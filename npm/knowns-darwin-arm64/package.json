@@ -1,0 +1,22 @@
+{
+  "name": "@knowns/darwin-arm64",
+  "version": "0.0.0",
+  "description": "Knowns binary for darwin arm64",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "knowns",
+  "files": [
+    "knowns",
+    "*.dylib"
+  ],
+  "license": "MIT",
+  "homepage": "https://knowns.sh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/knowns-dev/knowns.git"
+  }
+}

@@ -1,0 +1,39 @@
+package routes
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/go-chi/chi/v5"
+)
+
+type mock{{pascalCase name}}Broadcaster struct{}
+
+func (m *mock{{pascalCase name}}Broadcaster) Broadcast(event string, data interface{}) {}
+
+func Test{{pascalCase name}}Routes(t *testing.T) {
+	r := chi.NewRouter()
+	routes := &{{pascalCase name}}Routes{broker: &mock{{pascalCase name}}Broadcaster{}}
+	routes.Register(r)
+
+	t.Run("list returns 200", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/{{kebabCase name}}s", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("get returns 404 for missing", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/{{kebabCase name}}s/nonexistent", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("expected 404, got %d", w.Code)
+		}
+	})
+}

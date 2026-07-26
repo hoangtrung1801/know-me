@@ -1,0 +1,68 @@
+package handlers
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
+)
+
+// Register{{pascalCase name}}Tools adds {{name}} MCP tools to the server.
+func Register{{pascalCase name}}Tools(s *server.MCPServer, getStore StoreGetter) {
+	// List {{name}}s
+	s.AddTool(
+		mcp.NewTool("list_{{snakeCase name}}s",
+			mcp.WithDescription("List all {{name}}s"),
+		),
+		make{{pascalCase name}}ListHandler(getStore),
+	)
+
+	// Create {{name}}
+	s.AddTool(
+		mcp.NewTool("create_{{snakeCase name}}",
+			mcp.WithDescription("Create a new {{name}}"),
+			mcp.WithString("name", mcp.Required(), mcp.Description("{{pascalCase name}} name")),
+			mcp.WithString("description", mcp.Description("{{pascalCase name}} description")),
+		),
+		make{{pascalCase name}}CreateHandler(getStore),
+	)
+
+	// Get {{name}}
+	s.AddTool(
+		mcp.NewTool("get_{{snakeCase name}}",
+			mcp.WithDescription("Get a {{name}} by ID"),
+			mcp.WithString("id", mcp.Required(), mcp.Description("{{pascalCase name}} ID")),
+		),
+		make{{pascalCase name}}GetHandler(getStore),
+	)
+}
+
+func make{{pascalCase name}}ListHandler(getStore StoreGetter) server.ToolHandlerFunc {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		// TODO: Implement list
+		return mcp.NewToolResultText("[]"), nil
+	}
+}
+
+func make{{pascalCase name}}CreateHandler(getStore StoreGetter) server.ToolHandlerFunc {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		name, _ := req.Params.Arguments["name"].(string)
+		if name == "" {
+			return mcp.NewToolResultError("name is required"), nil
+		}
+		// TODO: Implement create
+		return mcp.NewToolResultText(fmt.Sprintf("Created {{name}}: %s", name)), nil
+	}
+}
+
+func make{{pascalCase name}}GetHandler(getStore StoreGetter) server.ToolHandlerFunc {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		id, _ := req.Params.Arguments["id"].(string)
+		if id == "" {
+			return mcp.NewToolResultError("id is required"), nil
+		}
+		// TODO: Implement get
+		return mcp.NewToolResultError(fmt.Sprintf("{{name}} %q not found", id)), nil
+	}
+}

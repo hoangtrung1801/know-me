@@ -1,0 +1,23 @@
+package models
+
+import "time"
+
+// {{pascalCase name}} represents a {{name}} entity.
+type {{pascalCase name}} struct {
+	ID          string    `yaml:"id"          json:"id"`
+	Name        string    `yaml:"name"        json:"name"`
+	Description string    `yaml:"description" json:"description,omitempty"`
+	CreatedAt   time.Time `yaml:"createdAt"   json:"createdAt"`
+	UpdatedAt   time.Time `yaml:"updatedAt"   json:"updatedAt"`
+}
+
+// New{{pascalCase name}} creates a new {{pascalCase name}} with defaults.
+func New{{pascalCase name}}(name string) *{{pascalCase name}} {
+	now := time.Now()
+	return &{{pascalCase name}}{
+		ID:        GenerateID(),
+		Name:      name,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+}

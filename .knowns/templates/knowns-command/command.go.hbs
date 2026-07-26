@@ -1,0 +1,38 @@
+package cli
+
+import (
+{{#unless hasSubcommands}}
+	"fmt"
+{{/unless}}
+	"github.com/spf13/cobra"
+)
+
+// {{camelCase name}}Cmd is the {{kebabCase name}} command.
+var {{camelCase name}}Cmd = &cobra.Command{
+	Use:   "{{kebabCase name}}",
+	Short: "{{description}}",
+{{#if hasSubcommands}}
+}
+{{else}}
+	RunE: run{{pascalCase name}},
+}
+
+func run{{pascalCase name}}(cmd *cobra.Command, args []string) error {
+	store := getStore()
+	_ = store
+
+	// TODO: Implement {{name}} logic
+	fmt.Println("{{name}} command executed")
+	return nil
+}
+{{/if}}
+
+func init() {
+	rootCmd.AddCommand({{camelCase name}}Cmd)
+{{#if hasSubcommands}}
+
+	// TODO: Add subcommands ({{subcommands}})
+	// Example:
+	// {{camelCase name}}Cmd.AddCommand({{camelCase name}}ListCmd)
+{{/if}}
+}

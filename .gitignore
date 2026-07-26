@@ -1,0 +1,30 @@
+# Build output
+bin/
+**/obj/
+tmp/
+*.exe
+/knowns
+/knowns-embed
+
+# npm platform binaries
+npm/knowns-*/knowns
+npm/knowns-*/knowns.exe
+
+# OS
+.DS_Store
+
+# Skills sync metadata
+**/.version
+
+# Release
+release
+
+# UI
+**/node_modules/
+ui/node_modules/
+ui/dist/
+sidecar/dist/
+ui/playwright-report/
+ui/test-results/
+playwright-report/
+test-results/

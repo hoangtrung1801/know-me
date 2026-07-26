@@ -1,0 +1,69 @@
+package cli
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
+
+// {{camelCase name}}Cmd is the top-level {{kebabCase name}} command.
+var {{camelCase name}}Cmd = &cobra.Command{
+	Use:   "{{kebabCase name}}",
+	Short: "{{description}}",
+}
+
+// {{camelCase name}}ListCmd lists all {{name}} entities.
+var {{camelCase name}}ListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all {{name}}s",
+	RunE:  run{{pascalCase name}}List,
+}
+
+// {{camelCase name}}CreateCmd creates a new {{name}}.
+var {{camelCase name}}CreateCmd = &cobra.Command{
+	Use:   "create <name>",
+	Short: "Create a new {{name}}",
+	Args:  cobra.ExactArgs(1),
+	RunE:  run{{pascalCase name}}Create,
+}
+
+// {{camelCase name}}ViewCmd shows details of a {{name}}.
+var {{camelCase name}}ViewCmd = &cobra.Command{
+	Use:   "view <id>",
+	Short: "View a {{name}}",
+	Args:  cobra.ExactArgs(1),
+	RunE:  run{{pascalCase name}}View,
+}
+
+func run{{pascalCase name}}List(cmd *cobra.Command, args []string) error {
+	store := getStore()
+	_ = store
+	// TODO: Implement list
+	fmt.Println("No {{name}}s found.")
+	return nil
+}
+
+func run{{pascalCase name}}Create(cmd *cobra.Command, args []string) error {
+	store := getStore()
+	_ = store
+	name := args[0]
+	// TODO: Implement create
+	fmt.Printf("Created {{name}}: %s\n", name)
+	return nil
+}
+
+func run{{pascalCase name}}View(cmd *cobra.Command, args []string) error {
+	store := getStore()
+	_ = store
+	id := args[0]
+	// TODO: Implement view
+	fmt.Printf("Viewing {{name}}: %s\n", id)
+	return nil
+}
+
+func init() {
+	rootCmd.AddCommand({{camelCase name}}Cmd)
+	{{camelCase name}}Cmd.AddCommand({{camelCase name}}ListCmd)
+	{{camelCase name}}Cmd.AddCommand({{camelCase name}}CreateCmd)
+	{{camelCase name}}Cmd.AddCommand({{camelCase name}}ViewCmd)
+}

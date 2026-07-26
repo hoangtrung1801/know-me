@@ -1,0 +1,109 @@
+# Knowns Guidelines
+
+> These rules are NON-NEGOTIABLE. Violating them causes data corruption.
+
+{{#if mcp}}
+## Session Init (Required)
+
+```json
+mcp__knowns__project({ "action": "detect" })
+mcp__knowns__project({ "action": "set", "projectRoot": "/path/to/project" })
+```
+
+**Skip this = tools fail or work on wrong project.**
+{{/if}}
+
+---
+
+## Critical Rules
+
+{{#if mcp}}
+{{#if cli}}
+| Rule | Description |
+|------|-------------|
+| **Never edit .md** | Use MCP tools (preferred) or CLI. NEVER edit task/doc files directly |
+| **Docs first** | Read project docs BEFORE planning or coding |
+| **Plan → Approve → Code** | Share plan, WAIT for approval, then implement |
+| **AC after work** | Only check acceptance criteria AFTER completing work |
+| **Time tracking** | `start_time` when taking task, `stop_time` when done |
+| **Validate** | Run `validate` before marking task done |
+| **Decision impact** | Record `none` or a persisted first-class draft candidate before completion; never create Decision Memory |
+| **appendNotes** | Use `appendNotes` for progress. `notes` REPLACES all (destroys history) |
+{{else}}
+| Rule | Description |
+|------|-------------|
+| **Never edit .md** | Use MCP tools. NEVER edit task/doc files directly |
+| **Docs first** | Read project docs BEFORE planning or coding |
+| **Plan → Approve → Code** | Share plan, WAIT for approval, then implement |
+| **AC after work** | Only check acceptance criteria AFTER completing work |
+| **Time tracking** | `start_time` when taking task, `stop_time` when done |
+| **Validate** | Run `validate` before marking task done |
+| **Decision impact** | Record `none` or a persisted first-class draft candidate before completion; never create Decision Memory |
+| **appendNotes** | Use `appendNotes` for progress. `notes` REPLACES all (destroys history) |
+{{/if}}
+{{else}}
+{{#if cli}}
+| Rule | Description |
+|------|-------------|
+| **Never edit .md** | Use CLI commands. NEVER edit task/doc files directly |
+| **Docs first** | Read project docs BEFORE planning or coding |
+| **Plan → Approve → Code** | Share plan, WAIT for approval, then implement |
+| **AC after work** | Only check acceptance criteria AFTER completing work |
+| **Time tracking** | `time start` when taking task, `time stop` when done |
+| **Validate** | Run `knowns validate` before marking task done |
+| **Decision impact** | Record `none` or a persisted first-class draft candidate before completion; never create Decision Memory |
+| **--append-notes** | Use `--append-notes` for progress. `--notes` REPLACES all (destroys history) |
+{{/if}}
+{{/if}}
+
+{{#if cli}}
+---
+
+## CLI Pitfalls
+
+### The `-a` flag trap
+
+| Command | `-a` means | NOT this |
+|---------|------------|----------|
+| `task create/edit` | `--assignee` | ~~acceptance criteria~~ |
+| `doc edit` | `--append` | ~~assignee~~ |
+
+```bash
+# WRONG - sets assignee to garbage!
+knowns task edit 35 -a "Criterion text"
+
+# CORRECT
+knowns task edit 35 --ac "Criterion text"
+```
+
+### --plain flag
+
+**Only for view/list/search commands:**
+```bash
+knowns task <id> --plain      # ✓
+knowns task list --plain      # ✓
+knowns task create --plain    # ✗ ERROR
+knowns task edit --plain      # ✗ ERROR
+```
+
+### Subtasks
+
+```bash
+knowns task create "Sub" --parent 48    # ✓ raw ID
+knowns task create "Sub" --parent task-48  # ✗ WRONG
+```
+{{/if}}
+
+---
+
+## References
+
+Tasks and docs can reference each other:
+
+| Type | Format |
+|------|--------|
+| Task | `@task-<id>` |
+| Doc | `@doc/<path>` |
+| Template | `@template/<name>` |
+
+**Always follow refs recursively** before planning.

@@ -1,0 +1,60 @@
+# Template: knowns-command
+name: knowns-command
+description: Generate a new Knowns CLI command following the Command Pattern
+version: 2.0.0
+
+# Link to documentation - AI should read this before generating
+doc: architecture/patterns/command
+
+# Base destination path
+destination: internal/cli
+
+# Interactive prompts
+prompts:
+  - name: name
+    type: text
+    message: "Command name? (e.g., 'export', 'import')"
+    validate: required
+
+  - name: description
+    type: text
+    message: "Command description?"
+
+  - name: hasSubcommands
+    type: confirm
+    message: "Will this command have subcommands?"
+    initial: true
+
+  - name: subcommands
+    type: text
+    message: "Subcommand names? (comma-separated, e.g., 'list,create,view')"
+    when: "{{hasSubcommands}}"
+
+# File generation actions
+actions:
+  - type: add
+    template: "command.go.hbs"
+    path: "{{snakeCase name}}.go"
+    skipIfExists: true
+
+  - type: add
+    template: "command_test.go.hbs"
+    path: "{{snakeCase name}}_test.go"
+    skipIfExists: true
+
+# Success message
+messages:
+  success: |
+    ✓ Created command: {{name}}
+
+    Files created:
+      - internal/cli/{{snakeCase name}}.go
+      - internal/cli/{{snakeCase name}}_test.go
+
+    Next steps:
+      1. Review the generated code
+      2. Register command in internal/cli/root.go init()
+      3. Implement subcommand handlers
+      4. Run tests: go test ./internal/cli/... -run {{pascalCase name}}
+
+    See @doc/architecture/patterns/command for the full pattern

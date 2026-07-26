@@ -1,0 +1,23 @@
+{
+  "name": "@knowns/linux-x64",
+  "version": "0.0.0",
+  "description": "Knowns binary for linux x64",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "knowns",
+  "files": [
+    "knowns",
+    "*.so",
+    "*.so.*"
+  ],
+  "license": "MIT",
+  "homepage": "https://knowns.sh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/knowns-dev/knowns.git"
+  }
+}

@@ -1,0 +1,55 @@
+package storage
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/howznguyen/knowns/internal/models"
+)
+
+// {{pascalCase name}}Store handles persistence for {{name}} entities.
+type {{pascalCase name}}Store struct {
+	dir string
+}
+
+// New{{pascalCase name}}Store creates a store rooted at dir.
+func New{{pascalCase name}}Store(dir string) *{{pascalCase name}}Store {
+	return &{{pascalCase name}}Store{dir: dir}
+}
+
+// List returns all {{name}} entities.
+func (s *{{pascalCase name}}Store) List() ([]*models.{{pascalCase name}}, error) {
+	// TODO: Implement listing from s.dir
+	return nil, nil
+}
+
+// Get returns a single {{name}} by ID.
+func (s *{{pascalCase name}}Store) Get(id string) (*models.{{pascalCase name}}, error) {
+	// TODO: Implement get by ID
+	return nil, fmt.Errorf("{{name}} %q not found", id)
+}
+
+// Create persists a new {{name}}.
+func (s *{{pascalCase name}}Store) Create(item *models.{{pascalCase name}}) error {
+	path := filepath.Join(s.dir, item.ID+".yaml")
+	// TODO: Marshal and write to path
+	_ = path
+	return nil
+}
+
+// Update persists changes to an existing {{name}}.
+func (s *{{pascalCase name}}Store) Update(item *models.{{pascalCase name}}) error {
+	path := filepath.Join(s.dir, item.ID+".yaml")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("{{name}} %q not found", item.ID)
+	}
+	// TODO: Marshal and write to path
+	return nil
+}
+
+// Delete removes a {{name}} by ID.
+func (s *{{pascalCase name}}Store) Delete(id string) error {
+	path := filepath.Join(s.dir, id+".yaml")
+	return os.Remove(path)
+}

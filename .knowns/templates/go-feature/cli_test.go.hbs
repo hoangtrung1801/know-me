@@ -1,0 +1,37 @@
+package cli
+
+import "testing"
+
+func Test{{pascalCase name}}Cmd(t *testing.T) {
+	t.Run("has subcommands", func(t *testing.T) {
+		if !{{camelCase name}}Cmd.HasSubCommands() {
+			t.Error("expected subcommands")
+		}
+	})
+
+	t.Run("list subcommand", func(t *testing.T) {
+		found := false
+		for _, sub := range {{camelCase name}}Cmd.Commands() {
+			if sub.Use == "list" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected 'list' subcommand")
+		}
+	})
+
+	t.Run("create subcommand", func(t *testing.T) {
+		found := false
+		for _, sub := range {{camelCase name}}Cmd.Commands() {
+			if sub.Use == "create <name>" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected 'create' subcommand")
+		}
+	})
+}

@@ -1,0 +1,66 @@
+package routes
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+)
+
+// {{pascalCase name}}Routes handles HTTP routes for {{name}} entities.
+type {{pascalCase name}}Routes struct {
+	broker Broadcaster
+}
+
+// Register mounts {{name}} routes on the given router.
+func (r *{{pascalCase name}}Routes) Register(router chi.Router) {
+	router.Route("/api/{{kebabCase name}}s", func(rt chi.Router) {
+		rt.Get("/", r.list)
+		rt.Post("/", r.create)
+		rt.Get("/{id}", r.get)
+		rt.Put("/{id}", r.update)
+		rt.Delete("/{id}", r.delete)
+	})
+}
+
+func (r *{{pascalCase name}}Routes) list(w http.ResponseWriter, req *http.Request) {
+	// TODO: Implement list
+	respondJSON(w, http.StatusOK, []interface{}{})
+}
+
+func (r *{{pascalCase name}}Routes) create(w http.ResponseWriter, req *http.Request) {
+	var body struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	// TODO: Implement create
+	r.broker.Broadcast("{{kebabCase name}}s:updated", map[string]interface{}{})
+	respondJSON(w, http.StatusCreated, map[string]string{"status": "created"})
+}
+
+func (r *{{pascalCase name}}Routes) get(w http.ResponseWriter, req *http.Request) {
+	id := chi.URLParam(req, "id")
+	// TODO: Implement get
+	_ = id
+	respondError(w, http.StatusNotFound, "not found")
+}
+
+func (r *{{pascalCase name}}Routes) update(w http.ResponseWriter, req *http.Request) {
+	id := chi.URLParam(req, "id")
+	// TODO: Implement update
+	_ = id
+	r.broker.Broadcast("{{kebabCase name}}s:updated", map[string]interface{}{})
+	respondJSON(w, http.StatusOK, map[string]string{"status": "updated"})
+}
+
+func (r *{{pascalCase name}}Routes) delete(w http.ResponseWriter, req *http.Request) {
+	id := chi.URLParam(req, "id")
+	// TODO: Implement delete
+	_ = id
+	r.broker.Broadcast("{{kebabCase name}}s:updated", map[string]interface{}{})
+	respondJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}

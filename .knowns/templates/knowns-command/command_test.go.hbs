@@ -1,0 +1,33 @@
+package cli
+
+import (
+	"testing"
+)
+
+func Test{{pascalCase name}}Cmd(t *testing.T) {
+	t.Run("should be defined", func(t *testing.T) {
+		if {{camelCase name}}Cmd == nil {
+			t.Fatal("{{camelCase name}}Cmd should not be nil")
+		}
+	})
+
+	t.Run("should have correct name", func(t *testing.T) {
+		if {{camelCase name}}Cmd.Use != "{{kebabCase name}}" {
+			t.Errorf("expected Use=%q, got %q", "{{kebabCase name}}", {{camelCase name}}Cmd.Use)
+		}
+	})
+
+	t.Run("should have description", func(t *testing.T) {
+		if {{camelCase name}}Cmd.Short == "" {
+			t.Error("Short description should not be empty")
+		}
+	})
+{{#if hasSubcommands}}
+
+	t.Run("should have subcommands", func(t *testing.T) {
+		if !{{camelCase name}}Cmd.HasSubCommands() {
+			t.Error("expected command to have subcommands")
+		}
+	})
+{{/if}}
+}

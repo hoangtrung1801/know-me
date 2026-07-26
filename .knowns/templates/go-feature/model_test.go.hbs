@@ -1,0 +1,20 @@
+package models
+
+import "testing"
+
+func TestNew{{pascalCase name}}(t *testing.T) {
+	item := New{{pascalCase name}}("test-{{kebabCase name}}")
+
+	if item.ID == "" {
+		t.Error("expected non-empty ID")
+	}
+	if item.Name != "test-{{kebabCase name}}" {
+		t.Errorf("expected Name=%q, got %q", "test-{{kebabCase name}}", item.Name)
+	}
+	if item.CreatedAt.IsZero() {
+		t.Error("expected non-zero CreatedAt")
+	}
+	if item.UpdatedAt.IsZero() {
+		t.Error("expected non-zero UpdatedAt")
+	}
+}

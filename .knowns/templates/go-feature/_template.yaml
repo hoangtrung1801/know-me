@@ -1,0 +1,107 @@
+name: go-feature
+description: Scaffold a complete Go feature module (model, store, CLI, MCP, server, tests)
+version: 1.0.0
+doc: architecture/patterns/command
+
+prompts:
+  - name: name
+    type: text
+    message: "Feature name? (e.g., 'label', 'milestone', 'webhook')"
+    validate: required
+
+  - name: description
+    type: text
+    message: "Short description?"
+
+  - name: withServer
+    type: confirm
+    message: "Include HTTP server routes?"
+    initial: true
+
+  - name: withMCP
+    type: confirm
+    message: "Include MCP handler?"
+    initial: true
+
+actions:
+  # 1. Model
+  - type: add
+    template: model.go.hbs
+    path: "internal/models/{{snakeCase name}}.go"
+    skipIfExists: true
+
+  # 2. Model test
+  - type: add
+    template: model_test.go.hbs
+    path: "internal/models/{{snakeCase name}}_test.go"
+    skipIfExists: true
+
+  # 3. Store
+  - type: add
+    template: store.go.hbs
+    path: "internal/storage/{{snakeCase name}}_store.go"
+    skipIfExists: true
+
+  # 4. Store test
+  - type: add
+    template: store_test.go.hbs
+    path: "internal/storage/{{snakeCase name}}_store_test.go"
+    skipIfExists: true
+
+  # 5. CLI command
+  - type: add
+    template: cli.go.hbs
+    path: "internal/cli/{{snakeCase name}}.go"
+    skipIfExists: true
+
+  # 6. CLI test
+  - type: add
+    template: cli_test.go.hbs
+    path: "internal/cli/{{snakeCase name}}_test.go"
+    skipIfExists: true
+
+  # 7. Server routes (conditional)
+  - type: add
+    template: routes.go.hbs
+    path: "internal/server/routes/{{snakeCase name}}.go"
+    skipIfExists: true
+    when: "{{withServer}}"
+
+  # 8. Server routes test (conditional)
+  - type: add
+    template: routes_test.go.hbs
+    path: "internal/server/routes/{{snakeCase name}}_test.go"
+    skipIfExists: true
+    when: "{{withServer}}"
+
+  # 9. MCP handler (conditional)
+  - type: add
+    template: mcp.go.hbs
+    path: "internal/mcp/handlers/{{snakeCase name}}.go"
+    skipIfExists: true
+    when: "{{withMCP}}"
+
+  # 10. MCP handler test (conditional)
+  - type: add
+    template: mcp_test.go.hbs
+    path: "internal/mcp/handlers/{{snakeCase name}}_test.go"
+    skipIfExists: true
+    when: "{{withMCP}}"
+
+messages:
+  success: |
+    ✓ Feature "{{name}}" scaffolded!
+
+    Files created:
+      Models:  internal/models/{{snakeCase name}}.go
+      Store:   internal/storage/{{snakeCase name}}_store.go
+      CLI:     internal/cli/{{snakeCase name}}.go
+      Server:  internal/server/routes/{{snakeCase name}}.go
+      MCP:     internal/mcp/handlers/{{snakeCase name}}.go
+
+    Next steps:
+      1. Define fields in the {{pascalCase name}} struct
+      2. Implement store CRUD methods
+      3. Wire CLI subcommands
+      4. Register routes in internal/server/routes/router.go
+      5. Run tests: go test ./internal/...
