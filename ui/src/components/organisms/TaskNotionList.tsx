@@ -351,6 +351,9 @@ function TaskRow({ task, isNew, onClick }: { task: Task; isNew?: boolean; onClic
 					<span className="text-[11px] font-mono text-muted-foreground/60 shrink-0">
 						#{task.id}
 					</span>
+					<span className="hidden rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground md:inline">
+						{task.projectId || "Global"}
+					</span>
 					<TaskLifecycleBadge state={task.lifecycleState} />
 				</div>
 				{task.description && (

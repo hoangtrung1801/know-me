@@ -15,6 +15,7 @@ import type { TaskLifecycleResponse } from "../models/taskLifecycle";
 import { TaskLifecycleDialog } from "../components/organisms/TaskLifecycleDialog";
 import { toast } from "../components/ui/sonner";
 import { useIsMobile } from "../hooks/useMobile";
+import { useWorkspaceProjects } from "../hooks/useWorkspaceProjects";
 import {
 	PageContent,
 	PageError,
@@ -44,6 +45,9 @@ interface KanbanPageProps {
 
 export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpdate, onNewTask }: KanbanPageProps) {
 	const isMobile = useIsMobile();
+	const projects = useWorkspaceProjects();
+	const [projectScope, setProjectScope] = useState("all");
+	const visibleTasks = projectScope === "all" ? tasks : tasks.filter((task) => projectScope === "global" ? !task.projectId : task.projectId === projectScope);
 	const [mobileWarningDismissed, setMobileWarningDismissed] = useState(() => {
 		return sessionStorage.getItem("kanban-mobile-warning-dismissed") === "true";
 	});
@@ -131,9 +135,19 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 				title="Kanban Board"
 				description="Move active work through your configured delivery stages."
 				context="Project work"
-				status={<span className="tabular-nums">{tasks.length} {tasks.length === 1 ? "task" : "tasks"}</span>}
+				status={<span className="tabular-nums">{visibleTasks.length} {visibleTasks.length === 1 ? "task" : "tasks"}</span>}
 				actions={
 					<div className="flex items-center gap-2 shrink-0">
+						<select
+							aria-label="Filter Kanban by project"
+							value={projectScope}
+							onChange={(event) => setProjectScope(event.target.value)}
+							className="h-11 max-w-36 rounded-md border bg-background px-2 text-xs sm:h-8"
+						>
+							<option value="all">All projects</option>
+							<option value="global">Global</option>
+							{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+						</select>
 						{/* Batch Archive Dropdown */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
@@ -201,7 +215,7 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 						className="flex-1"
 					/>
 				) : (
-					<Board tasks={tasks} loading={false} onTasksUpdate={onTasksUpdate} />
+					<Board tasks={visibleTasks} loading={false} onTasksUpdate={onTasksUpdate} />
 				)}
 			</PageContent>
 

@@ -222,7 +222,7 @@ export const api = {
 		return parseTaskDTO(dto);
 	},
 
-	async createTask(data: Partial<Task>): Promise<Task> {
+	async createTask(data: Partial<Task> & { global?: boolean }): Promise<Task> {
 		const res = await apiFetch(`${API_BASE}/api/tasks`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },

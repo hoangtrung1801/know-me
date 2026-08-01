@@ -504,6 +504,9 @@ function TaskKanbanCard({ item, isNew, statusColors, onClick }: TaskKanbanCardPr
 						)}
 					</div>
 				</div>
+				<span className="mb-2 inline-flex rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+					{task.projectId || "Global"}
+				</span>
 
 				<h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground">
 					{task.title}
