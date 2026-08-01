@@ -14,7 +14,8 @@ import (
 
 // DocStore reads and writes doc files from .knowns/docs/ (and .knowns/imports/).
 type DocStore struct {
-	root string
+	root      string
+	projectID string
 }
 
 func (ds *DocStore) docsDir() string    { return filepath.Join(ds.root, "docs") }

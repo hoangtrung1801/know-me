@@ -19,17 +19,19 @@ const globalSemanticStoreDir = "global"
 // Store is the top-level coordinator for all .knowns/ sub-stores.
 type Store struct {
 	// Root is the absolute path to the .knowns/ directory.
-	Root       string
-	Tasks      *TaskStore
-	Docs       *DocStore
-	Config     *ConfigStore
-	Time       *TimeStore
-	Templates  *TemplateStore
-	Versions   *VersionStore
-	Workspaces *WorkspaceStore
-	Chats      *ChatStore
-	Memory     *MemoryStore
-	Decisions  *DecisionStore
+	Root        string
+	ProjectID   string
+	ProjectRoot string
+	Tasks       *TaskStore
+	Docs        *DocStore
+	Config      *ConfigStore
+	Time        *TimeStore
+	Templates   *TemplateStore
+	Versions    *VersionStore
+	Workspaces  *WorkspaceStore
+	Chats       *ChatStore
+	Memory      *MemoryStore
+	Decisions   *DecisionStore
 
 	taskLifecycleLock     *taskLifecycleLock
 	decisionMigrationLock *decisionMemoryMigrationLock
@@ -38,23 +40,55 @@ type Store struct {
 // NewStore creates a Store rooted at the given .knowns/ directory path.
 // The directory does not need to exist yet; call Init to create it.
 func NewStore(root string) *Store {
+	return newStore(root, "", "")
+}
+
+// NewProjectStore creates a store rooted at the global Knowns directory while
+// retaining the active project identity and repository path separately.
+func NewProjectStore(globalRoot, projectID, repositoryRoot string) *Store {
+	s := newStore(globalRoot, projectID, repositoryRoot)
+	s.Config = &ConfigStore{root: ProjectConfigRoot(globalRoot, projectID)}
+	return s
+}
+
+// ProjectConfigRoot returns the central config directory for a project.
+func ProjectConfigRoot(globalRoot, projectID string) string {
+	return filepath.Join(globalRoot, "projects", projectID)
+}
+
+func newStore(root, projectID, projectRoot string) *Store {
 	globalRoot := GlobalRootPath()
 
 	lifecycleLock := newTaskLifecycleLock(root)
 	decisionLock := newDecisionLifecycleLock(root)
 	migrationLock := newDecisionMemoryMigrationLock(root)
-	s := &Store{Root: root, taskLifecycleLock: lifecycleLock, decisionMigrationLock: migrationLock}
-	s.Tasks = &TaskStore{root: root, lifecycleLock: lifecycleLock}
-	s.Docs = &DocStore{root: root}
+	s := &Store{Root: root, ProjectID: projectID, ProjectRoot: projectRoot, taskLifecycleLock: lifecycleLock, decisionMigrationLock: migrationLock}
+	s.Tasks = &TaskStore{root: root, projectID: projectID, lifecycleLock: lifecycleLock}
+	s.Docs = &DocStore{root: root, projectID: projectID}
 	s.Config = &ConfigStore{root: root}
 	s.Time = &TimeStore{root: root, lifecycleLock: lifecycleLock}
 	s.Templates = &TemplateStore{root: root}
-	s.Versions = &VersionStore{root: root, lifecycleLock: lifecycleLock}
+	s.Versions = &VersionStore{root: root, projectID: projectID, lifecycleLock: lifecycleLock}
 	s.Workspaces = &WorkspaceStore{root: root}
 	s.Chats = &ChatStore{root: root}
 	s.Memory = &MemoryStore{root: root, globalRoot: globalRoot}
 	s.Decisions = &DecisionStore{root: root, lifecycleLock: decisionLock}
 	return s
+}
+
+// RepositoryRoot returns the active repository path, or derives it for legacy
+// stores rooted at a repository-local .knowns directory.
+func (s *Store) RepositoryRoot() string {
+	if s == nil {
+		return ""
+	}
+	if s.ProjectRoot != "" {
+		return s.ProjectRoot
+	}
+	if filepath.Base(s.Root) == ".knowns" {
+		return filepath.Dir(s.Root)
+	}
+	return ""
 }
 
 // WithDecisionMemoryMigrationLock serializes review-driven migration across

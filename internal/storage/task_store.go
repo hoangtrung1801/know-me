@@ -18,6 +18,7 @@ import (
 // TaskStore reads and writes task files from .knowns/tasks/ and .knowns/archive/.
 type TaskStore struct {
 	root          string
+	projectID     string
 	lifecycleLock *taskLifecycleLock
 }
 
@@ -31,6 +32,7 @@ func (ts *TaskStore) tombstonesDir() string {
 // Fields use yaml tags that match the TypeScript output exactly.
 type taskFrontmatter struct {
 	ID          string   `yaml:"id"`
+	ProjectID   string   `yaml:"projectId,omitempty"`
 	Title       string   `yaml:"title"`
 	Status      string   `yaml:"status"`
 	Priority    string   `yaml:"priority"`
@@ -48,16 +50,23 @@ type taskFrontmatter struct {
 }
 
 // List returns all tasks from .knowns/tasks/.
-func (ts *TaskStore) List() ([]*models.Task, error) {
-	return ts.listDir(ts.tasksDir())
+func (ts *TaskStore) List(projectID ...string) ([]*models.Task, error) {
+	return ts.listDir(ts.tasksDir(), firstProjectID(projectID))
 }
 
 // ListArchived returns all tasks from .knowns/archive/.
-func (ts *TaskStore) ListArchived() ([]*models.Task, error) {
-	return ts.listDir(ts.archiveDir())
+func (ts *TaskStore) ListArchived(projectID ...string) ([]*models.Task, error) {
+	return ts.listDir(ts.archiveDir(), firstProjectID(projectID))
 }
 
-func (ts *TaskStore) listDir(dir string) ([]*models.Task, error) {
+func firstProjectID(projectID []string) string {
+	if len(projectID) == 0 {
+		return ""
+	}
+	return projectID[0]
+}
+
+func (ts *TaskStore) listDir(dir, projectID string) ([]*models.Task, error) {
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -68,7 +77,7 @@ func (ts *TaskStore) listDir(dir string) ([]*models.Task, error) {
 	// Parse all task files, deduplicating by ID (keep latest updatedAt).
 	// Duplicates can exist from migration artifacts or old filename-rename bugs.
 	byID := make(map[string]*models.Task)
-	pathByID := make(map[string]string) // track kept file path per ID
+	pathByID := make(map[string]string) // track kept file path per scoped ID
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
 			continue
@@ -78,19 +87,23 @@ func (ts *TaskStore) listDir(dir string) ([]*models.Task, error) {
 		if err != nil {
 			continue
 		}
-		if existing, ok := byID[task.ID]; ok {
+		if projectID != "" && task.ProjectID != projectID {
+			continue
+		}
+		key := ScopedKey(task.ProjectID, task.ID)
+		if existing, ok := byID[key]; ok {
 			// Duplicate found — keep the one with the latest updatedAt,
 			// remove the stale file.
 			if task.UpdatedAt.After(existing.UpdatedAt) {
-				_ = os.Remove(pathByID[task.ID])
-				byID[task.ID] = task
-				pathByID[task.ID] = path
+				_ = os.Remove(pathByID[key])
+				byID[key] = task
+				pathByID[key] = path
 			} else {
 				_ = os.Remove(path)
 			}
 		} else {
-			byID[task.ID] = task
-			pathByID[task.ID] = path
+			byID[key] = task
+			pathByID[key] = path
 		}
 	}
 	// Build final task list and subtask relationships.
@@ -119,12 +132,40 @@ func (ts *TaskStore) Get(id string) (*models.Task, error) {
 }
 
 func (ts *TaskStore) findFile(id string) (string, error) {
+	projectID, localID := SplitScopedKey(id)
+	return ts.findFileExact(projectID, localID, projectID != "")
+}
+
+func (ts *TaskStore) findFileExact(projectID, id string, scoped bool) (string, error) {
+	// ponytail: linear scan keeps one source of truth; add an index only if task volume makes lookup measurable.
+	var matches []string
 	for _, dir := range []string{ts.tasksDir(), ts.archiveDir()} {
-		if p, err := ts.scanForID(dir, id); err == nil {
-			return p, nil
+		entries, err := os.ReadDir(dir)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return "", err
+		}
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+				continue
+			}
+			path := filepath.Join(dir, entry.Name())
+			task, err := ts.parseFile(path)
+			if err != nil || task.ID != id || (scoped && task.ProjectID != projectID) || (!scoped && projectID != "" && task.ProjectID != projectID) {
+				continue
+			}
+			matches = append(matches, path)
 		}
 	}
-	return "", fmt.Errorf("task %q not found", id)
+	if len(matches) == 0 {
+		return "", fmt.Errorf("task %q not found", id)
+	}
+	if len(matches) > 1 {
+		return "", fmt.Errorf("task %q is ambiguous; use a project-prefixed ID", id)
+	}
+	return matches[0], nil
 }
 
 func (ts *TaskStore) scanForID(dir, id string) (string, error) {
@@ -151,6 +192,14 @@ func (ts *TaskStore) scanForID(dir, id string) (string, error) {
 
 // Create writes a new task file to .knowns/tasks/.
 func (ts *TaskStore) Create(task *models.Task) error {
+	if task != nil && task.ProjectID == "" {
+		task.ProjectID = ts.projectID
+	}
+	return ts.withLifecycleLock(func() error { return ts.createUnlocked(task) })
+}
+
+// CreateGlobal writes a task without applying the store's active project.
+func (ts *TaskStore) CreateGlobal(task *models.Task) error {
 	return ts.withLifecycleLock(func() error { return ts.createUnlocked(task) })
 }
 
@@ -158,7 +207,7 @@ func (ts *TaskStore) createUnlocked(task *models.Task) error {
 	if task.ID == "" {
 		return fmt.Errorf("task ID is required")
 	}
-	if _, err := ts.findFile(task.ID); err == nil {
+	if _, err := ts.findFileExact(task.ProjectID, task.ID, true); err == nil {
 		return fmt.Errorf("task ID %q already exists", task.ID)
 	}
 	reserved, err := ts.IsIDReserved(task.ID)
@@ -171,7 +220,11 @@ func (ts *TaskStore) createUnlocked(task *models.Task) error {
 	if err := os.MkdirAll(ts.tasksDir(), 0755); err != nil {
 		return fmt.Errorf("create task dir: %w", err)
 	}
-	path := filepath.Join(ts.tasksDir(), taskFilename(task.ID, task.Title))
+	name := taskFilename(task.ID, task.Title)
+	if task.ProjectID != "" {
+		name = taskFilename(task.ProjectID+"--"+task.ID, task.Title)
+	}
+	path := filepath.Join(ts.tasksDir(), name)
 	return ts.writeFile(path, task)
 }
 
@@ -183,7 +236,7 @@ func (ts *TaskStore) Update(task *models.Task) error {
 }
 
 func (ts *TaskStore) updateUnlocked(task *models.Task) error {
-	oldPath, err := ts.findFile(task.ID)
+	oldPath, err := ts.findFileExact(task.ProjectID, task.ID, true)
 	if err != nil {
 		return ts.createUnlocked(task)
 	}
@@ -433,6 +486,7 @@ func parseTaskContent(content string) (*models.Task, error) {
 	}
 
 	task := &models.Task{
+		ProjectID:           fm.ProjectID,
 		ID:                  fm.ID,
 		Title:               fm.Title,
 		Status:              fm.Status,
@@ -475,7 +529,7 @@ func (ts *TaskStore) patchLifecycleUnlocked(task *models.Task) error {
 	if task == nil {
 		return fmt.Errorf("patch Task lifecycle: task is required")
 	}
-	path, err := ts.findFile(task.ID)
+	path, err := ts.findFileExact(task.ProjectID, task.ID, true)
 	if err != nil {
 		return err
 	}
@@ -543,6 +597,9 @@ func renderTask(task *models.Task) string {
 		fmt.Fprintf(&b, "id: '%s'\n", task.ID)
 	} else {
 		fmt.Fprintf(&b, "id: %s\n", task.ID)
+	}
+	if task.ProjectID != "" {
+		fmt.Fprintf(&b, "projectId: %s\n", task.ProjectID)
 	}
 	fmt.Fprintf(&b, "title: %s\n", yamlScalar(task.Title))
 	fmt.Fprintf(&b, "status: %s\n", task.Status)

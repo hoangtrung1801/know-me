@@ -38,3 +38,14 @@ func TestSemanticDBWritableOpensExistingIndex(t *testing.T) {
 		t.Fatalf("expected writable db exec to succeed: %v", err)
 	}
 }
+
+func TestNewProjectStoreSeparatesDataAndRepositoryRoots(t *testing.T) {
+	globalRoot, repo := t.TempDir(), t.TempDir()
+	store := NewProjectStore(globalRoot, "p12345", repo)
+	if store.Root != globalRoot || store.ProjectID != "p12345" || store.RepositoryRoot() != repo {
+		t.Fatalf("unexpected store context: %#v", store)
+	}
+	if got := store.Config.configPath(); got != filepath.Join(globalRoot, "projects", "p12345", "config.json") {
+		t.Fatalf("config path = %q", got)
+	}
+}

@@ -172,3 +172,22 @@ func TestRegistryGetActiveEmpty(t *testing.T) {
 		t.Fatal("GetActive should return nil for empty registry")
 	}
 }
+
+func TestRegistryAddAndResolveWithoutLocalKnowns(t *testing.T) {
+	root := t.TempDir()
+	nested := filepath.Join(root, "src", "pkg")
+	if err := os.MkdirAll(nested, 0755); err != nil {
+		t.Fatal(err)
+	}
+	r := NewRegistryWithPath(filepath.Join(t.TempDir(), "registry.json"))
+	if err := r.Load(); err != nil {
+		t.Fatal(err)
+	}
+	p, err := r.Add(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := r.FindByWorkingDir(nested); got == nil || got.ID != p.ID {
+		t.Fatalf("resolved project = %#v, want %q", got, p.ID)
+	}
+}

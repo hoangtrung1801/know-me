@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/howznguyen/knowns/internal/util"
@@ -87,13 +88,8 @@ func (r *Registry) Add(projectPath string) (*Project, error) {
 		return nil, fmt.Errorf("resolve path: %w", err)
 	}
 
-	// Check .knowns/ exists and has config.json (properly initialized project)
-	knDir := filepath.Join(absPath, ".knowns")
-	if info, err := os.Stat(knDir); err != nil || !info.IsDir() {
-		return nil, fmt.Errorf("no .knowns/ directory found at %s", absPath)
-	}
-	if _, err := os.Stat(filepath.Join(knDir, "config.json")); err != nil {
-		return nil, fmt.Errorf("no config.json found at %s — run 'knowns init' first", absPath)
+	if info, err := os.Stat(absPath); err != nil || !info.IsDir() {
+		return nil, fmt.Errorf("project directory not found at %s", absPath)
 	}
 
 	// Dedup by path
@@ -109,6 +105,26 @@ func (r *Registry) Add(projectPath string) (*Project, error) {
 	}
 	r.Projects = append(r.Projects, p)
 	return &p, r.Save()
+}
+
+// FindByWorkingDir returns the registered project with the longest path prefix
+// of start, allowing commands to run from any repository subdirectory.
+func (r *Registry) FindByWorkingDir(start string) *Project {
+	abs, err := filepath.Abs(start)
+	if err != nil {
+		return nil
+	}
+	var best *Project
+	for i := range r.Projects {
+		rel, err := filepath.Rel(r.Projects[i].Path, abs)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			continue
+		}
+		if best == nil || len(r.Projects[i].Path) > len(best.Path) {
+			best = &r.Projects[i]
+		}
+	}
+	return best
 }
 
 // Remove deletes a project from the registry by ID.

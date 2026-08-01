@@ -7,6 +7,7 @@ import "time"
 // Legacy sequential integer IDs are also supported for backward compatibility.
 type Task struct {
 	ID          string   `json:"id"                    yaml:"id"`
+	ProjectID   string   `json:"projectId,omitempty" yaml:"projectId,omitempty"`
 	Title       string   `json:"title"                 yaml:"title"`
 	Description string   `json:"description,omitempty" yaml:"description,omitempty"`
 	Status      string   `json:"status"                yaml:"status"`
