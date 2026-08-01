@@ -17,6 +17,7 @@ import (
 	"github.com/howznguyen/knowns/internal/lsp"
 	"github.com/howznguyen/knowns/internal/lsp/adapters"
 	"github.com/howznguyen/knowns/internal/models"
+	"github.com/howznguyen/knowns/internal/registry"
 	"github.com/howznguyen/knowns/internal/runtimeinstall"
 	"github.com/howznguyen/knowns/internal/search"
 	"github.com/howznguyen/knowns/internal/server"
@@ -327,12 +328,27 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot determine working directory: %w", err)
 	}
 
-	root := filepath.Join(cwd, ".knowns")
+	globalRoot := storage.GlobalRootPath()
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err != nil {
+		return fmt.Errorf("load project registry: %w", err)
+	}
+	projectEntry := reg.FindByPath(cwd)
+	if projectEntry == nil {
+		projectEntry, err = reg.Add(cwd)
+		if err != nil {
+			return fmt.Errorf("register project: %w", err)
+		}
+	}
+	projectStore := func() *storage.Store {
+		return storage.NewProjectStore(globalRoot, projectEntry.ID, cwd)
+	}
+	configRoot := storage.ProjectConfigRoot(globalRoot, projectEntry.ID)
 	hasGitRepo := isGitRepo(cwd)
 	gitAvailable := isGitAvailable()
 
 	// Check if already initialized
-	if _, err := os.Stat(root); err == nil {
+	if _, err := os.Stat(filepath.Join(configRoot, "config.json")); err == nil {
 		if !force {
 			// Allow changing git tracking mode without --force
 			if gitTracked || gitIgnored {
@@ -340,7 +356,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 				if gitIgnored {
 					mode = "git-ignored"
 				}
-				store := storage.NewStore(root)
+				store := projectStore()
 				project, err := store.Config.Load()
 				if err != nil {
 					return err
@@ -351,13 +367,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 				if err := store.Config.Save(project); err != nil {
 					return err
 				}
-				if err := writeKnownsGitignore(cwd, mode, nil); err != nil {
-					return err
-				}
 				fmt.Printf("✓ Git tracking mode updated to %q\n", mode)
 				return nil
 			}
-			fmt.Println(warnStyle.Render("Project already initialized (.knowns/ directory exists)."))
+			fmt.Println(warnStyle.Render("Project already initialized in the global Knowns store."))
 			fmt.Println(dimStyle.Render("  Use --force to reinitialize."))
 			fmt.Println(dimStyle.Render("  Use --git-tracked or --git-ignored to change tracking mode."))
 			return nil
@@ -383,7 +396,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to load global settings: %v\n", err)
 	}
-	taskLifecycleSeed := lifecycleSeedForInit(root, force, globalDefaults)
+	taskLifecycleSeed := lifecycleSeedForInit(configRoot, force, globalDefaults)
 
 	// Determine if interactive mode
 	interactive := !noWizard
@@ -403,7 +416,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	if interactive && len(args) == 0 {
 		// Load any existing config to pre-populate wizard defaults.
 		existingName, existingGitTrackingMode, existingGitTracking, existingSemanticEnabled, existingSemanticModel, existingPlatforms := defaultsForWizard(cwd, globalDefaults)
-		if existingCfg, err := storage.NewStore(root).Config.Load(); err == nil {
+		if existingCfg, err := projectStore().Config.Load(); err == nil {
 			existingName = existingCfg.Name
 			existingGitTrackingMode = existingCfg.Settings.GitTrackingMode
 			if existingCfg.Settings.GitTracking != nil {
@@ -467,7 +480,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 			}
 		}
 		if force {
-			if existingCfg, err := storage.NewStore(root).Config.Load(); err == nil {
+			if existingCfg, err := projectStore().Config.Load(); err == nil {
 				if existingCfg.Name != "" && len(args) == 0 {
 					name = existingCfg.Name
 				}
@@ -516,14 +529,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 		{
 			label: "Creating project structure",
 			run: func() error {
-				store := storage.NewStore(root)
+				store := projectStore()
 				return store.Init(cfg.Name)
 			},
 		},
 		{
 			label: "Applying settings",
 			run: func() error {
-				store := storage.NewStore(root)
+				store := projectStore()
 				project, err := store.Config.Load()
 				if err != nil {
 					return err
@@ -579,12 +592,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 			},
 		},
 		{
-			label: "Configuring git integration",
-			run: func() error {
-				return writeKnownsGitignore(cwd, cfg.GitTrackingMode, &cfg.GitTracking)
-			},
-		},
-		{
 			label: "Creating project instruction files",
 			run: func() error {
 				return createInstructionFilesForPlatforms(cwd, force, cfg.Platforms)
@@ -622,7 +629,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		steps = append(steps, initStep{
 			label: "Preparing project and global semantic stores",
 			run: func() error {
-				store := storage.NewStore(root)
+				store := projectStore()
 				_, _, err := ensureProjectAndGlobalSemanticReady(store, cfg.SemanticModel)
 				return err
 			},
@@ -654,7 +661,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		steps = append(steps, initStep{
 			label: "Building project and global semantic indices",
 			run: func() error {
-				store := storage.NewStore(root)
+				store := projectStore()
 				return reindexSemanticStores(store)
 			},
 		})
@@ -663,7 +670,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	steps = append(steps, initStep{
 		label: "Installing language servers",
 		run: func() error {
-			s := storage.NewStore(root)
+			s := projectStore()
 			return autoInstallLSPServers(cwd, s)
 		},
 	})
@@ -1872,8 +1879,10 @@ func maybeOpenBrowser(cwd string, openFlag, noOpen bool) error {
 		return nil
 	}
 
-	root := filepath.Join(cwd, ".knowns")
-	store := storage.NewStore(root)
+	store, err := resolveProjectStore(cwd)
+	if err != nil {
+		return err
+	}
 	port := 3001
 	if cfg, err := store.Config.Load(); err == nil && cfg.Settings.ServerPort != 0 {
 		port = cfg.Settings.ServerPort
