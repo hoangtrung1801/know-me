@@ -20,13 +20,18 @@ import (
 // VersionStore reads and writes task version histories from .knowns/versions/.
 type VersionStore struct {
 	root          string
+	projectID     string
 	lifecycleLock *taskLifecycleLock
 }
 
 func (vs *VersionStore) versionsDir() string { return filepath.Join(vs.root, "versions") }
 
 func (vs *VersionStore) versionPath(taskID string) string {
-	return filepath.Join(vs.versionsDir(), "task-"+taskID+".json")
+	projectID, localID := SplitScopedKey(taskID)
+	if projectID == "" {
+		projectID = vs.projectID
+	}
+	return filepath.Join(vs.versionsDir(), "task-"+strings.ReplaceAll(ScopedKey(projectID, localID), ":", "--")+".json")
 }
 
 // GetHistory returns the full version history for a task.
@@ -66,7 +71,7 @@ func (vs *VersionStore) SaveVersion(taskID string, version models.TaskVersion) e
 }
 
 func (vs *VersionStore) saveVersionUnlocked(taskID string, version models.TaskVersion) error {
-	reserved, err := (&TaskStore{root: vs.root}).IsIDReserved(taskID)
+	reserved, err := (&TaskStore{root: vs.root, projectID: vs.projectID}).IsIDReserved(taskID)
 	if err != nil {
 		return fmt.Errorf("check Task tombstone before saving version: %w", err)
 	}

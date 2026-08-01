@@ -52,8 +52,8 @@ func TestManagerSwitch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Switch failed: %v", err)
 	}
-	if newStore.Root != filepath.Join(proj2, ".knowns") {
-		t.Fatalf("new store root = %q, want %q", newStore.Root, filepath.Join(proj2, ".knowns"))
+	if newStore.Root != GlobalRootPath() || newStore.RepositoryRoot() != proj2 {
+		t.Fatalf("new store context = (%q, %q), want (%q, %q)", newStore.Root, newStore.RepositoryRoot(), GlobalRootPath(), proj2)
 	}
 	if m.GetStore().Root != newStore.Root {
 		t.Fatal("GetStore should return the switched store")

@@ -41,7 +41,7 @@ func (m *Manager) GetRegistry() *registry.Registry {
 }
 
 // Switch changes the active project to the one at projectPath.
-// It validates that a .knowns/ directory exists, creates a new Store,
+// It validates that the project directory exists, creates a new Store,
 // and updates the registry's active project.
 func (m *Manager) Switch(projectPath string) (*Store, error) {
 	absPath, err := filepath.Abs(projectPath)
@@ -49,20 +49,23 @@ func (m *Manager) Switch(projectPath string) (*Store, error) {
 		return nil, fmt.Errorf("resolve path: %w", err)
 	}
 
-	knDir := filepath.Join(absPath, ".knowns")
-	if info, err := os.Stat(knDir); err != nil || !info.IsDir() {
-		return nil, fmt.Errorf("no .knowns/ directory at %s", absPath)
+	if info, err := os.Stat(absPath); err != nil || !info.IsDir() {
+		return nil, fmt.Errorf("project directory not found at %s", absPath)
 	}
 
-	newStore := NewStore(knDir)
-
 	// Update registry: add if new, then set active.
+	var projectID string
 	if m.reg != nil {
 		p, err := m.reg.Add(absPath)
-		if err == nil && p != nil {
+		if err != nil {
+			return nil, err
+		}
+		if p != nil {
+			projectID = p.ID
 			_ = m.reg.SetActive(p.ID)
 		}
 	}
+	newStore := NewProjectStore(GlobalRootPath(), projectID, absPath)
 
 	m.mu.Lock()
 	m.active = newStore
@@ -71,13 +74,13 @@ func (m *Manager) Switch(projectPath string) (*Store, error) {
 	return newStore, nil
 }
 
-// ActiveProjectRoot returns the project root (parent of .knowns/) for the
-// currently active store. Returns empty string when no store is active.
+// ActiveProjectRoot returns the repository root for the currently active store.
+// Returns empty string when no store is active.
 func (m *Manager) ActiveProjectRoot() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	if m.active == nil {
 		return ""
 	}
-	return filepath.Dir(m.active.Root)
+	return m.active.RepositoryRoot()
 }

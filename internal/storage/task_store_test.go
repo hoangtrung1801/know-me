@@ -224,6 +224,28 @@ func TestTaskTombstoneRoundTripReservesIDWithoutContent(t *testing.T) {
 	}
 }
 
+func TestTaskStoreScopesDuplicateIDs(t *testing.T) {
+	root := t.TempDir()
+	p1 := NewProjectStore(root, "p1", "/repo/one")
+	p2 := NewProjectStore(root, "p2", "/repo/two")
+	for _, store := range []*Store{p1, p2} {
+		if err := store.Tasks.Create(&models.Task{ID: "same01", Title: store.ProjectID, Status: "todo", Priority: "medium"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := p1.Tasks.Get("same01"); err == nil || !strings.Contains(err.Error(), "ambiguous") {
+		t.Fatalf("error = %v", err)
+	}
+	got, err := p1.Tasks.Get("p2:same01")
+	if err != nil || got.ProjectID != "p2" {
+		t.Fatalf("task = %#v, err = %v", got, err)
+	}
+	filtered, err := p1.Tasks.List("p1")
+	if err != nil || len(filtered) != 1 || filtered[0].ProjectID != "p1" {
+		t.Fatalf("tasks = %#v, err = %v", filtered, err)
+	}
+}
+
 func TestTaskTombstoneConcurrentWritersPreserveOneAuditRecord(t *testing.T) {
 	store := NewStore(t.TempDir())
 	deletedAt := time.Date(2026, 7, 21, 12, 0, 0, 0, time.UTC)
