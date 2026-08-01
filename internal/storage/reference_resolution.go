@@ -27,12 +27,13 @@ func (s *Store) ResolveReference(ref models.SemanticReference) models.SemanticRe
 			return result
 		}
 		result.Entity = &models.ResolvedEntity{
-			Type:     "task",
-			ID:       task.ID,
-			Title:    task.Title,
-			Status:   task.Status,
-			Priority: task.Priority,
-			Tags:     task.Labels,
+			Type:      "task",
+			ID:        ScopedKey(task.ProjectID, task.ID),
+			ProjectID: task.ProjectID,
+			Title:     task.Title,
+			Status:    task.Status,
+			Priority:  task.Priority,
+			Tags:      task.Labels,
 		}
 		result.Found = true
 	case "doc":
@@ -41,13 +42,14 @@ func (s *Store) ResolveReference(ref models.SemanticReference) models.SemanticRe
 			return result
 		}
 		result.Entity = &models.ResolvedEntity{
-			Type:     "doc",
-			ID:       doc.Path,
-			Path:     doc.Path,
-			Title:    doc.Title,
-			Tags:     doc.Tags,
-			Imported: doc.IsImported,
-			Source:   doc.ImportSource,
+			Type:      "doc",
+			ID:        ScopedKey(doc.ProjectID, doc.Path),
+			ProjectID: doc.ProjectID,
+			Path:      doc.Path,
+			Title:     doc.Title,
+			Tags:      doc.Tags,
+			Imported:  doc.IsImported,
+			Source:    doc.ImportSource,
 		}
 		result.Found = true
 	case "memory":

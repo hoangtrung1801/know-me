@@ -21,8 +21,27 @@ type DocStore struct {
 func (ds *DocStore) docsDir() string    { return filepath.Join(ds.root, "docs") }
 func (ds *DocStore) importsDir() string { return filepath.Join(ds.root, "imports") }
 
+func scopedDocPath(projectID, docPath string) string {
+	if projectID == "" {
+		return docPath
+	}
+	parts := strings.SplitN(strings.TrimPrefix(docPath, "/"), "/", 2)
+	parts[0] = projectID + "--" + parts[0]
+	return strings.Join(parts, "/")
+}
+
+func unscopedDocPath(projectID, docPath string) string {
+	prefix := projectID + "--"
+	parts := strings.SplitN(strings.TrimPrefix(docPath, "/"), "/", 2)
+	if len(parts) > 0 && strings.HasPrefix(parts[0], prefix) {
+		parts[0] = strings.TrimPrefix(parts[0], prefix)
+	}
+	return strings.Join(parts, "/")
+}
+
 // docFrontmatter mirrors the YAML frontmatter in every doc file.
 type docFrontmatter struct {
+	ProjectID   string   `yaml:"projectId,omitempty"`
 	Title       string   `yaml:"title"`
 	Description string   `yaml:"description"`
 	CreatedAt   string   `yaml:"createdAt"`
@@ -32,16 +51,17 @@ type docFrontmatter struct {
 }
 
 // List returns all docs from .knowns/docs/ and .knowns/imports/*/docs/.
-func (ds *DocStore) List() ([]*models.Doc, error) {
+func (ds *DocStore) List(projectID ...string) ([]*models.Doc, error) {
 	var docs []*models.Doc
+	filter := firstProjectID(projectID)
 
-	local, err := ds.walkDocs(ds.docsDir(), "", false, "")
+	local, err := ds.walkDocs(ds.docsDir(), "", false, "", filter)
 	if err != nil {
 		return nil, err
 	}
 	docs = append(docs, local...)
 
-	imported, err := ds.listImported()
+	imported, err := ds.listImported(filter)
 	if err != nil {
 		// Non-fatal: return what we have so far.
 		return docs, nil
@@ -52,7 +72,7 @@ func (ds *DocStore) List() ([]*models.Doc, error) {
 }
 
 // listImported scans .knowns/imports/*/docs/ for additional docs.
-func (ds *DocStore) listImported() ([]*models.Doc, error) {
+func (ds *DocStore) listImported(filter string) ([]*models.Doc, error) {
 	entries, err := os.ReadDir(ds.importsDir())
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -67,7 +87,7 @@ func (ds *DocStore) listImported() ([]*models.Doc, error) {
 		}
 		importSource := e.Name()
 		importDocsDir := filepath.Join(ds.importsDir(), importSource, "docs")
-		imported, err := ds.walkDocs(importDocsDir, "", true, importSource)
+		imported, err := ds.walkDocs(importDocsDir, "", true, importSource, filter)
 		if err != nil {
 			continue
 		}
@@ -77,7 +97,7 @@ func (ds *DocStore) listImported() ([]*models.Doc, error) {
 }
 
 // walkDocs recursively collects docs from a directory.
-func (ds *DocStore) walkDocs(dir, relBase string, imported bool, importSource string) ([]*models.Doc, error) {
+func (ds *DocStore) walkDocs(dir, relBase string, imported bool, importSource, filter string) ([]*models.Doc, error) {
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -93,7 +113,7 @@ func (ds *DocStore) walkDocs(dir, relBase string, imported bool, importSource st
 			if relBase != "" {
 				subBase = relBase + "/" + e.Name()
 			}
-			sub, err := ds.walkDocs(fullPath, subBase, imported, importSource)
+			sub, err := ds.walkDocs(fullPath, subBase, imported, importSource, filter)
 			if err != nil {
 				continue
 			}
@@ -115,6 +135,9 @@ func (ds *DocStore) walkDocs(dir, relBase string, imported bool, importSource st
 		if err != nil {
 			continue
 		}
+		if filter != "" && doc.ProjectID != filter {
+			continue
+		}
 		docs = append(docs, doc)
 	}
 	return docs, nil
@@ -123,59 +146,47 @@ func (ds *DocStore) walkDocs(dir, relBase string, imported bool, importSource st
 // Get retrieves a doc by its relative path (without .md extension).
 // Examples: "readme", "patterns/module", "specs/user-auth"
 func (ds *DocStore) Get(path string) (*models.Doc, error) {
-	path = strings.TrimPrefix(path, "/")
-	path = strings.TrimSuffix(path, ".md")
-
-	// Try local docs first.
-	absPath := filepath.Join(ds.docsDir(), filepath.FromSlash(path)+".md")
-	if _, err := os.Stat(absPath); err == nil {
-		folder := filepath.ToSlash(filepath.Dir(filepath.FromSlash(path)))
-		if folder == "." {
-			folder = ""
-		}
-		return ds.parseFile(absPath, path, folder, false, "")
+	path = strings.TrimSuffix(strings.TrimPrefix(path, "/"), ".md")
+	projectID, localPath := SplitScopedKey(path)
+	docs, err := ds.List()
+	if err != nil {
+		return nil, err
 	}
-
-	// Try imported docs: files are nested as .knowns/imports/{name}/docs/{name}/...
-	entries, _ := os.ReadDir(ds.importsDir())
-	for _, e := range entries {
-		if !e.IsDir() {
+	var matches []*models.Doc
+	for _, doc := range docs {
+		if doc.Path != localPath || (projectID != "" && doc.ProjectID != projectID) {
 			continue
 		}
-		importSource := e.Name()
-		// Direct lookup: path already includes the source prefix.
-		candidate := filepath.Join(ds.importsDir(), importSource, "docs", filepath.FromSlash(path)+".md")
-		if _, err := os.Stat(candidate); err == nil {
-			folder := filepath.ToSlash(filepath.Dir(filepath.FromSlash(path)))
-			if folder == "." {
-				folder = ""
-			}
-			return ds.parseFile(candidate, path, folder, true, importSource)
-		}
-		// Fallback: mentions inside imported docs use short paths without the
-		// source prefix (e.g. @doc/patterns/foo instead of @doc/source/patterns/foo).
-		// Try prepending the import source name.
-		prefixed := importSource + "/" + path
-		candidate = filepath.Join(ds.importsDir(), importSource, "docs", filepath.FromSlash(prefixed)+".md")
-		if _, err := os.Stat(candidate); err == nil {
-			folder := filepath.ToSlash(filepath.Dir(filepath.FromSlash(prefixed)))
-			if folder == "." {
-				folder = ""
-			}
-			return ds.parseFile(candidate, prefixed, folder, true, importSource)
-		}
+		matches = append(matches, doc)
 	}
-
+	if len(matches) == 1 {
+		return matches[0], nil
+	}
+	if len(matches) > 1 {
+		return nil, fmt.Errorf("doc %q is ambiguous; use a project-prefixed path", path)
+	}
 	return nil, fmt.Errorf("doc %q not found", path)
 }
 
 // Create writes a new doc to .knowns/docs/{path}.md.
 // doc.Path must be set (relative, without .md).
 func (ds *DocStore) Create(doc *models.Doc) error {
+	if doc != nil && doc.ProjectID == "" {
+		doc.ProjectID = ds.projectID
+	}
+	return ds.create(doc)
+}
+
+// CreateGlobal writes a doc without applying the store's active project.
+func (ds *DocStore) CreateGlobal(doc *models.Doc) error {
+	return ds.create(doc)
+}
+
+func (ds *DocStore) create(doc *models.Doc) error {
 	if doc.Path == "" {
 		return fmt.Errorf("doc path is required")
 	}
-	absPath := filepath.Join(ds.docsDir(), filepath.FromSlash(doc.Path)+".md")
+	absPath := filepath.Join(ds.docsDir(), filepath.FromSlash(scopedDocPath(doc.ProjectID, doc.Path))+".md")
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
 		return fmt.Errorf("create doc dir: %w", err)
 	}
@@ -187,10 +198,15 @@ func (ds *DocStore) Update(doc *models.Doc) error {
 	if doc.Path == "" {
 		return fmt.Errorf("doc path is required")
 	}
-	if existing, err := ds.Get(doc.Path); err == nil {
+	existing, err := ds.Get(doc.Path)
+	if err == nil {
+		if doc.ProjectID == "" {
+			doc.ProjectID = existing.ProjectID
+		}
+		doc.Path = existing.Path
 		applyLockedDecisionReviewGate(existing, doc)
 	}
-	absPath := filepath.Join(ds.docsDir(), filepath.FromSlash(doc.Path)+".md")
+	absPath := filepath.Join(ds.docsDir(), filepath.FromSlash(scopedDocPath(doc.ProjectID, doc.Path))+".md")
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
 		return err
 	}
@@ -202,11 +218,16 @@ func (ds *DocStore) Rename(oldPath string, doc *models.Doc) error {
 	if strings.TrimSpace(oldPath) == "" || doc == nil || strings.TrimSpace(doc.Path) == "" {
 		return fmt.Errorf("old path and new doc path are required")
 	}
-	if existing, err := ds.Get(oldPath); err == nil {
-		applyLockedDecisionReviewGate(existing, doc)
+	existing, err := ds.Get(oldPath)
+	if err != nil {
+		return err
 	}
-	oldAbsPath := filepath.Join(ds.docsDir(), filepath.FromSlash(strings.TrimSuffix(oldPath, ".md"))+".md")
-	newAbsPath := filepath.Join(ds.docsDir(), filepath.FromSlash(strings.TrimSuffix(doc.Path, ".md"))+".md")
+	if doc.ProjectID == "" {
+		doc.ProjectID = existing.ProjectID
+	}
+	applyLockedDecisionReviewGate(existing, doc)
+	oldAbsPath := filepath.Join(ds.docsDir(), filepath.FromSlash(scopedDocPath(existing.ProjectID, existing.Path))+".md")
+	newAbsPath := filepath.Join(ds.docsDir(), filepath.FromSlash(scopedDocPath(doc.ProjectID, strings.TrimSuffix(doc.Path, ".md")))+".md")
 	if err := os.MkdirAll(filepath.Dir(newAbsPath), 0755); err != nil {
 		return err
 	}
@@ -343,8 +364,11 @@ func (ds *DocStore) RewriteDocReferences(oldPath, newPath string, taskStore *Tas
 
 // Delete removes a doc file.
 func (ds *DocStore) Delete(path string) error {
-	path = strings.TrimSuffix(path, ".md")
-	absPath := filepath.Join(ds.docsDir(), filepath.FromSlash(path)+".md")
+	doc, err := ds.Get(path)
+	if err != nil {
+		return err
+	}
+	absPath := filepath.Join(ds.docsDir(), filepath.FromSlash(scopedDocPath(doc.ProjectID, doc.Path))+".md")
 	return os.Remove(absPath)
 }
 
@@ -382,6 +406,14 @@ func parseDocContent(content, relPath, folder string, imported bool, importSourc
 	}
 
 	doc.Title = fm.Title
+	doc.ProjectID = fm.ProjectID
+	if doc.ProjectID != "" {
+		doc.Path = unscopedDocPath(doc.ProjectID, doc.Path)
+		doc.Folder = filepath.ToSlash(filepath.Dir(filepath.FromSlash(doc.Path)))
+		if doc.Folder == "." {
+			doc.Folder = ""
+		}
+	}
 	doc.Description = fm.Description
 	doc.Tags = fm.Tags
 	if doc.Tags == nil {
@@ -414,6 +446,9 @@ func renderDoc(doc *models.Doc) string {
 	}
 
 	b.WriteString("---\n")
+	if doc.ProjectID != "" {
+		fmt.Fprintf(&b, "projectId: %s\n", doc.ProjectID)
+	}
 	fmt.Fprintf(&b, "title: %s\n", yamlScalar(doc.Title))
 	fmt.Fprintf(&b, "description: %s\n", yamlScalar(doc.Description))
 	fmt.Fprintf(&b, "createdAt: '%s'\n", formatISO(createdAt))

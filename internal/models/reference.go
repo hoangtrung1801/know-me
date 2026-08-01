@@ -29,6 +29,7 @@ type SemanticReference struct {
 type ResolvedEntity struct {
 	Type        string   `json:"type"`
 	ID          string   `json:"id"`
+	ProjectID   string   `json:"projectId,omitempty"`
 	Path        string   `json:"path,omitempty"`
 	Title       string   `json:"title,omitempty"`
 	Status      string   `json:"status,omitempty"`

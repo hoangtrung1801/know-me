@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -143,5 +145,26 @@ func TestDocStoreApprovedLockedDecisionEditRequiresReview(t *testing.T) {
 	}
 	if docHasTag(decisionEdit.Tags, "approved") || !docHasTag(decisionEdit.Tags, "draft") || !docHasTag(decisionEdit.Tags, "review-required") {
 		t.Fatalf("locked decision edit tags = %#v, want draft review-required without approved", decisionEdit.Tags)
+	}
+}
+
+func TestDocStoreScopesDuplicatePaths(t *testing.T) {
+	root := t.TempDir()
+	p1 := NewProjectStore(root, "p1", "/repo/one")
+	p2 := NewProjectStore(root, "p2", "/repo/two")
+	for _, store := range []*Store{p1, p2} {
+		if err := store.Docs.Create(&models.Doc{Path: "specs/auth", Title: store.ProjectID, Content: "body"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := p1.Docs.Get("specs/auth"); err == nil || !strings.Contains(err.Error(), "ambiguous") {
+		t.Fatalf("error = %v", err)
+	}
+	got, err := p1.Docs.Get("p2:specs/auth")
+	if err != nil || got.ProjectID != "p2" {
+		t.Fatalf("doc = %#v, err = %v", got, err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "docs", "p2--specs", "auth.md")); err != nil {
+		t.Fatal(err)
 	}
 }

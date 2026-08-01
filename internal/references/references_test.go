@@ -101,6 +101,13 @@ func TestParse_InvalidRelation(t *testing.T) {
 	}
 }
 
+func TestParse_ProjectPrefixedRefs(t *testing.T) {
+	refs := Extract("@task/p1:abc123 @doc/p1:specs/auth")
+	if len(refs) != 2 || refs[0].Target != "p1:abc123" || refs[1].Target != "p1:specs/auth" {
+		t.Fatalf("project-prefixed refs = %#v", refs)
+	}
+}
+
 func TestExtract_MixedSemanticRefs(t *testing.T) {
 	refs := Extract("See @doc/guides/setup{implements}, @task/rag001, @task-legacy, @memory/mem001, @memory-old{follows}, and @decision/20260618-1024-use-qdrant-as-default-vector-db.")
 	if len(refs) != 6 {
