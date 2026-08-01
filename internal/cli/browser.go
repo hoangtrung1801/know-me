@@ -42,8 +42,15 @@ func resolveProject(cmd *cobra.Command) (store *storage.Store, projectRoot strin
 	if projectFlag != "" {
 		absPath, err := filepath.Abs(projectFlag)
 		if err == nil {
-			knDir := filepath.Join(absPath, ".knowns")
-			store = storage.NewStore(knDir)
+			reg := registry.NewRegistry()
+			if err := reg.Load(); err != nil {
+				return nil, ""
+			}
+			project, err := reg.Add(absPath)
+			if err != nil {
+				return nil, ""
+			}
+			store = storage.NewProjectStore(storage.GlobalRootPath(), project.ID, absPath)
 			projectRoot = absPath
 			return
 		}
@@ -68,7 +75,7 @@ func resolveProject(cmd *cobra.Command) (store *storage.Store, projectRoot strin
 	s, err := getStoreErr()
 	if err == nil {
 		store = s
-		projectRoot = filepath.Dir(s.Root)
+		projectRoot = s.RepositoryRoot()
 		return
 	}
 

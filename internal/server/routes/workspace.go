@@ -77,13 +77,7 @@ func (wr *WorkspaceRoutes) browse(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		isProject := false
-		knDir := filepath.Join(fullPath, ".knowns")
-		if info, err := os.Stat(knDir); err == nil && info.IsDir() {
-			if _, cfgErr := os.Stat(filepath.Join(knDir, "config.json")); cfgErr == nil {
-				isProject = true
-			}
-		}
+		isProject := wr.manager.GetRegistry() != nil && wr.manager.GetRegistry().FindByPath(fullPath) != nil
 
 		hasChildren := false
 		if sub, err := os.ReadDir(fullPath); err == nil {
@@ -109,8 +103,6 @@ func (wr *WorkspaceRoutes) browse(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, result)
 }
 
-
-//
 // GET /api/workspaces
 func (wr *WorkspaceRoutes) list(w http.ResponseWriter, r *http.Request) {
 	reg := wr.manager.GetRegistry()
@@ -123,10 +115,10 @@ func (wr *WorkspaceRoutes) list(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, http.StatusOK, []struct{}{})
 		return
 	}
-	// Filter out entries that no longer have a valid .knowns/config.json
+	// Filter out entries whose repository or central project config disappeared.
 	valid := projects[:0]
 	for _, p := range projects {
-		cfgPath := filepath.Join(p.Path, ".knowns", "config.json")
+		cfgPath := filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), p.ID), "config.json")
 		if _, err := os.Stat(cfgPath); err == nil {
 			valid = append(valid, p)
 		}

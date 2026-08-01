@@ -21,6 +21,7 @@ import (
 	"github.com/howznguyen/knowns/internal/lspdaemon"
 	"github.com/howznguyen/knowns/internal/mcp/handlers"
 	"github.com/howznguyen/knowns/internal/permissions"
+	"github.com/howznguyen/knowns/internal/registry"
 	"github.com/howznguyen/knowns/internal/runtimequeue"
 	"github.com/howznguyen/knowns/internal/storage"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -289,7 +290,7 @@ func NewMCPServer(projectHint string) *MCPServer {
 			lspDaemonDisabledWarnOnce.Do(func() { mcpLog.Print("warn: " + lspdaemon.DisabledWarning()) })
 			return handlers.NewManagerCodeRuntime(getLSPManager())
 		}
-		return lspdaemon.NewRuntime(context.Background(), filepath.Dir(store.Root))
+		return lspdaemon.NewRuntime(context.Background(), store.RepositoryRoot())
 	}
 
 	getLSPStatuses := func(ctx context.Context) []lsp.LanguageRuntimeStatus {
@@ -304,7 +305,7 @@ func NewMCPServer(projectHint string) *MCPServer {
 			}
 			return nil
 		}
-		if client, err := lspdaemon.EnsureClient(ctx, filepath.Dir(store.Root)); err == nil {
+		if client, err := lspdaemon.EnsureClient(ctx, store.RepositoryRoot()); err == nil {
 			if statuses, err := client.RuntimeStatuses(ctx); err == nil {
 				return statuses
 			}
@@ -482,39 +483,21 @@ func NewMCPServer(projectHint string) *MCPServer {
 // autoDetectProject tries to find and set the project store automatically.
 // It checks the hint path first, then walks up from cwd.
 func (s *MCPServer) autoDetectProject(setStore func(*storage.Store, string), hint string) {
-	// 1. Try explicit hint path
-	if hint != "" {
-		knownsDir := filepath.Join(hint, ".knowns")
-		if info, err := os.Stat(knownsDir); err == nil && info.IsDir() {
-			store := storage.NewStore(knownsDir)
-			if _, err := store.Config.Load(); err == nil {
-				setStore(store, hint)
-				return
-			}
-		}
-	}
-
-	// 2. Walk up from cwd
-	cwd, err := os.Getwd()
-	if err != nil {
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err != nil {
 		return
 	}
-
-	dir := cwd
-	for {
-		knownsDir := filepath.Join(dir, ".knowns")
-		if info, err := os.Stat(knownsDir); err == nil && info.IsDir() {
-			store := storage.NewStore(knownsDir)
-			if _, err := store.Config.Load(); err == nil {
-				setStore(store, dir)
-			}
-			return
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return // reached filesystem root
-		}
-		dir = parent
+	start := hint
+	if start == "" {
+		start, _ = os.Getwd()
+	}
+	project := reg.FindByWorkingDir(start)
+	if project == nil {
+		return
+	}
+	store := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path)
+	if _, err := store.Config.Load(); err == nil {
+		setStore(store, project.Path)
 	}
 }
 

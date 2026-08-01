@@ -9,6 +9,7 @@ import (
 	"github.com/howznguyen/knowns/internal/lsp"
 	"github.com/howznguyen/knowns/internal/lsp/adapters"
 	"github.com/howznguyen/knowns/internal/models"
+	"github.com/howznguyen/knowns/internal/registry"
 	"github.com/howznguyen/knowns/internal/storage"
 	"github.com/spf13/cobra"
 )
@@ -21,13 +22,13 @@ func getStore() *storage.Store {
 		fmt.Fprintf(os.Stderr, "Error: cannot determine working directory: %v\n", err)
 		os.Exit(1)
 	}
-	root, err := storage.FindProjectRoot(cwd)
+	store, err := resolveProjectStore(cwd)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Run 'knowns init' to initialize a project.\n")
 		os.Exit(1)
 	}
-	return storage.NewStore(root)
+	return store
 }
 
 // getStoreErr finds the project root and returns a Store instance, or an error.
@@ -36,11 +37,19 @@ func getStoreErr() (*storage.Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot determine working directory: %w", err)
 	}
-	root, err := storage.FindProjectRoot(cwd)
-	if err != nil {
+	return resolveProjectStore(cwd)
+}
+
+func resolveProjectStore(start string) (*storage.Store, error) {
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err != nil {
 		return nil, err
 	}
-	return storage.NewStore(root), nil
+	project := reg.FindByWorkingDir(start)
+	if project == nil {
+		return nil, fmt.Errorf("no registered Knowns project found from %s", start)
+	}
+	return storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path), nil
 }
 
 // isPlain returns true if the --plain flag is set.

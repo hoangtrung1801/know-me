@@ -8,6 +8,7 @@ import (
 
 	"github.com/howznguyen/knowns/internal/lsp"
 	"github.com/howznguyen/knowns/internal/readiness"
+	"github.com/howznguyen/knowns/internal/registry"
 	"github.com/howznguyen/knowns/internal/storage"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -120,35 +121,21 @@ func handleProjectDetect(req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	seen := make(map[string]bool)
 	var projects []projectInfo
 
-	for _, dir := range dirs {
-		if dir == "" {
-			continue
-		}
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			continue
-		}
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err == nil {
+		for _, project := range reg.Projects {
+			for _, dir := range dirs {
+				rel, relErr := filepath.Rel(dir, project.Path)
+				if relErr != nil || rel == ".." || (len(rel) > 2 && rel[:3] == ".."+string(filepath.Separator)) {
+					continue
+				}
+				if seen[project.Path] {
+					break
+				}
+				seen[project.Path] = true
+				projects = append(projects, projectInfo{ProjectRoot: project.Path, Name: project.Name})
+				break
 			}
-			candidate := filepath.Join(dir, e.Name())
-			knownsDir := filepath.Join(candidate, ".knowns")
-			configFile := filepath.Join(knownsDir, "config.json")
-			if _, err := os.Stat(configFile); err != nil {
-				continue
-			}
-			if seen[candidate] {
-				continue
-			}
-			seen[candidate] = true
-
-			info := projectInfo{ProjectRoot: candidate}
-			store := storage.NewStore(knownsDir)
-			if proj, err := store.Config.Load(); err == nil {
-				info.Name = proj.Name
-			}
-			projects = append(projects, info)
 		}
 	}
 
@@ -189,12 +176,19 @@ func handleProjectSet(setStore func(*storage.Store, string), req mcp.CallToolReq
 		return errResult(err.Error())
 	}
 
-	knownsDir := filepath.Join(projectRoot, ".knowns")
-	if _, err := os.Stat(knownsDir); err != nil {
-		return errResultf(ErrNoKnownsDir, projectRoot)
+	absRoot, err := filepath.Abs(projectRoot)
+	if err != nil {
+		return errResult(err.Error())
 	}
-
-	store := storage.NewStore(knownsDir)
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err != nil {
+		return errResult(err.Error())
+	}
+	project, err := reg.Add(absRoot)
+	if err != nil {
+		return errResult(err.Error())
+	}
+	store := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, absRoot)
 
 	proj, err := store.Config.Load()
 	if err != nil {
