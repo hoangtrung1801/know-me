@@ -27,6 +27,7 @@ type docMetadataResponse struct {
 type docResponse struct {
 	Filename   string              `json:"filename"`
 	Path       string              `json:"path"`
+	ProjectID  string              `json:"projectId,omitempty"`
 	Folder     string              `json:"folder"`
 	Metadata   docMetadataResponse `json:"metadata"`
 	Content    string              `json:"content"`
@@ -41,9 +42,10 @@ func toDocResponse(d *models.Doc) docResponse {
 	}
 	filename := filepath.Base(d.Path) + ".md"
 	return docResponse{
-		Filename: filename,
-		Path:     d.Path,
-		Folder:   d.Folder,
+		Filename:  filename,
+		Path:      d.Path,
+		ProjectID: d.ProjectID,
+		Folder:    d.Folder,
 		Metadata: docMetadataResponse{
 			Title:       d.Title,
 			Description: d.Description,
@@ -111,7 +113,7 @@ func (dr *DocRoutes) postDocAction(w http.ResponseWriter, r *http.Request) {
 //
 // GET /api/docs
 func (dr *DocRoutes) list(w http.ResponseWriter, r *http.Request) {
-	docs, err := dr.getStore().Docs.List()
+	docs, err := dr.getStore().Docs.List(r.URL.Query().Get("projectId"))
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -194,11 +196,15 @@ func (dr *DocRoutes) get(w http.ResponseWriter, r *http.Request) {
 //
 // POST /api/docs
 func (dr *DocRoutes) create(w http.ResponseWriter, r *http.Request) {
-	var doc models.Doc
-	if err := decodeJSON(r, &doc); err != nil {
+	var request struct {
+		models.Doc
+		Global bool `json:"global"`
+	}
+	if err := decodeJSON(r, &request); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
+	doc := request.Doc
 	// Auto-generate path from title + folder when not provided.
 	if doc.Path == "" && doc.Title != "" {
 		slug := slugifyTitle(doc.Title)
@@ -223,8 +229,14 @@ func (dr *DocRoutes) create(w http.ResponseWriter, r *http.Request) {
 		doc.Tags = []string{}
 	}
 
-	if err := dr.getStore().Docs.Create(&doc); err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	var createErr error
+	if request.Global {
+		createErr = dr.getStore().Docs.CreateGlobal(&doc)
+	} else {
+		createErr = dr.getStore().Docs.Create(&doc)
+	}
+	if createErr != nil {
+		respondError(w, http.StatusInternalServerError, createErr.Error())
 		return
 	}
 

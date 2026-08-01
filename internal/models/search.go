@@ -9,7 +9,8 @@ type SearchResult struct {
 	Type string `json:"type"`
 
 	// ID is the source identifier for the result type.
-	ID string `json:"id"`
+	ID        string `json:"id"`
+	ProjectID string `json:"projectId,omitempty"`
 
 	Title string `json:"title"`
 
@@ -67,6 +68,7 @@ type RetrievalOptions struct {
 	Priority          string   `json:"priority,omitempty"`
 	Assignee          string   `json:"assignee,omitempty"`
 	Label             string   `json:"label,omitempty"`
+	ProjectID         string   `json:"projectId,omitempty"`
 	IncludeHistorical bool     `json:"includeHistorical,omitempty"`
 }
 
@@ -82,6 +84,7 @@ type RetrievalResponse struct {
 type RetrievalCandidate struct {
 	Type             string             `json:"type"`
 	ID               string             `json:"id"`
+	ProjectID        string             `json:"projectId,omitempty"`
 	Title            string             `json:"title"`
 	Path             string             `json:"path,omitempty"`
 	Score            float64            `json:"score"`
@@ -114,6 +117,7 @@ type ContextPack struct {
 type ContextItem struct {
 	Type           string             `json:"type"`
 	ID             string             `json:"id"`
+	ProjectID      string             `json:"projectId,omitempty"`
 	Title          string             `json:"title"`
 	Content        string             `json:"content"`
 	Snippet        string             `json:"snippet,omitempty"`
@@ -128,16 +132,18 @@ type ContextItem struct {
 
 // Citation points back to the originating source.
 type Citation struct {
-	Type    string `json:"type"`
-	ID      string `json:"id"`
-	Path    string `json:"path,omitempty"`
-	Section string `json:"section,omitempty"`
+	Type      string `json:"type"`
+	ID        string `json:"id"`
+	ProjectID string `json:"projectId,omitempty"`
+	Path      string `json:"path,omitempty"`
+	Section   string `json:"section,omitempty"`
 }
 
 // SourceRecord preserves source metadata for consumer inspection.
 type SourceRecord struct {
 	Type           string             `json:"type"`
 	ID             string             `json:"id"`
+	ProjectID      string             `json:"projectId,omitempty"`
 	Path           string             `json:"path,omitempty"`
 	Tags           []string           `json:"tags,omitempty"`
 	Status         string             `json:"status,omitempty"`

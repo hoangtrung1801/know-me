@@ -107,23 +107,23 @@ type templateListItem struct {
 
 // templateFile is the UI-friendly shape for template actions/files.
 type templateFile struct {
-	Type        string `json:"type"`
-	Template    string `json:"template,omitempty"`
-	Destination string `json:"destination,omitempty"`
-	Path        string `json:"path,omitempty"`
-	Source      string `json:"source,omitempty"`
-	GlobPattern string `json:"globPattern,omitempty"`
-	SkipIfExists bool  `json:"skipIfExists,omitempty"`
-	When        string `json:"when,omitempty"`
+	Type         string `json:"type"`
+	Template     string `json:"template,omitempty"`
+	Destination  string `json:"destination,omitempty"`
+	Path         string `json:"path,omitempty"`
+	Source       string `json:"source,omitempty"`
+	GlobPattern  string `json:"globPattern,omitempty"`
+	SkipIfExists bool   `json:"skipIfExists,omitempty"`
+	When         string `json:"when,omitempty"`
 }
 
 // uiPrompt is the UI-friendly shape for template prompts.
 type uiPrompt struct {
-	Name     string          `json:"name"`
-	Message  string          `json:"message"`
-	Type     string          `json:"type"`
-	Required bool            `json:"required"`
-	Default  string          `json:"default,omitempty"`
+	Name     string           `json:"name"`
+	Message  string           `json:"message"`
+	Type     string           `json:"type"`
+	Required bool             `json:"required"`
+	Default  string           `json:"default,omitempty"`
 	Choices  []uiPromptChoice `json:"choices,omitempty"`
 }
 
@@ -397,7 +397,7 @@ func (tr *TemplateRoutes) run(w http.ResponseWriter, r *http.Request) {
 		skipped := false
 		skipReason := ""
 		if action.SkipIfExists && !req.DryRun {
-			projectRoot := filepath.Dir(tr.getStore().Root)
+			projectRoot := tr.getStore().RepositoryRoot()
 			if _, statErr := os.Stat(filepath.Join(projectRoot, path)); statErr == nil {
 				skipped = true
 				skipReason = "file exists"

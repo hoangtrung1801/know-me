@@ -53,6 +53,8 @@ func runTaskCreate(cmd *cobra.Command, args []string) error {
 	fulfills, _ := cmd.Flags().GetStringArray("fulfills")
 	plan, _ := cmd.Flags().GetString("plan")
 	notes, _ := cmd.Flags().GetString("notes")
+	projectID, _ := cmd.Flags().GetString("project-id")
+	global, _ := cmd.Flags().GetBool("global")
 
 	description = unescapeText(description)
 	plan = unescapeText(plan)
@@ -90,6 +92,7 @@ func runTaskCreate(cmd *cobra.Command, args []string) error {
 		ImplementationNotes: notes,
 		CreatedAt:           now,
 		UpdatedAt:           now,
+		ProjectID:           projectID,
 	}
 	if status == "done" {
 		task.Status = "todo"
@@ -103,8 +106,14 @@ func runTaskCreate(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	if err := store.Tasks.Create(task); err != nil {
-		return fmt.Errorf("create task: %w", err)
+	var createErr error
+	if global {
+		createErr = store.Tasks.CreateGlobal(task)
+	} else {
+		createErr = store.Tasks.Create(task)
+	}
+	if createErr != nil {
+		return fmt.Errorf("create task: %w", createErr)
 	}
 
 	search.BestEffortIndexTask(store, task.ID)
@@ -135,9 +144,10 @@ func runTaskList(cmd *cobra.Command, args []string) error {
 	assigneeFilter, _ := cmd.Flags().GetString("assignee")
 	priorityFilter, _ := cmd.Flags().GetString("priority")
 	labelFilter, _ := cmd.Flags().GetString("label")
+	projectID, _ := cmd.Flags().GetString("project-id")
 	treeMode, _ := cmd.Flags().GetBool("tree")
 
-	tasks, err := store.Tasks.List()
+	tasks, err := store.Tasks.List(projectID)
 	if err != nil {
 		return fmt.Errorf("list tasks: %w", err)
 	}
@@ -932,6 +942,8 @@ func init() {
 	taskCreateCmd.Flags().StringArray("fulfills", nil, "Spec AC this task fulfills (repeatable)")
 	taskCreateCmd.Flags().String("plan", "", "Implementation plan")
 	taskCreateCmd.Flags().String("notes", "", "Implementation notes")
+	taskCreateCmd.Flags().String("project-id", "", "Project ID (optional; defaults to active project)")
+	taskCreateCmd.Flags().Bool("global", false, "Create an unscoped global task")
 
 	// task list flags
 	taskListCmd.Flags().String("status", "", "Filter by status")
@@ -939,6 +951,7 @@ func init() {
 	taskListCmd.Flags().String("priority", "", "Filter by priority")
 	taskListCmd.Flags().String("label", "", "Filter by label")
 	taskListCmd.Flags().Bool("tree", false, "Show tasks as tree hierarchy")
+	taskListCmd.Flags().String("project-id", "", "Filter by project ID")
 
 	// task edit flags
 	taskEditCmd.Flags().StringP("title", "t", "", "New title")

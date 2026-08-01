@@ -45,15 +45,16 @@ func (sr *SearchRoutes) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := search.SearchOptions{
-		Query:    q.Get("q"),
-		Type:     q.Get("type"),
-		Mode:     q.Get("mode"),
-		Status:   q.Get("status"),
-		Priority: q.Get("priority"),
-		Assignee: q.Get("assignee"),
-		Label:    q.Get("label"),
-		Tag:      q.Get("tag"),
-		Limit:    limit,
+		Query:     q.Get("q"),
+		Type:      q.Get("type"),
+		Mode:      q.Get("mode"),
+		Status:    q.Get("status"),
+		Priority:  q.Get("priority"),
+		Assignee:  q.Get("assignee"),
+		Label:     q.Get("label"),
+		Tag:       q.Get("tag"),
+		ProjectID: q.Get("projectId"),
+		Limit:     limit,
 	}
 
 	response, err := search.SearchWithRuntime(sr.getStore(), opts)
@@ -144,6 +145,7 @@ func (sr *SearchRoutes) retrieveHandler(w http.ResponseWriter, r *http.Request) 
 		Assignee:         q.Get("assignee"),
 		Label:            q.Get("label"),
 		Tag:              q.Get("tag"),
+		ProjectID:        q.Get("projectId"),
 	})
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())

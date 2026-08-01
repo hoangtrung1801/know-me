@@ -37,6 +37,7 @@ type heuristicLexicalBackend struct {
 type lexicalDoc struct {
 	Type           string
 	ID             string
+	ProjectID      string
 	Title          string
 	Path           string
 	Snippet        string
@@ -168,7 +169,7 @@ func (b *bm25LexicalBackend) buildCorpus(opts SearchOptions) ([]lexicalDoc, erro
 	}
 
 	if opts.Type == "all" || opts.Type == "doc" {
-		docs, err := b.store.Docs.List()
+		docs, err := b.store.Docs.List(opts.ProjectID)
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +258,8 @@ func lexicalDocFromTask(task *models.Task) lexicalDoc {
 	}
 	doc := lexicalDoc{
 		Type:           "task",
-		ID:             task.ID,
+		ID:             storage.ScopedKey(task.ProjectID, task.ID),
+		ProjectID:      task.ProjectID,
 		Title:          task.Title,
 		Snippet:        firstNonEmpty(task.Description, task.ImplementationPlan, task.ImplementationNotes),
 		Status:         task.Status,
@@ -283,12 +285,13 @@ func lexicalDocFromTask(task *models.Task) lexicalDoc {
 
 func lexicalDocFromDoc(doc *models.Doc) lexicalDoc {
 	lex := lexicalDoc{
-		Type:    "doc",
-		ID:      doc.Path,
-		Title:   doc.Title,
-		Path:    doc.Path,
-		Snippet: firstNonEmpty(doc.Description, doc.Content),
-		Tags:    append([]string{}, doc.Tags...),
+		Type:      "doc",
+		ID:        storage.ScopedKey(doc.ProjectID, doc.Path),
+		ProjectID: doc.ProjectID,
+		Title:     doc.Title,
+		Path:      doc.Path,
+		Snippet:   firstNonEmpty(doc.Description, doc.Content),
+		Tags:      append([]string{}, doc.Tags...),
 		Fields: []lexicalField{
 			newLexicalField("title", doc.Title, 4.0),
 			newLexicalField("path", doc.Path, 3.2),
@@ -362,6 +365,7 @@ func (d lexicalDoc) toSearchResult(score float64) models.SearchResult {
 	return models.SearchResult{
 		Type:           d.Type,
 		ID:             d.ID,
+		ProjectID:      d.ProjectID,
 		Title:          d.Title,
 		Score:          score,
 		Snippet:        truncateStr(d.Snippet, 150),

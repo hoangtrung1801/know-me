@@ -105,13 +105,14 @@ func (tr *TaskRoutes) list(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	tasks, err := tr.getStore().Tasks.List()
+	projectID := r.URL.Query().Get("projectId")
+	tasks, err := tr.getStore().Tasks.List(projectID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	if includeHistorical {
-		archived, err := tr.getStore().Tasks.ListArchived()
+		archived, err := tr.getStore().Tasks.ListArchived(projectID)
 		if err != nil {
 			respondError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -190,11 +191,15 @@ func (tr *TaskRoutes) get(w http.ResponseWriter, r *http.Request) {
 //
 // POST /api/tasks
 func (tr *TaskRoutes) create(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
-	if err := decodeJSON(r, &task); err != nil {
+	var request struct {
+		models.Task
+		Global bool `json:"global"`
+	}
+	if err := decodeJSON(r, &request); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
+	task := request.Task
 
 	// Generate an ID if not provided.
 	if task.ID == "" {
@@ -225,8 +230,14 @@ func (tr *TaskRoutes) create(w http.ResponseWriter, r *http.Request) {
 		task.Labels = []string{}
 	}
 
-	if err := tr.getStore().Tasks.Create(&task); err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	var createErr error
+	if request.Global {
+		createErr = tr.getStore().Tasks.CreateGlobal(&task)
+	} else {
+		createErr = tr.getStore().Tasks.Create(&task)
+	}
+	if createErr != nil {
+		respondError(w, http.StatusInternalServerError, createErr.Error())
 		return
 	}
 

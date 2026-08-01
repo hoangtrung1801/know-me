@@ -58,6 +58,7 @@ func RegisterSearchTool(s toolRegistrar, getStore func() *storage.Store) {
 			mcp.WithString("tag",
 				mcp.Description("Filter docs, memories, or decisions by tag"),
 			),
+			mcp.WithString("projectId", mcp.Description("Filter tasks and docs by project ID; omit for global visibility")),
 			mcp.WithBoolean("includeHistorical",
 				mcp.Description("Include historical entities with status metadata; Task retrieval adds done and archived Tasks"),
 			),
@@ -133,6 +134,7 @@ func handleSearch(getStore func() *storage.Store, req mcp.CallToolRequest) (*mcp
 	assigneeFilter, _ := stringArg(args, "assignee")
 	labelFilter, _ := stringArg(args, "label")
 	tagFilter, _ := stringArg(args, "tag")
+	projectID, _ := stringArg(args, "projectId")
 	includeHistorical := boolArg(args, "includeHistorical")
 	limit := 20
 	if v, ok := intArg(args, "limit"); ok && v > 0 {
@@ -148,6 +150,7 @@ func handleSearch(getStore func() *storage.Store, req mcp.CallToolRequest) (*mcp
 		Assignee:          assigneeFilter,
 		Label:             labelFilter,
 		Tag:               tagFilter,
+		ProjectID:         projectID,
 		Limit:             limit,
 		IncludeHistorical: includeHistorical,
 	}
@@ -199,6 +202,7 @@ func handleRetrieve(getStore func() *storage.Store, req mcp.CallToolRequest) (*m
 	assigneeFilter, _ := stringArg(args, "assignee")
 	labelFilter, _ := stringArg(args, "label")
 	tagFilter, _ := stringArg(args, "tag")
+	projectID, _ := stringArg(args, "projectId")
 	includeHistorical := boolArg(args, "includeHistorical")
 	limit := 20
 	if v, ok := intArg(args, "limit"); ok && v > 0 {
@@ -218,6 +222,7 @@ func handleRetrieve(getStore func() *storage.Store, req mcp.CallToolRequest) (*m
 		Assignee:          assigneeFilter,
 		Label:             labelFilter,
 		Tag:               tagFilter,
+		ProjectID:         projectID,
 		IncludeHistorical: includeHistorical,
 	})
 	if err != nil {

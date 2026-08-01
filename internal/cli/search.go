@@ -62,6 +62,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	priorityFilter, _ := cmd.Flags().GetString("priority")
 	labelFilter, _ := cmd.Flags().GetString("label")
 	tagFilter, _ := cmd.Flags().GetString("tag")
+	projectID, _ := cmd.Flags().GetString("project-id")
 	assigneeFilter, _ := cmd.Flags().GetString("assignee")
 	keywordOnly, _ := cmd.Flags().GetBool("keyword")
 	includeHistorical, _ := cmd.Flags().GetBool("include-historical")
@@ -88,6 +89,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		Assignee:          assigneeFilter,
 		Label:             labelFilter,
 		Tag:               tagFilter,
+		ProjectID:         projectID,
 		Limit:             limit,
 		IncludeHistorical: includeHistorical,
 	}
@@ -170,6 +172,7 @@ func runRetrieve(cmd *cobra.Command, args []string) error {
 	priorityFilter, _ := cmd.Flags().GetString("priority")
 	labelFilter, _ := cmd.Flags().GetString("label")
 	tagFilter, _ := cmd.Flags().GetString("tag")
+	projectID, _ := cmd.Flags().GetString("project-id")
 	assigneeFilter, _ := cmd.Flags().GetString("assignee")
 	keywordOnly, _ := cmd.Flags().GetBool("keyword")
 	includeHistorical, _ := cmd.Flags().GetBool("include-historical")
@@ -199,6 +202,7 @@ func runRetrieve(cmd *cobra.Command, args []string) error {
 		Assignee:          assigneeFilter,
 		Label:             labelFilter,
 		Tag:               tagFilter,
+		ProjectID:         projectID,
 		IncludeHistorical: includeHistorical,
 	})
 	if err != nil {
@@ -1077,6 +1081,7 @@ func init() {
 	searchCmd.Flags().String("priority", "", "Filter tasks by priority")
 	searchCmd.Flags().String("label", "", "Filter tasks by label")
 	searchCmd.Flags().String("tag", "", "Filter docs, memories, or decisions by tag")
+	searchCmd.Flags().String("project-id", "", "Filter tasks and docs by project ID")
 	searchCmd.Flags().String("assignee", "", "Filter tasks by assignee")
 	searchCmd.Flags().Bool("keyword", false, "Force keyword-only search")
 	searchCmd.Flags().Bool("include-historical", false, "Include historical entities, including archived Tasks")
@@ -1089,6 +1094,7 @@ func init() {
 	retrieveCmd.Flags().String("priority", "", "Filter tasks by priority")
 	retrieveCmd.Flags().String("label", "", "Filter tasks by label")
 	retrieveCmd.Flags().String("tag", "", "Filter docs, memories, or decisions by tag")
+	retrieveCmd.Flags().String("project-id", "", "Filter tasks and docs by project ID")
 	retrieveCmd.Flags().String("assignee", "", "Filter tasks by assignee")
 	retrieveCmd.Flags().Bool("keyword", false, "Force keyword-only retrieval")
 	retrieveCmd.Flags().Bool("expand-references", false, "Expand @doc/@task/@memory/@decision references into the result")

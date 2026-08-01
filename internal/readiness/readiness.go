@@ -165,7 +165,7 @@ type Options struct {
 // Entity counts and search status are computed real-time.
 // Runtime health comes from opts.Runtime (cached snapshot).
 func BuildReadiness(store *storage.Store, opts Options) Payload {
-	projectPath := filepath.Dir(store.Root)
+	projectPath := store.RepositoryRoot()
 	projectName := filepath.Base(projectPath)
 
 	p := Payload{

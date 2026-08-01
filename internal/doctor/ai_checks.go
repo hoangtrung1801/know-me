@@ -169,7 +169,7 @@ func aiPlatformConfigChecker(state *localState) Checker {
 			if err != nil {
 				return CheckResult{}, err
 			}
-			projectRoot := filepath.Dir(state.store.Root)
+			projectRoot := state.store.RepositoryRoot()
 			platforms := normalizedStrings(project.Settings.Platforms)
 			expectedByPlatform := make(map[string]string)
 			if len(platforms) > 0 {
@@ -244,7 +244,7 @@ func aiInstructionsChecker(state *localState) Checker {
 			if err != nil {
 				return CheckResult{}, err
 			}
-			projectRoot := filepath.Dir(state.store.Root)
+			projectRoot := state.store.RepositoryRoot()
 			platforms := normalizedStrings(project.Settings.Platforms)
 			expected := []string{"KNOWNS.md"}
 			if len(platforms) > 0 {
@@ -327,7 +327,7 @@ func aiSkillsChecker(state *localState) Checker {
 			if err != nil {
 				return CheckResult{}, err
 			}
-			projectRoot := filepath.Dir(state.store.Root)
+			projectRoot := state.store.RepositoryRoot()
 			platforms := normalizedStrings(project.Settings.Platforms)
 			expected := skillDirsForPlatforms(platforms)
 			if len(platforms) == 0 {

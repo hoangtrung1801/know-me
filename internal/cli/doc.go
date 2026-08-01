@@ -40,8 +40,9 @@ var docListCmd = &cobra.Command{
 func runDocList(cmd *cobra.Command, args []string) error {
 	store := getStore()
 	tagFilter, _ := cmd.Flags().GetString("tag")
+	projectID, _ := cmd.Flags().GetString("project-id")
 
-	docs, err := store.Docs.List()
+	docs, err := store.Docs.List(projectID)
 	if err != nil {
 		return fmt.Errorf("list docs: %w", err)
 	}
@@ -269,6 +270,8 @@ func runDocCreate(cmd *cobra.Command, args []string) error {
 	tags, _ := cmd.Flags().GetStringArray("tag")
 	folder, _ := cmd.Flags().GetString("folder")
 	content, _ := cmd.Flags().GetString("content")
+	projectID, _ := cmd.Flags().GetString("project-id")
+	global, _ := cmd.Flags().GetBool("global")
 	content = unescapeText(content)
 	// Build path from folder + sanitized title
 	slug := slugifyTitle(title)
@@ -289,13 +292,20 @@ func runDocCreate(cmd *cobra.Command, args []string) error {
 		Folder:      folder,
 		CreatedAt:   now,
 		UpdatedAt:   now,
+		ProjectID:   projectID,
 	}
 	if doc.Tags == nil {
 		doc.Tags = []string{}
 	}
 
-	if err := store.Docs.Create(doc); err != nil {
-		return fmt.Errorf("create doc: %w", err)
+	var createErr error
+	if global {
+		createErr = store.Docs.CreateGlobal(doc)
+	} else {
+		createErr = store.Docs.Create(doc)
+	}
+	if createErr != nil {
+		return fmt.Errorf("create doc: %w", createErr)
 	}
 
 	search.BestEffortIndexDoc(store, doc.Path)
@@ -998,6 +1008,7 @@ func replaceDocSection(content, sectionRef, newContent string) string {
 func init() {
 	// doc list flags
 	docListCmd.Flags().String("tag", "", "Filter by tag")
+	docListCmd.Flags().String("project-id", "", "Filter by project ID")
 
 	// doc view flags
 	docViewCmd.Flags().Bool("toc", false, "Show table of contents only")
@@ -1018,6 +1029,8 @@ func init() {
 	docCreateCmd.Flags().StringArrayP("tag", "t", nil, "Document tag (repeatable)")
 	docCreateCmd.Flags().StringP("folder", "f", "", "Folder path within docs/")
 	docCreateCmd.Flags().StringP("content", "c", "", "Initial content")
+	docCreateCmd.Flags().String("project-id", "", "Project ID (optional; defaults to active project)")
+	docCreateCmd.Flags().Bool("global", false, "Create an unscoped global document")
 
 	// doc edit flags
 	docEditCmd.Flags().StringP("title", "t", "", "New title")

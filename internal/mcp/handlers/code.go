@@ -21,7 +21,7 @@ import (
 
 // projectRoot returns the project root directory (parent of .knowns/).
 func projectRoot(store *storage.Store) string {
-	return filepath.Dir(store.Root)
+	return store.RepositoryRoot()
 }
 
 // RegisterCodeTool registers the consolidated code intelligence MCP tool.

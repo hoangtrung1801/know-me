@@ -40,6 +40,8 @@ func RegisterTaskTool(s toolRegistrar, getStore func() *storage.Store) {
 			mcp.WithString("taskId",
 				mcp.Description("Task ID (required for get, update, delete, history)"),
 			),
+			mcp.WithString("projectId", mcp.Description("Project ID for scoping or filtering; omit for global visibility")),
+			mcp.WithBoolean("global", mcp.Description("Create an unscoped global task")),
 			mcp.WithString("title",
 				mcp.Description("Task title (required for create, optional for update)"),
 			),
@@ -255,9 +257,18 @@ func handleTaskCreate(getStore func() *storage.Store, req mcp.CallToolRequest) (
 	if v, ok := textArg(args, "notes"); ok {
 		task.ImplementationNotes = v
 	}
+	if v, ok := stringArg(args, "projectId"); ok {
+		task.ProjectID = v
+	}
 
-	if err := store.Tasks.Create(task); err != nil {
-		return errFailed("create task", err)
+	var createErr error
+	if boolArg(args, "global") {
+		createErr = store.Tasks.CreateGlobal(task)
+	} else {
+		createErr = store.Tasks.Create(task)
+	}
+	if createErr != nil {
+		return errFailed("create task", createErr)
 	}
 
 	_ = store.Versions.SaveVersion(task.ID, models.TaskVersion{
@@ -444,12 +455,13 @@ func handleTaskList(getStore func() *storage.Store, req mcp.CallToolRequest) (*m
 		return noProjectError()
 	}
 
-	tasks, err := store.Tasks.List()
+	args := req.GetArguments()
+	projectID, _ := stringArg(args, "projectId")
+	tasks, err := store.Tasks.List(projectID)
 	if err != nil {
 		return errFailed("list tasks", err)
 	}
 
-	args := req.GetArguments()
 	statusFilter, _ := stringArg(args, "status")
 	priorityFilter, _ := stringArg(args, "priority")
 	assigneeFilter, _ := stringArg(args, "assignee")
@@ -608,7 +620,9 @@ func handleTaskBoard(getStore func() *storage.Store, req mcp.CallToolRequest) (*
 		return noProjectError()
 	}
 
-	tasks, err := store.Tasks.List()
+	args := req.GetArguments()
+	projectID, _ := stringArg(args, "projectId")
+	tasks, err := store.Tasks.List(projectID)
 	if err != nil {
 		return errFailed("list tasks", err)
 	}

@@ -27,6 +27,7 @@ const (
 // Chunk is a piece of a task or document prepared for embedding.
 type Chunk struct {
 	ID         string    `json:"id"`
+	ProjectID  string    `json:"projectId,omitempty"`
 	Type       ChunkType `json:"type"`
 	Content    string    `json:"content"`
 	TokenCount int       `json:"tokenCount"`

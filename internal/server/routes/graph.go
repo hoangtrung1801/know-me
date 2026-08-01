@@ -56,13 +56,14 @@ var (
 //
 // GET /api/graph
 func (gr *GraphRoutes) graph(w http.ResponseWriter, r *http.Request) {
-	tasks, err := gr.getStore().Tasks.List()
+	projectID := r.URL.Query().Get("projectId")
+	tasks, err := gr.getStore().Tasks.List(projectID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	docs, err := gr.getStore().Docs.List()
+	docs, err := gr.getStore().Docs.List(projectID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -82,30 +83,32 @@ func (gr *GraphRoutes) graph(w http.ResponseWriter, r *http.Request) {
 
 	// --- Task nodes ---
 	for _, t := range tasks {
-		taskIDs[t.ID] = true
+		taskIDs[storage.ScopedKey(t.ProjectID, t.ID)] = true
 		nodes = append(nodes, GraphNode{
-			ID:    "task:" + t.ID,
+			ID:    "task:" + storage.ScopedKey(t.ProjectID, t.ID),
 			Type:  "task",
 			Label: t.Title,
 			Data: map[string]interface{}{
-				"status":   t.Status,
-				"priority": t.Priority,
-				"labels":   t.Labels,
-				"assignee": t.Assignee,
+				"status":    t.Status,
+				"priority":  t.Priority,
+				"labels":    t.Labels,
+				"assignee":  t.Assignee,
+				"projectId": t.ProjectID,
 			},
 		})
 	}
 
 	// --- Doc nodes ---
 	for _, d := range docs {
-		docPaths[d.Path] = true
+		docPaths[storage.ScopedKey(d.ProjectID, d.Path)] = true
 		nodes = append(nodes, GraphNode{
-			ID:    "doc:" + d.Path,
+			ID:    "doc:" + storage.ScopedKey(d.ProjectID, d.Path),
 			Type:  "doc",
 			Label: d.Title,
 			Data: map[string]interface{}{
 				"tags":        d.Tags,
 				"description": d.Description,
+				"projectId":   d.ProjectID,
 			},
 		})
 	}
@@ -157,16 +160,28 @@ func (gr *GraphRoutes) graph(w http.ResponseWriter, r *http.Request) {
 
 	// --- Edges from task fields ---
 	for _, t := range tasks {
-		src := "task:" + t.ID
+		src := "task:" + storage.ScopedKey(t.ProjectID, t.ID)
 
 		// Parent-child
-		if t.Parent != "" && taskIDs[t.Parent] {
-			edges = append(edges, GraphEdge{Source: src, Target: "task:" + t.Parent, Type: "parent"})
+		if t.Parent != "" {
+			parentKey := t.Parent
+			if parentProject, local := storage.SplitScopedKey(parentKey); parentProject == "" {
+				parentKey = storage.ScopedKey(t.ProjectID, local)
+			}
+			if taskIDs[parentKey] {
+				edges = append(edges, GraphEdge{Source: src, Target: "task:" + parentKey, Type: "parent"})
+			}
 		}
 
 		// Spec link
-		if t.Spec != "" && docPaths[t.Spec] {
-			edges = append(edges, GraphEdge{Source: src, Target: "doc:" + t.Spec, Type: "spec"})
+		if t.Spec != "" {
+			docKey := t.Spec
+			if docProject, local := storage.SplitScopedKey(docKey); docProject == "" {
+				docKey = storage.ScopedKey(t.ProjectID, local)
+			}
+			if docPaths[docKey] {
+				edges = append(edges, GraphEdge{Source: src, Target: "doc:" + docKey, Type: "spec"})
+			}
 		}
 
 		// Cross-references in content
@@ -176,7 +191,7 @@ func (gr *GraphRoutes) graph(w http.ResponseWriter, r *http.Request) {
 
 	// --- Edges from doc content ---
 	for _, d := range docs {
-		src := "doc:" + d.Path
+		src := "doc:" + storage.ScopedKey(d.ProjectID, d.Path)
 		edges = append(edges, gr.extractMentions(src, d.Content)...)
 	}
 
@@ -235,9 +250,9 @@ func (gr *GraphRoutes) extractMentions(src, content string) []GraphEdge {
 		var target string
 		switch resolution.Entity.Type {
 		case "task":
-			target = "task:" + resolution.Entity.ID
+			target = "task:" + storage.ScopedKey(resolution.Entity.ProjectID, resolution.Entity.ID)
 		case "doc":
-			target = "doc:" + resolution.Entity.Path
+			target = "doc:" + storage.ScopedKey(resolution.Entity.ProjectID, resolution.Entity.Path)
 		case "memory":
 			target = "memory:" + resolution.Entity.ID
 		case "decision":

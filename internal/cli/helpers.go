@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/howznguyen/knowns/internal/lsp"
@@ -47,6 +48,10 @@ func resolveProjectStore(start string) (*storage.Store, error) {
 	}
 	project := reg.FindByWorkingDir(start)
 	if project == nil {
+		legacy := filepath.Join(start, ".knowns", "config.json")
+		if _, statErr := os.Stat(legacy); statErr == nil {
+			return storage.NewStore(filepath.Dir(legacy)), nil
+		}
 		return nil, fmt.Errorf("no registered Knowns project found from %s", start)
 	}
 	return storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path), nil

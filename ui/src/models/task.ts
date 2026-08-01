@@ -14,6 +14,7 @@ export type TaskLifecycleState = "active" | "done" | "archived";
 // Task interface
 export interface Task {
 	id: string; // task-{6_char_base36} for new tasks; legacy sequential IDs still supported
+	projectId?: string;
 	title: string;
 	description?: string;
 	status: TaskStatus;
