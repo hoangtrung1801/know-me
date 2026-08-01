@@ -11,6 +11,7 @@ import type { TaskLifecycleResponse } from "../models/taskLifecycle";
 import { TaskLifecycleDialog } from "../components/organisms/TaskLifecycleDialog";
 import { toast } from "../components/ui/sonner";
 import { useSSEEvent } from "../contexts/SSEContext";
+import { useWorkspaceProjects } from "../hooks/useWorkspaceProjects";
 import {
 	PageContent,
 	PageError,
@@ -43,6 +44,8 @@ export default function TasksPage({
 	onNewTask,
 }: TasksPageProps) {
 	const [viewMode, setViewMode] = useState<ViewMode>("table");
+	const projects = useWorkspaceProjects();
+	const [projectScope, setProjectScope] = useState("all");
 	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 	const [lifecycleFilter, setLifecycleFilter] = useState<"current" | "active" | "done" | "archived" | "all">("current");
 	const [restoreOpen, setRestoreOpen] = useState(false);
@@ -99,18 +102,19 @@ export default function TasksPage({
 	const taskSource = historicalMode ? historicalTasks || [] : tasks;
 
 	const visibleTasks = useMemo(() => {
+		const scopedTasks = taskSource.filter((task) => projectScope === "all" || (projectScope === "global" ? !task.projectId : task.projectId === projectScope));
 		switch (lifecycleFilter) {
-			case "active": return taskSource.filter((task) => task.lifecycleState === "active");
-			case "done": return taskSource.filter((task) => task.lifecycleState === "done");
-			case "archived": return taskSource.filter((task) => task.lifecycleState === "archived");
-			case "all": return taskSource;
-			default: return taskSource.filter((task) => task.lifecycleState !== "archived");
+			case "active": return scopedTasks.filter((task) => task.lifecycleState === "active");
+			case "done": return scopedTasks.filter((task) => task.lifecycleState === "done");
+			case "archived": return scopedTasks.filter((task) => task.lifecycleState === "archived");
+			case "all": return scopedTasks;
+			default: return scopedTasks.filter((task) => task.lifecycleState !== "archived");
 		}
-	}, [taskSource, lifecycleFilter]);
+	}, [taskSource, lifecycleFilter, projectScope]);
 
 	const archivedIDs = useMemo(
-		() => taskSource.filter((task) => task.lifecycleState === "archived").map((task) => task.id),
-		[taskSource],
+		() => visibleTasks.filter((task) => task.lifecycleState === "archived").map((task) => task.id),
+		[visibleTasks],
 	);
 
 	const previewRestore = async () => {
@@ -203,6 +207,17 @@ export default function TasksPage({
 				}
 				actions={
 					<div className="flex flex-wrap items-center gap-2">
+						<label className="sr-only" htmlFor="task-project-filter">Project</label>
+						<select
+							id="task-project-filter"
+							value={projectScope}
+							onChange={(event) => setProjectScope(event.target.value)}
+							className="h-11 max-w-full rounded-md border bg-background px-2 text-xs sm:h-8"
+						>
+							<option value="all">All projects</option>
+							<option value="global">Global</option>
+							{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+						</select>
 						<label className="sr-only" htmlFor="task-lifecycle-filter">Lifecycle</label>
 						<select
 							id="task-lifecycle-filter"

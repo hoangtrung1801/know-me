@@ -41,6 +41,7 @@ import { cn } from "@/ui/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { buildStatusOptions, getStatusBadgeClasses, type ColorName } from "../../utils/colors";
 import { useIsMobile } from "../../hooks/useMobile";
+import { latestWorkspaceProjectID, useWorkspaceProjects } from "../../hooks/useWorkspaceProjects";
 
 interface TaskCreateFormProps {
 	isOpen: boolean;
@@ -69,6 +70,7 @@ export default function TaskCreateForm({
 }: TaskCreateFormProps) {
 	const { currentUser } = useCurrentUser();
 	const { config } = useConfig();
+	const projects = useWorkspaceProjects();
 	const titleInputRef = useRef<HTMLInputElement>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
 
@@ -92,6 +94,7 @@ export default function TaskCreateForm({
 	const [acceptanceCriteria, setAcceptanceCriteria] = useState<{ id: string; text: string }[]>([]);
 	const [implementationPlan, setImplementationPlan] = useState("");
 	const [implementationNotes, setImplementationNotes] = useState("");
+	const [projectScope, setProjectScope] = useState("");
 
 	// UI states
 	const [saving, setSaving] = useState(false);
@@ -127,6 +130,14 @@ export default function TaskCreateForm({
 		}
 	};
 
+	useEffect(() => {
+		if (isOpen && !projectScope) setProjectScope(latestWorkspaceProjectID(projects) || "global");
+	}, [isOpen, projectScope, projects]);
+
+	useEffect(() => {
+		setParentId("");
+	}, [projectScope]);
+
 	// Reset form when closed
 	useEffect(() => {
 		if (!isOpen) {
@@ -140,6 +151,7 @@ export default function TaskCreateForm({
 			setAcceptanceCriteria([]);
 			setImplementationPlan("");
 			setImplementationNotes("");
+			setProjectScope("");
 			setError(null);
 			setSuccess(false);
 			setNewACText("");
@@ -216,6 +228,8 @@ export default function TaskCreateForm({
 				})),
 				implementationPlan: implementationPlan.trim() || undefined,
 				implementationNotes: implementationNotes.trim() || undefined,
+				projectId: projectScope === "global" ? undefined : projectScope,
+				global: projectScope === "global",
 			};
 
 			await createTask(taskData);
@@ -239,7 +253,8 @@ export default function TaskCreateForm({
 		}
 	};
 
-	const parentTask = parentId ? allTasks.find((t) => t.id === parentId) : null;
+	const parentTasks = allTasks.filter((task) => projectScope === "global" ? !task.projectId : task.projectId === projectScope);
+	const parentTask = parentId ? parentTasks.find((t) => t.id === parentId) : null;
 
 	// Header component (shared)
 	const Header = (
@@ -452,6 +467,17 @@ export default function TaskCreateForm({
 	// Sidebar component (shared)
 	const SidebarContent = (
 		<div className="p-4 space-y-6">
+			<div className="space-y-2">
+				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Project</Label>
+				<Select value={projectScope} onValueChange={setProjectScope} disabled={saving}>
+					<SelectTrigger className="w-full"><SelectValue placeholder="Select project" /></SelectTrigger>
+					<SelectContent>
+						<SelectItem value="global">Global</SelectItem>
+						{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
+					</SelectContent>
+				</Select>
+			</div>
+
 			{/* Status */}
 			<div className="space-y-2">
 				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -630,7 +656,7 @@ export default function TaskCreateForm({
 										/>
 										<span className="text-muted-foreground">None</span>
 									</CommandItem>
-									{allTasks.map((t) => (
+									{parentTasks.map((t) => (
 										<CommandItem
 											key={t.id}
 											value={`${t.id} ${t.title}`}
@@ -920,7 +946,7 @@ export default function TaskCreateForm({
 																		/>
 																		<span className="text-muted-foreground">None</span>
 																	</CommandItem>
-																	{allTasks.map((t) => (
+																	{parentTasks.map((t) => (
 																		<CommandItem
 																			key={t.id}
 																			value={`${t.id} ${t.title}`}
