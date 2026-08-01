@@ -335,6 +335,7 @@ func isDocPathChar(r rune) bool {
 		(r >= 'a' && r <= 'z') ||
 		(r >= '0' && r <= '9') ||
 		r == '/' ||
+		r == ':' ||
 		r == '_' ||
 		r == '-' ||
 		r == '.'
@@ -354,6 +355,7 @@ func isNamespacedTargetChar(r rune) bool {
 		(r >= 'a' && r <= 'z') ||
 		(r >= '0' && r <= '9') ||
 		r == '/' ||
+		r == ':' ||
 		r == '_' ||
 		r == '-' ||
 		r == '.'

@@ -8,7 +8,8 @@ import "time"
 type Doc struct {
 	// Path is the relative path inside .knowns/docs/ without the .md suffix
 	// (e.g., "guides/setup").  When a filename is needed use Path + ".md".
-	Path string `json:"path"`
+	Path      string `json:"path"`
+	ProjectID string `json:"projectId,omitempty" yaml:"projectId,omitempty"`
 
 	Title       string `json:"title"                 yaml:"title"`
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
