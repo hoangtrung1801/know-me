@@ -127,7 +127,7 @@ func detectAll(ctx context.Context, store *storage.Store, cleanupStale bool, lsp
 		}
 		projectRoot := ""
 		if store != nil {
-			projectRoot = filepath.Dir(store.Root)
+			projectRoot = store.RepositoryRoot()
 		}
 		add(detectLSP(proj, projectRoot))
 	}()

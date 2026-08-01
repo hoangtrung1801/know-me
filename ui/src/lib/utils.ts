@@ -60,6 +60,7 @@ export interface DocMetadata {
 export interface Doc {
 	filename: string;
 	path: string;
+	projectId?: string;
 	folder: string;
 	metadata: DocMetadata;
 	content: string;

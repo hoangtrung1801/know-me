@@ -49,6 +49,7 @@ type SearchOptions struct {
 	Assignee          string
 	Label             string
 	Tag               string
+	ProjectID         string
 	Limit             int
 	IncludeHistorical bool
 	Purpose           SearchPurpose
@@ -167,6 +168,7 @@ func (e *Engine) Retrieve(opts models.RetrievalOptions) (*models.RetrievalRespon
 		Priority:          opts.Priority,
 		Assignee:          opts.Assignee,
 		Label:             opts.Label,
+		ProjectID:         opts.ProjectID,
 		Type:              typeFilterFromSources(opts.SourceTypes),
 		IncludeHistorical: opts.IncludeHistorical,
 		Purpose:           SearchPurposeAIRetrieval,
@@ -231,23 +233,29 @@ func (e *Engine) withTaskSnapshot(opts SearchOptions) (SearchOptions, error) {
 				return fmt.Errorf("snapshot archived Tasks: %w", err)
 			}
 			for _, task := range archived {
+				if opts.ProjectID != "" && task.ProjectID != opts.ProjectID {
+					continue
+				}
 				reserved, err := tx.IsIDReserved(task.ID)
 				if err != nil {
 					return fmt.Errorf("snapshot archived Task %q tombstone: %w", task.ID, err)
 				}
 				if !reserved {
-					snapshot.byID[task.ID] = task
+					snapshot.byID[storage.ScopedKey(task.ProjectID, task.ID)] = task
 				}
 			}
 		}
 		// Active storage wins over migration artifacts in both locations.
 		for _, task := range active {
+			if opts.ProjectID != "" && task.ProjectID != opts.ProjectID {
+				continue
+			}
 			reserved, err := tx.IsIDReserved(task.ID)
 			if err != nil {
 				return fmt.Errorf("snapshot active Task %q tombstone: %w", task.ID, err)
 			}
 			if !reserved {
-				snapshot.byID[task.ID] = task
+				snapshot.byID[storage.ScopedKey(task.ProjectID, task.ID)] = task
 			}
 		}
 		return nil
@@ -262,8 +270,15 @@ func taskFromSnapshot(opts SearchOptions, taskID string) (*models.Task, bool) {
 	if opts.taskSnapshot == nil {
 		return nil, false
 	}
-	task, ok := opts.taskSnapshot.byID[taskID]
-	return task, ok && task != nil
+	if task, ok := opts.taskSnapshot.byID[taskID]; ok {
+		return task, task != nil
+	}
+	for _, task := range opts.taskSnapshot.byID {
+		if task.ID == taskID || storage.ScopedKey(task.ProjectID, task.ID) == taskID {
+			return task, task != nil
+		}
+	}
+	return nil, false
 }
 
 func (e *Engine) resolveTaskVisibility(opts SearchOptions) SearchOptions {
@@ -356,6 +371,8 @@ func (e *Engine) canonicalizeTaskResults(results []models.SearchResult, opts Sea
 			continue
 		}
 		applyTaskLifecycleToSearchResult(&result, task)
+		result.ID = storage.ScopedKey(task.ProjectID, task.ID)
+		result.ProjectID = task.ProjectID
 		filtered = append(filtered, result)
 	}
 	return filtered
@@ -376,6 +393,8 @@ func (e *Engine) canonicalizeRetrievalCandidates(candidates []models.RetrievalCa
 			continue
 		}
 		applyTaskLifecycleToCandidate(&candidate, task)
+		candidate.ID = storage.ScopedKey(task.ProjectID, task.ID)
+		candidate.ProjectID = task.ProjectID
 		filtered = append(filtered, candidate)
 	}
 	sortRetrievalCandidates(filtered, opts.IncludeHistorical)
@@ -675,7 +694,7 @@ func (e *Engine) contextContent(candidate models.RetrievalCandidate, opts Search
 }
 
 func citationFromResult(result models.SearchResult) models.Citation {
-	citation := models.Citation{Type: result.Type, ID: result.ID}
+	citation := models.Citation{Type: result.Type, ID: result.ID, ProjectID: result.ProjectID}
 	if result.Type == "doc" {
 		citation.Path = result.Path
 		citation.Section = result.Snippet
@@ -702,6 +721,7 @@ func (e *Engine) sourceRecord(result models.SearchResult, opts SearchOptions) mo
 	record := models.SourceRecord{
 		Type:           result.Type,
 		ID:             result.ID,
+		ProjectID:      result.ProjectID,
 		Path:           result.Path,
 		Tags:           result.Tags,
 		Status:         result.Status,
@@ -1012,7 +1032,8 @@ func (e *Engine) keywordSearchTasks(query string, words []string, opts SearchOpt
 
 		result := models.SearchResult{
 			Type:      "task",
-			ID:        task.ID,
+			ID:        storage.ScopedKey(task.ProjectID, task.ID),
+			ProjectID: task.ProjectID,
 			Title:     task.Title,
 			Score:     score,
 			Snippet:   snippet,
@@ -1037,24 +1058,24 @@ func tasksForSearch(store *storage.Store, opts SearchOptions) ([]*models.Task, e
 	if store == nil || store.Tasks == nil {
 		return nil, fmt.Errorf("task search store unavailable")
 	}
-	active, err := store.Tasks.List()
+	active, err := store.Tasks.List(opts.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 	if opts.taskVisibility != taskVisibilityHistorical {
 		return active, nil
 	}
-	archived, err := store.Tasks.ListArchived()
+	archived, err := store.Tasks.ListArchived(opts.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 	byID := make(map[string]*models.Task, len(active)+len(archived))
 	for _, task := range archived {
-		byID[task.ID] = task
+		byID[storage.ScopedKey(task.ProjectID, task.ID)] = task
 	}
 	// An active copy wins if legacy/migration artifacts left both locations.
 	for _, task := range active {
-		byID[task.ID] = task
+		byID[storage.ScopedKey(task.ProjectID, task.ID)] = task
 	}
 	all := make([]*models.Task, 0, len(byID))
 	for _, task := range byID {
@@ -1064,7 +1085,7 @@ func tasksForSearch(store *storage.Store, opts SearchOptions) ([]*models.Task, e
 }
 
 func (e *Engine) keywordSearchDocs(query string, words []string, opts SearchOptions) ([]models.SearchResult, error) {
-	docs, err := e.store.Docs.List()
+	docs, err := e.store.Docs.List(opts.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -1087,7 +1108,8 @@ func (e *Engine) keywordSearchDocs(query string, words []string, opts SearchOpti
 
 		results = append(results, models.SearchResult{
 			Type:      "doc",
-			ID:        doc.Path,
+			ID:        storage.ScopedKey(doc.ProjectID, doc.Path),
+			ProjectID: doc.ProjectID,
 			Title:     doc.Title,
 			Score:     score,
 			Snippet:   snippet,
@@ -1565,7 +1587,7 @@ func (e *Engine) scoredChunksToResults(scored []ScoredChunk, opts SearchOptions,
 
 		switch sc.Type {
 		case ChunkTypeTask:
-			key = "task:" + sc.TaskID
+			key = "task:" + storage.ScopedKey(sc.ProjectID, sc.TaskID)
 			if opts.Type != "" && opts.Type != "all" && opts.Type != "task" {
 				continue
 			}
@@ -1576,7 +1598,8 @@ func (e *Engine) scoredChunksToResults(scored []ScoredChunk, opts SearchOptions,
 
 			result = models.SearchResult{
 				Type:      "task",
-				ID:        sc.TaskID,
+				ID:        storage.ScopedKey(task.ProjectID, task.ID),
+				ProjectID: task.ProjectID,
 				Title:     task.Title,
 				Score:     chunkScore,
 				Status:    task.Status,
@@ -1586,10 +1609,18 @@ func (e *Engine) scoredChunksToResults(scored []ScoredChunk, opts SearchOptions,
 			applyTaskLifecycleToSearchResult(&result, task)
 
 		case ChunkTypeDoc:
-			key = "doc:" + sc.DocPath
+			doc, docErr := e.store.Docs.Get(sc.DocPath)
+			if opts.ProjectID != "" && (docErr != nil || doc.ProjectID != opts.ProjectID) {
+				continue
+			}
+			docProject, docPath := "", sc.DocPath
+			if docErr == nil {
+				docProject, docPath = doc.ProjectID, doc.Path
+			}
+			key = "doc:" + storage.ScopedKey(docProject, docPath)
 
 			if opts.Tag != "" {
-				if doc, err := e.store.Docs.Get(sc.DocPath); err != nil || !containsStr(doc.Tags, opts.Tag) {
+				if !containsStr(doc.Tags, opts.Tag) {
 					continue
 				}
 			}
@@ -1599,14 +1630,15 @@ func (e *Engine) scoredChunksToResults(scored []ScoredChunk, opts SearchOptions,
 
 			title := sc.DocPath
 			var tags []string
-			if doc, err := e.store.Docs.Get(sc.DocPath); err == nil {
+			if doc != nil {
 				title = doc.Title
 				tags = doc.Tags
 			}
 
 			result = models.SearchResult{
 				Type:      "doc",
-				ID:        sc.DocPath,
+				ID:        storage.ScopedKey(docProject, docPath),
+				ProjectID: docProject,
 				Title:     title,
 				Score:     chunkScore,
 				Path:      sc.DocPath,

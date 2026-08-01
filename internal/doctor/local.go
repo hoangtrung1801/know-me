@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"sort"
 	"sync"
 
@@ -227,7 +226,7 @@ func collectLocalLSPStatuses(ctx context.Context, store *storage.Store) ([]lsp.L
 		defaults = settings.ProjectDefaults
 	}
 	return lsp.CollectRuntimeStatuses(ctx, lsp.RuntimeStatusOptions{
-		Root:     filepath.Dir(store.Root),
+		Root:     store.RepositoryRoot(),
 		Config:   lsp.ConfigFromProjectWithDefaults(project, defaults),
 		Adapters: adapters.All(),
 	}), nil

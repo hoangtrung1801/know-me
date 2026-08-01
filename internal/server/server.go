@@ -515,7 +515,7 @@ func (s *Server) releaseLSPDaemonLease() {
 	}
 	if s.manager != nil {
 		if store := s.manager.GetStore(); store != nil && store.Root != "" {
-			roots[filepath.Dir(store.Root)] = struct{}{}
+			roots[store.RepositoryRoot()] = struct{}{}
 		}
 	}
 
@@ -699,7 +699,7 @@ func (s *Server) lspRuntimeStatuses(ctx context.Context, store *storage.Store, a
 		return nil
 	}
 
-	if client, err := lspdaemon.EnsureClient(ctx, filepath.Dir(store.Root)); err == nil {
+	if client, err := lspdaemon.EnsureClient(ctx, store.RepositoryRoot()); err == nil {
 		if statuses, err := fetchLSPRuntimeStatuses(ctx, client, acquireLease); err == nil {
 			return statuses
 		}

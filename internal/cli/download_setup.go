@@ -461,7 +461,7 @@ func ensureSemanticStoreInitialized(store *storage.Store) error {
 	if _, err := os.Stat(store.Root); err == nil {
 		return nil
 	}
-	return store.Init(filepath.Base(filepath.Dir(store.Root)))
+	return store.Init(filepath.Base(store.RepositoryRoot()))
 }
 
 func ensureSemanticConfig(store *storage.Store, defaultModelID string) (bool, string, error) {

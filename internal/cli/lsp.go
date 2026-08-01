@@ -390,7 +390,7 @@ func currentProjectRoot() string {
 		cwd, _ := os.Getwd()
 		return cwd
 	}
-	return filepath.Dir(store.Root)
+	return store.RepositoryRoot()
 }
 
 func firstBinaryName(adapter lsp.LanguageAdapter) string {

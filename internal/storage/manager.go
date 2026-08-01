@@ -66,6 +66,13 @@ func (m *Manager) Switch(projectPath string) (*Store, error) {
 		}
 	}
 	newStore := NewProjectStore(GlobalRootPath(), projectID, absPath)
+	// Preserve access to pre-centralization projects until they are initialized
+	// into the global registry store.
+	if _, err := os.Stat(filepath.Join(ProjectConfigRoot(GlobalRootPath(), projectID), "config.json")); err != nil {
+		if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
+			newStore = NewStore(filepath.Join(absPath, ".knowns"))
+		}
+	}
 
 	m.mu.Lock()
 	m.active = newStore

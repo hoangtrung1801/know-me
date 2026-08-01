@@ -18,6 +18,7 @@ function apiFetch(input: string, init?: RequestInit): Promise<Response> {
 
 interface TaskDTO {
 	id: string;
+	projectId?: string;
 	title: string;
 	description?: string;
 	status: string;
@@ -533,6 +534,7 @@ export async function saveUserPreferences(prefs: Record<string, unknown>): Promi
 // Docs API
 export interface Doc {
 	path: string;
+	projectId?: string;
 	title: string;
 	description?: string;
 	tags?: string[];
@@ -712,6 +714,7 @@ export async function restoreDocRevision(
 export interface KnownsSearchResult {
 	type: "task" | "doc" | "memory" | "decision" | "code";
 	id: string;
+	projectId?: string;
 	title: string;
 	score: number;
 	snippet?: string;

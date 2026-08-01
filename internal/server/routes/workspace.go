@@ -119,7 +119,10 @@ func (wr *WorkspaceRoutes) list(w http.ResponseWriter, r *http.Request) {
 	valid := projects[:0]
 	for _, p := range projects {
 		cfgPath := filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), p.ID), "config.json")
+		legacyCfg := filepath.Join(p.Path, ".knowns", "config.json")
 		if _, err := os.Stat(cfgPath); err == nil {
+			valid = append(valid, p)
+		} else if _, err := os.Stat(legacyCfg); err == nil {
 			valid = append(valid, p)
 		}
 	}

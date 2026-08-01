@@ -28,6 +28,8 @@ func RegisterDocTool(s toolRegistrar, getStore func() *storage.Store) {
 			mcp.WithString("path",
 				mcp.Description("Document path (required for get, update, delete, history, diff, restore)"),
 			),
+			mcp.WithString("projectId", mcp.Description("Project ID for scoping or filtering; omit for global visibility")),
+			mcp.WithBoolean("global", mcp.Description("Create an unscoped global document")),
 			mcp.WithString("title",
 				mcp.Description("Document title (required for create, optional for update)"),
 			),
@@ -180,12 +182,13 @@ func handleDocList(getStore func() *storage.Store, req mcp.CallToolRequest) (*mc
 		return noProjectError()
 	}
 
-	docs, err := store.Docs.List()
+	args := req.GetArguments()
+	projectID, _ := stringArg(args, "projectId")
+	docs, err := store.Docs.List(projectID)
 	if err != nil {
 		return errFailed("list docs", err)
 	}
 
-	args := req.GetArguments()
 	tagFilter, _ := stringArg(args, "tag")
 
 	var filtered []*models.Doc
@@ -372,9 +375,18 @@ func handleDocCreate(getStore func() *storage.Store, req mcp.CallToolRequest) (*
 	if v, ok := stringSliceArg(args, "tags"); ok {
 		doc.Tags = v
 	}
+	if v, ok := stringArg(args, "projectId"); ok {
+		doc.ProjectID = v
+	}
 
-	if err := store.Docs.Create(doc); err != nil {
-		return errFailed("create doc", err)
+	var createErr error
+	if boolArg(args, "global") {
+		createErr = store.Docs.CreateGlobal(doc)
+	} else {
+		createErr = store.Docs.Create(doc)
+	}
+	if createErr != nil {
+		return errFailed("create doc", createErr)
 	}
 
 	search.BestEffortIndexDoc(store, doc.Path)

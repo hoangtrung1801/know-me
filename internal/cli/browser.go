@@ -44,13 +44,24 @@ func resolveProject(cmd *cobra.Command) (store *storage.Store, projectRoot strin
 		if err == nil {
 			reg := registry.NewRegistry()
 			if err := reg.Load(); err != nil {
+				if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
+					return storage.NewStore(filepath.Join(absPath, ".knowns")), absPath
+				}
 				return nil, ""
 			}
 			project, err := reg.Add(absPath)
 			if err != nil {
+				if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
+					return storage.NewStore(filepath.Join(absPath, ".knowns")), absPath
+				}
 				return nil, ""
 			}
 			store = storage.NewProjectStore(storage.GlobalRootPath(), project.ID, absPath)
+			if _, centralErr := os.Stat(filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), project.ID), "config.json")); centralErr != nil {
+				if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
+					store = storage.NewStore(filepath.Join(absPath, ".knowns"))
+				}
+			}
 			projectRoot = absPath
 			return
 		}
