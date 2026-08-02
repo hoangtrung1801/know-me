@@ -14,6 +14,7 @@ import {
 	Brain,
 	ScrollText,
 	Activity,
+	FolderOpen,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import logoImage from "../../public/logo.png";
@@ -52,6 +53,12 @@ const topNavItems = [
 		label: "Dashboard",
 		icon: LayoutDashboard,
 		to: "/",
+	},
+	{
+		id: "projects",
+		label: "Projects",
+		icon: FolderOpen,
+		to: "/projects",
 	},
 	{
 		id: "kanban",

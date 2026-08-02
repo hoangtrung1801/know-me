@@ -33,6 +33,12 @@ test.describe("Navigation & Global Features", () => {
 			await expect(page).toHaveURL(/\/docs/);
 		});
 
+		await test.step("Navigate to Projects via sidebar", async () => {
+			await page.getByText("Projects", { exact: true }).first().click();
+			await expect(page).toHaveURL(/\/projects/);
+			await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible();
+		});
+
 		await test.step("Navigate to Settings via sidebar", async () => {
 			await page.getByText("Settings", { exact: true }).first().click();
 			await expect(page).toHaveURL(/\/config/);

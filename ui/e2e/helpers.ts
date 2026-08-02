@@ -95,7 +95,7 @@ export async function startServer(): Promise<TestServer> {
 		KNOWN_LSP_AUTO_INSTALL: "0",
 		// UI tests exercise the local fallback. Dedicated LSP fixture tests
 		// cover the shared daemon and native Windows named-pipe transport.
-		KNOWN_LSP_DAEMON: "0",
+		KNOWNS_LSP_DAEMON: "0",
 	};
 
 	// Initialize git + knowns project
