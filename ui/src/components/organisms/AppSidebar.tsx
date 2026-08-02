@@ -15,7 +15,8 @@ import {
 	Link2,
 	ScrollText,
 	Activity,
-	FolderOpen,
+		FolderOpen,
+	NotebookPen,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import logoImage from "../../public/logo.png";
@@ -96,6 +97,12 @@ const topNavItems = [
 		label: "Saved Links",
 		icon: Link2,
 		to: "/links",
+	},
+	{
+		id: "memos",
+		label: "Memos",
+		icon: NotebookPen,
+		to: "/memos",
 	},
 	{
 		id: "decisions",

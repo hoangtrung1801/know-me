@@ -2780,3 +2780,44 @@ export const linkApi = {
 		return res.json();
 	},
 };
+
+export interface Memo {
+	id: string;
+	content: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+async function memoMutation(path: string, method: "POST" | "PATCH", content: string): Promise<Memo> {
+	const res = await apiFetch(`${API_BASE}${path}`, {
+		method,
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ content }),
+	});
+	if (!res.ok) {
+		const body = await res.json().catch(() => ({}));
+		throw new Error(body.error || "Failed to save memo");
+	}
+	return res.json();
+}
+
+export const memoApi = {
+	async list(query = ""): Promise<Memo[]> {
+		const params = new URLSearchParams();
+		if (query.trim()) params.set("q", query.trim());
+		const res = await apiFetch(`${API_BASE}/api/memos${params.size ? `?${params}` : ""}`);
+		if (!res.ok) throw new Error("Failed to fetch memos");
+		return res.json();
+	},
+	add(content: string) { return memoMutation("/api/memos", "POST", content); },
+	update(id: string, content: string) {
+		return memoMutation(`/api/memos/${encodeURIComponent(id)}`, "PATCH", content);
+	},
+	async delete(id: string): Promise<void> {
+		const res = await apiFetch(`${API_BASE}/api/memos/${encodeURIComponent(id)}`, { method: "DELETE" });
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body.error || "Failed to delete memo");
+		}
+	},
+};

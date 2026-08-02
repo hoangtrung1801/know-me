@@ -47,6 +47,7 @@ const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
 const GraphPage = lazyWithRetry(() => import("./pages/GraphPage"));
 const MemoryPage = lazyWithRetry(() => import("./pages/MemoryPage"));
 const LinksPage = lazyWithRetry(() => import("./pages/LinksPage"));
+const MemosPage = lazyWithRetry(() => import("./pages/MemosPage"));
 const DecisionPage = lazyWithRetry(() => import("./pages/DecisionPage"));
 const AuditPage = lazyWithRetry(() => import("./pages/AuditPage"));
 
@@ -70,6 +71,7 @@ function getCurrentPage(pathname: string) {
 	if (pathname.startsWith("/graph")) return "graph";
 	if (pathname.startsWith("/memory")) return "memory";
 	if (pathname.startsWith("/links")) return "links";
+	if (pathname.startsWith("/memos")) return "memos";
 	if (pathname.startsWith("/decisions")) return "decisions";
 	if (pathname.startsWith("/audit")) return "audit";
 	if (pathname.startsWith("/chat")) return "chat";
@@ -114,6 +116,7 @@ export default function AppShell() {
 	});
 
 	const currentPage = getCurrentPage(location.pathname);
+	const globalPageWithoutProject = currentPage === "memos";
 	const isChatPage = currentPage === "chat";
 	const currentTasks = tasks;
 	const routeTaskId = currentPage === "tasks"
@@ -156,6 +159,7 @@ export default function AppShell() {
 			graph: "Graph",
 			memory: "Memories",
 			links: "Saved links",
+			memos: "Memos",
 			decisions: "Decisions",
 			audit: "Audit Trail",
 			imports: "Imports",
@@ -364,6 +368,8 @@ export default function AppShell() {
 				return <MemoryPage />;
 			case "links":
 				return <LinksPage />;
+			case "memos":
+				return <MemosPage />;
 			case "decisions":
 				return <DecisionPage />;
 			case "audit":
@@ -386,10 +392,10 @@ export default function AppShell() {
 					<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
 				</div>
 			)}
-			{projectActive === false && (
+			{projectActive === false && !globalPageWithoutProject && (
 				<WelcomePage onProjectSelected={() => window.location.reload()} />
 			)}
-			{projectActive === true && (
+			{(projectActive === true || globalPageWithoutProject) && (
 			<SidebarProvider open={sidebarOpen} onOpenChange={handleSidebarOpenChange}>
 				<AppSidebar
 					currentPage={currentPage}
