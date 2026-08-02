@@ -173,6 +173,18 @@ function DocsPageInner() {
 		}
 	};
 
+	const handleProjectChange = async (projectID: string) => {
+		if (!selectedDoc || selectedDoc.isImported) return;
+		try {
+			const projectId = projectID === "global" ? "" : projectID;
+			await updateDoc(normalizePathForAPI(selectedDoc.path), { projectId });
+			setSelectedDoc({ ...selectedDoc, projectId: projectId || undefined });
+			loadDocs();
+		} catch (err) {
+			console.error("Failed to save document project:", err);
+		}
+	};
+
 	// URL params
 	useEffect(() => {
 		if ((location.search as Record<string, unknown>).create === true || (location.search as Record<string, unknown>).create === "true") {
@@ -412,6 +424,7 @@ function DocsPageInner() {
 											metaDescription={metaDescription} setMetaDescription={setMetaDescription}
 											metaTags={metaTags} setMetaTags={setMetaTags}
 											handleSaveMetadata={handleSaveMetadata}
+											handleProjectChange={handleProjectChange}
 											linkedTasks={linkedTasks}
 											linkedTasksExpanded={linkedTasksExpanded} setLinkedTasksExpanded={setLinkedTasksExpanded}
 											openTask={openTask}
