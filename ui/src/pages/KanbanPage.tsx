@@ -1,8 +1,15 @@
 import { useRef, useState } from "react";
-import { Plus, Archive, ChevronDown, ListTodo, X } from "lucide-react";
+import { Plus, Archive, ChevronDown, FolderKanban, ListTodo, X } from "lucide-react";
 import type { Task } from "@/ui/models/task";
 import { Board } from "../components/organisms";
 import { Button } from "../components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "../components/ui/select";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -138,16 +145,19 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 				status={<span className="tabular-nums">{visibleTasks.length} {visibleTasks.length === 1 ? "task" : "tasks"}</span>}
 				actions={
 					<div className="flex items-center gap-2 shrink-0">
-						<select
-							aria-label="Filter Kanban by project"
-							value={projectScope}
-							onChange={(event) => setProjectScope(event.target.value)}
-							className="h-11 max-w-36 rounded-md border bg-background px-2 text-xs sm:h-8"
-						>
-							<option value="all">All projects</option>
-							<option value="global">Global</option>
-							{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-						</select>
+						<div className="relative">
+							<FolderKanban className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+							<Select value={projectScope} onValueChange={setProjectScope}>
+								<SelectTrigger aria-label="Filter Kanban by project" className="h-11 min-w-40 border-border/70 bg-muted/30 pl-8 pr-2 text-xs font-medium shadow-none transition-colors hover:bg-muted/55 focus:ring-1 sm:h-8">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent align="start">
+									<SelectItem value="all">All projects</SelectItem>
+									<SelectItem value="global">Global</SelectItem>
+									{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
+								</SelectContent>
+							</Select>
+						</div>
 						{/* Batch Archive Dropdown */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
