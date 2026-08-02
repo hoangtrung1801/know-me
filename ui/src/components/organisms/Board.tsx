@@ -6,6 +6,7 @@ import { api } from "../../api/client";
 import { navigateTo } from "../../lib/navigation";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useNewTaskIds } from "../../hooks/useNewTaskIds";
+import { useWorkspaceProjects } from "../../hooks/useWorkspaceProjects";
 import { TaskDetailSheet } from "./TaskDetail/TaskDetailSheet";
 import { ScrollArea, ScrollBar } from "../ui/ScrollArea";
 import {
@@ -75,6 +76,11 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 	const location = useRouterState({ select: (state) => state.location });
 	const { config, updateConfig } = useConfig();
 	const newTaskIds = useNewTaskIds(tasks);
+	const projects = useWorkspaceProjects();
+	const projectNames = useMemo(
+		() => new Map(projects.map((project) => [project.id, project.name])),
+		[projects],
+	);
 	const [visibleColumns, setVisibleColumns] = useState<Set<TaskStatus>>(new Set());
 	const [columnControlsOpen, setColumnControlsOpen] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
@@ -426,6 +432,7 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 												item={item}
 												isNew={newTaskIds.has(item.id)}
 												statusColors={statusColors}
+												projectName={projectNames.get(item.task.projectId || "") || item.task.projectId || "Global"}
 												onClick={() => handleTaskClick(item.task)}
 											/>
 										)}
@@ -463,10 +470,11 @@ interface TaskKanbanCardProps {
 	item: KanbanTaskItem;
 	isNew?: boolean;
 	statusColors: Record<string, ColorName>;
+	projectName: string;
 	onClick: () => void;
 }
 
-function TaskKanbanCard({ item, isNew, statusColors, onClick }: TaskKanbanCardProps) {
+function TaskKanbanCard({ item, isNew, statusColors, projectName, onClick }: TaskKanbanCardProps) {
 	const { task } = item;
 	const statusBadgeClasses = getStatusBadgeClasses(task.status, statusColors);
 	const ac = task.acceptanceCriteria ?? [];
@@ -505,7 +513,7 @@ function TaskKanbanCard({ item, isNew, statusColors, onClick }: TaskKanbanCardPr
 					</div>
 				</div>
 				<span className="mb-2 inline-flex rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-					{task.projectId || "Global"}
+					{projectName}
 				</span>
 
 				<h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground">
