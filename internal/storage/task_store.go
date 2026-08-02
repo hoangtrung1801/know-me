@@ -235,12 +235,41 @@ func (ts *TaskStore) Update(task *models.Task) error {
 	return ts.withLifecycleLock(func() error { return ts.updateUnlocked(task) })
 }
 
+// MoveProject relocates an active task when its project scope changes.
+func (ts *TaskStore) MoveProject(previousProjectID string, task *models.Task) error {
+	return ts.withLifecycleLock(func() error { return ts.moveProjectUnlocked(previousProjectID, task) })
+}
+
 func (ts *TaskStore) updateUnlocked(task *models.Task) error {
 	oldPath, err := ts.findFileExact(task.ProjectID, task.ID, true)
 	if err != nil {
 		return ts.createUnlocked(task)
 	}
 	return ts.writeFile(oldPath, task)
+}
+
+func (ts *TaskStore) moveProjectUnlocked(previousProjectID string, task *models.Task) error {
+	oldPath, err := ts.findFileExact(previousProjectID, task.ID, true)
+	if err != nil {
+		return err
+	}
+	name := taskFilename(task.ID, task.Title)
+	if task.ProjectID != "" {
+		name = taskFilename(task.ProjectID+"--"+task.ID, task.Title)
+	}
+	newPath := filepath.Join(ts.tasksDir(), name)
+	if oldPath == newPath {
+		return ts.writeFile(oldPath, task)
+	}
+	if _, err := os.Stat(newPath); err == nil {
+		return fmt.Errorf("task %q already exists in project %q", task.ID, task.ProjectID)
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	if err := ts.writeFile(newPath, task); err != nil {
+		return err
+	}
+	return os.Remove(oldPath)
 }
 
 // Delete removes a task file from tasks/ or archive/.

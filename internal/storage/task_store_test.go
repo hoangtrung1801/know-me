@@ -86,6 +86,26 @@ func TestTaskLifecycleMetadataRoundTripAndArchiveState(t *testing.T) {
 	}
 }
 
+func TestTaskStoreMoveProjectMovesScopedTaskWithoutDuplicate(t *testing.T) {
+	store := NewStore(t.TempDir())
+	task := &models.Task{ID: "scope01", ProjectID: "alpha", Title: "Move scope", Status: "todo", Priority: "medium"}
+	if err := store.Tasks.CreateGlobal(task); err != nil {
+		t.Fatalf("CreateGlobal: %v", err)
+	}
+
+	task.ProjectID = "beta"
+	if err := store.Tasks.MoveProject("alpha", task); err != nil {
+		t.Fatalf("MoveProject: %v", err)
+	}
+	if _, err := store.Tasks.Get("alpha:scope01"); err == nil {
+		t.Fatal("alpha task remains after move")
+	}
+	moved, err := store.Tasks.Get("beta:scope01")
+	if err != nil || moved.ProjectID != "beta" {
+		t.Fatalf("moved task = %#v, %v", moved, err)
+	}
+}
+
 func TestTaskLifecycleLegacyFrontmatterRemainsReadable(t *testing.T) {
 	content := `---
 id: legacy
