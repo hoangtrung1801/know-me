@@ -53,10 +53,15 @@ func (r *Registry) Load() error {
 	if err := json.Unmarshal(data, &r.Projects); err != nil {
 		return err
 	}
-	// Deduplicate by path (keep last occurrence so most recent wins)
+	// Deduplicate path-backed projects (keep last occurrence so most recent wins).
+	// Pathless projects are distinct logical projects and must be retained.
 	seen := make(map[string]int)
 	deduped := r.Projects[:0]
 	for _, p := range r.Projects {
+		if p.Path == "" {
+			deduped = append(deduped, p)
+			continue
+		}
 		if idx, exists := seen[p.Path]; exists {
 			deduped[idx] = p // overwrite with newer entry
 		} else {
@@ -80,29 +85,38 @@ func (r *Registry) Save() error {
 	return os.WriteFile(r.filePath, data, 0644)
 }
 
-// Add registers a project. If the path is already registered, returns the
-// existing entry without duplicating. The path must contain a .knowns/ directory.
+// Add registers a path-backed project. If the path is already registered, it
+// returns the existing entry without duplicating.
 func (r *Registry) Add(projectPath string) (*Project, error) {
-	absPath, err := filepath.Abs(projectPath)
-	if err != nil {
-		return nil, fmt.Errorf("resolve path: %w", err)
+	return r.Create("", projectPath)
+}
+
+// Create registers a logical project. A project name is required; its local
+// path is optional so projects without a mounted directory can own Knowns data.
+func (r *Registry) Create(name, projectPath string) (*Project, error) {
+	name = strings.TrimSpace(name)
+	projectPath = strings.TrimSpace(projectPath)
+	if projectPath != "" {
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			return nil, fmt.Errorf("resolve path: %w", err)
+		}
+		if info, err := os.Stat(absPath); err != nil || !info.IsDir() {
+			return nil, fmt.Errorf("project directory not found at %s", absPath)
+		}
+		if existing := r.FindByPath(absPath); existing != nil {
+			return existing, nil
+		}
+		projectPath = absPath
+		if name == "" {
+			name = filepath.Base(absPath)
+		}
+	}
+	if name == "" {
+		return nil, fmt.Errorf("project name is required")
 	}
 
-	if info, err := os.Stat(absPath); err != nil || !info.IsDir() {
-		return nil, fmt.Errorf("project directory not found at %s", absPath)
-	}
-
-	// Dedup by path
-	if existing := r.FindByPath(absPath); existing != nil {
-		return existing, nil
-	}
-
-	p := Project{
-		ID:       util.GenerateID(),
-		Name:     filepath.Base(absPath),
-		Path:     absPath,
-		LastUsed: time.Now(),
-	}
+	p := Project{ID: util.GenerateID(), Name: name, Path: projectPath, LastUsed: time.Now()}
 	r.Projects = append(r.Projects, p)
 	return &p, r.Save()
 }
@@ -116,6 +130,9 @@ func (r *Registry) FindByWorkingDir(start string) *Project {
 	}
 	var best *Project
 	for i := range r.Projects {
+		if r.Projects[i].Path == "" {
+			continue
+		}
 		rel, err := filepath.Rel(r.Projects[i].Path, abs)
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 			continue
@@ -165,6 +182,10 @@ func (r *Registry) GetActive() *Project {
 
 // FindByPath returns the project with the given absolute path, or nil.
 func (r *Registry) FindByPath(absPath string) *Project {
+	if absPath == "" {
+		return nil
+	}
+
 	for i, p := range r.Projects {
 		if p.Path == absPath {
 			return &r.Projects[i]
