@@ -20,11 +20,46 @@ type WorkspaceRoutes struct {
 // Register wires workspace routes onto r.
 func (wr *WorkspaceRoutes) Register(r chi.Router) {
 	r.Get("/workspaces", wr.list)
+	r.Post("/workspaces", wr.create)
 	r.Get("/workspaces/browse", wr.browse)
 	r.Post("/workspaces/switch", wr.switchWorkspace)
 	r.Post("/workspaces/scan", wr.scan)
 	r.Post("/workspaces/auto-scan", wr.autoScan)
 	r.Delete("/workspaces/{id}", wr.remove)
+}
+
+// create registers an existing project without switching the active workspace.
+// POST /api/workspaces
+// Body: {"path": "/absolute/project/path"}
+func (wr *WorkspaceRoutes) create(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Path string `json:"path"`
+	}
+	if err := decodeJSON(r, &body); err != nil || strings.TrimSpace(body.Path) == "" {
+		respondError(w, http.StatusBadRequest, "project path is required")
+		return
+	}
+
+	reg := wr.manager.GetRegistry()
+	if reg == nil {
+		respondError(w, http.StatusInternalServerError, "registry not available")
+		return
+	}
+	projectPath, err := filepath.Abs(strings.TrimSpace(body.Path))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid project path")
+		return
+	}
+	if _, err := os.Stat(filepath.Join(projectPath, ".knowns", "config.json")); err != nil {
+		respondError(w, http.StatusBadRequest, "project is not initialized")
+		return
+	}
+	project, err := reg.Add(projectPath)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusCreated, project)
 }
 
 // DirEntry describes a single directory entry for the browser tree.

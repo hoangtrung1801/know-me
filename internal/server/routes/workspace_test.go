@@ -72,6 +72,46 @@ func TestWorkspaceList(t *testing.T) {
 	}
 }
 
+func TestWorkspaceCreate(t *testing.T) {
+	r, _, mgr, tmpDir := setupWorkspaceTest(t)
+	projectPath := filepath.Join(tmpDir, "added-project")
+	if err := os.MkdirAll(filepath.Join(projectPath, ".knowns"), 0755); err != nil {
+		t.Fatalf("create project directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(projectPath, ".knowns", "config.json"), []byte(`{"name":"added-project"}`), 0644); err != nil {
+		t.Fatalf("write project config: %v", err)
+	}
+
+	body, _ := json.Marshal(map[string]string{"path": projectPath})
+	req := httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("POST /workspaces status = %d, want %d: %s", w.Code, http.StatusCreated, w.Body.String())
+	}
+	if project := mgr.GetRegistry().FindByPath(projectPath); project == nil {
+		t.Fatalf("project %q was not registered", projectPath)
+	}
+}
+
+func TestWorkspaceCreateRejectsUninitializedDirectory(t *testing.T) {
+	r, _, _, tmpDir := setupWorkspaceTest(t)
+	projectPath := filepath.Join(tmpDir, "plain-directory")
+	if err := os.MkdirAll(projectPath, 0755); err != nil {
+		t.Fatalf("create directory: %v", err)
+	}
+
+	body, _ := json.Marshal(map[string]string{"path": projectPath})
+	req := httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("POST /workspaces status = %d, want %d", w.Code, http.StatusBadRequest)
+	}
+}
+
 func TestWorkspaceSwitch(t *testing.T) {
 	r, sse, mgr, tmpDir := setupWorkspaceTest(t)
 
