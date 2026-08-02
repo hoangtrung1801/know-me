@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/howznguyen/knowns/internal/links"
+	"github.com/howznguyen/knowns/internal/memos"
 	"github.com/howznguyen/knowns/internal/services"
 	"github.com/howznguyen/knowns/internal/storage"
 )
@@ -134,6 +135,9 @@ func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadca
 
 	// Saved links are global and remain available without an active project.
 	(&LinkRoutes{service: links.NewService(storage.GlobalRootPath())}).Register(r)
+
+	// Memos are global and remain available without an active project.
+	(&MemoRoutes{service: memos.NewService(storage.GlobalRootPath())}).Register(r)
 
 	// Audit trail (global, not project-scoped)
 	audr := &AuditRoutes{auditStore: storage.NewGlobalAuditStore()}
