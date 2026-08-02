@@ -38,6 +38,7 @@ function lazyWithRetry(factory: () => Promise<{ default: React.ComponentType<any
 
 const ConfigPage = lazyWithRetry(() => import("./pages/ConfigPage"));
 const DashboardPage = lazyWithRetry(() => import("./pages/DashboardPage"));
+const ProjectsPage = lazyWithRetry(() => import("./pages/ProjectsPage"));
 const DocsPage = lazyWithRetry(() => import("./pages/DocsPage"));
 const ImportsPage = lazyWithRetry(() => import("./pages/ImportsPage"));
 const KanbanPage = lazyWithRetry(() => import("./pages/KanbanPage"));
@@ -61,6 +62,7 @@ function PageLoading() {
 
 function getCurrentPage(pathname: string) {
 	if (pathname.startsWith("/dashboard")) return "dashboard";
+	if (pathname.startsWith("/projects")) return "projects";
 	if (pathname.startsWith("/tasks")) return "tasks";
 	if (pathname.startsWith("/docs")) return "docs";
 	if (pathname.startsWith("/imports")) return "imports";
@@ -145,6 +147,7 @@ export default function AppShell() {
 	useEffect(() => {
 		const titles: Record<string, string> = {
 			dashboard: "Dashboard",
+			projects: "Projects",
 			kanban: "Kanban",
 			tasks: "Tasks",
 			docs: "Docs",
@@ -317,6 +320,8 @@ export default function AppShell() {
 		switch (currentPage) {
 			case "dashboard":
 				return <DashboardPage tasks={currentTasks} loading={loading} />;
+			case "projects":
+				return <ProjectsPage />;
 			case "kanban":
 				return (
 					<KanbanPage

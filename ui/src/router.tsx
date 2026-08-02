@@ -18,6 +18,12 @@ const dashboardRoute = createRoute({
 	component: EmptyRoute,
 });
 
+const projectsRoute = createRoute({
+	getParentRoute: () => rootRoute,
+	path: "/projects",
+	component: EmptyRoute,
+});
+
 const kanbanRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: "/kanban",
@@ -135,6 +141,7 @@ const fallbackRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
 	dashboardRoute,
+	projectsRoute,
 	kanbanRoute,
 	kanbanTaskRoute,
 	tasksRoute,
