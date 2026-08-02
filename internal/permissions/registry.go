@@ -29,6 +29,7 @@ const (
 	TargetSearch   = "search"
 	TargetCode     = "code"
 	TargetLink     = "link"
+	TargetMemo     = "memo"
 )
 
 // Risk levels for AI actions.
@@ -96,6 +97,12 @@ var ActionRegistry = map[string]ActionMeta{
 	"link.list":   {Capability: CapRead, Target: TargetLink, Risk: RiskLow},
 	"link.update": {Capability: CapWrite, Target: TargetLink, Risk: RiskMedium},
 
+	// memos
+	"memo.add":    {Capability: CapWrite, Target: TargetMemo, Risk: RiskMedium},
+	"memo.list":   {Capability: CapRead, Target: TargetMemo, Risk: RiskLow},
+	"memo.update": {Capability: CapWrite, Target: TargetMemo, Risk: RiskMedium},
+	"memo.delete": {Capability: CapDelete, Target: TargetMemo, Risk: RiskHigh},
+
 	// search
 	"search.search":   {Capability: CapRead, Target: TargetSearch, Risk: RiskLow},
 	"search.retrieve": {Capability: CapRead, Target: TargetSearch, Risk: RiskLow},
@@ -130,6 +137,7 @@ var toolFallback = map[string]ActionMeta{
 	"validate":  {Capability: CapRead, Target: TargetRuntime, Risk: RiskLow},
 	"memory":    {Capability: CapRead, Target: TargetMemory, Risk: RiskLow},
 	"link":      {Capability: CapRead, Target: TargetLink, Risk: RiskLow},
+	"memo":      {Capability: CapRead, Target: TargetMemo, Risk: RiskLow},
 	"project":   {Capability: CapAdmin, Target: TargetRuntime, Risk: RiskMedium},
 }
 

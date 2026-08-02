@@ -14,3 +14,17 @@ func TestLinkActionsAreClassified(t *testing.T) {
 		}
 	}
 }
+
+func TestMemoActionsAreClassified(t *testing.T) {
+	checks := map[string]ActionMeta{
+		"memo.add":    {Capability: CapWrite, Target: TargetMemo, Risk: RiskMedium},
+		"memo.list":   {Capability: CapRead, Target: TargetMemo, Risk: RiskLow},
+		"memo.update": {Capability: CapWrite, Target: TargetMemo, Risk: RiskMedium},
+		"memo.delete": {Capability: CapDelete, Target: TargetMemo, Risk: RiskHigh},
+	}
+	for action, want := range checks {
+		if got := ClassifyAction("memo", action[len("memo."):]); got != want {
+			t.Fatalf("ClassifyAction(%q) = %+v, want %+v", action, got, want)
+		}
+	}
+}
