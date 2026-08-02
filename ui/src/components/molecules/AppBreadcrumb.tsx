@@ -14,6 +14,7 @@ const pageLabels: Record<string, string> = {
 	docs: "Docs",
 	graph: "Graph",
 	memory: "Memories",
+	memos: "Memos",
 	decisions: "Decisions",
 	templates: "Templates",
 	imports: "Imports",
