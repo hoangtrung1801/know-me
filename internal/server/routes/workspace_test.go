@@ -27,6 +27,7 @@ func (fb *fakeBroadcaster) Broadcast(e SSEEvent) {
 func setupWorkspaceTest(t *testing.T) (*chi.Mux, *fakeBroadcaster, *storage.Manager, string) {
 	t.Helper()
 	tmpDir := t.TempDir()
+	t.Setenv("HOME", t.TempDir())
 
 	// Create a fake project with .knowns/config.json
 	projDir := filepath.Join(tmpDir, "test-project")
@@ -75,14 +76,11 @@ func TestWorkspaceList(t *testing.T) {
 func TestWorkspaceCreate(t *testing.T) {
 	r, _, mgr, tmpDir := setupWorkspaceTest(t)
 	projectPath := filepath.Join(tmpDir, "added-project")
-	if err := os.MkdirAll(filepath.Join(projectPath, ".knowns"), 0755); err != nil {
+	if err := os.MkdirAll(projectPath, 0755); err != nil {
 		t.Fatalf("create project directory: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(projectPath, ".knowns", "config.json"), []byte(`{"name":"added-project"}`), 0644); err != nil {
-		t.Fatalf("write project config: %v", err)
-	}
 
-	body, _ := json.Marshal(map[string]string{"path": projectPath})
+	body, _ := json.Marshal(map[string]string{"name": "Added project", "path": projectPath})
 	req := httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -90,25 +88,33 @@ func TestWorkspaceCreate(t *testing.T) {
 	if w.Code != http.StatusCreated {
 		t.Fatalf("POST /workspaces status = %d, want %d: %s", w.Code, http.StatusCreated, w.Body.String())
 	}
-	if project := mgr.GetRegistry().FindByPath(projectPath); project == nil {
+	if project := mgr.GetRegistry().FindByPath(projectPath); project == nil || project.Name != "Added project" {
 		t.Fatalf("project %q was not registered", projectPath)
 	}
 }
 
-func TestWorkspaceCreateRejectsUninitializedDirectory(t *testing.T) {
-	r, _, _, tmpDir := setupWorkspaceTest(t)
-	projectPath := filepath.Join(tmpDir, "plain-directory")
-	if err := os.MkdirAll(projectPath, 0755); err != nil {
-		t.Fatalf("create directory: %v", err)
-	}
-
-	body, _ := json.Marshal(map[string]string{"path": projectPath})
+func TestWorkspaceCreateWithoutLocalPath(t *testing.T) {
+	r, _, mgr, _ := setupWorkspaceTest(t)
+	body, _ := json.Marshal(map[string]string{"name": "Pathless project"})
 	req := httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusBadRequest {
-		t.Fatalf("POST /workspaces status = %d, want %d", w.Code, http.StatusBadRequest)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("POST /workspaces status = %d, want %d: %s", w.Code, http.StatusCreated, w.Body.String())
+	}
+	var project registry.Project
+	if err := json.Unmarshal(w.Body.Bytes(), &project); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if project.Path != "" || project.Name != "Pathless project" {
+		t.Fatalf("project = %#v, want pathless project", project)
+	}
+	if _, err := os.Stat(filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), project.ID), "config.json")); err != nil {
+		t.Fatalf("project config not initialized: %v", err)
+	}
+	if listed := mgr.GetRegistry().FindByPath(""); listed != nil {
+		t.Fatal("pathless project should not be resolved by path")
 	}
 }
 

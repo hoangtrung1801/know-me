@@ -1915,11 +1915,11 @@ export const workspaceApi = {
 		return res.json();
 	},
 
-	async create(path: string): Promise<WorkspaceProject> {
+	async create(project: { name: string; path?: string }): Promise<WorkspaceProject> {
 		const res = await apiFetch(`${API_BASE}/api/workspaces`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ path }),
+			body: JSON.stringify(project),
 		});
 		if (!res.ok) throw new Error("Failed to add workspace");
 		return res.json();

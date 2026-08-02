@@ -30,13 +30,14 @@ func (wr *WorkspaceRoutes) Register(r chi.Router) {
 
 // create registers an existing project without switching the active workspace.
 // POST /api/workspaces
-// Body: {"path": "/absolute/project/path"}
+// Body: {"name": "Project name", "path": "/optional/local/project/path"}
 func (wr *WorkspaceRoutes) create(w http.ResponseWriter, r *http.Request) {
 	var body struct {
+		Name string `json:"name"`
 		Path string `json:"path"`
 	}
-	if err := decodeJSON(r, &body); err != nil || strings.TrimSpace(body.Path) == "" {
-		respondError(w, http.StatusBadRequest, "project path is required")
+	if err := decodeJSON(r, &body); err != nil || strings.TrimSpace(body.Name) == "" {
+		respondError(w, http.StatusBadRequest, "project name is required")
 		return
 	}
 
@@ -45,19 +46,30 @@ func (wr *WorkspaceRoutes) create(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "registry not available")
 		return
 	}
-	projectPath, err := filepath.Abs(strings.TrimSpace(body.Path))
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid project path")
-		return
+	projectPath := strings.TrimSpace(body.Path)
+	if projectPath != "" {
+		var err error
+		projectPath, err = filepath.Abs(projectPath)
+		if err != nil {
+			respondError(w, http.StatusBadRequest, "invalid project path")
+			return
+		}
 	}
-	if _, err := os.Stat(filepath.Join(projectPath, ".knowns", "config.json")); err != nil {
-		respondError(w, http.StatusBadRequest, "project is not initialized")
-		return
-	}
-	project, err := reg.Add(projectPath)
+	existing := reg.FindByPath(projectPath)
+	project, err := reg.Create(body.Name, projectPath)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+	projectStore := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path)
+	if _, err := os.Stat(filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), project.ID), "config.json")); os.IsNotExist(err) {
+		if err := projectStore.Init(project.Name); err != nil {
+			if existing == nil {
+				_ = reg.Remove(project.ID)
+			}
+			respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	respondJSON(w, http.StatusCreated, project)
 }
@@ -153,6 +165,10 @@ func (wr *WorkspaceRoutes) list(w http.ResponseWriter, r *http.Request) {
 	// Filter out entries whose repository or central project config disappeared.
 	valid := projects[:0]
 	for _, p := range projects {
+		if p.Path == "" {
+			valid = append(valid, p)
+			continue
+		}
 		cfgPath := filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), p.ID), "config.json")
 		legacyCfg := filepath.Join(p.Path, ".knowns", "config.json")
 		if _, err := os.Stat(cfgPath); err == nil {

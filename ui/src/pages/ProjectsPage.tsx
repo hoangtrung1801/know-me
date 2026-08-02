@@ -11,6 +11,7 @@ export default function ProjectsPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [createOpen, setCreateOpen] = useState(false);
+	const [projectName, setProjectName] = useState("");
 	const [projectPath, setProjectPath] = useState("");
 	const [removing, setRemoving] = useState<WorkspaceProject | null>(null);
 	const [busy, setBusy] = useState(false);
@@ -33,12 +34,13 @@ export default function ProjectsPage() {
 		setBusy(true);
 		setError(null);
 		try {
-			await workspaceApi.create(projectPath.trim());
+			await workspaceApi.create({ name: projectName.trim(), path: projectPath.trim() || undefined });
+			setProjectName("");
 			setProjectPath("");
 			setCreateOpen(false);
 			await loadProjects();
 		} catch {
-			setError("Project could not be added. Check that the path exists and is initialized.");
+			setError("Project could not be added. Check the project name and local path.");
 		} finally {
 			setBusy(false);
 		}
@@ -87,7 +89,7 @@ export default function ProjectsPage() {
 									<FolderOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
 									<div className="min-w-0">
 										<h2 className="truncate font-medium">{project.name}</h2>
-										<p className="mt-1 truncate text-xs text-muted-foreground" title={project.path}>{project.path}</p>
+										<p className="mt-1 truncate text-xs text-muted-foreground" title={project.path}>{project.path || "No local directory"}</p>
 									</div>
 								</div>
 								<div className="mt-4 flex items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -106,14 +108,15 @@ export default function ProjectsPage() {
 			<Dialog open={createOpen} onOpenChange={(open) => !busy && setCreateOpen(open)}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Add existing project</DialogTitle>
-						<DialogDescription>Enter the absolute path to an initialized Knowns project. This does not switch your active workspace.</DialogDescription>
+						<DialogTitle>Add project</DialogTitle>
+						<DialogDescription>A project name is required. Its local directory is optional and does not switch your active workspace.</DialogDescription>
 					</DialogHeader>
 					<form onSubmit={createProject} className="space-y-4">
-						<Input autoFocus required value={projectPath} onChange={(event) => setProjectPath(event.target.value)} placeholder="/absolute/path/to/project" />
+						<Input autoFocus required value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Project name" />
+						<Input value={projectPath} onChange={(event) => setProjectPath(event.target.value)} placeholder="Optional local directory" />
 						<DialogFooter>
 							<Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={busy}>Cancel</Button>
-							<Button type="submit" disabled={busy || !projectPath.trim()}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Add project</Button>
+							<Button type="submit" disabled={busy || !projectName.trim()}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Add project</Button>
 						</DialogFooter>
 					</form>
 				</DialogContent>
