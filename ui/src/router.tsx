@@ -91,6 +91,12 @@ const memoryRoute = createRoute({
 	component: EmptyRoute,
 });
 
+const linksRoute = createRoute({
+	getParentRoute: () => rootRoute,
+	path: "/links",
+	component: EmptyRoute,
+});
+
 const memoryReviewRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: "/memory/review",
@@ -151,6 +157,7 @@ const routeTree = rootRoute.addChildren([
 	importsRoute,
 	graphRoute,
 	memoryRoute,
+	linksRoute,
 	memoryReviewRoute,
 	memoryHistoryRoute,
 	decisionsRoute,

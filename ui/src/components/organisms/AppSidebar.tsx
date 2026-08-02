@@ -12,6 +12,7 @@ import {
 	ArrowRightLeft,
 	Network,
 	Brain,
+	Link2,
 	ScrollText,
 	Activity,
 	FolderOpen,
@@ -89,6 +90,12 @@ const topNavItems = [
 		label: "Memories",
 		icon: Brain,
 		to: "/memory",
+	},
+	{
+		id: "links",
+		label: "Saved Links",
+		icon: Link2,
+		to: "/links",
 	},
 	{
 		id: "decisions",

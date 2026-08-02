@@ -2739,3 +2739,44 @@ export const tunnelApi = {
 		if (!res.ok) throw new Error("Failed to stop tunnel");
 	},
 };
+
+export interface SavedLink {
+	id: string;
+	url: string;
+	title: string;
+	description: string;
+	image?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export const linkApi = {
+	async list(): Promise<SavedLink[]> {
+		const res = await apiFetch(`${API_BASE}/api/links`);
+		if (!res.ok) throw new Error("Failed to fetch links");
+		return res.json();
+	},
+	async add(url: string, image?: File): Promise<SavedLink> {
+		const form = new FormData();
+		form.set("url", url);
+		if (image) form.set("image", image);
+		const res = await apiFetch(`${API_BASE}/api/links`, { method: "POST", body: form });
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body.error || "Failed to save link");
+		}
+		return res.json();
+	},
+	async update(id: string, data: { title: string; description: string; image?: File }): Promise<SavedLink> {
+		const form = new FormData();
+		form.set("title", data.title);
+		form.set("description", data.description);
+		if (data.image) form.set("image", data.image);
+		const res = await apiFetch(`${API_BASE}/api/links/${encodeURIComponent(id)}`, { method: "PATCH", body: form });
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body.error || "Failed to update link");
+		}
+		return res.json();
+	},
+};
