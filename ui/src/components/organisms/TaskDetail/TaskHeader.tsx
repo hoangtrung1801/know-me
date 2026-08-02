@@ -4,6 +4,7 @@ import { Input } from "../../ui/input";
 import type { Task } from "@models/task";
 import { useConfig } from "../../../contexts/ConfigContext";
 import { getStatusBadgeClasses, getStatusLabel, type ColorName } from "../../../utils/colors";
+import { useWorkspaceProjects } from "../../../hooks/useWorkspaceProjects";
 
 interface TaskHeaderProps {
 	task: Task;
@@ -16,6 +17,8 @@ export function TaskHeader({ task, onSave, saving }: TaskHeaderProps) {
 	const [title, setTitle] = useState(task.title);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const { config } = useConfig();
+	const projects = useWorkspaceProjects();
+	const projectName = task.projectId ? projects.find((project) => project.id === task.projectId)?.name || task.projectId : "Global";
 	const configStatusColors = (config.statusColors || {}) as Record<string, ColorName>;
 
 	useEffect(() => {
@@ -51,6 +54,7 @@ export function TaskHeader({ task, onSave, saving }: TaskHeaderProps) {
 				<span className={`text-xs px-1.5 py-0.5 rounded font-medium ${getStatusBadgeClasses(task.status, configStatusColors)}`}>
 					{getStatusLabel(task.status)}
 				</span>
+				<span className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">{projectName}</span>
 			</div>
 			{editing ? (
 				<Input

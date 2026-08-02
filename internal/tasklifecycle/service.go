@@ -565,11 +565,20 @@ func (service *Service) UpdateTask(ctx context.Context, taskID string, options T
 		now := service.now().UTC()
 		ApplyStatusTransition(candidate, requestedStatus, now)
 		candidate.UpdatedAt = now
-		if err := tx.UpdateTask(candidate); err != nil {
+		if before.ProjectID != candidate.ProjectID {
+			err = tx.MoveTaskProject(before.ProjectID, candidate)
+		} else {
+			err = tx.UpdateTask(candidate)
+		}
+		if err != nil {
 			return err
 		}
 		if err := tx.SaveTaskVersion(before, candidate, options.Actor, now, ""); err != nil {
-			_ = tx.UpdateTask(before)
+			if before.ProjectID != candidate.ProjectID {
+				_ = tx.MoveTaskProject(candidate.ProjectID, before)
+			} else {
+				_ = tx.UpdateTask(before)
+			}
 			return err
 		}
 		updated = cloneTask(candidate)

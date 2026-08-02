@@ -64,6 +64,10 @@ func (tx *TaskLifecycleTransaction) UpdateTask(task *models.Task) error {
 	return tx.store.Tasks.updateUnlocked(task)
 }
 
+func (tx *TaskLifecycleTransaction) MoveTaskProject(previousProjectID string, task *models.Task) error {
+	return tx.store.Tasks.moveProjectUnlocked(previousProjectID, task)
+}
+
 func (tx *TaskLifecycleTransaction) TrackTaskChanges(before, after *models.Task) []models.TaskChange {
 	return tx.store.Versions.TrackChanges(before, after)
 }

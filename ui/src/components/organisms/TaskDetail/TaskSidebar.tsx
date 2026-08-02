@@ -20,6 +20,7 @@ import { useTimeTracker } from "../../../contexts/TimeTrackerContext";
 import { useConfig } from "../../../contexts/ConfigContext";
 import { buildStatusOptions, getStatusBadgeClasses, type ColorName } from "../../../utils/colors";
 import { TaskLifecycleBadge, TaskLifecycleTimestamps } from "../../molecules/TaskLifecycleBadge";
+import { useWorkspaceProjects } from "../../../hooks/useWorkspaceProjects";
 
 interface TaskSidebarProps {
 	task: Task;
@@ -54,6 +55,8 @@ export function TaskSidebar({
 	const [newLabel, setNewLabel] = useState("");
 	const { isTaskRunning, isTaskPaused, start, stop, pause, resume } = useTimeTracker();
 	const { config } = useConfig();
+	const projects = useWorkspaceProjects();
+	const updateProject = (projectID: string) => onSave({ projectId: projectID === "global" ? "" : projectID, parent: "" });
 
 	// Build status options from config
 	const statusOptions = useMemo(() => {
@@ -158,8 +161,18 @@ export function TaskSidebar({
 					)}
 				</div>
 
-				{/* Row 2: Status, Priority, Assignee */}
-				<div className="grid grid-cols-3 gap-3">
+				{/* Row 2: Project, Status, Priority, Assignee */}
+				<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+					<div className="space-y-1">
+						<span className="text-xs text-muted-foreground">Project</span>
+						<Select value={task.projectId || "global"} onValueChange={updateProject} disabled={saving || task.lifecycleState === "archived"}>
+							<SelectTrigger className="w-full h-8 text-sm"><SelectValue /></SelectTrigger>
+							<SelectContent>
+								<SelectItem value="global">Global</SelectItem>
+								{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
+							</SelectContent>
+						</Select>
+					</div>
 					<div className="space-y-1">
 						<span className="text-xs text-muted-foreground">Status</span>
 						<Select
@@ -469,6 +482,18 @@ export function TaskSidebar({
 								{opt.label}
 							</SelectItem>
 						))}
+					</SelectContent>
+				</Select>
+			</div>
+
+			{/* Project */}
+			<div className="space-y-1.5">
+				<span className="text-xs text-muted-foreground">Project</span>
+				<Select value={task.projectId || "global"} onValueChange={updateProject} disabled={saving || task.lifecycleState === "archived"}>
+					<SelectTrigger className="w-full h-8 text-sm"><SelectValue /></SelectTrigger>
+					<SelectContent>
+						<SelectItem value="global">Global</SelectItem>
+						{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
 					</SelectContent>
 				</Select>
 			</div>
