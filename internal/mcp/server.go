@@ -21,6 +21,7 @@ import (
 	"github.com/howznguyen/knowns/internal/lsp/adapters"
 	"github.com/howznguyen/knowns/internal/lspdaemon"
 	"github.com/howznguyen/knowns/internal/mcp/handlers"
+	"github.com/howznguyen/knowns/internal/memos"
 	"github.com/howznguyen/knowns/internal/permissions"
 	"github.com/howznguyen/knowns/internal/registry"
 	"github.com/howznguyen/knowns/internal/runtimequeue"
@@ -475,6 +476,7 @@ func NewMCPServer(projectHint string) *MCPServer {
 	handlers.RegisterMemoryTool(s.srv, getStore)
 	handlers.RegisterDecisionTool(s, getStore)
 	handlers.RegisterLinkTool(s, links.NewService(storage.GlobalRootPath()))
+	handlers.RegisterMemoTool(s, memos.NewService(storage.GlobalRootPath()))
 
 	// Auto-detect project from hint or cwd.
 	s.autoDetectProject(setStore, projectHint)
