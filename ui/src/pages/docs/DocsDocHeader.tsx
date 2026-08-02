@@ -1,9 +1,12 @@
 import { FileText, ListChecks, ChevronDown, ChevronUp } from "lucide-react";
 import { Progress } from "../../components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { useWorkspaceProjects } from "../../hooks/useWorkspaceProjects";
 import { toDisplayPath, isSpec, getSpecStatus, parseACProgress } from "../../lib/utils";
 
 interface DocData {
   path: string;
+	projectId?: string;
   content: string;
   isImported?: boolean;
   metadata: {
@@ -28,7 +31,8 @@ interface DocsDocHeaderProps {
   setMetaDescription: (v: string) => void;
   metaTags: string;
   setMetaTags: (v: string) => void;
-  handleSaveMetadata: (field: "title" | "description" | "tags") => void;
+	handleSaveMetadata: (field: "title" | "description" | "tags") => void;
+	handleProjectChange: (projectID: string) => void;
   linkedTasks: LinkedTask[];
   linkedTasksExpanded: boolean;
   setLinkedTasksExpanded: (v: boolean) => void;
@@ -44,11 +48,14 @@ export function DocsDocHeader({
   metaTags,
   setMetaTags,
   handleSaveMetadata,
+	handleProjectChange,
   linkedTasks,
   linkedTasksExpanded,
   setLinkedTasksExpanded,
   openTask,
 }: DocsDocHeaderProps) {
+	const projects = useWorkspaceProjects();
+
   return (
     <header className="mb-10">
       {/* Title */}
@@ -111,6 +118,16 @@ export function DocsDocHeader({
             </div>
           )
         )}
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground/75">
+          <span>Project</span>
+          <Select value={selectedDoc.projectId || "global"} onValueChange={handleProjectChange} disabled={selectedDoc.isImported}>
+            <SelectTrigger className="h-7 w-40 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="global">Global</SelectItem>
+              {projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="text-[11px] font-mono text-muted-foreground/65 break-all">
           @doc/{toDisplayPath(selectedDoc.path).replace(/\.md$/, "")}
         </div>

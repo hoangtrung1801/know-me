@@ -273,6 +273,7 @@ func (dr *DocRoutes) update(w http.ResponseWriter, r *http.Request) {
 		Content     *string   `json:"content"`
 		Tags        *[]string `json:"tags"`
 		Path        *string   `json:"path"`
+		ProjectID   *string   `json:"projectId"`
 		Section     *string   `json:"section"`
 	}
 	if err := decodeJSON(r, &payload); err != nil {
@@ -281,7 +282,6 @@ func (dr *DocRoutes) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	doc := oldDoc
-	doc.Path = path
 	doc.UpdatedAt = time.Now().UTC()
 	oldPath := path
 
@@ -300,12 +300,20 @@ func (dr *DocRoutes) update(w http.ResponseWriter, r *http.Request) {
 	if payload.Path != nil {
 		doc.Path = strings.Trim(strings.TrimSuffix(*payload.Path, ".md"), "/")
 	}
+	if payload.ProjectID != nil {
+		doc.ProjectID = strings.TrimSpace(*payload.ProjectID)
+	}
 
 	if doc.Tags == nil {
 		doc.Tags = []string{}
 	}
 
-	if oldPath != doc.Path {
+	if oldDoc.ProjectID != doc.ProjectID {
+		if err := dr.getStore().Docs.MoveProject(oldPath, &doc); err != nil {
+			respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	} else if oldDoc.Path != doc.Path {
 		if err := dr.getStore().Docs.Rename(oldPath, &doc); err != nil {
 			respondError(w, http.StatusInternalServerError, err.Error())
 			return

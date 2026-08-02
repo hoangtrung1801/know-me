@@ -213,6 +213,34 @@ func (ds *DocStore) Update(doc *models.Doc) error {
 	return ds.writeFile(absPath, doc)
 }
 
+// MoveProject changes a document's optional project scope and moves its file.
+func (ds *DocStore) MoveProject(oldPath string, doc *models.Doc) error {
+	if doc == nil || doc.Path == "" {
+		return fmt.Errorf("doc path is required")
+	}
+	existing, err := ds.Get(oldPath)
+	if err != nil {
+		return err
+	}
+	doc.Path = existing.Path
+	applyLockedDecisionReviewGate(existing, doc)
+
+	oldAbsPath := filepath.Join(ds.docsDir(), filepath.FromSlash(scopedDocPath(existing.ProjectID, existing.Path))+".md")
+	newAbsPath := filepath.Join(ds.docsDir(), filepath.FromSlash(scopedDocPath(doc.ProjectID, doc.Path))+".md")
+	if err := os.MkdirAll(filepath.Dir(newAbsPath), 0755); err != nil {
+		return err
+	}
+	if err := ds.writeFile(newAbsPath, doc); err != nil {
+		return err
+	}
+	if oldAbsPath != newAbsPath {
+		if err := os.Remove(oldAbsPath); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
+}
+
 // Rename rewrites a doc to a new path and removes the old file.
 func (ds *DocStore) Rename(oldPath string, doc *models.Doc) error {
 	if strings.TrimSpace(oldPath) == "" || doc == nil || strings.TrimSpace(doc.Path) == "" {
