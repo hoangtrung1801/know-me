@@ -7,6 +7,7 @@ import { StatusBadge, PriorityBadge, LabelList } from "@/ui/components/molecules
 import { useConfig } from "@/ui/contexts/ConfigContext";
 import { buildStatusOptions } from "@/ui/utils/colors";
 import { useNewTaskIds } from "@/ui/hooks/useNewTaskIds";
+import { useWorkspaceProjects } from "@/ui/hooks/useWorkspaceProjects";
 import { navigateTo } from "../../lib/navigation";
 import { cn } from "@/ui/lib/utils";
 import { TaskLifecycleBadge } from "../molecules/TaskLifecycleBadge";
@@ -20,6 +21,11 @@ interface TaskNotionListProps {
 export function TaskNotionList({ tasks, onTaskClick, onNewTask }: TaskNotionListProps) {
 	const { config } = useConfig();
 	const newTaskIds = useNewTaskIds(tasks);
+	const projects = useWorkspaceProjects();
+	const projectNames = useMemo(
+		() => new Map(projects.map((project) => [project.id, project.name])),
+		[projects],
+	);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState<string>("all");
 	const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -301,6 +307,7 @@ export function TaskNotionList({ tasks, onTaskClick, onNewTask }: TaskNotionList
 												key={task.id}
 												task={task}
 												isNew={newTaskIds.has(task.id)}
+												projectName={projectNames.get(task.projectId || "") || task.projectId || "Global"}
 												onClick={() => onTaskClick(task)}
 											/>
 										))}
@@ -321,7 +328,17 @@ export function TaskNotionList({ tasks, onTaskClick, onNewTask }: TaskNotionList
 }
 
 
-function TaskRow({ task, isNew, onClick }: { task: Task; isNew?: boolean; onClick: () => void }) {
+function TaskRow({
+	task,
+	isNew,
+	projectName,
+	onClick,
+}: {
+	task: Task;
+	isNew?: boolean;
+	projectName: string;
+	onClick: () => void;
+}) {
 	const criteria = task.acceptanceCriteria ?? [];
 	const acCompleted = criteria.filter((c: { completed: boolean }) => c.completed).length;
 	const acTotal = criteria.length;
@@ -352,7 +369,7 @@ function TaskRow({ task, isNew, onClick }: { task: Task; isNew?: boolean; onClic
 						#{task.id}
 					</span>
 					<span className="hidden rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground md:inline">
-						{task.projectId || "Global"}
+						{projectName}
 					</span>
 					<TaskLifecycleBadge state={task.lifecycleState} />
 				</div>
