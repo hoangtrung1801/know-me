@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/howznguyen/knowns/internal/links"
 	"github.com/howznguyen/knowns/internal/lsp"
 	"github.com/howznguyen/knowns/internal/lsp/adapters"
 	"github.com/howznguyen/knowns/internal/lspdaemon"
@@ -473,6 +474,7 @@ func NewMCPServer(projectHint string) *MCPServer {
 	handlers.RegisterValidateTools(s, getStore)
 	handlers.RegisterMemoryTool(s.srv, getStore)
 	handlers.RegisterDecisionTool(s, getStore)
+	handlers.RegisterLinkTool(s, links.NewService(storage.GlobalRootPath()))
 
 	// Auto-detect project from hint or cwd.
 	s.autoDetectProject(setStore, projectHint)

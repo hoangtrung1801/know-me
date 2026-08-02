@@ -46,6 +46,7 @@ const TasksPage = lazyWithRetry(() => import("./pages/TasksPage"));
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
 const GraphPage = lazyWithRetry(() => import("./pages/GraphPage"));
 const MemoryPage = lazyWithRetry(() => import("./pages/MemoryPage"));
+const LinksPage = lazyWithRetry(() => import("./pages/LinksPage"));
 const DecisionPage = lazyWithRetry(() => import("./pages/DecisionPage"));
 const AuditPage = lazyWithRetry(() => import("./pages/AuditPage"));
 
@@ -68,6 +69,7 @@ function getCurrentPage(pathname: string) {
 	if (pathname.startsWith("/imports")) return "imports";
 	if (pathname.startsWith("/graph")) return "graph";
 	if (pathname.startsWith("/memory")) return "memory";
+	if (pathname.startsWith("/links")) return "links";
 	if (pathname.startsWith("/decisions")) return "decisions";
 	if (pathname.startsWith("/audit")) return "audit";
 	if (pathname.startsWith("/chat")) return "chat";
@@ -153,6 +155,7 @@ export default function AppShell() {
 			docs: "Docs",
 			graph: "Graph",
 			memory: "Memories",
+			links: "Saved links",
 			decisions: "Decisions",
 			audit: "Audit Trail",
 			imports: "Imports",
@@ -359,6 +362,8 @@ export default function AppShell() {
 				return <GraphPage />;
 			case "memory":
 				return <MemoryPage />;
+			case "links":
+				return <LinksPage />;
 			case "decisions":
 				return <DecisionPage />;
 			case "audit":

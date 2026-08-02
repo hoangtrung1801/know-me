@@ -28,6 +28,7 @@ const (
 	TargetGraph    = "graph"
 	TargetSearch   = "search"
 	TargetCode     = "code"
+	TargetLink     = "link"
 )
 
 // Risk levels for AI actions.
@@ -90,6 +91,11 @@ var ActionRegistry = map[string]ActionMeta{
 	"time.add":    {Capability: CapWrite, Target: TargetTime, Risk: RiskMedium},
 	"time.report": {Capability: CapRead, Target: TargetTime, Risk: RiskLow},
 
+	// links
+	"link.add":    {Capability: CapWrite, Target: TargetLink, Risk: RiskMedium},
+	"link.list":   {Capability: CapRead, Target: TargetLink, Risk: RiskLow},
+	"link.update": {Capability: CapWrite, Target: TargetLink, Risk: RiskMedium},
+
 	// search
 	"search.search":   {Capability: CapRead, Target: TargetSearch, Risk: RiskLow},
 	"search.retrieve": {Capability: CapRead, Target: TargetSearch, Risk: RiskLow},
@@ -123,6 +129,7 @@ var toolFallback = map[string]ActionMeta{
 	"templates": {Capability: CapRead, Target: TargetTemplate, Risk: RiskLow},
 	"validate":  {Capability: CapRead, Target: TargetRuntime, Risk: RiskLow},
 	"memory":    {Capability: CapRead, Target: TargetMemory, Risk: RiskLow},
+	"link":      {Capability: CapRead, Target: TargetLink, Risk: RiskLow},
 	"project":   {Capability: CapAdmin, Target: TargetRuntime, Risk: RiskMedium},
 }
 
