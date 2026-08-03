@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, Link2, Loader2, Pencil, Plus, RefreshCw } from "lucide-react";
 import { linkApi, type SavedLink } from "@/ui/api/client";
 import { PageContent, PageHeader, PageLoading, PageShell } from "@/ui/components/templates/PageShell";
@@ -19,6 +19,9 @@ export default function LinksPage() {
 	const [description, setDescription] = useState("");
 	const [image, setImage] = useState<File | undefined>();
 	const [busy, setBusy] = useState(false);
+	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const availableTags = useMemo(() => [...new Set(links.flatMap((link) => link.tags ?? []))].sort(), [links]);
+	const visibleLinks = useMemo(() => selectedTags.length === 0 ? links : links.filter((link) => (link.tags ?? []).some((tag) => selectedTags.includes(tag))), [links, selectedTags]);
 
 	const load = useCallback(async () => {
 		setError(null);
@@ -52,9 +55,13 @@ export default function LinksPage() {
 
 	return <PageShell>
 		<PageHeader size="full" title="Saved links" description="Your global link library, available across every project." context="Library" status={`${links.length} ${links.length === 1 ? "link" : "links"}`} actions={<><Button onClick={() => { setURL(""); setAddImage(undefined); setAdding(true); }}><Plus className="mr-2 h-4 w-4" />Add Link</Button><Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button></>} />
+		{availableTags.length > 0 && <div className="mx-auto flex w-full max-w-screen-2xl flex-wrap gap-2 px-6 pt-4" aria-label="Filter links by tag">
+			<Button size="sm" variant={selectedTags.length === 0 ? "default" : "outline"} onClick={() => setSelectedTags([])}>All tags</Button>
+			{availableTags.map((tag) => <Button key={tag} size="sm" variant={selectedTags.includes(tag) ? "default" : "outline"} aria-pressed={selectedTags.includes(tag)} onClick={() => setSelectedTags((current) => current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])}>{tag}</Button>)}
+		</div>}
 		<PageContent size="full">
-			{loading ? <PageLoading label="Loading saved links" /> : error && links.length === 0 ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : links.length === 0 ? <div className="rounded-lg border border-dashed px-6 py-12 text-center"><Link2 className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 text-sm font-medium">No saved links yet</p><p className="mt-1 text-sm text-muted-foreground">Use the CLI, MCP, or API to save a URL.</p></div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-				{links.map((link) => { const src = imageSrc(link); return <article key={link.id} className="group overflow-hidden rounded-lg border border-border bg-transparent shadow-none transition-colors hover:bg-accent/40">
+			{loading ? <PageLoading label="Loading saved links" /> : error && links.length === 0 ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : links.length === 0 ? <div className="rounded-lg border border-dashed px-6 py-12 text-center"><Link2 className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 text-sm font-medium">No saved links yet</p><p className="mt-1 text-sm text-muted-foreground">Use the CLI, MCP, or API to save a URL.</p></div> : visibleLinks.length === 0 ? <div className="rounded-lg border border-dashed px-6 py-12 text-center"><p className="text-sm text-muted-foreground">No links match the selected tags.</p></div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+				{visibleLinks.map((link) => { const src = imageSrc(link); return <article key={link.id} className="group overflow-hidden rounded-lg border border-border bg-transparent shadow-none transition-colors hover:bg-accent/40">
 					{src ? <img src={src} alt="" className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-muted/40"><Link2 className="h-8 w-8 text-muted-foreground/50" /></div>}
 					<div className="p-4"><div className="flex items-start justify-between gap-3"><h2 className="line-clamp-2 font-semibold leading-tight">{link.title || link.url}</h2><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Edit ${link.title || link.url}`} onClick={() => openEditor(link)}><Pencil className="h-4 w-4" /></Button></div>
 						{link.description && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{link.description}</p>}
