@@ -46,3 +46,16 @@ test("saved link cards show automatic tags", async ({ page }) => {
 	await expect(page.getByText("golang", { exact: true })).toBeVisible();
 	await expect(page.getByText("release", { exact: true })).toBeVisible();
 });
+
+test("saved links can be filtered by tag", async ({ page }) => {
+	await page.route("**/api/links", (route) => route.fulfill({ json: [
+		{ id: "link1", url: "https://example.com/go", title: "Go release", description: "", tags: ["golang", "release"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+		{ id: "link2", url: "https://example.com/design", title: "Design notes", description: "", tags: ["design"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+	] }));
+	await page.goto(`${server.baseURL}/links`);
+	await page.getByRole("button", { name: "golang" }).click();
+	await expect(page.getByText("Go release")).toBeVisible();
+	await expect(page.getByText("Design notes")).not.toBeVisible();
+	await page.getByRole("button", { name: "All tags" }).click();
+	await expect(page.getByText("Design notes")).toBeVisible();
+});
