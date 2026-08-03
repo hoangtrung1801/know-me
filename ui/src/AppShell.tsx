@@ -412,8 +412,8 @@ export default function AppShell() {
 								: "h-11 border-b border-sidebar-border/80 bg-background sm:gap-2",
 							)}
 						>
-							<SidebarTrigger className={cn("-ml-1", isChatPage && "opacity-80")} />
-							<Separator orientation="vertical" className={cn("mr-1 h-4 sm:mr-2", isChatPage && "opacity-50")} />
+							<SidebarTrigger className={cn("-ml-1 md:hidden", isChatPage && "opacity-80")} />
+							<Separator orientation="vertical" className={cn("mr-1 h-4 md:hidden sm:mr-2", isChatPage && "opacity-50")} />
 							<ConnectionStatus />
 							<AppBreadcrumb
 								currentPage={currentPage}

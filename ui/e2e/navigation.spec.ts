@@ -12,35 +12,47 @@ test.afterAll(() => {
 });
 
 test.describe("Navigation & Global Features", () => {
-	test("sidebar navigates between pages", async ({ page }) => {
+	test("desktop navigation uses the bottom dock", async ({ page }) => {
+		await page.goto(server.baseURL);
+		await expect(page.locator("[data-navigation-dock]")).toBeVisible();
+		const tasksLink = page.getByRole("link", { name: "Tasks" });
+		await tasksLink.hover();
+		await expect(page.getByRole("tooltip", { name: "Tasks", exact: true })).toBeVisible();
+		await tasksLink.click();
+		await expect(page).toHaveURL(/\/tasks/);
+	});
+
+	test("bottom dock navigates between pages", async ({ page }) => {
+		const dock = page.locator("[data-navigation-dock]");
+
 		await test.step("Navigate to dashboard", async () => {
 			await page.goto(server.baseURL);
 			await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 		});
 
-		await test.step("Navigate to Tasks via sidebar", async () => {
-			await page.getByText("Tasks", { exact: true }).first().click();
+		await test.step("Navigate to Tasks via bottom dock", async () => {
+			await dock.getByRole("link", { name: "Tasks" }).click();
 			await expect(page).toHaveURL(/\/tasks/);
 		});
 
-		await test.step("Navigate to Kanban via sidebar", async () => {
-			await page.getByText("Kanban", { exact: true }).first().click();
+		await test.step("Navigate to Kanban via bottom dock", async () => {
+			await dock.getByRole("link", { name: "Kanban" }).click();
 			await expect(page).toHaveURL(/\/kanban/);
 		});
 
-		await test.step("Navigate to Docs via sidebar", async () => {
-			await page.getByText("Docs", { exact: true }).first().click();
+		await test.step("Navigate to Docs via bottom dock", async () => {
+			await dock.getByRole("link", { name: "Docs" }).click();
 			await expect(page).toHaveURL(/\/docs/);
 		});
 
-		await test.step("Navigate to Projects via sidebar", async () => {
-			await page.getByText("Projects", { exact: true }).first().click();
+		await test.step("Navigate to Projects via bottom dock", async () => {
+			await dock.getByRole("link", { name: "Projects" }).click();
 			await expect(page).toHaveURL(/\/projects/);
 			await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible();
 		});
 
-		await test.step("Navigate to Settings via sidebar", async () => {
-			await page.getByText("Settings", { exact: true }).first().click();
+		await test.step("Navigate to Settings via bottom dock", async () => {
+			await dock.getByRole("link", { name: "Settings" }).click();
 			await expect(page).toHaveURL(/\/config/);
 		});
 	});
