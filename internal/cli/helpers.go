@@ -52,7 +52,7 @@ func resolveProjectStore(start string) (*storage.Store, error) {
 		if _, statErr := os.Stat(legacy); statErr == nil {
 			return storage.NewStore(filepath.Dir(legacy)), nil
 		}
-		return nil, fmt.Errorf("no registered Knowns project found from %s", start)
+		return nil, fmt.Errorf("no registered Know-Me project found from %s", start)
 	}
 	return storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path), nil
 }

@@ -58,7 +58,7 @@ func (a *BashAdapter) InstallGuide() lsp.InstallGuide {
 		Command:   "npm install -g bash-language-server@" + bashLanguageServerVersion,
 		URL:       "https://github.com/bash-lsp/bash-language-server",
 		KnownsCmd: "knowns lsp install bash",
-		Notes:     "Requires Node.js 20+; Knowns uses the pinned recommended version by default",
+		Notes:     "Requires Node.js 20+; Know-Me uses the pinned recommended version by default",
 	}
 }
 func (a *BashAdapter) CanInstall() bool { return true }

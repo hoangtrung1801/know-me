@@ -1,5 +1,5 @@
 // Package storage provides read/write access to the .knowns/ directory format.
-// It is fully backward-compatible with the TypeScript Knowns CLI.
+// It is fully backward-compatible with the TypeScript Know-Me CLI.
 package storage
 
 import (
@@ -43,7 +43,7 @@ func NewStore(root string) *Store {
 	return newStore(root, "", "")
 }
 
-// NewProjectStore creates a store rooted at the global Knowns directory while
+// NewProjectStore creates a store rooted at the global Know-Me directory while
 // retaining the active project identity and repository path separately.
 func NewProjectStore(globalRoot, projectID, repositoryRoot string) *Store {
 	s := newStore(globalRoot, projectID, repositoryRoot)
@@ -119,7 +119,7 @@ func (s *Store) WithTaskLifecycleTransaction(ctx context.Context, fn func(*TaskL
 	})
 }
 
-// GlobalRootPath returns the machine-level Knowns root (~/.knowns).
+// GlobalRootPath returns the machine-level Know-Me root (~/.knowns).
 func GlobalRootPath() string {
 	if home := os.Getenv("HOME"); home != "" {
 		return filepath.Join(home, ".knowns")
@@ -129,7 +129,7 @@ func GlobalRootPath() string {
 }
 
 // GlobalSemanticStoreRoot returns the dedicated store root for global semantic
-// config and indices under the machine-level Knowns directory.
+// config and indices under the machine-level Know-Me directory.
 func GlobalSemanticStoreRoot() string {
 	return filepath.Join(GlobalRootPath(), globalSemanticStoreDir)
 }

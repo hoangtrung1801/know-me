@@ -1,6 +1,6 @@
 # Model management
 
-Knowns dùng local embedding models cho semantic search.
+Know-Me dùng local embedding models cho semantic search.
 
 ## Lệnh chính
 
@@ -29,4 +29,4 @@ knowns search --reindex
 
 ## Lưu ý
 
-Không có local model → semantic search không hoạt động → Knowns fallback về keyword search.
+Không có local model → semantic search không hoạt động → Know-Me fallback về keyword search.

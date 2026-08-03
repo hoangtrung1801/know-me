@@ -1,6 +1,6 @@
 # Model Management
 
-Knowns can use local embedding models for semantic search.
+Know-Me can use local embedding models for semantic search.
 
 ## Main commands
 
@@ -29,4 +29,4 @@ knowns search --reindex
 
 ## Why this matters
 
-Without a local model, semantic search is unavailable and Knowns will rely on keyword behavior where applicable.
+Without a local model, semantic search is unavailable and Know-Me will rely on keyword behavior where applicable.

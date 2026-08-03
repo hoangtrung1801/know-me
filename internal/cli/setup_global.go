@@ -376,28 +376,28 @@ func generateGlobalInstructionContent(platform string) string {
 	case "claude-code":
 		return `# CLAUDE
 
-Global Knowns integration. Project-level MCP configuration takes precedence when available.
+Global Know-Me integration. Project-level MCP configuration takes precedence when available.
 
-## Knowns
+## Know-Me
 
-Knowns is the repository memory and workflow layer for AI-native development.
+Know-Me is the repository memory and workflow layer for AI-native development.
 
-- When working in a project with a .knowns/ directory, use Knowns MCP for project-specific context.
-- Use Knowns MCP tools for tasks, docs, templates, and workflow state.
+- When working in a project with a .knowns/ directory, use Know-Me MCP for project-specific context.
+- Use Know-Me MCP tools for tasks, docs, templates, and workflow state.
 - Search first, then read only relevant docs and code.
 - Plan before implementation unless the user explicitly overrides.
 `
 	case "kiro":
-		return `# Knowns Global Steering
+		return `# Know-Me Global Steering
 
-Global Knowns integration for Kiro. Project-level configuration takes precedence when available.
+Global Know-Me integration for Kiro. Project-level configuration takes precedence when available.
 
-## Knowns
+## Know-Me
 
-Knowns is the repository memory and workflow layer for AI-native development.
+Know-Me is the repository memory and workflow layer for AI-native development.
 
-- When working in a project with a .knowns/ directory, use Knowns MCP for project-specific context.
-- Use Knowns MCP tools for tasks, docs, templates, and workflow state.
+- When working in a project with a .knowns/ directory, use Know-Me MCP for project-specific context.
+- Use Know-Me MCP tools for tasks, docs, templates, and workflow state.
 - Search first, then read only relevant docs and code.
 `
 	default:

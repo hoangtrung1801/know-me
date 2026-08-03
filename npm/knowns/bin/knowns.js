@@ -42,7 +42,7 @@ function getInstallHint(pkgName) {
 
 function getWindowsRuntimeCacheRoot() {
   if (process.env.LOCALAPPDATA) {
-    return path.join(process.env.LOCALAPPDATA, "Knowns", "npm-runtime");
+    return path.join(process.env.LOCALAPPDATA, "Know-Me", "npm-runtime");
   }
   return path.join(os.homedir(), ".knowns", "cache", "npm-runtime");
 }
@@ -84,7 +84,7 @@ function stageWindowsBinary(binary, options = {}) {
   }
 
   if (!fs.existsSync(cachedBinary)) {
-    throw new Error(`Failed to stage Knowns Windows runtime at ${cachedBinary}`);
+    throw new Error(`Failed to stage Know-Me Windows runtime at ${cachedBinary}`);
   }
   return cachedBinary;
 }

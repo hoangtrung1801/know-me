@@ -229,7 +229,7 @@ function writeDownloadedPackageMetadata(dest, platformPackage, version) {
       {
         name: platformPackage.name,
         version,
-        description: `Knowns binary for ${platformPackage.asset.replace(/^knowns-/, "").replace(/-/g, " ")}`,
+        description: `Know-Me binary for ${platformPackage.asset.replace(/^knowns-/, "").replace(/-/g, " ")}`,
         os: [platformPackage.packageOs],
         cpu: [platformPackage.packageCpu],
         main: `knowns${platformPackage.ext}`,
@@ -318,7 +318,7 @@ async function main() {
   } catch (error) {
     const platformPackage = getPlatformPackage();
     const details = error && error.message ? error.message : String(error);
-    console.error(`Failed to install Knowns platform binary.${platformPackage ? ` Expected package: ${platformPackage.name}.` : ""}`);
+    console.error(`Failed to install Know-Me platform binary.${platformPackage ? ` Expected package: ${platformPackage.name}.` : ""}`);
     console.error(details);
     if (platformPackage) {
       console.error(`Try: ${getInstallHint(platformPackage.name)}`);

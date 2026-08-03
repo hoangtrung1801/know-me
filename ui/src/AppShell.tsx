@@ -167,7 +167,7 @@ export default function AppShell() {
 			config: "Settings",
 		};
 		const pageTitle = titles[currentPage] || "Dashboard";
-		const projectName = config.name || "Knowns";
+		const projectName = config.name || "Know-Me";
 		document.title = `${pageTitle} · ${projectName}`;
 	}, [currentPage, config.name]);
 
@@ -417,7 +417,7 @@ export default function AppShell() {
 							<ConnectionStatus />
 							<AppBreadcrumb
 								currentPage={currentPage}
-								projectName={config.name || "Knowns"}
+								projectName={config.name || "Know-Me"}
 							/>
 							{!isChatPage && (
 								<HeaderTimeTracker

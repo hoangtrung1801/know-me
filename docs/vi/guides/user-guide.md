@@ -1,12 +1,12 @@
 # Hướng dẫn sử dụng
 
-Dành cho người dùng Knowns trong project thực tế, không chỉ thử CLI một lần.
+Dành cho người dùng Know-Me trong project thực tế, không chỉ thử CLI một lần.
 
-Knowns hữu ích nhất khi bạn xem nó là shared project context nằm cạnh source code. CLI, MCP server, và Web UI cùng đọc/ghi trên một project state, nên work tạo ở một surface sẽ thấy được ở các surface còn lại.
+Know-Me hữu ích nhất khi bạn xem nó là shared project context nằm cạnh source code. CLI, MCP server, và Web UI cùng đọc/ghi trên một project state, nên work tạo ở một surface sẽ thấy được ở các surface còn lại.
 
 ## Mô hình chính
 
-Knowns là một context layer cho project, gồm 5 phần gắn với nhau:
+Know-Me là một context layer cho project, gồm 5 phần gắn với nhau:
 
 - **task** cho planned work, status, acceptance criteria, implementation plan, và notes
 - **doc** cho project knowledge bền vững như architecture, spec, decision, và onboarding
@@ -14,7 +14,7 @@ Knowns là một context layer cho project, gồm 5 phần gắn với nhau:
 - **template** cho project scaffolding lặp lại
 - **search / retrieval** để tìm context liên quan khi người hoặc AI cần
 
-Thói quen quan trọng là đưa context có thể tái sử dụng vào Knowns, thay vì chỉ để nó trong chat message.
+Thói quen quan trọng là đưa context có thể tái sử dụng vào Know-Me, thay vì chỉ để nó trong chat message.
 
 ## `knowns init` làm gì?
 

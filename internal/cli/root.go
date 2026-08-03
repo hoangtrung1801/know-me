@@ -33,7 +33,7 @@ var rootCmd = &cobra.Command{
 			fmt.Println(StyleInfo.Render(line))
 		}
 		fmt.Println()
-		fmt.Printf("  %s %s\n", StyleBold.Render("Knowns"), StyleSuccess.Render(util.Version))
+		fmt.Printf("  %s %s\n", StyleBold.Render("Know-Me"), StyleSuccess.Render(util.Version))
 		fmt.Println("  The memory layer for AI-native software development.")
 		fmt.Println("  Enabling AI to understand your project instantly.")
 		fmt.Println()
@@ -115,7 +115,7 @@ func maybeWarnSkillsOutOfSync() {
 	}
 }
 
-// maybeAutoSetup detects a cloned Knowns project with config.json but missing
+// maybeAutoSetup detects a cloned Know-Me project with config.json but missing
 // local setup (e.g. embedding model not downloaded) and prompts the user to
 // complete setup. This runs on the first command after cloning.
 func maybeAutoSetup() {

@@ -12,7 +12,7 @@ type DocReferenceFragment struct {
 	Heading    string `json:"heading,omitempty"`
 }
 
-// SemanticReference is a parsed inline Knowns reference.
+// SemanticReference is a parsed inline Know-Me reference.
 type SemanticReference struct {
 	Raw              string                `json:"raw"`
 	Canonical        string                `json:"canonical"`

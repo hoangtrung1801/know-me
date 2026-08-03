@@ -28,12 +28,12 @@ var updateRuntimeGOOS = runtime.GOOS
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Update Knowns CLI to the latest version and sync project configs",
-	Long: `Update the Knowns CLI binary to the latest version, then sync the current
+	Short: "Update Know-Me CLI to the latest version and sync project configs",
+	Long: `Update the Know-Me CLI binary to the latest version, then sync the current
 project's MCP configurations to use the local binary directly (instead of npx).
 
 This command:
-  1. Detects how Knowns was installed (Homebrew, npm, etc.)
+  1. Detects how Know-Me was installed (Homebrew, npm, etc.)
   2. Runs the appropriate upgrade command
   3. Syncs MCP configs (.mcp.json, .kiro/settings/mcp.json) to use the local binary
 
@@ -415,7 +415,7 @@ func printPackageManagerExternalUpdateGuidanceTo(w io.Writer, method util.Instal
 		StyleBold.Render(installMethodLabel(method)),
 	)
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "  Close terminals/agents that are using Knowns, then run this in a fresh PowerShell:")
+	fmt.Fprintln(w, "  Close terminals/agents that are using Know-Me, then run this in a fresh PowerShell:")
 	fmt.Fprintf(w, "  %s\n", StyleInfo.Render(installCmd))
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  After it finishes, run %s to sync configs and rebuild indexes.\n", StyleBold.Render("knowns sync"))

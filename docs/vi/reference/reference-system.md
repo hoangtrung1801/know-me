@@ -1,6 +1,6 @@
 # Reference system
 
-Knowns hỗ trợ structured references giữa task, doc, memory, và template.
+Know-Me hỗ trợ structured references giữa task, doc, memory, và template.
 
 ## Các dạng phổ biến
 

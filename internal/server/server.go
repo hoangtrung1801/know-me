@@ -1,5 +1,5 @@
 // Package server provides the HTTP server, REST API, SSE broker, and WebSocket
-// support for the Knowns CLI Go rewrite.
+// support for the Know-Me CLI Go rewrite.
 package server
 
 import (
@@ -278,7 +278,7 @@ func buildOpenCodeProxy(cfg opencode.Config) *httputil.ReverseProxy {
 	proxy.Transport = transport
 	proxy.FlushInterval = -1 // flush immediately — required for SSE streaming
 	proxy.ModifyResponse = func(resp *http.Response) error {
-		// Let the Knowns server own CORS for proxied OpenCode responses.
+		// Let the Know-Me server own CORS for proxied OpenCode responses.
 		resp.Header.Del("Access-Control-Allow-Origin")
 		resp.Header.Del("Access-Control-Allow-Credentials")
 		resp.Header.Del("Access-Control-Allow-Headers")
@@ -399,7 +399,7 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 	s.router = s.buildRouter()
 
 	// Start OpenCode SSE forwarder — multiplexes OpenCode events into the
-	// Knowns SSE stream so each browser tab needs only one SSE connection.
+	// Know-Me SSE stream so each browser tab needs only one SSE connection.
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancelSSEFwd = cancel
 	s.startOpenCodeSSEForwarder(ctx)
@@ -793,7 +793,7 @@ func (s *Server) startOpenCodeRuntimeMonitor(ctx context.Context) {
 }
 
 // startOpenCodeSSEForwarder subscribes to the OpenCode global SSE stream and
-// re-broadcasts every event through the Knowns SSEBroker as "opencode:event".
+// re-broadcasts every event through the Know-Me SSEBroker as "opencode:event".
 // This eliminates the need for each browser tab to open its own EventSource to
 // OpenCode, reducing per-tab SSE connections from 2 to 1 and avoiding HTTP/1.1
 // connection exhaustion when multiple tabs are open.

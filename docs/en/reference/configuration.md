@@ -1,8 +1,8 @@
 # Configuration
 
-Knowns stores project configuration in `.knowns/config.json`.
+Know-Me stores project configuration in `.knowns/config.json`.
 
-This file describes what the project wants Knowns to manage locally, including platform integrations, semantic search settings, and generated artifact behavior.
+This file describes what the project wants Know-Me to manage locally, including platform integrations, semantic search settings, and generated artifact behavior.
 
 ## Example
 
@@ -45,11 +45,11 @@ This file describes what the project wants Knowns to manage locally, including p
 
 ### `name`
 
-The project name shown in Knowns surfaces.
+The project name shown in Know-Me surfaces.
 
 ### `settings.gitTrackingMode`
 
-Controls how Knowns manages Git-related generated content.
+Controls how Know-Me manages Git-related generated content.
 
 Supported values:
 
@@ -61,7 +61,7 @@ Behavior:
 
 - `git-tracked`: keep `.knowns/` content tracked in Git
 - `git-ignored`: keep config/docs/templates tracked while leaving some local data out of Git depending on generated ignore rules
-- `none`: do not let Knowns manage `.gitignore`
+- `none`: do not let Know-Me manage `.gitignore`
 
 ### `settings.gitTracking`
 
@@ -102,7 +102,7 @@ Controls LSP-based code intelligence.
 
 ### `settings.platforms`
 
-Declares which platform integrations Knowns should manage.
+Declares which platform integrations Know-Me should manage.
 
 Supported values:
 
@@ -181,7 +181,7 @@ knowns config set gitTracking.memories false
 
 Changing `gitTracking.*` toggles automatically regenerates `.gitignore`.
 
-Interactive `knowns init` needs a terminal at least 90 columns wide. If the terminal is too small, Knowns prints resize and `--no-wizard` guidance and stops without initializing by defaults.
+Interactive `knowns init` needs a terminal at least 90 columns wide. If the terminal is too small, Know-Me prints resize and `--no-wizard` guidance and stops without initializing by defaults.
 
 ### When to use `knowns sync`
 

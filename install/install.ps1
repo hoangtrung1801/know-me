@@ -1,4 +1,4 @@
-# Knowns CLI installer for Windows
+# Know-Me CLI installer for Windows
 # Usage:
 #   irm https://raw.githubusercontent.com/knowns-dev/knowns/main/install/install.ps1 | iex
 #
@@ -52,7 +52,7 @@ function Get-Version {
 # ─── Main ─────────────────────────────────────────────────────────────
 
 Write-Host ""
-Write-Host "  Knowns CLI Installer" -ForegroundColor Cyan
+Write-Host "  Know-Me CLI Installer" -ForegroundColor Cyan
 Write-Host ""
 
 $Platform = Get-Platform
@@ -149,9 +149,9 @@ try {
     Write-Host ""
     try {
         $installedVersion = & (Join-Path $InstallDir $Binary) --version 2>$null
-        Write-Host "  Knowns CLI $installedVersion installed successfully!" -ForegroundColor Green
+        Write-Host "  Know-Me CLI $installedVersion installed successfully!" -ForegroundColor Green
     } catch {
-        Write-Host "  Knowns CLI installed successfully!" -ForegroundColor Green
+        Write-Host "  Know-Me CLI installed successfully!" -ForegroundColor Green
     }
 
     Write-Host ""

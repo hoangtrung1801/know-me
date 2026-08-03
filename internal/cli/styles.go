@@ -27,13 +27,13 @@ var (
 
 // ─── Brand color ─────────────────────────────────────────────────────
 
-// KnownsBrand is the primary Knowns navy blue used for progress bars and accents.
+// KnownsBrand is the primary Know-Me navy blue used for progress bars and accents.
 const KnownsBrand = "#1e3a5f"
 
 // KnownsBrandLight is the secondary lighter blue for gradient endpoints.
 const KnownsBrandLight = "#4a90d9"
 
-// NewBrandProgressBar creates a progress bar with the Knowns brand gradient.
+// NewBrandProgressBar creates a progress bar with the Know-Me brand gradient.
 // Use this for all progress bars in the CLI for consistent styling.
 func NewBrandProgressBar(opts ...progress.Option) progress.Model {
 	defaults := []progress.Option{

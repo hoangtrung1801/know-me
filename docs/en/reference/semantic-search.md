@@ -1,6 +1,6 @@
 # Semantic Search
 
-Semantic search helps Knowns search docs, tasks, and memories by meaning instead of only exact keywords.
+Semantic search helps Know-Me search docs, tasks, and memories by meaning instead of only exact keywords.
 
 Code search is no longer part of semantic search. Code intelligence is LSP-based and available through the MCP `code` tool.
 

@@ -1,6 +1,6 @@
-# Contributing to Knowns CLI
+# Contributing to Know-Me CLI
 
-First off, thank you for considering contributing to Knowns CLI! :tada:
+First off, thank you for considering contributing to Know-Me CLI! :tada:
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 Before creating bug reports, please check existing issues to avoid duplicates.
 
 When creating a bug report, include:
-- **Knowns CLI version** (`knowns --version`)
+- **Know-Me CLI version** (`knowns --version`)
 - **OS and version**
 - **Node.js version** (`node --version`)
 - **Steps to reproduce**

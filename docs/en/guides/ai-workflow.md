@@ -37,8 +37,8 @@ This is why the full SDD path below starts with `research` before `spec`.
 
 `kn-research` starts with project-owned context before going outside the repo:
 
-- Knowns `search` and `retrieve` for docs, tasks, memory, and decisions
-- Knowns `code` tools for symbols, definitions, references, diagnostics, and safe code navigation
+- Know-Me `search` and `retrieve` for docs, tasks, memory, and decisions
+- Know-Me `code` tools for symbols, definitions, references, diagnostics, and safe code navigation
 - specialized external MCP providers, when available, for upstream or library facts such as Context7/library docs, GitHub/source MCP, or official docs MCP
 - general web search only when a specialized MCP provider is unavailable, insufficient, or the user explicitly asks for internet research
 

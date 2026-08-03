@@ -1,11 +1,11 @@
 ---
 name: known-me
-description: Use when working in a Knowns-managed project and needing to discover, inspect, or operate any Knowns CLI command, task, document, template, memory, decision, search, validation, setup, or runtime workflow.
+description: Use when working in a Know-Me-managed project and needing to discover, inspect, or operate any Know-Me CLI command, task, document, template, memory, decision, search, validation, setup, or runtime workflow.
 ---
 
-# Knowns CLI
+# Know-Me CLI
 
-Use the CLI only; do not use Knowns MCP tools.
+Use the CLI only; do not use Know-Me MCP tools.
 
 ## Start
 
@@ -61,4 +61,4 @@ Memos are short global scratch notes, separate from durable project `memory` rec
 
 A project is the current working directory registered by `knowns init`; there is no separate `project` command. Run `knowns status --plain` to identify the active project and readiness, `knowns doctor --plain` to diagnose it, and `knowns init` only to initialize or register the current directory. Use `knowns settings` for interactive project settings and `knowns config <get|set|list|reset> --help` for scriptable configuration. Run `knowns sync` after changing bundled or integration artifacts.
 
-Never edit Knowns-managed task or document Markdown directly. Use the matching CLI command, preview destructive or bulk operations when available, and run `knowns validate --plain` after changes.
+Never edit Know-Me-managed task or document Markdown directly. Use the matching CLI command, preview destructive or bulk operations when available, and run `knowns validate --plain` after changes.

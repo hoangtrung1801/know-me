@@ -1,6 +1,6 @@
 # KNOWNS
 
-Human-readable repository guidance for agents working in this project. Runtime-critical AI bootstrap guidance is provided by Knowns MCP `initial` and on-demand `help`.
+Human-readable repository guidance for agents working in this project. Runtime-critical AI bootstrap guidance is provided by Know-Me MCP `initial` and on-demand `help`.
 
 ## Table of Contents
 
@@ -38,18 +38,18 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 
 - Call `initial` at session start — it returns project readiness, knowledge counts, code intelligence rules, workflow guidance, and available tools.
 - Use `help("tool.action")`, `help("tool.*")`, or `help("workflow.*")` when a domain/action schema is not visible.
-- Use Knowns as the memory layer for humans and the AI-friendly working layer for agents.
+- Use Know-Me as the memory layer for humans and the AI-friendly working layer for agents.
 - Search before reading; read only the sections and docs relevant to the current task.
-- Never manually edit Knowns-managed task or doc markdown.
-- Prefer Knowns MCP tools; use the `knowns` CLI only as fallback.
+- Never manually edit Know-Me-managed task or doc markdown.
+- Prefer Know-Me MCP tools; use the `knowns` CLI only as fallback.
 - Let skills handle detailed workflows; use this file for rules, conventions, and context routing.
 - Validate before marking work complete.
 - Do not revert user changes you did not make.
 
 ## Repo Mental Model
 
-- Knowns is the project's memory layer for humans and the AI-friendly operating layer for agents.
-- Knowns manages tasks, docs, templates, specs, references, and workflow state in one place.
+- Know-Me is the project's memory layer for humans and the AI-friendly operating layer for agents.
+- Know-Me manages tasks, docs, templates, specs, references, and workflow state in one place.
 - Tasks and docs may reference each other using `@task-<id>`, `@doc/<path>`, and `@template/<name>`.
 - MCP `initial` defines runtime operating rules; skills define step-by-step execution flows.
 - `KNOWNS.md` provides a stable human-readable reference for those conventions.
@@ -70,8 +70,8 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 
 - Call `initial` at session start — it includes project readiness, capabilities, and code intelligence rules.
 - Use `help("tool.action")` or `help("tool.*")` for detailed per-action documentation on demand.
-- Use Knowns MCP tools first for tasks, docs, templates, validation, and time tracking.
-- Use Knowns `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.
+- Use Know-Me MCP tools first for tasks, docs, templates, validation, and time tracking.
+- Use Know-Me `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.
 - Use shell commands for git, tests, builds, generators, and other terminal operations.
 - Prefer targeted retrieval over loading large files in full.
 - Use `knowns search` for discovery and quick relevance checks.
@@ -107,7 +107,7 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 
 ## Critical Rules
 
-- Never manually edit Knowns-managed task or doc markdown.
+- Never manually edit Know-Me-managed task or doc markdown.
 - Search first, then read only relevant docs and code.
 - Follow `@task-<id>`, `@doc/<path>`, and `@template/<name>` references before acting.
 - Use `appendNotes` for progress updates; `notes` replaces existing notes and should only be used intentionally.
@@ -173,7 +173,7 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 ## Recommended File Roles
 
 - `KNOWNS.md`: human-readable repo-level reference and fallback.
-- Compatibility shim files: lightweight entrypoints that introduce Knowns and redirect runtimes to MCP `initial`/`help`.
+- Compatibility shim files: lightweight entrypoints that introduce Know-Me and redirect runtimes to MCP `initial`/`help`.
 - Other docs: deeper domain, feature, or workflow references.
 
 ## Compatibility Pattern
@@ -184,7 +184,7 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 
 ## Maintenance Rules
 
-- Update the Knowns generator when the repository's operational rules change.
+- Update the Know-Me generator when the repository's operational rules change.
 - Keep top sections stable so automated loaders can depend on them.
 - Prefer adding new sections over bloating the TL;DR.
 - Keep workflow details in skills and MCP `help` when possible; keep `KNOWNS.md` focused on human-readable rules, conventions, and routing.

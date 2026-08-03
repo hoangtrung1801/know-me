@@ -1,12 +1,12 @@
 # AI Agent Guide
 
-This guide explains how to use Knowns effectively with AI assistants.
+This guide explains how to use Know-Me effectively with AI assistants.
 
 ## Core idea
 
 AI works better when it does not have to guess project context.
 
-Knowns gives AI a structured way to access:
+Know-Me gives AI a structured way to access:
 
 - tasks
 - docs
@@ -45,8 +45,8 @@ Validation should be part of the normal workflow.
 
 When an AI needs to understand a codebase or upstream behavior, it should search in this order:
 
-1. Knowns `search` and `retrieve` for local project context.
-2. Knowns `code` tools for code structure, symbols, definitions, references, diagnostics, and edits.
+1. Know-Me `search` and `retrieve` for local project context.
+2. Know-Me `code` tools for code structure, symbols, definitions, references, diagnostics, and edits.
 3. External MCP providers such as Context7/library docs, GitHub/source MCP, or official docs MCP when current upstream facts matter.
 4. General web search when specialized MCP providers are unavailable, insufficient, or explicitly requested.
 

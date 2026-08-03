@@ -1,7 +1,7 @@
 {
   "name": "@knowns/darwin-arm64",
   "version": "0.0.0",
-  "description": "Knowns binary for darwin arm64",
+  "description": "Know-Me binary for darwin arm64",
   "os": [
     "darwin"
   ],

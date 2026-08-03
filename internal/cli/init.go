@@ -113,8 +113,8 @@ var defaultInstructionFiles = []instructionFile{
 
 var initCmd = &cobra.Command{
 	Use:   "init [name]",
-	Short: "Initialize a new Knowns project",
-	Long: `Initialize a new Knowns project in the current directory.
+	Short: "Initialize a new Know-Me project",
+	Long: `Initialize a new Know-Me project in the current directory.
 Creates a .knowns/ directory with the required structure and a default config.json.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runInit,
@@ -370,7 +370,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 				fmt.Printf("✓ Git tracking mode updated to %q\n", mode)
 				return nil
 			}
-			fmt.Println(warnStyle.Render("Project already initialized in the global Knowns store."))
+			fmt.Println(warnStyle.Render("Project already initialized in the global Know-Me store."))
 			fmt.Println(dimStyle.Render("  Use --force to reinitialize."))
 			fmt.Println(dimStyle.Render("  Use --git-tracked or --git-ignored to change tracking mode."))
 			return nil
@@ -382,7 +382,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Check git availability / repository status.
 	if !hasGitRepo {
 		if gitAvailable {
-			fmt.Println(dimStyle.Render("No git repository found — Knowns will run git init after setup."))
+			fmt.Println(dimStyle.Render("No git repository found — Know-Me will run git init after setup."))
 			fmt.Println()
 		} else {
 			fmt.Println(warnStyle.Render("Warning: No git repository found and git is not available in PATH."))
@@ -760,7 +760,7 @@ func runWizard(cwd string, gitTracked, gitIgnored bool, gitAvailable bool, exist
 	hasGit := isGitRepo(cwd)
 
 	fmt.Println()
-	fmt.Println(titleStyle.Render("🚀 Knowns Project Setup"))
+	fmt.Println(titleStyle.Render("🚀 Know-Me Project Setup"))
 	fmt.Println(dimStyle.Render("   Quick configuration"))
 	fmt.Println()
 
@@ -791,7 +791,7 @@ func runWizard(cwd string, gitTracked, gitIgnored bool, gitAvailable bool, exist
 		gitGroup = huh.NewGroup(
 			huh.NewSelect[string]().
 				Title("Git tracking mode").
-				Description("Choose what Knowns data is committed to git.").
+				Description("Choose what Know-Me data is committed to git.").
 				Options(
 					huh.NewOption("Git Tracked  · tasks, docs, templates", "git-tracked"),
 					huh.NewOption("Git Ignored  · docs, templates only", "git-ignored"),
@@ -853,7 +853,7 @@ func runWizard(cwd string, gitTracked, gitIgnored bool, gitAvailable bool, exist
 		trackingForm := huh.NewForm(
 			huh.NewGroup(
 				huh.NewMultiSelect[string]().
-					Title("Knowns sections to track in git").
+					Title("Know-Me sections to track in git").
 					Description("Choose sections under .knowns/ that should be committed.").
 					Options(
 						huh.NewOption("Tasks", "tasks").Selected(sectionSelected(selected, "tasks")),
@@ -1102,7 +1102,7 @@ func gitInit(dir string) error {
 	return nil
 }
 
-// mcpCommand returns the command and args for starting the Knowns MCP server
+// mcpCommand returns the command and args for starting the Know-Me MCP server
 // in generated project configs. Uses the local knowns binary if available,
 // otherwise falls back to npx so configs work on machines without a global install.
 func mcpCommand() (command string, args []string) {
@@ -1182,7 +1182,7 @@ func createOpenCodeConfigQuiet(projectRoot string) error {
 }
 
 // createKiroSteeringQuiet creates .kiro/steering/knowns.md with lightweight
-// Knowns MCP bootstrap guidance.
+// Know-Me MCP bootstrap guidance.
 func createKiroSteeringQuiet(projectRoot string, force bool) error {
 	steeringDir := filepath.Join(projectRoot, ".kiro", "steering")
 	if err := os.MkdirAll(steeringDir, 0755); err != nil {
@@ -1195,19 +1195,19 @@ func createKiroSteeringQuiet(projectRoot string, force bool) error {
 	}
 
 	content := `---
-description: Knowns project guidelines — prefer MCP initial/help and Knowns tools.
+description: Know-Me project guidelines — prefer MCP initial/help and Know-Me tools.
 ---
 
-# Knowns Guidelines
+# Know-Me Guidelines
 
-Start with Knowns MCP ` + "`initial`" + ` when available. Use ` + "`help(\"tool.*\")`" + ` or ` + "`help(\"workflow.*\")`" + ` for domain details on demand.
+Start with Know-Me MCP ` + "`initial`" + ` when available. Use ` + "`help(\"tool.*\")`" + ` or ` + "`help(\"workflow.*\")`" + ` for domain details on demand.
 
-Use Knowns docs, tasks, search, memory, and validation as the project working layer. If MCP is unavailable, use the ` + "`knowns`" + ` CLI for project context.
+Use Know-Me docs, tasks, search, memory, and validation as the project working layer. If MCP is unavailable, use the ` + "`knowns`" + ` CLI for project context.
 `
 	return os.WriteFile(steeringPath, []byte(content), 0644)
 }
 
-// createKiroMCPConfigQuiet creates .kiro/settings/mcp.json with the Knowns
+// createKiroMCPConfigQuiet creates .kiro/settings/mcp.json with the Know-Me
 // MCP server entry. It merges into an existing file if present.
 func createKiroMCPConfigQuiet(projectRoot string) error {
 	settingsDir := filepath.Join(projectRoot, ".kiro", "settings")
@@ -1318,15 +1318,15 @@ func createAntigravityRulesQuiet(projectRoot string, force bool) error {
 
 	content := `---
 trigger: always_on
-description: Prefer Knowns MCP initial/help and Knowns tools for project context.
+description: Prefer Know-Me MCP initial/help and Know-Me tools for project context.
 ---
 
-# Knowns Project Guidance
+# Know-Me Project Guidance
 
-- Start with Knowns MCP ` + "`initial`" + ` when available.
+- Start with Know-Me MCP ` + "`initial`" + ` when available.
 - Use ` + "`help(\"tool.*\")`" + ` or ` + "`help(\"workflow.*\")`" + ` for domain details on demand.
-- Treat Knowns docs, tasks, and memory as the working layer for the project.
-- Prefer Knowns MCP tools for docs, tasks, search, and validation when available.
+- Treat Know-Me docs, tasks, and memory as the working layer for the project.
+- Prefer Know-Me MCP tools for docs, tasks, search, and validation when available.
 - If MCP is unavailable, fall back to the ` + "`knowns`" + ` CLI.
 `
 
@@ -1391,7 +1391,7 @@ func createAntigravityMCPConfigQuiet(projectRoot string) error {
 // createInstructionFilesForPlatforms generates only instruction files for the
 // given platform IDs. If platforms is empty all files are generated.
 func createInstructionFilesForPlatforms(projectRoot string, force bool, platforms []string) error {
-	if err := writeInstructionFile(projectRoot, canonicalInstructionFile, "Knowns", force); err != nil {
+	if err := writeInstructionFile(projectRoot, canonicalInstructionFile, "Know-Me", force); err != nil {
 		return err
 	}
 
@@ -1408,7 +1408,7 @@ func createInstructionFilesForPlatforms(projectRoot string, force bool, platform
 
 // createInstructionFilesQuiet generates agent instruction files without printing.
 func createInstructionFilesQuiet(projectRoot string, force bool) error {
-	if err := writeInstructionFile(projectRoot, canonicalInstructionFile, "Knowns", force); err != nil {
+	if err := writeInstructionFile(projectRoot, canonicalInstructionFile, "Know-Me", force); err != nil {
 		return err
 	}
 
@@ -1462,7 +1462,7 @@ func generateInstructionContent(relativePath, platform, projectRoot string) stri
 func renderCanonicalInstructionContent() string {
 	var sb strings.Builder
 	sb.WriteString("# KNOWNS\n\n")
-	sb.WriteString("Human-readable repository guidance for agents working in this project. Runtime-critical AI bootstrap guidance is provided by Knowns MCP `initial` and on-demand `help`.\n\n")
+	sb.WriteString("Human-readable repository guidance for agents working in this project. Runtime-critical AI bootstrap guidance is provided by Know-Me MCP `initial` and on-demand `help`.\n\n")
 	sb.WriteString("## Table of Contents\n\n")
 	sb.WriteString("- [Source of Truth](#source-of-truth)\n")
 	sb.WriteString("- [TL;DR](#tldr)\n")
@@ -1494,16 +1494,16 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("## TL;DR\n\n")
 	sb.WriteString("- Call `initial` at session start — it returns project readiness, knowledge counts, code intelligence rules, workflow guidance, and available tools.\n")
 	sb.WriteString("- Use `help(\"tool.action\")`, `help(\"tool.*\")`, or `help(\"workflow.*\")` when a domain/action schema is not visible.\n")
-	sb.WriteString("- Use Knowns as the memory layer for humans and the AI-friendly working layer for agents.\n")
+	sb.WriteString("- Use Know-Me as the memory layer for humans and the AI-friendly working layer for agents.\n")
 	sb.WriteString("- Search before reading; read only the sections and docs relevant to the current task.\n")
-	sb.WriteString("- Never manually edit Knowns-managed task or doc markdown.\n")
-	sb.WriteString("- Prefer Knowns MCP tools; use the `knowns` CLI only as fallback.\n")
+	sb.WriteString("- Never manually edit Know-Me-managed task or doc markdown.\n")
+	sb.WriteString("- Prefer Know-Me MCP tools; use the `knowns` CLI only as fallback.\n")
 	sb.WriteString("- Let skills handle detailed workflows; use this file for rules, conventions, and context routing.\n")
 	sb.WriteString("- Validate before marking work complete.\n")
 	sb.WriteString("- Do not revert user changes you did not make.\n\n")
 	sb.WriteString("## Repo Mental Model\n\n")
-	sb.WriteString("- Knowns is the project's memory layer for humans and the AI-friendly operating layer for agents.\n")
-	sb.WriteString("- Knowns manages tasks, docs, templates, specs, references, and workflow state in one place.\n")
+	sb.WriteString("- Know-Me is the project's memory layer for humans and the AI-friendly operating layer for agents.\n")
+	sb.WriteString("- Know-Me manages tasks, docs, templates, specs, references, and workflow state in one place.\n")
 	sb.WriteString("- Tasks and docs may reference each other using `@task-<id>`, `@doc/<path>`, and `@template/<name>`.\n")
 	sb.WriteString("- MCP `initial` defines runtime operating rules; skills define step-by-step execution flows.\n")
 	sb.WriteString("- `KNOWNS.md` provides a stable human-readable reference for those conventions.\n")
@@ -1520,8 +1520,8 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("## Tool Selection\n\n")
 	sb.WriteString("- Call `initial` at session start — it includes project readiness, capabilities, and code intelligence rules.\n")
 	sb.WriteString("- Use `help(\"tool.action\")` or `help(\"tool.*\")` for detailed per-action documentation on demand.\n")
-	sb.WriteString("- Use Knowns MCP tools first for tasks, docs, templates, validation, and time tracking.\n")
-	sb.WriteString("- Use Knowns `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.\n")
+	sb.WriteString("- Use Know-Me MCP tools first for tasks, docs, templates, validation, and time tracking.\n")
+	sb.WriteString("- Use Know-Me `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.\n")
 	sb.WriteString("- Use shell commands for git, tests, builds, generators, and other terminal operations.\n")
 	sb.WriteString("- Prefer targeted retrieval over loading large files in full.\n")
 	sb.WriteString("- Use `knowns search` for discovery and quick relevance checks.\n")
@@ -1551,7 +1551,7 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("- After any meaningful user instruction, correction, or newly discovered pattern, quickly evaluate whether it should be stored as memory and save it when appropriate.\n")
 	sb.WriteString("- If the user states a stable collaboration preference, default to saving it as `global` memory unless they clearly scoped it to this repository only.\n\n")
 	sb.WriteString("## Critical Rules\n\n")
-	sb.WriteString("- Never manually edit Knowns-managed task or doc markdown.\n")
+	sb.WriteString("- Never manually edit Know-Me-managed task or doc markdown.\n")
 	sb.WriteString("- Search first, then read only relevant docs and code.\n")
 	sb.WriteString("- Follow `@task-<id>`, `@doc/<path>`, and `@template/<name>` references before acting.\n")
 	sb.WriteString("- Use `appendNotes` for progress updates; `notes` replaces existing notes and should only be used intentionally.\n")
@@ -1602,14 +1602,14 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("- Do not quote large file contents when a concise summary is enough.\n\n")
 	sb.WriteString("## Recommended File Roles\n\n")
 	sb.WriteString("- `KNOWNS.md`: human-readable repo-level reference and fallback.\n")
-	sb.WriteString("- Compatibility shim files: lightweight entrypoints that introduce Knowns and redirect runtimes to MCP `initial`/`help`.\n")
+	sb.WriteString("- Compatibility shim files: lightweight entrypoints that introduce Know-Me and redirect runtimes to MCP `initial`/`help`.\n")
 	sb.WriteString("- Other docs: deeper domain, feature, or workflow references.\n\n")
 	sb.WriteString("## Compatibility Pattern\n\n")
 	sb.WriteString("- Keep shim files short.\n")
 	sb.WriteString("- In every shim file, explicitly say MCP `initial` is the primary bootstrap and `KNOWNS.md` is optional fallback/reference.\n")
 	sb.WriteString("- Preserve the `<!-- KNOWNS GUIDELINES START -->` and `<!-- KNOWNS GUIDELINES END -->` markers in shim files so tooling can detect and sync them reliably.\n\n")
 	sb.WriteString("## Maintenance Rules\n\n")
-	sb.WriteString("- Update the Knowns generator when the repository's operational rules change.\n")
+	sb.WriteString("- Update the Know-Me generator when the repository's operational rules change.\n")
 	sb.WriteString("- Keep top sections stable so automated loaders can depend on them.\n")
 	sb.WriteString("- Prefer adding new sections over bloating the TL;DR.\n")
 	sb.WriteString("- Keep workflow details in skills and MCP `help` when possible; keep `KNOWNS.md` focused on human-readable rules, conventions, and routing.\n")
@@ -1624,15 +1624,15 @@ func renderCompatibilityInstructionContent(relativePath, platform, projectRoot s
 	sb.WriteString(fmt.Sprintf("Compatibility entrypoint for runtimes that auto-detect `%s`.\n\n", relativePath))
 	sb.WriteString("<!-- KNOWNS GUIDELINES START -->\n\n")
 
-	sb.WriteString("**CRITICAL: Start with Knowns MCP `initial` when available. Use `help(\"tool.*\")` or `help(\"workflow.*\")` for domain details on demand.**\n\n")
+	sb.WriteString("**CRITICAL: Start with Know-Me MCP `initial` when available. Use `help(\"tool.*\")` or `help(\"workflow.*\")` for domain details on demand.**\n\n")
 	sb.WriteString("## Runtime Guidance\n\n")
-	sb.WriteString("- Knowns is the repository memory layer for humans and the AI-friendly working layer for agents.\n")
+	sb.WriteString("- Know-Me is the repository memory layer for humans and the AI-friendly working layer for agents.\n")
 	sb.WriteString("- MCP `initial` is the primary AI bootstrap: project state, tool domains, code rules, and workflow routing.\n")
 	sb.WriteString("- MCP `help` is the primary on-demand source for action schemas and recipes.\n")
 	sb.WriteString("- Treat this file only as a lightweight compatibility entrypoint.\n\n")
 	sb.WriteString("## Minimum Rules\n\n")
-	sb.WriteString("- Use Knowns as the canonical system for tasks, docs, templates, and workflow state.\n")
-	sb.WriteString("- Never manually edit Knowns-managed task or doc markdown.\n")
+	sb.WriteString("- Use Know-Me as the canonical system for tasks, docs, templates, and workflow state.\n")
+	sb.WriteString("- Never manually edit Know-Me-managed task or doc markdown.\n")
 	sb.WriteString("- Search first, then read only relevant docs and code.\n")
 	sb.WriteString("- Use `search` for discovery; use MCP `retrieve` tool when a workflow needs structured context with citations. Fall back to CLI `knowns retrieve` if MCP is unavailable.\n")
 	sb.WriteString("- For code operations, use `code` tool: `find`/`symbols` for structure, `references`/`definition` for navigation, `rename`/`replace`/`replace_body`/`insert`/`delete` for editing. Use `help(\"code.*\")` or `help(\"workflow.code-edit\")` for details.\n")
@@ -1751,7 +1751,7 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 		// Track all .knowns/ content; only ignore runtime/cache files and
 		// sections explicitly disabled.
 		var buf strings.Builder
-		buf.WriteString("# Managed by Knowns CLI — do not edit manually.\n")
+		buf.WriteString("# Managed by Know-Me CLI — do not edit manually.\n")
 		buf.WriteString("# Run 'knowns init' to regenerate.\n\n")
 		buf.WriteString("# Runtime & cache\n")
 		buf.WriteString(".search/\n")
@@ -1782,7 +1782,7 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 	case "git-ignored":
 		// Ignore everything by default, then un-ignore sections that are enabled.
 		var buf strings.Builder
-		buf.WriteString("# Managed by Knowns CLI — do not edit manually.\n")
+		buf.WriteString("# Managed by Know-Me CLI — do not edit manually.\n")
 		buf.WriteString("# Run 'knowns init' to regenerate.\n\n")
 		buf.WriteString("# Ignore everything by default\n")
 		buf.WriteString("*\n\n")
@@ -1823,7 +1823,7 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 	return nil
 }
 
-// removeLegacyGitignoreBlock removes the old marker-delimited Knowns block
+// removeLegacyGitignoreBlock removes the old marker-delimited Know-Me block
 // from root .gitignore (migration from older versions).
 func removeLegacyGitignoreBlock(dir string) {
 	gitignorePath := filepath.Join(dir, ".gitignore")

@@ -12,7 +12,7 @@ import (
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
 	Short: "Start the MCP (Model Context Protocol) server",
-	Long: `Start the Knowns MCP server, which exposes project management tools
+	Long: `Start the Know-Me MCP server, which exposes project management tools
 to AI agents via the Model Context Protocol.
 
 Use --stdio to communicate over stdin/stdout (default for MCP clients).`,

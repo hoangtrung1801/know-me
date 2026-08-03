@@ -62,7 +62,7 @@ interface ToolCallListProps {
 }
 
 function KnownsIcon({ className }: { className?: string }) {
-	return <img src={knownsLogo} alt="Knowns" className={cn("h-3.5 w-3.5 rounded-sm object-contain", className)} />;
+	return <img src={knownsLogo} alt="Know-Me" className={cn("h-3.5 w-3.5 rounded-sm object-contain", className)} />;
 }
 
 function truncate(value: string, limit = 120): string {
@@ -323,7 +323,7 @@ function getKnownsIntent(tool: ToolCallItem) {
 	if (normalized.includes("validate")) {
 		return {
 			key: "knowns-validate",
-			label: "Knowns validation",
+			label: "Know-Me validation",
 			icon: <KnownsIcon />,
 			tone: "success" as const,
 		};
@@ -331,7 +331,7 @@ function getKnownsIntent(tool: ToolCallItem) {
 	if (normalized.includes("time")) {
 		return {
 			key: "knowns-time",
-			label: "Knowns time",
+			label: "Know-Me time",
 			icon: <KnownsIcon />,
 			tone: "info" as const,
 		};
@@ -339,7 +339,7 @@ function getKnownsIntent(tool: ToolCallItem) {
 	if (normalized.includes("task") || normalized.includes("board")) {
 		return {
 			key: "knowns-task",
-			label: "Knowns task ops",
+			label: "Know-Me task ops",
 			icon: <KnownsIcon />,
 			tone: "info" as const,
 		};
@@ -347,14 +347,14 @@ function getKnownsIntent(tool: ToolCallItem) {
 	if (normalized.includes("template")) {
 		return {
 			key: "knowns-template",
-			label: "Knowns templates",
+			label: "Know-Me templates",
 			icon: <KnownsIcon />,
 			tone: "info" as const,
 		};
 	}
 	return {
 		key: "knowns-research",
-		label: "Knowns research",
+		label: "Know-Me research",
 		icon: <KnownsIcon />,
 		tone: "info" as const,
 	};

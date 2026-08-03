@@ -1,6 +1,6 @@
 # Development Workflow
 
-This document describes the standard development workflow for contributing to Knowns CLI.
+This document describes the standard development workflow for contributing to Know-Me CLI.
 
 ## Table of Contents
 
@@ -36,7 +36,7 @@ This document describes the standard development workflow for contributing to Kn
 
 ## 1. Create Task/Issue
 
-### For Maintainers (using Knowns CLI)
+### For Maintainers (using Know-Me CLI)
 
 ```bash
 # Create a new task

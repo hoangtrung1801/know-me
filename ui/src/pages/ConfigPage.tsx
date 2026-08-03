@@ -2021,7 +2021,7 @@ export default function ConfigPage() {
 
 			<SectionHeader icon={Settings} title="Server" description="Network configuration" />
 
-			<FieldRow label="Server Port" hint="Port for the Knowns server">
+			<FieldRow label="Server Port" hint="Port for the Know-Me server">
 				<Input
 					type="number"
 					value={config.serverPort ?? 0}

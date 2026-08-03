@@ -890,7 +890,7 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 				<div className="mx-auto flex w-full max-w-[1440px] flex-col justify-between gap-4 px-4 py-5 sm:flex-row sm:items-end sm:px-6">
 					<div>
 						<div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-							<span>{config.name || "Knowns"}</span>
+							<span>{config.name || "Know-Me"}</span>
 							<span aria-hidden="true">/</span>
 							<span>Analysis workbench</span>
 							<span className="inline-flex items-center gap-1 normal-case tracking-normal">
@@ -1019,7 +1019,7 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 							<SectionHeader
 								icon={Sparkles}
 								title="Knowledge health"
-								description="Coverage, inventory, and review signals from Knowns project memory"
+								description="Coverage, inventory, and review signals from Know-Me project memory"
 								action={
 									remote.errors.length > 0 ? (
 										<span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--analysis-risk)]">

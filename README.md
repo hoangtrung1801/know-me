@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./images/logo.png" alt="Knowns" width="120">
+  <img src="./images/logo.png" alt="Know-Me" width="120">
 </p>
 
-<h1 align="center">Knowns</h1>
+<h1 align="center">Know-Me</h1>
 
 <p align="center">
   <a href="https://go.dev/"><img src="https://img.shields.io/badge/go-%3E%3D1.24.2-00ADD8?style=flat-square&logo=go" alt="Go"></a>
@@ -27,13 +27,13 @@
 
 Every time you start a new AI coding session, you re-explain your architecture, paste docs, repeat conventions, and clarify past decisions. Your AI assistant is powerful - but it forgets everything between sessions.
 
-**Knowns fixes that.** It gives AI assistants like Claude, Cursor, Copilot, and others structured, persistent access to your project's tasks, documentation, specs, acceptance criteria, and architectural decisions. Instead of prompting from scratch, your AI reads what it needs and picks up where you left off.
+**Know-Me fixes that.** It gives AI assistants like Claude, Cursor, Copilot, and others structured, persistent access to your project's tasks, documentation, specs, acceptance criteria, and architectural decisions. Instead of prompting from scratch, your AI reads what it needs and picks up where you left off.
 
-If you believe AI should truly understand software projects, consider giving **Knowns** a star.
+If you believe AI should truly understand software projects, consider giving **Know-Me** a star.
 
 <p align="center">
   <a href="https://player.cloudinary.com/embed/?cloud_name=dkxhoyenc&public_id=knowns-full-pipeline_uwhyk1">
-    <img src="./images/knowns-full-pipeline-20s.gif" alt="Knowns full pipeline demo preview" width="100%">
+    <img src="./images/knowns-full-pipeline-20s.gif" alt="Know-Me full pipeline demo preview" width="100%">
   </a>
 </p>
 <p align="center">
@@ -42,14 +42,14 @@ If you believe AI should truly understand software projects, consider giving **K
 
 ## Table of Contents
 
-- [Why Knowns?](#why-knowns)
+- [Why Know-Me?](#why-know-me)
 - [Before & After](#before--after)
-- [What is Knowns?](#what-is-knowns)
+- [What is Know-Me?](#what-is-know-me)
 - [Who It's For](#who-its-for)
 - [How It Works](#how-it-works)
 - [Quick Start](#quick-start)
 - [Core Capabilities](#core-capabilities)
-- [What You Can Build](#what-you-can-build-with-knowns)
+- [What You Can Build](#what-you-can-build-with-know-me)
 - [Agent Skills Workflow](#agent-skills-workflow)
 - [Installation](#installation)
 - [Documentation](#documentation)
@@ -59,7 +59,7 @@ If you believe AI should truly understand software projects, consider giving **K
 
 ---
 
-## Why Knowns?
+## Why Know-Me?
 
 AI coding assistants are stateless. Every session starts from zero.
 
@@ -73,13 +73,13 @@ That means you end up doing the same work over and over:
 
 The AI doesn't lack intelligence. **It lacks access to what your project already knows.**
 
-Knowns gives it that access.
+Know-Me gives it that access.
 
 ---
 
 ## Before & After
 
-| Without Knowns | With Knowns |
+| Without Know-Me | With Know-Me |
 |---|---|
 | "We use the repository pattern with..." _(paste 50 lines)_ | AI reads `@doc/patterns/repository` automatically |
 | "Here's the task, the acceptance criteria are..." _(re-type everything)_ | AI reads the task, its ACs, linked specs, and related docs |
@@ -90,17 +90,17 @@ Knowns gives it that access.
 
 ---
 
-## What is Knowns?
+## What is Know-Me?
 
-Knowns is a **local-first, self-hostable project context layer** for AI-native development.
+Know-Me is a **local-first, self-hostable project context layer** for AI-native development.
 
 It stores your project knowledge in structured, AI-readable files - and exposes them to AI assistants through CLI and [MCP (Model Context Protocol)](https://modelcontextprotocol.io/).
 
 <p align="center">
-  <img src="./images/how-knowns-works.png" alt="How Knowns Works" width="100%">
+  <img src="./images/how-knowns-works.png" alt="How Know-Me Works" width="100%">
 </p>
 
-Concretely, Knowns manages:
+Concretely, Know-Me manages:
 
 - **Tasks** with acceptance criteria, implementation plans, and status tracking
 - **Documentation** in nested markdown folders with cross-references
@@ -125,13 +125,13 @@ Everything lives in a `.knowns/` directory in your repo. Plain files. Committabl
 
 ## How It Works
 
-Knowns sits alongside your existing tools. Your stack stays the same.
+Know-Me sits alongside your existing tools. Your stack stays the same.
 
 <p align="center">
-  <img src="./images/architecture.png" alt="Knowns Architecture" width="100%">
+  <img src="./images/architecture.png" alt="Know-Me Architecture" width="100%">
 </p>
 
-1. **You structure your project knowledge** - tasks, docs, specs, decisions - using the Knowns CLI or Web UI
+1. **You structure your project knowledge** - tasks, docs, specs, decisions - using the Know-Me CLI or Web UI
 2. **AI reads it** - through MCP integration or CLI commands, your AI assistant accesses exactly the context it needs
 3. **AI acts on it** - follows references, checks acceptance criteria, updates task status, and builds with full awareness
 4. **Knowledge accumulates** - decisions, patterns, and conventions persist across sessions instead of disappearing
@@ -180,7 +180,7 @@ knowns doc create "Auth Architecture" \
 # Open the Web UI
 knowns browser --open
 
-# Update Knowns later
+# Update Know-Me later
 knowns update
 
 # Connect to your AI assistant via MCP
@@ -221,7 +221,7 @@ knowns memory add "We use repository pattern for data access" --category pattern
 knowns memory list --plain
 ```
 
-Knowns has two Decision domains: **Spec Decisions** are locked `D1`, `D2`, … rules inside an approved spec that implementers must follow and report; **System Decisions** are first-class records of durable project evolution. New System Decisions always start as drafts and become current only after linked evidence is verified.
+Know-Me has two Decision domains: **Spec Decisions** are locked `D1`, `D2`, … rules inside an approved spec that implementers must follow and report; **System Decisions** are first-class records of durable project evolution. New System Decisions always start as drafts and become current only after linked evidence is verified.
 
 ```bash
 knowns decision create "Use Postgres for metadata" --decision "Use Postgres as the metadata store."
@@ -286,7 +286,7 @@ knowns browser --open
 
 ---
 
-## What You Can Build With Knowns
+## What You Can Build With Know-Me
 
 | Capability | What It Does |
 |---|---|
@@ -308,10 +308,10 @@ knowns browser --open
 
 ## Agent Skills Workflow
 
-When using Knowns with an agent runtime such as Claude Code or Codex, skills provide a guided workflow:
+When using Know-Me with an agent runtime such as Claude Code or Codex, skills provide a guided workflow:
 
 <p align="center">
-  <img src="./images/workflow.png" alt="Knowns AI Workflow" width="100%">
+  <img src="./images/workflow.png" alt="Know-Me AI Workflow" width="100%">
 </p>
 
 ```

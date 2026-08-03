@@ -2,7 +2,7 @@
 export interface Annotation {
 	/** Unique identifier (nanoid-style). */
 	id: string;
-	/** Knowns doc path, e.g. "specs/agent-workspace". */
+	/** Know-Me doc path, e.g. "specs/agent-workspace". */
 	docPath: string;
 	/** The exact text that was selected. */
 	selectedText: string;

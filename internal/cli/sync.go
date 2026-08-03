@@ -20,7 +20,7 @@ var syncCmd = &cobra.Command{
 	Short: "Sync project from config.json (skills, instructions, model, search index)",
 	Long: `Apply project configuration from .knowns/config.json.
 
-This is the recommended command after cloning a repo with Knowns:
+This is the recommended command after cloning a repo with Know-Me:
   git clone <repo>
   knowns sync
 
@@ -386,7 +386,7 @@ func runSyncInstructions(projectRoot string, platform string, force bool, config
 		platforms = filtered
 	}
 
-	if err := writeInstructionFile(projectRoot, canonicalInstructionFile, "Knowns", force); err != nil {
+	if err := writeInstructionFile(projectRoot, canonicalInstructionFile, "Know-Me", force); err != nil {
 		return err
 	}
 

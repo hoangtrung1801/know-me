@@ -1,6 +1,6 @@
 # Web UI
 
-Knowns có Web UI cho người muốn xem project context trực quan thay vì chỉ đọc CLI output. Web UI đọc cùng project state với CLI và MCP server, nên task, doc, memory, graph views, config, và chat workflows vẫn nối với nhau.
+Know-Me có Web UI cho người muốn xem project context trực quan thay vì chỉ đọc CLI output. Web UI đọc cùng project state với CLI và MCP server, nên task, doc, memory, graph views, config, và chat workflows vẫn nối với nhau.
 
 ## Mở
 
@@ -9,7 +9,7 @@ knowns browser
 knowns browser --open
 ```
 
-Chạy command từ một Knowns project. Dùng `--open` khi muốn Knowns start local server và tự mở default browser.
+Chạy command từ một Know-Me project. Dùng `--open` khi muốn Know-Me start local server và tự mở default browser.
 
 ## Các khu vực chính
 

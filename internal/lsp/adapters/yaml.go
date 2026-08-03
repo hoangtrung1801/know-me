@@ -55,7 +55,7 @@ func (a *YAMLAdapter) InstallGuide() lsp.InstallGuide {
 		Command:   "npm install -g yaml-language-server@" + yamlLanguageServerVersion,
 		KnownsCmd: "knowns lsp install yaml",
 		URL:       "https://github.com/redhat-developer/yaml-language-server",
-		Notes:     "Requires Node.js 12+; Knowns installs the recommended integrity-pinned version",
+		Notes:     "Requires Node.js 12+; Know-Me installs the recommended integrity-pinned version",
 	}
 }
 func (a *YAMLAdapter) CanInstall() bool { return true }

@@ -1,7 +1,7 @@
 {
   "name": "@knowns/darwin-x64",
   "version": "0.0.0",
-  "description": "Knowns CLI binary for macOS Intel (x86_64); local ONNX Runtime is not bundled",
+  "description": "Know-Me CLI binary for macOS Intel (x86_64); local ONNX Runtime is not bundled",
   "os": [
     "darwin"
   ],

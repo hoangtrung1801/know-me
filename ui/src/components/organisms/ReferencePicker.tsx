@@ -194,7 +194,7 @@ export default function ReferencePicker({
 							) : null}
 						</div>
 						<p className="mt-2 text-xs text-muted-foreground">
-							Choose an existing Knowns item, or keep using the field above for external URLs and special refs.
+							Choose an existing Know-Me item, or keep using the field above for external URLs and special refs.
 						</p>
 					</div>
 

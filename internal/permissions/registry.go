@@ -1,5 +1,5 @@
 // Package permissions provides a shared action registry and policy model
-// for the Knowns AI permission system.
+// for the Know-Me AI permission system.
 //
 // The registry classifies every MCP tool+action by capability, target, and
 // risk level. Both the audit system and the permission guard consume this

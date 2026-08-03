@@ -43,7 +43,7 @@ function LoginForm() {
 		<div className="fixed inset-0 flex items-center justify-center bg-background">
 			<div className="w-full max-w-sm p-6 space-y-6">
 				<div className="text-center space-y-2">
-					<h1 className="text-2xl font-bold">Knowns</h1>
+					<h1 className="text-2xl font-bold">Know-Me</h1>
 					<p className="text-sm text-muted-foreground">This instance is password protected</p>
 				</div>
 				<form onSubmit={handleSubmit} className="space-y-4">

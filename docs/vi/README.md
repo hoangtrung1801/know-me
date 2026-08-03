@@ -1,10 +1,10 @@
-# Tài liệu Knowns
+# Tài liệu Know-Me
 
-Knowns là một project context layer cho software team và AI agent. Nó gom task, doc, memory, template, semantic search, và AI integrations vào cùng một repo-local system để người và AI cùng làm việc trên một nguồn context thống nhất.
+Know-Me là một project context layer cho software team và AI agent. Nó gom task, doc, memory, template, semantic search, và AI integrations vào cùng một repo-local system để người và AI cùng làm việc trên một nguồn context thống nhất.
 
 Dùng bộ docs này khi bạn muốn:
 
-- setup Knowns trong một repository có sẵn
+- setup Know-Me trong một repository có sẵn
 - giữ project work, decision, và doc ở nơi cả người lẫn AI đều đọc được
 - kết nối assistant qua MCP, skill, hoặc lightweight shim files
 - dùng Web UI để xem board, doc, graph, và chat workflows
@@ -25,7 +25,7 @@ Nội dung tiếng Việt bám theo `docs/en/` nhưng viết lại cho dễ đ�
 1. [Cài đặt](./getting-started/installation.md)
 2. [Quick start](./getting-started/quick-start.md)
 3. [Dự án đầu tiên](./getting-started/first-project.md)
-4. [Vì sao có Knowns?](./guides/why-knowns.md)
+4. [Vì sao có Know-Me?](./guides/why-knowns.md)
 5. [Hướng dẫn sử dụng](./guides/user-guide.md)
 6. [Quản lý task](./guides/task-management.md)
 7. [Làm việc với AI](./guides/ai-agent-guide.md)
@@ -56,7 +56,7 @@ Nội dung tiếng Việt bám theo `docs/en/` nhưng viết lại cho dễ đ�
 
 ### Hướng dẫn
 
-- [Vì sao có Knowns?](./guides/why-knowns.md)
+- [Vì sao có Know-Me?](./guides/why-knowns.md)
 - [Hướng dẫn sử dụng](./guides/user-guide.md)
 - [Quản lý task](./guides/task-management.md)
 - [Làm việc với AI](./guides/ai-agent-guide.md)

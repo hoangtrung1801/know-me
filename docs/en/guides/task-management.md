@@ -1,6 +1,6 @@
 # Task Management
 
-Tasks are the main unit of planned work in Knowns.
+Tasks are the main unit of planned work in Know-Me.
 
 ## What a task contains
 

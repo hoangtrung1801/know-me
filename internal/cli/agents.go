@@ -17,7 +17,7 @@ type agentPlatform struct {
 
 // knownPlatforms lists the canonical guidance file plus supported AI agent platforms.
 var knownPlatforms = []agentPlatform{
-	{Name: "knowns", FileName: canonicalInstructionFile, Label: "Knowns Canonical Guide"},
+	{Name: "knowns", FileName: canonicalInstructionFile, Label: "Know-Me Canonical Guide"},
 	{Name: "claude", FileName: "CLAUDE.md", Label: "Claude Code"},
 	{Name: "opencode", FileName: "OPENCODE.md", Label: "OpenCode"},
 	{Name: "gemini", FileName: "GEMINI.md", Label: "Google Gemini"},

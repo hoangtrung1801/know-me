@@ -1,8 +1,8 @@
 # Philosophy
 
-Knowns is built around a simple idea: **AI should understand your project the same way a teammate does.**
+Know-Me is built around a simple idea: **AI should understand your project the same way a teammate does.**
 
-This document explains the principles that guide Knowns' design and why it works the way it does.
+This document explains the principles that guide Know-Me' design and why it works the way it does.
 
 ---
 
@@ -10,7 +10,7 @@ This document explains the principles that guide Knowns' design and why it works
 
 Most AI tools rely on prompts, memory tricks, or repeated explanations. This breaks down over time.
 
-Knowns takes a different approach:
+Know-Me takes a different approach:
 
 - AI should read real project artifacts
 - Context should be explicit, structured, and versioned
@@ -18,13 +18,13 @@ Knowns takes a different approach:
 
 If a human can open a file and understand the project, AI should be able to do the same.
 
-That's why Knowns focuses on **files, references, and predictable structure**.
+That's why Know-Me focuses on **files, references, and predictable structure**.
 
 ---
 
 ## 2. Files Are the Source of Truth
 
-Knowns is file-first and local-first by design.
+Know-Me is file-first and local-first by design.
 
 - Tasks are markdown files
 - Docs are markdown files
@@ -38,7 +38,7 @@ This means:
 - No vendor lock-in
 - Full auditability
 
-Your project knowledge should survive tools, editors, and even Knowns itself.
+Your project knowledge should survive tools, editors, and even Know-Me itself.
 
 ---
 
@@ -46,7 +46,7 @@ Your project knowledge should survive tools, editors, and even Knowns itself.
 
 Human memory is fuzzy. AI memory is unreliable across sessions.
 
-Knowns replaces implicit memory with explicit references:
+Know-Me replaces implicit memory with explicit references:
 
 ```
 @doc/patterns/auth
@@ -67,11 +67,11 @@ No guessing. No hallucinated context.
 
 ## 4. Local-First, Sync Optional
 
-Knowns works fully offline.
+Know-Me works fully offline.
 
 The local `.knowns/` directory is always the source of truth.
 
-When teams need visibility, Knowns can optionally sync to a self-hosted server that:
+When teams need visibility, Know-Me can optionally sync to a self-hosted server that:
 
 - Mirrors task and documentation state
 - Shows activity and progress
@@ -85,7 +85,7 @@ You own your data.
 
 ## 5. CLI Is the Primary Interface
 
-Knowns is built for developers.
+Know-Me is built for developers.
 
 The CLI is not an afterthought — it is the core interface:
 
@@ -100,7 +100,7 @@ The Web UI exists to visualize and browse, not to replace the CLI.
 
 ## 6. AI Is a Teammate, Not a Feature
 
-Knowns does not treat AI as a magic button.
+Know-Me does not treat AI as a magic button.
 
 Instead, AI is treated like a junior teammate who:
 
@@ -115,7 +115,7 @@ By structuring knowledge clearly, AI can behave consistently and predictably.
 
 ## 7. Simple Concepts, Strong Guarantees
 
-Knowns intentionally avoids complex abstractions.
+Know-Me intentionally avoids complex abstractions.
 
 Core building blocks:
 
@@ -126,7 +126,7 @@ Core building blocks:
 
 From these, higher-level workflows emerge naturally.
 
-This simplicity makes Knowns:
+This simplicity makes Know-Me:
 
 - Easy to reason about
 - Easy to extend
@@ -136,7 +136,7 @@ This simplicity makes Knowns:
 
 ## 8. Designed for Long-Term Projects
 
-Knowns is optimized for projects that live for months or years.
+Know-Me is optimized for projects that live for months or years.
 
 It helps teams:
 
@@ -149,9 +149,9 @@ Knowledge should accumulate — not reset every session.
 
 ---
 
-## 9. What Knowns Is Not
+## 9. What Know-Me Is Not
 
-To stay focused, Knowns intentionally avoids becoming:
+To stay focused, Know-Me intentionally avoids becoming:
 
 - A full project management system
 - A ticketing platform
@@ -167,4 +167,4 @@ It **complements existing tools** instead of replacing them.
 
 > If knowledge is explicit, structured, and versioned, AI can work like a real teammate.
 
-Knowns exists to make that belief practical.
+Know-Me exists to make that belief practical.

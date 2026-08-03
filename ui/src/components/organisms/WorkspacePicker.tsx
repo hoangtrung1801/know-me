@@ -299,7 +299,7 @@ function BrowseTab({ onSwitch }: { onSwitch: (path: string) => Promise<void> }) 
 				)}
 			</div>
 			<p className="text-xs text-muted-foreground px-1">
-				Folders with a <FolderOpen className="inline h-3 w-3 text-primary" /> icon contain a Knowns project.
+				Folders with a <FolderOpen className="inline h-3 w-3 text-primary" /> icon contain a Know-Me project.
 			</p>
 		</div>
 	);

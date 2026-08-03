@@ -140,17 +140,17 @@ func onlineVersionChecker(deps onlineDependencies) Checker {
 			if util.CompareVersions(latest, util.Version) > 0 {
 				return CheckResult{
 					Status:   StatusWarn,
-					Summary:  "A newer Knowns version is available",
+					Summary:  "A newer Know-Me version is available",
 					Evidence: evidence,
 					Remediation: &Remediation{
-						Description: "Update Knowns to the latest available version.",
+						Description: "Update Know-Me to the latest available version.",
 						Command:     "knowns update",
 					},
 				}, nil
 			}
 			return CheckResult{
 				Status:   StatusPass,
-				Summary:  "Knowns is up to date",
+				Summary:  "Know-Me is up to date",
 				Evidence: evidence,
 			}, nil
 		},

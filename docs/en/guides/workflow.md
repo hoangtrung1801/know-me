@@ -1,6 +1,6 @@
 # Workflow
 
-This is the recommended human + AI workflow with Knowns.
+This is the recommended human + AI workflow with Know-Me.
 
 The goal is to keep planning, context, implementation notes, and validation visible outside a single chat session. A person can drive the workflow from the CLI or Web UI; an AI assistant can use the same context through MCP tools and skills.
 
@@ -28,7 +28,7 @@ knowns sync
 
 ## Human-driven workflow
 
-Use this when you want Knowns as a project organization layer:
+Use this when you want Know-Me as a project organization layer:
 
 1. Create a task with acceptance criteria.
 2. Add docs for architecture, decisions, or onboarding context.
@@ -71,4 +71,4 @@ knowns validate --plain
 knowns sync
 ```
 
-Validation checks project integrity. Sync keeps generated shim files and platform artifacts aligned with the current Knowns config.
+Validation checks project integrity. Sync keeps generated shim files and platform artifacts aligned with the current Know-Me config.

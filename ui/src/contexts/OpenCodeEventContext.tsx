@@ -1,9 +1,9 @@
 /**
  * OpenCodeEventContext — receives OpenCode events multiplexed through the
- * Knowns SSE stream (via the "opencode:event" named event).
+ * Know-Me SSE stream (via the "opencode:event" named event).
  *
  * The backend subscribes to OpenCode's /global/event SSE and re-broadcasts
- * each event through the Knowns SSEBroker. This means each browser tab only
+ * each event through the Know-Me SSEBroker. This means each browser tab only
  * needs ONE SSE connection instead of two, avoiding HTTP/1.1 connection
  * exhaustion when multiple tabs are open on the same server.
  *
@@ -35,7 +35,7 @@ export function OpenCodeEventProvider({ children }: { children: ReactNode }) {
 		});
 	}, []);
 
-	// Listen for OpenCode events multiplexed through the Knowns SSE stream.
+	// Listen for OpenCode events multiplexed through the Know-Me SSE stream.
 	useSSEEvent("opencode:event", useCallback((data: Record<string, unknown>) => {
 		// The backend wraps the raw OpenCode event as the SSE data payload.
 		// Extract the inner payload if present, otherwise pass through as-is.

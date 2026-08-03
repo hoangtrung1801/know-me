@@ -1,4 +1,4 @@
-# Knowns CLI uninstaller for Windows
+# Know-Me CLI uninstaller for Windows
 # Usage:
 #   irm https://raw.githubusercontent.com/knowns-dev/knowns/main/install/uninstall.ps1 | iex
 #
@@ -29,7 +29,7 @@ function Remove-UserPathEntry {
 }
 
 Write-Host ""
-Write-Host "  Knowns CLI Uninstaller" -ForegroundColor Cyan
+Write-Host "  Know-Me CLI Uninstaller" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Install:  $InstallDir" -ForegroundColor DarkGray
 Write-Host ""
@@ -52,10 +52,10 @@ if ((Test-Path $InstallDir) -and -not (Get-ChildItem -Path $InstallDir -Force | 
 }
 
 if (-not $removed) {
-    Write-Host "  - No Knowns binaries found in $InstallDir" -ForegroundColor DarkGray
+    Write-Host "  - No Know-Me binaries found in $InstallDir" -ForegroundColor DarkGray
 }
 
 Write-Host ""
-Write-Host "  Knowns CLI uninstall complete" -ForegroundColor Green
+Write-Host "  Know-Me CLI uninstall complete" -ForegroundColor Green
 Write-Host "  Project folders and .knowns data were left untouched" -ForegroundColor DarkGray
 Write-Host ""

@@ -177,12 +177,12 @@ export function AppSidebar({
 						<div className="flex w-full items-center gap-2 rounded-md p-2 text-left">
 								<img
 									src={logoImage}
-									alt="Knowns"
+									alt="Know-Me"
 									className="size-8 rounded-lg object-contain"
 								/>
 								<div className="grid flex-1 text-left text-sm leading-tight">
 									<span className="truncate font-semibold">
-										{config.name || "Knowns"}
+										{config.name || "Know-Me"}
 									</span>
 								</div>
 								{isExpanded && (

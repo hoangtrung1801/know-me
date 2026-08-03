@@ -1,8 +1,8 @@
 # Cấu hình
 
-Knowns lưu project config trong `.knowns/config.json`.
+Know-Me lưu project config trong `.knowns/config.json`.
 
-File này khai báo những gì Knowns cần quản lý locally: platform integrations, semantic search, generated artifacts.
+File này khai báo những gì Know-Me cần quản lý locally: platform integrations, semantic search, generated artifacts.
 
 ## Ví dụ
 
@@ -45,13 +45,13 @@ File này khai báo những gì Knowns cần quản lý locally: platform integr
 
 ### `name`
 
-Tên project hiển thị trong Knowns.
+Tên project hiển thị trong Know-Me.
 
 ### `settings.gitTrackingMode`
 
 - `git-tracked` — `.knowns/` content tracked trong Git
 - `git-ignored` — config/docs/templates tracked, local data thì không
-- `none` — Knowns không quản lý `.gitignore`
+- `none` — Know-Me không quản lý `.gitignore`
 
 ### `settings.gitTracking`
 
@@ -72,7 +72,7 @@ Config cho semantic search: `enabled`, `model`, `provider`, `dimensions`.
 
 - `knowns init` set các giá trị này
 - `knowns settings` hiển thị Local ONNX models kèm trạng thái downloaded/not downloaded
-- Nếu chọn Local ONNX model chưa download trong `knowns settings`, Knowns hỏi xác nhận rồi download trước khi lưu
+- Nếu chọn Local ONNX model chưa download trong `knowns settings`, Know-Me hỏi xác nhận rồi download trước khi lưu
 - `knowns provider add` và `knowns model add --provider <id> <model-name>` cấu hình API-backed embedding models
 - `knowns sync` re-apply semantic setup
 - `knowns search --reindex` rebuild local index
@@ -136,4 +136,4 @@ knowns config set gitTracking.memories false
 
 Thay đổi `gitTracking.*` sẽ tự động regenerate `.gitignore`.
 
-Interactive `knowns init` cần terminal rộng tối thiểu 90 cột. Nếu terminal quá nhỏ, Knowns hiển thị hướng dẫn resize hoặc dùng `knowns init --no-wizard`, rồi dừng mà không tự init bằng defaults.
+Interactive `knowns init` cần terminal rộng tối thiểu 90 cột. Nếu terminal quá nhỏ, Know-Me hiển thị hướng dẫn resize hoặc dùng `knowns init --no-wizard`, rồi dừng mà không tự init bằng defaults.

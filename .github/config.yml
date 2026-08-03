@@ -9,7 +9,7 @@
 
 # Comment on new issues
 newIssueWelcomeComment: |
-  Thanks for opening your first issue here! Welcome to the Knowns CLI community! :wave:
+  Thanks for opening your first issue here! Welcome to the Know-Me CLI community! :wave:
 
   Please make sure you've read our [Contributing Guidelines](CONTRIBUTING.md) and provided all the necessary information to help us understand and reproduce the issue.
 
@@ -25,13 +25,13 @@ newPRWelcomeComment: |
   - [ ] You've updated the documentation (if applicable)
   - [ ] All CI checks pass
 
-  A maintainer will review your PR soon. Thanks for contributing to Knowns CLI!
+  A maintainer will review your PR soon. Thanks for contributing to Know-Me CLI!
 
 # Comment on merged PRs (first-time contributors)
 firstPRMergeComment: |
   Congrats on getting your first pull request merged! :confetti_ball: :tada:
 
-  Thank you for your contribution to Knowns CLI! You're now officially a contributor! :star2:
+  Thank you for your contribution to Know-Me CLI! You're now officially a contributor! :star2:
 
   We'd love to have you stick around. Check out our [good first issues](https://github.com/knowns-dev/knowns/labels/good%20first%20issue) if you want to contribute more!
 
@@ -49,7 +49,7 @@ requestInfoReplyComment: |
   Please update your issue with the following details:
 
   **For bug reports:**
-  - Knowns CLI version (`knowns --version`)
+  - Know-Me CLI version (`knowns --version`)
   - Operating system and version
   - Node.js version (`node --version`)
   - Steps to reproduce the issue

@@ -1,4 +1,4 @@
-# Why Knowns Exists
+# Why Know-Me Exists
 
 Modern software work has two context problems.
 
@@ -6,11 +6,11 @@ First, project knowledge is scattered. The task lives in one place, architecture
 
 Second, AI workflows need more than raw chat. A useful assistant needs to know the current task, relevant docs, durable memory, accepted decisions, project rules, and how to verify work. Without that structure, the assistant can sound confident while working from incomplete or stale context.
 
-Knowns exists to make project context explicit, local, and usable by both humans and AI agents.
+Know-Me exists to make project context explicit, local, and usable by both humans and AI agents.
 
 ## The Core Idea
 
-Knowns is a repo-local context layer. It keeps task, doc, memory, template, search, MCP tools, and agent skills connected around the same project state.
+Know-Me is a repo-local context layer. It keeps task, doc, memory, template, search, MCP tools, and agent skills connected around the same project state.
 
 That means:
 
@@ -33,11 +33,11 @@ Project context changes with the code. Keeping it near the repository makes it e
 - preserve decisions and conventions after the conversation ends
 - validate that generated project artifacts still match config
 
-Knowns also supports user-level setup where that makes sense. For example, `knowns setup codex --global` installs user-level MCP config, skills, and runtime hooks so your assistant integration follows you across repositories.
+Know-Me also supports user-level setup where that makes sense. For example, `knowns setup codex --global` installs user-level MCP config, skills, and runtime hooks so your assistant integration follows you across repositories.
 
 ## Why MCP `initial` and `help`?
 
-Agent bootstrap should be easy to change without rewriting every repository file. Knowns puts runtime-critical guidance in MCP `initial` and on-demand `help`, while repo instruction files stay lightweight compatibility shims for tools that auto-detect filenames.
+Agent bootstrap should be easy to change without rewriting every repository file. Know-Me puts runtime-critical guidance in MCP `initial` and on-demand `help`, while repo instruction files stay lightweight compatibility shims for tools that auto-detect filenames.
 
 This keeps the startup path small:
 
@@ -45,15 +45,15 @@ This keeps the startup path small:
 2. it uses `help("tool.*")` or `help("workflow.*")` when it needs details
 3. it reads only the task, doc, memory, or code context needed for the current work
 
-## What Knowns Is Not
+## What Know-Me Is Not
 
-Knowns does not replace source code, tests, or human review.
+Know-Me does not replace source code, tests, or human review.
 
-Memory is supplemental context only. It should not override source-of-truth docs, tasks, source files, tests, or explicit user instructions. Knowns helps surface context and workflow state, but correctness still comes from reading the code, running verification, and reviewing changes.
+Memory is supplemental context only. It should not override source-of-truth docs, tasks, source files, tests, or explicit user instructions. Know-Me helps surface context and workflow state, but correctness still comes from reading the code, running verification, and reviewing changes.
 
 ## The Practical Outcome
 
-With Knowns, a project can move from:
+With Know-Me, a project can move from:
 
 ```text
 "Here is a long chat history. Please infer what matters."
@@ -65,4 +65,4 @@ to:
 "Start with MCP initial, inspect the task and docs, retrieve relevant context, implement, review, and validate."
 ```
 
-That is the reason Knowns exists: less repeated context, more inspectable workflow state, and safer collaboration between people and AI agents.
+That is the reason Know-Me exists: less repeated context, more inspectable workflow state, and safer collaboration between people and AI agents.

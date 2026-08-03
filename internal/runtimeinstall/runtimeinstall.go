@@ -227,7 +227,7 @@ func RuntimePickerDescription(runtimeName string, opts Options) string {
 		if runtimeAvailable(spec, opts) {
 			return "Installs global OpenCode memory plugin"
 		}
-		return "Installs OpenCode, then adds the global Knowns memory plugin"
+		return "Installs OpenCode, then adds the global Know-Me memory plugin"
 	default:
 		return ""
 	}
@@ -549,7 +549,7 @@ func installKiro(spec runtimeSpec, opts Options) error {
 		"version":     "1.0.0",
 		"enabled":     true,
 		"name":        managedStatus,
-		"description": "Inject bounded Knowns memory when a prompt is submitted.",
+		"description": "Inject bounded Know-Me memory when a prompt is submitted.",
 		"when": map[string]any{
 			"type": "promptSubmit",
 		},

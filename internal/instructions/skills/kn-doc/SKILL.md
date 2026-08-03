@@ -1,6 +1,6 @@
 ---
 name: kn-doc
-description: Use when working with Knowns documentation - viewing, searching, creating, or updating docs
+description: Use when working with Know-Me documentation - viewing, searching, creating, or updating docs
 ---
 
 # Working with Documentation

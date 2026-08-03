@@ -1,5 +1,5 @@
 // Package registry manages a global project registry at ~/.knowns/registry.json.
-// It tracks known Knowns projects with their paths, names, and last-used timestamps.
+// It tracks known Know-Me projects with their paths, names, and last-used timestamps.
 package registry
 
 import (
@@ -13,7 +13,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/util"
 )
 
-// Project represents a registered Knowns project.
+// Project represents a registered Know-Me project.
 type Project struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
@@ -92,7 +92,7 @@ func (r *Registry) Add(projectPath string) (*Project, error) {
 }
 
 // Create registers a logical project. A project name is required; its local
-// path is optional so projects without a mounted directory can own Knowns data.
+// path is optional so projects without a mounted directory can own Know-Me data.
 func (r *Registry) Create(name, projectPath string) (*Project, error) {
 	name = strings.TrimSpace(name)
 	projectPath = strings.TrimSpace(projectPath)

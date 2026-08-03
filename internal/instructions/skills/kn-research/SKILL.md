@@ -28,7 +28,7 @@ description: Use when you need to understand existing code, find patterns, searc
 
 Use the narrowest search surface that can answer the question, then widen deliberately.
 
-- Use Knowns `search` first for project context: docs, tasks, memories, and decisions.
+- Use Know-Me `search` first for project context: docs, tasks, memories, and decisions.
 - Use `retrieve` when the next consumer needs a cited context pack, not for every lookup.
 - Use MCP/code intelligence (`code.find`, `code.symbols`, `code.references`, `code.definition`) for code structure before raw file reads.
 - Use specialized external MCP providers when available and relevant, before general web search. Examples: Context7/library-doc MCP for framework or package docs, GitHub/source MCP for issues or repository state, official-docs MCP for vendor APIs.
@@ -175,7 +175,7 @@ For `kn-research`, the key details should cover:
 
 If the research surface becomes too large for one response or one task:
 
-- create or update a Knowns doc for the reusable/domain knowledge
+- create or update a Know-Me doc for the reusable/domain knowledge
 - reference that doc from the current task or plan with `@doc/<path>`
 - keep the research summary short and point to the canonical doc instead of repeating everything inline
 

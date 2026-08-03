@@ -18,7 +18,7 @@ import (
 
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "Manage imported Knowns packages",
+	Short: "Manage imported Know-Me packages",
 }
 
 // --- import add ---
@@ -26,7 +26,7 @@ var importCmd = &cobra.Command{
 var importAddCmd = &cobra.Command{
 	Use:   "add <source>",
 	Short: "Add an import source",
-	Long: `Add a Knowns package import. The source can be:
+	Long: `Add a Know-Me package import. The source can be:
   - A local path: ./path/to/package
   - An npm package: @scope/package or package-name`,
 	Args: cobra.ExactArgs(1),

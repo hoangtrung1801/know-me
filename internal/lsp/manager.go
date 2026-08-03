@@ -535,7 +535,7 @@ func runtimeBinariesForAdapter(adapter LanguageAdapter, installer *Installer) []
 	status := installer.Status(adapter)
 	if status.Installed && status.SelectedPath != "" {
 		// Config overrides are handled by Detector.resolve. Keep compatible
-		// user PATH binaries ahead of the Knowns-managed fallback here.
+		// user PATH binaries ahead of the Know-Me-managed fallback here.
 		return append(binaries, BinaryCandidate{Name: status.SelectedPath, Args: adapter.DefaultArgs()})
 	}
 	return binaries

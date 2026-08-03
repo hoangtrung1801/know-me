@@ -11,7 +11,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
-// notifyServer sends a POST request to the running Knowns server to trigger
+// notifyServer sends a POST request to the running Know-Me server to trigger
 // an SSE event. This is used by MCP handlers (which run in a separate process)
 // to notify the Web UI of data changes.
 //

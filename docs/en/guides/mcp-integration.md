@@ -1,6 +1,6 @@
 # MCP Integration
 
-Knowns exposes an MCP server so AI assistants can access tasks, docs, memory, decisions, templates, time tracking, search, validation, project state, help, and code tools directly.
+Know-Me exposes an MCP server so AI assistants can access tasks, docs, memory, decisions, templates, time tracking, search, validation, project state, help, and code tools directly.
 
 ## Server command
 
@@ -9,7 +9,7 @@ knowns mcp --stdio
 knowns mcp --stdio --project /path/to/project
 ```
 
-If `--project` is not set, Knowns attempts to auto-detect the project from the current working directory.
+If `--project` is not set, Know-Me attempts to auto-detect the project from the current working directory.
 
 ## Current platform support
 

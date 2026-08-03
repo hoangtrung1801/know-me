@@ -123,7 +123,7 @@ func fetchMetadata(ctx context.Context, target *url.URL, client *http.Client) (M
 	if err != nil {
 		return Metadata{}, err
 	}
-	req.Header.Set("User-Agent", "Knowns Link Metadata/1.0")
+	req.Header.Set("User-Agent", "Know-Me Link Metadata/1.0")
 	resp, err := client.Do(req)
 	if err != nil {
 		return Metadata{}, err

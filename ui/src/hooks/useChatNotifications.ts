@@ -41,7 +41,7 @@ export function useChatNotifications({
 
 	// Update page title
 	useEffect(() => {
-		const title = sessionTitle ? `${sessionTitle} - Knowns` : "Knowns";
+		const title = sessionTitle ? `${sessionTitle} - Know-Me` : "Know-Me";
 		setOriginalTitle(title);
 	}, [sessionTitle]);
 

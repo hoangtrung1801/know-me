@@ -484,8 +484,8 @@ func TestCreateAntigravityRulesQuietCreatesRuleFile(t *testing.T) {
 
 	content := readTextFile(t, filepath.Join(projectRoot, ".agents", "rules", "knowns.md"))
 	assertContains(t, content, "trigger: always_on")
-	assertContains(t, content, "Start with Knowns MCP `initial`")
-	assertContains(t, content, "Prefer Knowns MCP tools")
+	assertContains(t, content, "Start with Know-Me MCP `initial`")
+	assertContains(t, content, "Prefer Know-Me MCP tools")
 	assertContains(t, content, "`knowns`")
 }
 
@@ -900,7 +900,7 @@ func TestRenderCanonicalInstructionContentIncludesProactiveMemoryRules(t *testin
 func TestRenderCompatibilityInstructionContentUsesMCPBootstrap(t *testing.T) {
 	content := renderCompatibilityInstructionContent("AGENTS.md", "Generic AI", "/tmp/example-project")
 
-	assertContains(t, content, "Start with Knowns MCP `initial`")
+	assertContains(t, content, "Start with Know-Me MCP `initial`")
 	assertNotContains(t, content, "KNOWNS.md")
 	assertContains(t, content, "- Proactively capture durable memory when scope and durability are clear.")
 }

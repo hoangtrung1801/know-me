@@ -60,7 +60,7 @@ func TestBuildSelectsRelevantProjectAndGlobalMemories(t *testing.T) {
 	if pack.Serialized == "" {
 		t.Fatal("expected serialized payload")
 	}
-	if !strings.Contains(pack.Serialized, "Knowns Guidance") {
+	if !strings.Contains(pack.Serialized, "Know-Me Guidance") {
 		t.Fatalf("expected guidance header, got %q", pack.Serialized)
 	}
 	if !strings.Contains(pack.Serialized, "memory({ action: \"list\" })") {
@@ -829,7 +829,7 @@ func TestBuildKeepsEmptyPackCleanWhenHybridReturnsNoUsableCandidates(t *testing.
 	if pack.Serialized != "" {
 		t.Fatalf("expected empty serialized payload, got %q", pack.Serialized)
 	}
-	if strings.Contains(pack.Serialized, "Knowns Guidance") {
+	if strings.Contains(pack.Serialized, "Know-Me Guidance") {
 		t.Fatalf("expected no serialized memory pack for empty result")
 	}
 }
