@@ -18,22 +18,42 @@ import (
 const maxImportedImageBytes = 10 << 20
 
 type FetchFunc func(context.Context, string) (Metadata, error)
+type ClassifyFunc func(context.Context, string, Metadata, []string) ([]string, error)
 
 type Service struct {
-	store *storage.LinkStore
-	fetch FetchFunc
-	now   func() time.Time
+	store    *storage.LinkStore
+	fetch    FetchFunc
+	classify ClassifyFunc
+	now      func() time.Time
 }
 
 func NewService(root string) *Service {
-	return NewServiceWithFetcher(root, FetchMetadata)
+	return NewServiceWithFetcherAndClassifier(root, FetchMetadata, classifierFromGlobalSettings())
+}
+
+func classifierFromGlobalSettings() ClassifyFunc {
+	settings := storage.NewLinkClassifierSettingsStore()
+	return func(ctx context.Context, rawURL string, metadata Metadata, existing []string) ([]string, error) {
+		config, err := settings.Load()
+		if err != nil {
+			return nil, err
+		}
+		if config.APIBase == "" || config.Model == "" {
+			return nil, errors.New("link classifier is not configured")
+		}
+		return NewOpenAIClassifier(*config).Classify(ctx, rawURL, metadata, existing)
+	}
 }
 
 func NewServiceWithFetcher(root string, fetch FetchFunc) *Service {
+	return NewServiceWithFetcherAndClassifier(root, fetch, nil)
+}
+
+func NewServiceWithFetcherAndClassifier(root string, fetch FetchFunc, classify ClassifyFunc) *Service {
 	if fetch == nil {
 		fetch = FetchMetadata
 	}
-	return &Service{store: storage.NewLinkStore(root), fetch: fetch, now: func() time.Time { return time.Now().UTC() }}
+	return &Service{store: storage.NewLinkStore(root), fetch: fetch, classify: classify, now: func() time.Time { return time.Now().UTC() }}
 }
 
 func (s *Service) Add(ctx context.Context, rawURL string, image io.Reader) (*models.Link, error) {
@@ -60,6 +80,13 @@ func (s *Service) Add(ctx context.Context, rawURL string, image io.Reader) (*mod
 	}
 	link.Description = metadata.Description
 	link.Image = metadata.Image
+	if fetchErr == nil && s.classify != nil {
+		if existing, err := s.store.Tags(); err == nil {
+			if tags, err := s.classify(ctx, link.URL, metadata, existing); err == nil {
+				link.Tags = normalizeTags(tags)
+			}
+		}
+	}
 
 	newImage := ""
 	if image != nil {
