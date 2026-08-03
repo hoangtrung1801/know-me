@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { memoApi, type Memo } from "@/ui/api/client";
 import { MDRender } from "@/ui/components/editor";
@@ -22,6 +22,10 @@ function dayLabel(value: string) {
 	return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 }
 
+function memoTags(content: string) {
+	return [...content.matchAll(/(?:^|\s)#([\p{L}\p{N}_-]+)/gu)].map((match) => match[1]);
+}
+
 function groupMemos(items: Memo[]) {
 	const groups: Array<{ label: string; items: Memo[] }> = [];
 	for (const memo of items) {
@@ -36,6 +40,7 @@ function groupMemos(items: Memo[]) {
 export default function MemosPage() {
 	const [memos, setMemos] = useState<Memo[]>([]);
 	const [query, setQuery] = useState("");
+	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const debouncedQuery = useDebouncedValue(query, 250);
 	const [newContent, setNewContent] = useState("");
 	const [editingID, setEditingID] = useState<string | null>(null);
@@ -58,6 +63,9 @@ export default function MemosPage() {
 	}, []);
 
 	useEffect(() => { void load(debouncedQuery); }, [debouncedQuery, load]);
+
+	const availableTags = useMemo(() => [...new Set(memos.flatMap((memo) => memoTags(memo.content)))].sort(), [memos]);
+	const visibleMemos = useMemo(() => selectedTags.length === 0 ? memos : memos.filter((memo) => memoTags(memo.content).some((tag) => selectedTags.includes(tag))), [memos, selectedTags]);
 
 	const add = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -106,8 +114,8 @@ export default function MemosPage() {
 		}
 	};
 
-	const groups = groupMemos(memos);
-	const emptyMessage = query.trim() ? "No matching memos" : "No memos yet";
+	const groups = groupMemos(visibleMemos);
+	const emptyMessage = query.trim() || selectedTags.length > 0 ? "No matching memos" : "No memos yet";
 
 	return (
 		<PageShell>
@@ -133,12 +141,16 @@ export default function MemosPage() {
 					<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 					<Input aria-label="Search memos" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search memos..." className="pl-9" />
 				</div>
+				{availableTags.length > 0 && <div className="mt-3 flex flex-wrap gap-2" aria-label="Filter memos by tag">
+					<Button size="sm" variant={selectedTags.length === 0 ? "default" : "outline"} onClick={() => setSelectedTags([])}>All tags</Button>
+					{availableTags.map((tag) => <Button key={tag} size="sm" variant={selectedTags.includes(tag) ? "default" : "outline"} aria-pressed={selectedTags.includes(tag)} onClick={() => setSelectedTags((current) => current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])}>{tag}</Button>)}
+				</div>}
 
 				{error && <p role="alert" className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
 				{loading ? <PageLoading label="Loading memos" /> : groups.length === 0 ? <div className="mt-8 rounded-xl border border-dashed px-6 py-12 text-center text-sm text-muted-foreground">{emptyMessage}</div> : <div className="mt-8 space-y-8">
 					{groups.map((group) => <section key={group.label} aria-labelledby={`memos-${group.label}`}>
 						<h2 id={`memos-${group.label}`} className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h2>
-						<div className="space-y-4">
+						<div className="grid gap-4 md:grid-cols-2">
 							{group.items.map((memo) => <article key={memo.id} className="rounded-lg border border-border bg-transparent p-4 shadow-none">
 								{editingID === memo.id ? <div>
 									<Textarea aria-label="Edit memo" value={editContent} onChange={(event) => setEditContent(event.target.value)} rows={6} />
