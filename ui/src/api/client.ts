@@ -2746,9 +2746,41 @@ export interface SavedLink {
 	title: string;
 	description: string;
 	image?: string;
+	tags?: string[];
 	createdAt: string;
 	updatedAt: string;
 }
+
+export interface LinkClassifierSettings {
+	apiBase: string;
+	model: string;
+	configured: boolean;
+}
+
+export const linkClassifierApi = {
+	async get(): Promise<LinkClassifierSettings> {
+		const res = await apiFetch(`${API_BASE}/api/link-classifier`);
+		if (!res.ok) throw new Error("Failed to load link classifier settings");
+		return res.json();
+	},
+	async save(input: { apiBase: string; apiKey: string; model: string }): Promise<LinkClassifierSettings> {
+		const res = await apiFetch(`${API_BASE}/api/link-classifier`, {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(input),
+		});
+		if (!res.ok) throw new Error("Failed to save link classifier settings");
+		return res.json();
+	},
+	async test(input: { apiBase: string; apiKey: string; model: string }): Promise<{ success: boolean; error?: string }> {
+		const res = await apiFetch(`${API_BASE}/api/link-classifier/test`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(input),
+		});
+		return res.json();
+	},
+};
 
 export const linkApi = {
 	async list(): Promise<SavedLink[]> {

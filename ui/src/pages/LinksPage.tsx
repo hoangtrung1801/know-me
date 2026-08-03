@@ -58,6 +58,7 @@ export default function LinksPage() {
 					{src ? <img src={src} alt="" className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-muted/40"><Link2 className="h-8 w-8 text-muted-foreground/50" /></div>}
 					<div className="p-4"><div className="flex items-start justify-between gap-3"><h2 className="line-clamp-2 font-semibold leading-tight">{link.title || link.url}</h2><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Edit ${link.title || link.url}`} onClick={() => openEditor(link)}><Pencil className="h-4 w-4" /></Button></div>
 						{link.description && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{link.description}</p>}
+						{link.tags?.length ? <div className="mt-3 flex flex-wrap gap-1">{link.tags.map((tag) => <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-xs">{tag}</span>)}</div> : null}
 						<a href={link.url} target="_blank" rel="noreferrer" className="mt-4 flex items-center gap-1 truncate text-xs text-primary hover:underline" title={link.url}>{link.url}<ExternalLink className="h-3 w-3 shrink-0" /></a>
 					</div></article>; })}
 			</div>}

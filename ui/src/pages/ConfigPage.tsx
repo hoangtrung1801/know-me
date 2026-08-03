@@ -47,7 +47,7 @@ import { useOpenCodeModelManager } from "../hooks/useOpencodeModelManager";
 import { OpenCodeModelManager } from "../components/organisms/OpenCodeModelManager";
 import DecisionMigrationTool from "../components/organisms/DecisionMigrationTool";
 import { toast } from "../components/ui/sonner";
-import { importApi, saveUserPreferences, getRuntimeServices, getEmbeddingModels, testEmbeddingModel, tunnelApi, lspApi, type EmbeddingModelInfo, type EmbeddingModelsResponse, type EmbeddingModelTestResult, type Import, type ImportDetail, type ImportResult, type RuntimeService, type LSPLanguageInfo } from "../api/client";
+import { importApi, saveUserPreferences, getRuntimeServices, getEmbeddingModels, testEmbeddingModel, linkClassifierApi, tunnelApi, lspApi, type EmbeddingModelInfo, type EmbeddingModelsResponse, type EmbeddingModelTestResult, type Import, type ImportDetail, type ImportResult, type RuntimeService, type LSPLanguageInfo } from "../api/client";
 
 const DEFAULT_STATUSES = ["todo", "in-progress", "in-review", "done", "blocked", "on-hold", "urgent"];
 const COLOR_OPTIONS = ["gray", "blue", "green", "yellow", "red", "purple", "orange", "pink", "cyan", "indigo"];
@@ -217,6 +217,59 @@ function FieldRow({ label, hint, children }: { label: string; hint?: string; chi
 			<div className="w-full min-w-0 flex-1">{children}</div>
 		</div>
 	);
+}
+
+function LinkClassifierSettings() {
+	const [apiBase, setAPIBase] = useState("");
+	const [apiKey, setAPIKey] = useState("");
+	const [model, setModel] = useState("");
+	const [busy, setBusy] = useState(false);
+	const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null);
+
+	useEffect(() => {
+		void linkClassifierApi.get().then((settings) => {
+			setAPIBase(settings.apiBase);
+			setModel(settings.model);
+		}).catch(() => {});
+	}, []);
+
+	const test = async () => {
+		setBusy(true);
+		setResult(null);
+		try {
+			setResult(await linkClassifierApi.test({ apiBase: apiBase.trim(), apiKey: apiKey.trim(), model: model.trim() }));
+		} catch (err) {
+			setResult({ success: false, error: err instanceof Error ? err.message : "Request failed" });
+		} finally {
+			setBusy(false);
+		}
+	};
+
+	const save = async () => {
+		setBusy(true);
+		try {
+			const saved = await linkClassifierApi.save({ apiBase: apiBase.trim(), apiKey: apiKey.trim(), model: model.trim() });
+			setAPIBase(saved.apiBase);
+			setModel(saved.model);
+			setAPIKey("");
+			toast.success("Link classifier settings saved");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to save link classifier settings");
+		} finally {
+			setBusy(false);
+		}
+	};
+
+	return <>
+		<FieldRow label="API base URL"><Input aria-label="Link classifier API base URL" value={apiBase} onChange={(e) => setAPIBase(e.target.value)} placeholder="https://api.example/v1" /></FieldRow>
+		<FieldRow label="API key" hint="Leave blank to keep the saved key"><Input aria-label="Link classifier API key" type="password" value={apiKey} onChange={(e) => setAPIKey(e.target.value)} placeholder="Bearer token" /></FieldRow>
+		<FieldRow label="Model"><Input aria-label="Link classifier model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="gpt-4o-mini" /></FieldRow>
+		<div className="ml-[calc(11rem+1rem)] flex flex-wrap gap-2">
+			<Button variant="outline" size="sm" onClick={() => void test()} disabled={busy || !apiBase.trim() || !model.trim()}>{busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}Test</Button>
+			<Button size="sm" onClick={() => void save()} disabled={busy || !apiBase.trim() || !model.trim()}>Save</Button>
+		</div>
+		{result && <div className={`ml-[calc(11rem+1rem)] mt-2 rounded-md border px-3 py-2 text-sm ${result.success ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-destructive/30 bg-destructive/10 text-destructive"}`}>{result.success ? "Classifier connected." : result.error}</div>}
+	</>;
 }
 
 // ── Main component ────────────────────────────────────────────────
@@ -719,6 +772,10 @@ export default function ConfigPage() {
 					placeholder="code, vim, nano"
 				/>
 			</FieldRow>
+
+			<Separator className="my-1" />
+			<SectionHeader icon={Bot} title="Link classification" description="Automatically tag new saved links with an OpenAI-compatible model" />
+			<LinkClassifierSettings />
 		</div>
 	);
 

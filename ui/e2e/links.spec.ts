@@ -36,3 +36,13 @@ test("saved link cards can be edited with an imported image", async ({ page }) =
 		rmSync(imageDir, { recursive: true, force: true });
 	}
 });
+
+test("saved link cards show automatic tags", async ({ page }) => {
+	await page.route("**/api/links", (route) => route.fulfill({ json: [{
+		id: "link1", url: "https://example.com", title: "Example", description: "",
+		tags: ["golang", "release"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z",
+	}] }));
+	await page.goto(`${server.baseURL}/links`);
+	await expect(page.getByText("golang", { exact: true })).toBeVisible();
+	await expect(page.getByText("release", { exact: true })).toBeVisible();
+});

@@ -134,6 +134,7 @@ func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadca
 	upr.Register(r)
 
 	// Saved links are global and remain available without an active project.
+	(&LinkClassifierRoutes{store: storage.NewLinkClassifierSettingsStore()}).Register(r)
 	(&LinkRoutes{service: links.NewService(storage.GlobalRootPath())}).Register(r)
 
 	// Memos are global and remain available without an active project.

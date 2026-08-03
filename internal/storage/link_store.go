@@ -62,6 +62,28 @@ func (s *LinkStore) List() ([]*models.Link, error) {
 	return links, nil
 }
 
+func (s *LinkStore) Tags() ([]string, error) {
+	links, err := s.List()
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]struct{})
+	for _, link := range links {
+		for _, tag := range link.Tags {
+			tag = strings.TrimSpace(tag)
+			if tag != "" {
+				seen[tag] = struct{}{}
+			}
+		}
+	}
+	tags := make([]string, 0, len(seen))
+	for tag := range seen {
+		tags = append(tags, tag)
+	}
+	sort.Strings(tags)
+	return tags, nil
+}
+
 func (s *LinkStore) Get(id string) (*models.Link, error) {
 	if !validLinkID(id) {
 		return nil, models.ErrLinkNotFound
