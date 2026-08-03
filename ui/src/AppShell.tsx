@@ -408,8 +408,8 @@ export default function AppShell() {
 							className={cn(
 								"flex shrink-0 items-center gap-1.5 px-2 sm:px-4",
 								isChatPage
-									? "h-11 border-b border-border/50 bg-background/95 px-4 sm:px-6"
-									: "h-11 border-b border-border/50 bg-background sm:gap-2",
+								? "h-11 border-b border-sidebar-border/80 bg-background/95 px-4 sm:px-6"
+								: "h-11 border-b border-sidebar-border/80 bg-background sm:gap-2",
 							)}
 						>
 							<SidebarTrigger className={cn("-ml-1", isChatPage && "opacity-80")} />

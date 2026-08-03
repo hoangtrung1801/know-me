@@ -417,7 +417,7 @@ function DocsPageInner() {
 						) : (
 							<div className="flex-1 overflow-y-auto relative" ref={scrollContainerRef}>
 								<div ref={docViewerRef} className="flex justify-center relative">
-									<article key={selectedDoc.path} className={`w-full px-6 sm:px-8 py-10 sm:py-12 transition-[max-width] duration-300 ease-in-out animate-doc-in ${wideMode ? "max-w-[1040px]" : "max-w-[760px]"}`}>
+									<article data-document-surface="doc" key={selectedDoc.path} className={`w-full px-6 sm:px-8 py-10 sm:py-12 transition-[max-width] duration-300 ease-in-out animate-doc-in ${wideMode ? "max-w-[1040px]" : "max-w-[880px]"}`}>
 										<DocsDocHeader
 											selectedDoc={selectedDoc}
 											metaTitle={metaTitle} setMetaTitle={setMetaTitle}

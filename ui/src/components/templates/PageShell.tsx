@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Button } from "@/ui/components/ui/button";
 import { Skeleton } from "@/ui/components/ui/skeleton";
 import { cn } from "@/ui/lib/utils";
@@ -8,6 +8,8 @@ interface PageShellProps {
 	className?: string;
 }
 
+export type PageSize = "reading" | "default" | "wide" | "full";
+
 interface PageHeaderProps {
 	title: ReactNode;
 	description?: ReactNode;
@@ -15,12 +17,12 @@ interface PageHeaderProps {
 	status?: ReactNode;
 	actions?: ReactNode;
 	className?: string;
+	size?: PageSize;
 }
 
-interface PageContentProps {
+interface PageContentProps extends ComponentProps<"div"> {
 	children: ReactNode;
-	className?: string;
-	size?: "default" | "wide" | "full";
+	size?: PageSize;
 }
 
 interface PageLoadingProps {
@@ -35,7 +37,8 @@ interface PageErrorProps {
 	className?: string;
 }
 
-const contentWidths: Record<NonNullable<PageContentProps["size"]>, string> = {
+const contentWidths: Record<PageSize, string> = {
+	reading: "max-w-[880px]",
 	default: "max-w-[1440px]",
 	wide: "max-w-[1680px]",
 	full: "max-w-none",
@@ -61,10 +64,11 @@ export function PageHeader({
 	status,
 	actions,
 	className,
+	size = "default",
 }: PageHeaderProps) {
 	return (
-		<header className={cn("shrink-0 border-b border-border/70 bg-card", className)}>
-			<div className="mx-auto flex w-full max-w-[1440px] flex-col justify-between gap-4 px-4 py-5 sm:flex-row sm:items-end sm:px-6">
+		<header className={cn("shrink-0", className)} data-page-header data-page-size={size}>
+			<div className={cn("mx-auto flex w-full flex-col justify-between gap-4 px-4 py-5 sm:flex-row sm:items-end sm:px-6", contentWidths[size])}>
 				<div className="min-w-0">
 					{(context || status) && (
 						<div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
@@ -98,14 +102,17 @@ export function PageContent({
 	children,
 	className,
 	size = "default",
+	...props
 }: PageContentProps) {
 	return (
 		<div
+			data-page-size={size}
 			className={cn(
 				"mx-auto min-h-0 w-full flex-1 overflow-auto px-4 py-5 sm:px-6",
 				contentWidths[size],
 				className,
 			)}
+			{...props}
 		>
 			{children}
 		</div>
@@ -153,7 +160,7 @@ export function PageError({
 		<section
 			role="alert"
 			className={cn(
-				"flex min-h-64 flex-col items-start justify-center rounded-lg border border-border/70 bg-card p-6",
+				"flex min-h-64 flex-col items-start justify-center rounded-lg border border-border bg-transparent p-6 shadow-none",
 				className,
 			)}
 		>

@@ -139,6 +139,7 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 	return (
 		<PageShell>
 			<PageHeader
+				size="full"
 				title="Kanban Board"
 				description="Move active work through your configured delivery stages."
 				context="Project work"

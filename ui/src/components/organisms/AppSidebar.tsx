@@ -169,7 +169,7 @@ export function AppSidebar({
 						<button
 							type="button"
 							onClick={onSearchClick}
-							className="flex w-full items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+							className="flex w-full items-center gap-2 rounded-md bg-sidebar-accent/60 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
 						>
 							<Search className="h-4 w-4" />
 							<span>Search...</span>

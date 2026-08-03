@@ -165,7 +165,7 @@ function SectionCard({
 	className?: string;
 }) {
 	return (
-		<section className={cn("rounded-xl border border-border/70 bg-card", className)}>
+		<section className={cn("rounded-lg border border-border bg-transparent", className)}>
 			{children}
 		</section>
 	);
@@ -609,7 +609,7 @@ function FilterBar({
 	totalCount: number;
 }) {
 	return (
-		<div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-3">
+		<div className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-transparent px-3 py-3">
 			<fieldset className="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
 				<legend className="sr-only">Analysis period</legend>
 				{PERIOD_OPTIONS.map((option) => (
@@ -886,7 +886,7 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 
 	return (
 		<div className="analysis-workbench h-full overflow-auto bg-[var(--analysis-canvas)] text-foreground">
-			<header className="border-b border-border/70 bg-card">
+			<header className="border-b border-border bg-background">
 				<div className="mx-auto flex w-full max-w-[1440px] flex-col justify-between gap-4 px-4 py-5 sm:flex-row sm:items-end sm:px-6">
 					<div>
 						<div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">

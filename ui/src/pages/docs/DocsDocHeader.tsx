@@ -57,7 +57,7 @@ export function DocsDocHeader({
 	const projects = useWorkspaceProjects();
 
   return (
-    <header className="mb-10">
+    <header className="mb-8">
       {/* Title */}
       {selectedDoc.isImported ? (
         <h1 className="text-4xl font-semibold tracking-tight mb-2 text-balance">

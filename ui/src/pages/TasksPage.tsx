@@ -197,6 +197,7 @@ export default function TasksPage({
 	return (
 		<PageShell>
 			<PageHeader
+				size="full"
 				title="Tasks"
 				description="Plan, review, and recover project work across its lifecycle."
 				context="Project work"
