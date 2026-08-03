@@ -64,13 +64,14 @@ export default function ProjectsPage() {
 	return (
 		<PageShell>
 			<PageHeader
+				size="full"
 				title="Projects"
 				description="All workspace projects available in your shared Knowns store."
 				context="Workspace registry"
 				status={<span className="tabular-nums">{projects.length} {projects.length === 1 ? "project" : "projects"}</span>}
 				actions={<Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" />Add project</Button>}
 			/>
-			<PageContent>
+			<PageContent size="full">
 				{loading ? (
 					<PageLoading label="Loading projects" />
 				) : error ? (
@@ -84,7 +85,7 @@ export default function ProjectsPage() {
 				) : (
 					<div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
 						{projects.map((project) => (
-							<article key={project.id} className="rounded-lg border bg-card p-4">
+							<article key={project.id} className="rounded-lg border border-border bg-transparent p-4">
 								<div className="flex items-start gap-3">
 									<FolderOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
 									<div className="min-w-0">

@@ -124,6 +124,7 @@ export default function AuditPage() {
 	return (
 		<PageShell>
 			<PageHeader
+				size="full"
 				title="MCP Audit Trail"
 				description="Review MCP activity, outcomes, and execution details recorded for this project."
 				actions={
@@ -143,7 +144,7 @@ export default function AuditPage() {
 				}
 			/>
 
-			<PageContent className="flex min-h-0 flex-1 flex-col gap-4 overflow-x-hidden">
+			<PageContent size="full" className="flex min-h-0 flex-1 flex-col gap-4 overflow-x-hidden">
 				<AuditStatusSummary
 					tab={tab}
 					events={events}

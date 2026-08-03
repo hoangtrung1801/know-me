@@ -311,7 +311,7 @@ export function TaskDetailSheet({
 
 	// Main content section (shared)
 	const MainContent = (
-		<div className="px-6 py-8 space-y-0">
+		<div data-document-surface="task-detail" className="mx-auto w-full max-w-[880px] px-5 py-6 space-y-0 sm:px-7">
 			<TaskDescription task={task} onSave={handleSave} saving={saving} />
 
 			<div className="border-t border-border/40" />

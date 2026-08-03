@@ -112,13 +112,14 @@ export default function MemosPage() {
 	return (
 		<PageShell>
 			<PageHeader
+				size="reading"
 				title="Memos"
 				description="Quick Markdown notes, available across every project."
 				context="Personal notes"
 				status={`${memos.length} ${memos.length === 1 ? "memo" : "memos"}`}
 			/>
-			<PageContent size="wide">
-				<form onSubmit={add} className="rounded-xl border bg-card p-4 shadow-sm">
+			<PageContent size="reading" data-document-surface="memos">
+				<form onSubmit={add} className="rounded-lg border border-border bg-transparent p-4 shadow-none">
 					<Textarea aria-label="New memo" value={newContent} onChange={(event) => setNewContent(event.target.value)} placeholder="Write a quick note in Markdown..." rows={4} />
 					<div className="mt-3 flex justify-end">
 						<Button type="submit" disabled={busy || !newContent.trim()}>
@@ -138,7 +139,7 @@ export default function MemosPage() {
 					{groups.map((group) => <section key={group.label} aria-labelledby={`memos-${group.label}`}>
 						<h2 id={`memos-${group.label}`} className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h2>
 						<div className="space-y-4">
-							{group.items.map((memo) => <article key={memo.id} className="rounded-xl border bg-card p-4 shadow-sm">
+							{group.items.map((memo) => <article key={memo.id} className="rounded-lg border border-border bg-transparent p-4 shadow-none">
 								{editingID === memo.id ? <div>
 									<Textarea aria-label="Edit memo" value={editContent} onChange={(event) => setEditContent(event.target.value)} rows={6} />
 									<div className="mt-3 flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={() => setEditingID(null)}>Cancel</Button><Button type="button" disabled={busy || !editContent.trim()} onClick={() => void save(memo)}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save memo</Button></div>

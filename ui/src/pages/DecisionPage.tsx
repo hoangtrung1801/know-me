@@ -356,8 +356,8 @@ export default function DecisionPage() {
 	}
 
 	return (
-		<div className="flex h-full flex-col overflow-hidden bg-[#FAFAFA] text-zinc-950 dark:bg-background dark:text-foreground">
-			<header className="shrink-0 border-b border-zinc-200 bg-white dark:border-border dark:bg-background">
+		<div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
+			<header className="shrink-0 border-b border-border bg-background">
 				<div className="mx-auto flex w-full max-w-[1440px] flex-wrap items-start justify-between gap-4 px-4 py-5 sm:px-6">
 					<div className="min-w-0">
 						<h1 className="text-2xl font-semibold tracking-[-0.025em]">System Decisions</h1>
