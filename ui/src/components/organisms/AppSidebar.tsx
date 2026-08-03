@@ -3,7 +3,6 @@ import {
 	LayoutGrid,
 	ListTodo,
 	FileText,
-	Download,
 	MessageSquare,
 	Settings,
 	Search,
@@ -33,6 +32,11 @@ import {
 	SidebarFooter,
 	useSidebar,
 } from "@/ui/components/ui/sidebar";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/ui/components/ui/tooltip";
 import { useIsMobile } from "@/ui/hooks/useMobile";
 import { useConfig } from "@/ui/contexts/ConfigContext";
 
@@ -131,9 +135,41 @@ export function AppSidebar({
 	const visibleNavItems = topNavItems.filter(
 		(item) => item.id !== "chat" || chatUIEnabled
 	);
+	const dockItems = [
+		...visibleNavItems,
+		{ id: "config", label: "Settings", icon: Settings, to: "/config" },
+	];
+
+	if (!isMobile) {
+		return (
+			<nav
+				aria-label="Main navigation"
+				data-navigation-dock
+				className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-border/70 bg-background/95 p-1.5 shadow-lg backdrop-blur"
+			>
+				{dockItems.map((item) => {
+					const isActive = currentPage === item.id;
+					return (
+						<Tooltip key={item.id}>
+							<TooltipTrigger asChild>
+								<Link
+									to={item.to}
+									aria-label={item.label}
+									className={`flex size-10 items-center justify-center rounded-xl transition-colors ${isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
+								>
+									<item.icon className="size-4" />
+								</Link>
+							</TooltipTrigger>
+							<TooltipContent side="top">{item.label}</TooltipContent>
+						</Tooltip>
+					);
+				})}
+			</nav>
+		);
+	}
 
 	return (
-		<Sidebar collapsible="icon" variant={isMobile ? "floating" : "sidebar"}>
+		<Sidebar collapsible="icon" variant="floating">
 			{/* Header: Logo + Project Name + Version */}
 			<SidebarHeader>
 				<SidebarMenu>
