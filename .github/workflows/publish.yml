@@ -41,89 +41,89 @@ jobs:
           echo "meta.version=${{ steps.meta.outputs.version }}"
           echo "meta.tag=${{ steps.meta.outputs.tag }}"
 
-  # verify:
-  #   needs: meta
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #
-  #     - name: Setup Go
-  #       uses: actions/setup-go@v5
-  #       with:
-  #         go-version: "1.26"
-  #
-  #     - name: Setup Bun
-  #       uses: oven-sh/setup-bun@v2
-  #       with:
-  #         bun-version: ">=1.3.10"
-  #
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "20"
-  #
-  #     - name: Build UI
-  #       env:
-  #         APP_VERSION: ${{ needs.meta.outputs.version }}
-  #       run: cd ui && bun install --frozen-lockfile && bun run build
-  #
-  #     - name: Trace built UI version
-  #       env:
-  #         EXPECTED_VERSION: ${{ needs.meta.outputs.version }}
-  #         APP_VERSION: ${{ needs.meta.outputs.version }}
-  #       run: |
-  #         UI_PACKAGE_VERSION=$(node -p 'require("./ui/package.json").version')
-  #
-  #         echo "expected_version=$EXPECTED_VERSION"
-  #         echo "app_version_env=$APP_VERSION"
-  #         echo "ui_package_version=$UI_PACKAGE_VERSION"
-  #
-  #         echo "dist files:"
-  #         ls -la ui/dist
-  #         ls -la ui/dist/assets || true
-  #
-  #         echo "version-like strings in dist:"
-  #         grep -RhoE '[0-9]+\.[0-9]+\.[0-9]+' ui/dist | sort -u || true
-  #
-  #         echo "search expected version in dist:"
-  #         if grep -R "$EXPECTED_VERSION" ui/dist >/dev/null 2>&1; then
-  #           echo "OK: found expected version $EXPECTED_VERSION in built UI"
-  #         else
-  #           echo "ERROR: expected version $EXPECTED_VERSION not found in built UI"
-  #           exit 1
-  #         fi
-  #
-  #     - name: Download ONNX Runtime for tests
-  #       env:
-  #         ORT_VERSION: "1.25.0"
-  #       run: |
-  #         BASE_URL="https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}"
-  #         ARCHIVE="onnxruntime-linux-x64-${ORT_VERSION}.tgz"
-  #         curl -L --retry 5 --retry-delay 5 -o "/tmp/${ARCHIVE}" "${BASE_URL}/${ARCHIVE}"
-  #         tar -xzf "/tmp/${ARCHIVE}" -C /tmp
-  #         mkdir -p ./bin
-  #         cp "/tmp/onnxruntime-linux-x64-${ORT_VERSION}/lib/libonnxruntime.so.${ORT_VERSION}" ./bin/libonnxruntime.so
-  #         echo "KNOWNS_ORT_LIB=$(pwd)/bin/libonnxruntime.so" >> "$GITHUB_ENV"
-  #         echo "✓ ONNX Runtime ${ORT_VERSION} installed for tests"
-  #
-  #     - name: Run Go tests
-  #       run: go test -v -race ./...
-  #
-  #     - name: Run Go vet
-  #       run: go vet ./...
-  #
-  #     - name: Upload UI artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: ui-dist
-  #         path: ui/dist/
-  #         retention-days: 1
+  verify:
+    needs: meta
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ">=1.3.10"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build UI
+        env:
+          APP_VERSION: ${{ needs.meta.outputs.version }}
+        run: cd ui && bun install --frozen-lockfile && bun run build
+
+      - name: Trace built UI version
+        env:
+          EXPECTED_VERSION: ${{ needs.meta.outputs.version }}
+          APP_VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          UI_PACKAGE_VERSION=$(node -p 'require("./ui/package.json").version')
+
+          echo "expected_version=$EXPECTED_VERSION"
+          echo "app_version_env=$APP_VERSION"
+          echo "ui_package_version=$UI_PACKAGE_VERSION"
+
+          echo "dist files:"
+          ls -la ui/dist
+          ls -la ui/dist/assets || true
+
+          echo "version-like strings in dist:"
+          grep -RhoE '[0-9]+\.[0-9]+\.[0-9]+' ui/dist | sort -u || true
+
+          echo "search expected version in dist:"
+          if grep -R "$EXPECTED_VERSION" ui/dist >/dev/null 2>&1; then
+            echo "OK: found expected version $EXPECTED_VERSION in built UI"
+          else
+            echo "ERROR: expected version $EXPECTED_VERSION not found in built UI"
+            exit 1
+          fi
+
+      - name: Download ONNX Runtime for tests
+        env:
+          ORT_VERSION: "1.25.0"
+        run: |
+          BASE_URL="https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}"
+          ARCHIVE="onnxruntime-linux-x64-${ORT_VERSION}.tgz"
+          curl -L --retry 5 --retry-delay 5 -o "/tmp/${ARCHIVE}" "${BASE_URL}/${ARCHIVE}"
+          tar -xzf "/tmp/${ARCHIVE}" -C /tmp
+          mkdir -p ./bin
+          cp "/tmp/onnxruntime-linux-x64-${ORT_VERSION}/lib/libonnxruntime.so.${ORT_VERSION}" ./bin/libonnxruntime.so
+          echo "KNOWNS_ORT_LIB=$(pwd)/bin/libonnxruntime.so" >> "$GITHUB_ENV"
+          echo "✓ ONNX Runtime ${ORT_VERSION} installed for tests"
+
+      # - name: Run Go tests
+      #   run: go test -v -race ./...
+
+      - name: Run Go vet
+        run: go vet ./...
+
+      - name: Upload UI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-dist
+          path: ui/dist/
+          retention-days: 1
 
   build-binaries:
-    needs: [meta]
+    needs: [meta, verify]
     strategy:
       fail-fast: false
       matrix:
