@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 // TimeStore reads and writes .knowns/time.json and .knowns/time-entries.json.

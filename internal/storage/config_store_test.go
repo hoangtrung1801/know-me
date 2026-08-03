@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestConfigStoreLoadsLegacyLifecycleDefaultsWithoutRewriting(t *testing.T) {

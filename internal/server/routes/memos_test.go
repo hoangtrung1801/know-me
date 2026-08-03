@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/memos"
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestMemoRoutesLifecycleAndSearch(t *testing.T) {

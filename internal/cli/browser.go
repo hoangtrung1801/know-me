@@ -16,10 +16,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/howznguyen/knowns/internal/registry"
-	"github.com/howznguyen/knowns/internal/server"
-	"github.com/howznguyen/knowns/internal/storage"
-	"github.com/howznguyen/knowns/internal/util"
+	"github.com/hoangtrung1801/known-me/internal/registry"
+	"github.com/hoangtrung1801/known-me/internal/server"
+	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/util"
 )
 
 var browserCmd = &cobra.Command{

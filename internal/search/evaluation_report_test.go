@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestEvaluateRetrievalFixtureReportsContextPackLossAndLatency(t *testing.T) {

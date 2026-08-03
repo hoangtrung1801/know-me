@@ -3,7 +3,7 @@ package cli
 import (
 	"os"
 
-	"github.com/howznguyen/knowns/internal/lspdaemon"
+	"github.com/hoangtrung1801/known-me/internal/lspdaemon"
 	"github.com/spf13/cobra"
 )
 

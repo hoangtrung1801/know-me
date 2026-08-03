@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/howznguyen/knowns/internal/registry"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 )
 
 // Manager coordinates runtime project switching. All route handlers call

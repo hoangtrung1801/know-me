@@ -433,7 +433,7 @@ import (
     "context"
     "encoding/json"
 
-    "github.com/howznguyen/knowns/internal/storage"
+    "github.com/hoangtrung1801/known-me/internal/storage"
     "github.com/mark3labs/mcp-go/mcp"
     "github.com/mark3labs/mcp-go/server"
 )
@@ -555,7 +555,7 @@ Persistent flags are inherited by all subcommands automatically in Cobra.
 
 ```bash
 # Clone repository
-git clone https://github.com/howznguyen/knowns.git
+git clone https://github.com/hoangtrung1801/known-me.git
 cd knowns
 
 # Download Go dependencies

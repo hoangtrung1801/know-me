@@ -5,7 +5,7 @@ package tasklifecycle
 import (
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 type Operation string

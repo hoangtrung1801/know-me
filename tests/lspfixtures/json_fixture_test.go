@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/lsp"
-	"github.com/howznguyen/knowns/internal/lsp/adapters"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
 )
 
 func TestLSPFixture_JSONLocalSchema(t *testing.T) {

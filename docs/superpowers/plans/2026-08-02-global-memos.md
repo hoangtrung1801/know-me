@@ -49,7 +49,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestMemoStoreRoundTripOrderingAndDelete(t *testing.T) {
@@ -81,7 +81,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestServiceLifecycleAndSearch(t *testing.T) {
@@ -225,8 +225,8 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/memos"
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestMemoRoutesLifecycleAndSearch(t *testing.T) {
@@ -551,8 +551,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/memos"
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func runMemoCommand(t *testing.T, service *memos.Service, args ...string) string {
@@ -645,8 +645,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/memos"
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/models"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 

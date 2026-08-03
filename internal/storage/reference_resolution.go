@@ -3,8 +3,8 @@ package storage
 import (
 	"fmt"
 
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/references"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/references"
 )
 
 // ResolveRawReference parses and resolves a semantic reference expression.

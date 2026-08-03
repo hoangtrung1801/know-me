@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/howznguyen/knowns/internal/server/routes"
-	"github.com/howznguyen/knowns/internal/tunnel/cloudflared"
+	"github.com/hoangtrung1801/known-me/internal/server/routes"
+	"github.com/hoangtrung1801/known-me/internal/tunnel/cloudflared"
 )
 
 // ServerTunnelManager wraps cloudflared.Daemon for use by the server.

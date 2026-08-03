@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/decisionmigration"
-	"github.com/howznguyen/knowns/internal/decisionreview"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/decisionmigration"
+	"github.com/hoangtrung1801/known-me/internal/decisionreview"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )

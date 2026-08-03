@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/search"
 	"github.com/spf13/cobra"
 )
 

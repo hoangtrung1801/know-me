@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // IndexService orchestrates chunking, embedding, and storage of vectors.

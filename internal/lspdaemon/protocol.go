@@ -3,7 +3,7 @@ package lspdaemon
 import (
 	"errors"
 
-	"github.com/howznguyen/knowns/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
 )
 
 type Operation string

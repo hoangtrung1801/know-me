@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/howznguyen/knowns/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
 )
 
 type RustAnalyzerAdapter struct{ lsp.BaseAdapter }

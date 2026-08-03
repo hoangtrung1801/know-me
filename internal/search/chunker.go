@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 // EstimateTokens returns a rough token count (~4 chars per token for English).

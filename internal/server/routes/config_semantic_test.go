@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/search"
 )
 
 func TestValidateSemanticSearchCapability(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
 )
 
 // codeSymbolKindString converts LSP SymbolKind numeric code to human-readable string.

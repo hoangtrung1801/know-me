@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/howznguyen/knowns/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/memos"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 

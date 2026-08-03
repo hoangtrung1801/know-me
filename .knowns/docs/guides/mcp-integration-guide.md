@@ -36,7 +36,7 @@ Knowns is a compiled Go binary. Install it first, then configure MCP.
 npm install -g knowns
 
 # Via Go
-go install github.com/howznguyen/knowns/cmd/knowns@latest
+go install github.com/hoangtrung1801/known-me/cmd/knowns@latest
 
 # Via curl (Linux/macOS)
 curl -fsSL https://raw.githubusercontent.com/howznguyen/knowns/main/install/install.sh | sh

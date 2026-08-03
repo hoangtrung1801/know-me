@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
 )
 
 const (

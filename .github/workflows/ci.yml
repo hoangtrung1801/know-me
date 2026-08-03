@@ -61,7 +61,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/howznguyen/knowns/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowns.exe ./cmd/knowns
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowns.exe ./cmd/knowns
 
       - name: Download ONNX Runtime (Unix)
         if: runner.os != 'Windows'
@@ -150,7 +150,7 @@ jobs:
       - name: Build native Intel binary without ONNX Runtime
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/howznguyen/knowns/internal/util.Version=${GITHUB_SHA}" -o bin/knowns ./cmd/knowns
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowns ./cmd/knowns
 
       - name: Verify installer and disabled Local ONNX path
         shell: bash
@@ -219,7 +219,7 @@ jobs:
         run: cd ui && bun install --frozen-lockfile && bun run build
 
       - name: Build Knowns
-        run: go build -ldflags "-s -w -X github.com/howznguyen/knowns/internal/util.Version=${GITHUB_SHA}" -o bin/knowns ./cmd/knowns
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowns ./cmd/knowns
 
       - name: Install pinned ONNX Runtime
         run: |
@@ -342,13 +342,13 @@ jobs:
 
       - name: Build Go binary (Unix)
         if: runner.os != 'Windows'
-        run: go build -ldflags "-s -w -X github.com/howznguyen/knowns/internal/util.Version=${GITHUB_SHA}" -o bin/knowns ./cmd/knowns
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowns ./cmd/knowns
 
       - name: Build Go binary (Windows)
         if: runner.os == 'Windows'
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/howznguyen/knowns/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowns.exe ./cmd/knowns
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowns.exe ./cmd/knowns
 
       - name: Install managed LSP fixtures and expose selected binaries
         shell: bash
@@ -463,7 +463,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/howznguyen/knowns/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowns.exe ./cmd/knowns
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowns.exe ./cmd/knowns
 
       - name: Download ONNX Runtime (Unix)
         if: runner.os != 'Windows'

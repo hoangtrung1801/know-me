@@ -1,4 +1,4 @@
-module github.com/howznguyen/knowns
+module github.com/hoangtrung1801/known-me
 
 go 1.24.2
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 func TestSemanticEvaluationRuntimeIdentityIsStableAndNonSecret(t *testing.T) {

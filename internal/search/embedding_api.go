@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // APIEmbedder produces embedding vectors via an OpenAI-compatible /v1/embeddings endpoint.

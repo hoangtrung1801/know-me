@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/agents/opencode"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/runtimequeue"
-	"github.com/howznguyen/knowns/internal/search"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/agents/opencode"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/known-me/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 func TestSortServiceStatusesRunningFirst(t *testing.T) {

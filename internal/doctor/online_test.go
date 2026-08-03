@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 type httpDoerFunc func(*http.Request) (*http.Response, error)

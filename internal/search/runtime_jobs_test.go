@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/runtimequeue"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
 )
 
 func TestExecuteRuntimeJobReusesSemanticRuntimeProvider(t *testing.T) {

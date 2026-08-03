@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/registry"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/registry"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 func TestResolveProjectStoreUsesRegistryWithoutLocalKnowns(t *testing.T) {
