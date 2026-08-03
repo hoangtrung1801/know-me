@@ -81,6 +81,28 @@ func TestSyncSkillsToTargetsIncludesKnFlowSkill(t *testing.T) {
 	assertKnFlowSkillSynced(t, target)
 }
 
+func TestSyncSkillsToTargetsIncludesKnownMeSkill(t *testing.T) {
+	projectRoot := t.TempDir()
+	target := filepath.Join(projectRoot, "global", ".agents", "skills")
+
+	if err := SyncSkillsToTargets(map[string]string{"codex": target}); err != nil {
+		t.Fatalf("SyncSkillsToTargets returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(target, "known-me", "SKILL.md"))
+	if err != nil {
+		t.Fatalf("read synced known-me: %v", err)
+	}
+	if !strings.Contains(string(data), "name: known-me") {
+		t.Fatal("synced known-me has invalid frontmatter")
+	}
+	for _, section := range []string{"## Tasks", "## Links", "## Memos", "## Projects"} {
+		if !strings.Contains(string(data), section) {
+			t.Fatalf("synced known-me is missing %q", section)
+		}
+	}
+}
+
 func TestDecisionWorkflowRulesSyncToRuntimeCopies(t *testing.T) {
 	projectRoot := t.TempDir()
 	if err := SyncSkillsForPlatforms(projectRoot, []string{"codex"}); err != nil {
