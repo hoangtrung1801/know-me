@@ -11,7 +11,7 @@
 
 set -e
 
-REPO="knowns-dev/knowns"
+REPO="hoangtrung1801/known-me"
 BINARY="knowns"
 DEFAULT_INSTALL_DIR="${HOME}/.knowns/bin"
 INSTALL_DIR="${KNOWNS_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
