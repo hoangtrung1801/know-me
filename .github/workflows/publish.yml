@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Build Release Binaries
 
 on:
   release:
@@ -319,7 +319,7 @@ jobs:
           path: artifacts/${{ matrix.npm_pkg }}/
           retention-days: 1
 
-  publish:
+  release:
     needs: [meta, build-binaries]
     runs-on: ubuntu-latest
     permissions:
@@ -466,6 +466,7 @@ jobs:
           echo "✓ knowns-win-x64/knowns.exe"
 
       - name: Publish platform packages
+        if: false # Release archives only; do not publish to npm.
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -502,6 +503,7 @@ jobs:
           done
 
       - name: Publish main package
+        if: false # Release archives only; do not publish to npm.
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -628,7 +630,7 @@ jobs:
           done
 
       - name: Update Homebrew tap
-        if: github.event_name == 'release'
+        if: false # Release archives only; do not update the Homebrew tap.
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           VERSION: ${{ needs.meta.outputs.version }}
@@ -691,7 +693,7 @@ jobs:
           git push
 
       - name: Get changelog from release
-        if: github.event_name == 'release'
+        if: false # Only used by the disabled Discord notification.
         id: changelog
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -709,7 +711,7 @@ jobs:
           echo "content=$CHANGELOG" >> "$GITHUB_OUTPUT"
 
       - name: Send Discord notification
-        if: github.event_name == 'release' && success()
+        if: false # Release archives only; do not send notifications.
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
           VERSION: ${{ needs.meta.outputs.version }}
