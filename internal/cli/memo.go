@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/memos"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
 

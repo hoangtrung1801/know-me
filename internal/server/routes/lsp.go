@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/lsp"
-	"github.com/howznguyen/knowns/internal/lspdaemon"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lspdaemon"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // LSPRoutes handles /api/lsp/languages endpoints.

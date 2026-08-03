@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestUserPrefsStoreLoadEmpty(t *testing.T) {

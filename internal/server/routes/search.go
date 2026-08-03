@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/search"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // SearchRoutes handles /api/search endpoints.

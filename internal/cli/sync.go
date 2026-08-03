@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/codegen"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/runtimeinstall"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/codegen"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
 

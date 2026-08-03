@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 // Engine executes Knowns code-generation templates.

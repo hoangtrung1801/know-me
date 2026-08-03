@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/memos"
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func runMemoCommand(t *testing.T, service *memos.Service, args ...string) string {

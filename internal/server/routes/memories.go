@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/memoryreview"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/references"
-	"github.com/howznguyen/knowns/internal/search"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/memoryreview"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/references"
+	"github.com/hoangtrung1801/known-me/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // MemoryRoutes handles persistent memory endpoints.

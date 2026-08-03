@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 func TestTimeMutationsRemainConsistentAcrossArchiveOrderings(t *testing.T) {

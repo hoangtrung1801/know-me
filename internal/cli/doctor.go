@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/doctor"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/doctor"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
 

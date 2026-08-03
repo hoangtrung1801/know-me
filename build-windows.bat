@@ -47,9 +47,9 @@ if exist "%LLVM_MINGW_BIN%\x86_64-w64-mingw32-clang.exe" (
   exit /b 1
 )
 if not exist bin mkdir bin
-go build -ldflags "-s -w -X github.com/howznguyen/knowns/internal/util.Version=%VERSION%" -o bin\knowns.exe .\cmd\knowns
+go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=%VERSION%" -o bin\knowns.exe .\cmd\knowns
 if errorlevel 1 exit /b 1
-go build -ldflags "-s -w -H windowsgui -X github.com/howznguyen/knowns/internal/util.Version=%VERSION%" -o bin\knowns-embed.exe .\cmd\knowns-embed
+go build -ldflags "-s -w -H windowsgui -X github.com/hoangtrung1801/known-me/internal/util.Version=%VERSION%" -o bin\knowns-embed.exe .\cmd\knowns-embed
 if errorlevel 1 exit /b 1
 
 echo [4/4] Copying ONNX runtime DLL to bin...

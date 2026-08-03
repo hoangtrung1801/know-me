@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/links"
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/links"
+	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
 func TestLinkRoutesCreateUpdateAndImage(t *testing.T) {

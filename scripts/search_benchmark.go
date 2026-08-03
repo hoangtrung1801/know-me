@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	searchbench "github.com/howznguyen/knowns/internal/search"
+	searchbench "github.com/hoangtrung1801/known-me/internal/search"
 )
 
 func main() {

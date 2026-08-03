@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // WorkspaceRoutes handles /api/workspaces endpoints for multi-project management.

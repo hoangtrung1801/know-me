@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/howznguyen/knowns/internal/storage"
-	"github.com/howznguyen/knowns/internal/util"
-	"github.com/howznguyen/knowns/internal/validate"
+	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/util"
+	"github.com/hoangtrung1801/known-me/internal/validate"
 )
 
 func ProjectFromStore(store *storage.Store) ProjectInfo {

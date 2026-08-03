@@ -434,7 +434,7 @@ npx knowns
 ### Build từ source (Go 1.24.2+)
 
 ```bash
-go install github.com/howznguyen/knowns/cmd/knowns@latest
+go install github.com/hoangtrung1801/known-me/cmd/knowns@latest
 
 # Hoặc clone rồi build
 git clone https://github.com/knowns-dev/knowns.git

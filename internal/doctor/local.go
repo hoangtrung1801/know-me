@@ -8,15 +8,15 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/howznguyen/knowns/internal/codegen"
-	"github.com/howznguyen/knowns/internal/lsp"
-	"github.com/howznguyen/knowns/internal/lsp/adapters"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/readiness"
-	"github.com/howznguyen/knowns/internal/runtimeinstall"
-	"github.com/howznguyen/knowns/internal/search"
-	"github.com/howznguyen/knowns/internal/services"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/codegen"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/readiness"
+	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/services"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 type localDependencies struct {

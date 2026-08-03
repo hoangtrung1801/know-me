@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/howznguyen/knowns/internal/lsp"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/services"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/services"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 func runtimeCheckers(store *storage.Store, snapshot *serviceSnapshot) []Checker {

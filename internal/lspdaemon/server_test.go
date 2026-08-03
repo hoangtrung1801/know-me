@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
 )
 
 func TestMain(m *testing.M) {

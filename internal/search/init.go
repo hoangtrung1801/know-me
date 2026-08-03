@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // ErrSemanticNotConfigured is returned when semantic search is not enabled in config.

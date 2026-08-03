@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/howznguyen/knowns/internal/runtimequeue"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // ExecuteRuntimeJob runs a queued runtime job synchronously inside the shared runtime.

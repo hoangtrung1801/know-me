@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
 )
 
 func checkBinary(ctx context.Context, name string, args ...string) error {

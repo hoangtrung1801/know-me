@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/links"
-	"github.com/howznguyen/knowns/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/links"
+	"github.com/hoangtrung1801/known-me/internal/models"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 

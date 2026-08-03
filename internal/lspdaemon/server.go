@@ -13,9 +13,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/lsp"
-	"github.com/howznguyen/knowns/internal/lsp/adapters"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 func Run(ctx context.Context, root string) error {

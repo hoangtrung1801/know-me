@@ -12,11 +12,11 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/term"
-	"github.com/howznguyen/knowns/internal/runtimeinstall"
-	"github.com/howznguyen/knowns/internal/runtimequeue"
-	"github.com/howznguyen/knowns/internal/search"
-	"github.com/howznguyen/knowns/internal/services"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/known-me/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/services"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
 

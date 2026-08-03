@@ -16,9 +16,9 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/howznguyen/knowns/internal/runtimeinstall"
-	"github.com/howznguyen/knowns/internal/runtimequeue"
-	"github.com/howznguyen/knowns/internal/util"
+	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/known-me/internal/util"
 	"github.com/spf13/cobra"
 )
 

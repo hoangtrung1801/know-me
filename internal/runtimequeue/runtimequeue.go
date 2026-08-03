@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/howznguyen/knowns/internal/util"
+	"github.com/hoangtrung1801/known-me/internal/util"
 )
 
 type JobKind string

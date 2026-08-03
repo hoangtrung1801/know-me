@@ -7,8 +7,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
-	"github.com/howznguyen/knowns/internal/codegen"
-	"github.com/howznguyen/knowns/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/codegen"
+	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
 	"github.com/spf13/cobra"
 )
 

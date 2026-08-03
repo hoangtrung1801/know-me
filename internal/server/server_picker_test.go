@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/registry"
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/registry"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // newPickerServer creates a Server in picker mode (nil store).

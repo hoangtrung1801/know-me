@@ -9,7 +9,7 @@ import (
 
 // Version is set by the linker at build time via:
 //
-//	go build -ldflags "-X github.com/howznguyen/knowns/internal/util.Version=0.12.4"
+//	go build -ldflags "-X github.com/hoangtrung1801/known-me/internal/util.Version=0.12.4"
 //
 // When built via CI/CD, this comes from the git tag (e.g. v0.12.4).
 // When built locally without a tag, it defaults to "dev" and falls back

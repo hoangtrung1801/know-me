@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/howznguyen/knowns/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
 // SemanticEvaluationRuntimeIdentity returns a stable, non-secret identity for

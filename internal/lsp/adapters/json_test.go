@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/howznguyen/knowns/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/lsp"
 )
 
 func TestJSONAdapterContracts(t *testing.T) {

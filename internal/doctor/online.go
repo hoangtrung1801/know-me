@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/storage"
-	"github.com/howznguyen/knowns/internal/util"
+	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/util"
 )
 
 const (

@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/mcp/handlers"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/permissions"
-	"github.com/howznguyen/knowns/internal/server/routes"
-	"github.com/howznguyen/knowns/internal/storage"
-	"github.com/howznguyen/knowns/internal/tasklifecycle"
+	"github.com/hoangtrung1801/known-me/internal/mcp/handlers"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/permissions"
+	"github.com/hoangtrung1801/known-me/internal/server/routes"
+	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/known-me/internal/tasklifecycle"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 	"github.com/spf13/cobra"
 )

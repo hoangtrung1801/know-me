@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/howznguyen/knowns/internal/memoryreview"
-	"github.com/howznguyen/knowns/internal/models"
-	"github.com/howznguyen/knowns/internal/search"
+	"github.com/hoangtrung1801/known-me/internal/memoryreview"
+	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/search"
 	"github.com/spf13/cobra"
 )
 

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/howznguyen/knowns/internal/storage"
-	knownsvalidate "github.com/howznguyen/knowns/internal/validate"
+	"github.com/hoangtrung1801/known-me/internal/storage"
+	knownsvalidate "github.com/hoangtrung1801/known-me/internal/validate"
 )
 
 // ValidateRoutes handles /api/validate endpoints.
