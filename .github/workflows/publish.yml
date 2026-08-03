@@ -123,7 +123,7 @@ jobs:
   #         retention-days: 1
 
   build-binaries:
-    needs: [meta, verify]
+    needs: [meta]
     strategy:
       fail-fast: false
       matrix:
