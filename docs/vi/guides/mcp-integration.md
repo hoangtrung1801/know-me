@@ -1,6 +1,6 @@
 # MCP
 
-Knowns expose MCP server để AI assistants truy cập trực tiếp task, doc, memory, decision, template, time tracking, search, validation, project state, help, và code tools.
+Know-Me expose MCP server để AI assistants truy cập trực tiếp task, doc, memory, decision, template, time tracking, search, validation, project state, help, và code tools.
 
 ## Server command
 
@@ -9,7 +9,7 @@ knowns mcp --stdio
 knowns mcp --stdio --project /path/to/project
 ```
 
-Nếu không truyền `--project`, Knowns sẽ cố auto-detect project từ current working directory.
+Nếu không truyền `--project`, Know-Me sẽ cố auto-detect project từ current working directory.
 
 ## Platform support
 

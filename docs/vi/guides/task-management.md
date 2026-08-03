@@ -1,6 +1,6 @@
 # Quản lý task
 
-Task là đơn vị công việc chính trong Knowns.
+Task là đơn vị công việc chính trong Know-Me.
 
 ## Task gồm gì?
 

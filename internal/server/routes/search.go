@@ -31,7 +31,7 @@ func (sr *SearchRoutes) Register(r chi.Router) {
 	r.Get("/resolve", sr.resolveHandler)
 }
 
-// searchHandler executes a search across Knowns entities.
+// searchHandler executes a search across Know-Me entities.
 //
 // GET /api/search?q={query}&type={all|task|doc|memory|decision|code}&mode={keyword|semantic|hybrid}&limit={n}&status={s}&priority={p}&assignee={a}&label={l}&tag={t}
 func (sr *SearchRoutes) searchHandler(w http.ResponseWriter, r *http.Request) {

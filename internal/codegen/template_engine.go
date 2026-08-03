@@ -1,5 +1,5 @@
 // Package codegen implements the Handlebars-compatible template engine for the
-// Knowns CLI. It processes .hbs template files and applies variable
+// Know-Me CLI. It processes .hbs template files and applies variable
 // substitution with case-conversion helpers.
 package codegen
 
@@ -15,7 +15,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
-// Engine executes Knowns code-generation templates.
+// Engine executes Know-Me code-generation templates.
 type Engine struct {
 	// ProjectRoot is the absolute path to the project root (not the .knowns
 	// directory — one level above it).

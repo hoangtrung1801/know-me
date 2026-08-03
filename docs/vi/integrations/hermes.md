@@ -1,12 +1,12 @@
 # Hermes Agent
 
-Dùng Hermes Agent với Knowns qua MCP, `AGENTS.md`, và Knowns skills khi cần.
+Dùng Hermes Agent với Know-Me qua MCP, `AGENTS.md`, và Know-Me skills khi cần.
 
-Hermes đọc project context files như `AGENTS.md`, hỗ trợ MCP servers qua `~/.hermes/config.yaml`, và có thể scan external skill directories. Knowns kết hợp ba bề mặt này:
+Hermes đọc project context files như `AGENTS.md`, hỗ trợ MCP servers qua `~/.hermes/config.yaml`, và có thể scan external skill directories. Know-Me kết hợp ba bề mặt này:
 
-- `AGENTS.md` yêu cầu Hermes bắt đầu bằng Knowns MCP `initial` và dùng `help("tool.*")` hoặc `help("workflow.*")` khi cần chi tiết.
-- `knowns mcp --stdio` expose Knowns tools cho tasks, docs, memory, search, code, templates, và validation.
-- `.agents/skills` expose Knowns workflow skills như `kn-research`, `kn-plan`, `kn-flow`, và `kn-review` khi Hermes scan path này như external skill directory.
+- `AGENTS.md` yêu cầu Hermes bắt đầu bằng Know-Me MCP `initial` và dùng `help("tool.*")` hoặc `help("workflow.*")` khi cần chi tiết.
+- `knowns mcp --stdio` expose Know-Me tools cho tasks, docs, memory, search, code, templates, và validation.
+- `.agents/skills` expose Know-Me workflow skills như `kn-research`, `kn-plan`, `kn-flow`, và `kn-review` khi Hermes scan path này như external skill directory.
 
 Hermes references:
 
@@ -17,14 +17,14 @@ Hermes references:
 
 ## Setup khuyên dùng
 
-Trong một Knowns project:
+Trong một Know-Me project:
 
 ```bash
 knowns init
 knowns setup hermes
 ```
 
-Hermes lưu MCP settings trong `~/.hermes/config.yaml`, nên kể cả project setup cũng ghi vào user-level Hermes config file. Scope vẫn là project vì Knowns ghi `--project <repo-hiện-tại>` vào MCP server args.
+Hermes lưu MCP settings trong `~/.hermes/config.yaml`, nên kể cả project setup cũng ghi vào user-level Hermes config file. Scope vẫn là project vì Know-Me ghi `--project <repo-hiện-tại>` vào MCP server args.
 
 `knowns setup hermes` tạo hoặc refresh:
 
@@ -33,15 +33,15 @@ Hermes lưu MCP settings trong `~/.hermes/config.yaml`, nên kể cả project s
 - `.agents/skills`
 - `~/.hermes/config.yaml`
 
-Hermes config sẽ trỏ Knowns MCP server tới project hiện tại bằng `--project`, nên Hermes có thể chạy từ thư mục khác mà vẫn dùng đúng Knowns store. Nếu chạy `knowns setup hermes` từ project khác, cùng entry `mcp_servers.knowns` sẽ được cập nhật sang project đó.
+Hermes config sẽ trỏ Know-Me MCP server tới project hiện tại bằng `--project`, nên Hermes có thể chạy từ thư mục khác mà vẫn dùng đúng Know-Me store. Nếu chạy `knowns setup hermes` từ project khác, cùng entry `mcp_servers.knowns` sẽ được cập nhật sang project đó.
 
-Dùng global setup nếu bạn muốn Hermes biết Knowns ở mọi machine-level Hermes session:
+Dùng global setup nếu bạn muốn Hermes biết Know-Me ở mọi machine-level Hermes session:
 
 ```bash
 knowns setup hermes --global
 ```
 
-Global setup ghi `~/.hermes/config.yaml` với reusable `knowns mcp --stdio` server và `~/.agents/skills` làm external skill directory. Mode này không pin project; Knowns resolve active project từ Hermes working directory hoặc từ MCP project selection.
+Global setup ghi `~/.hermes/config.yaml` với reusable `knowns mcp --stdio` server và `~/.agents/skills` làm external skill directory. Mode này không pin project; Know-Me resolve active project từ Hermes working directory hoặc từ MCP project selection.
 
 ## Manual config
 
@@ -81,15 +81,15 @@ Yêu cầu Hermes kiểm tra MCP tools:
 Tell me which MCP-backed tools are available right now.
 ```
 
-Sau đó yêu cầu Hermes bắt đầu với Knowns:
+Sau đó yêu cầu Hermes bắt đầu với Know-Me:
 
 ```text
-Call Knowns MCP initial, then use help("workflow.*") if you need workflow details.
+Call Know-Me MCP initial, then use help("workflow.*") if you need workflow details.
 ```
 
 ## Working model
 
-Hermes nên xem Knowns là project working layer:
+Hermes nên xem Know-Me là project working layer:
 
 - gọi MCP `initial` khi bắt đầu session
 - dùng `search` trước khi đọc project context rộng
@@ -101,7 +101,7 @@ Skills không phải MCP tools. MCP tools xuất hiện như structured tools t�
 
 ## Troubleshooting
 
-- Nếu Hermes không thấy Knowns tools, restart Hermes hoặc chạy `/reload-mcp`.
+- Nếu Hermes không thấy Know-Me tools, restart Hermes hoặc chạy `/reload-mcp`.
 - Nếu MCP server mở sai project, chạy `knowns setup hermes` từ project root để generated config có `--project`.
 - Nếu skills không hiện, kiểm tra `.agents/skills` tồn tại và đã nằm trong `skills.external_dirs`.
-- Nếu `knowns` không có trong `PATH`, install lại Knowns global hoặc dùng config dạng `npx`.
+- Nếu `knowns` không có trong `PATH`, install lại Know-Me global hoặc dùng config dạng `npx`.

@@ -15,7 +15,7 @@ import (
 var setupCmd = &cobra.Command{
 	Use:   "setup [target]",
 	Short: "Configure AI tool integrations",
-	Long: `Configure AI tool integrations for an initialized Knowns project.
+	Long: `Configure AI tool integrations for an initialized Know-Me project.
 
 Without a target, an interactive selector is shown.
 

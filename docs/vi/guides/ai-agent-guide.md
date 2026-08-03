@@ -1,12 +1,12 @@
 # Làm việc với AI
 
-Cách dùng Knowns hiệu quả khi làm việc cùng AI assistants.
+Cách dùng Know-Me hiệu quả khi làm việc cùng AI assistants.
 
 ## Ý chính
 
 AI làm việc tốt hơn nhiều khi không phải tự đoán context.
 
-Knowns cho AI truy cập có cấu trúc vào:
+Know-Me cho AI truy cập có cấu trúc vào:
 
 - task
 - doc
@@ -45,8 +45,8 @@ Validation nên là phần bình thường của workflow.
 
 Khi AI cần hiểu codebase hoặc upstream behavior, nên search theo thứ tự:
 
-1. Knowns `search` và `retrieve` cho local project context.
-2. Knowns `code` tools cho code structure, symbols, definitions, references, diagnostics, và edits.
+1. Know-Me `search` và `retrieve` cho local project context.
+2. Know-Me `code` tools cho code structure, symbols, definitions, references, diagnostics, và edits.
 3. External MCP providers như Context7/library docs, GitHub/source MCP, hoặc official docs MCP khi cần current upstream facts.
 4. General web search khi specialized MCP providers không có, không đủ, hoặc user yêu cầu rõ.
 

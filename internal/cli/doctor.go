@@ -49,7 +49,7 @@ func newDoctorCmd(deps doctorCommandDependencies) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Diagnose project and local integration health",
-		Long: `Run read-only diagnostics for the active Knowns project.
+		Long: `Run read-only diagnostics for the active Know-Me project.
 
 Local checks run offline by default. Use --online to opt into registered
 external checks, --scope to select diagnostic areas, and --verbose to show
@@ -171,7 +171,7 @@ func renderDoctorJSON(w io.Writer, result doctor.Result) error {
 }
 
 func renderDoctorPlain(w io.Writer, result doctor.Result, verbose bool) {
-	fmt.Fprintln(w, "Knowns Doctor")
+	fmt.Fprintln(w, "Know-Me Doctor")
 	renderDoctorIdentity(w, result)
 	fmt.Fprintf(w, "Verdict: %s\n", strings.ToUpper(string(result.Verdict)))
 	fmt.Fprintf(w, "Summary: %d pass, %d warn, %d fail, %d skip\n",
@@ -180,7 +180,7 @@ func renderDoctorPlain(w io.Writer, result doctor.Result, verbose bool) {
 }
 
 func renderDoctorStyled(w io.Writer, result doctor.Result, verbose bool) {
-	fmt.Fprintln(w, StyleBold.Render("Knowns Doctor"))
+	fmt.Fprintln(w, StyleBold.Render("Know-Me Doctor"))
 	if result.Project.Active {
 		fmt.Fprintf(w, "%s %s\n", StyleDim.Render("Project:"),
 			StyleInfo.Render(fmt.Sprintf("%s (%s)", result.Project.Name, result.Project.Path)))

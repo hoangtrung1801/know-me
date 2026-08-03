@@ -27,7 +27,7 @@ type Paths struct {
 	PipeName   string `json:"pipe_name"`
 }
 
-// GlobalRoot returns the Knowns user state directory.
+// GlobalRoot returns the Know-Me user state directory.
 func GlobalRoot() string {
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
@@ -36,7 +36,7 @@ func GlobalRoot() string {
 	return filepath.Join(home, ".knowns")
 }
 
-// RuntimeRoot returns the Knowns runtime root used by shared runtime helpers.
+// RuntimeRoot returns the Know-Me runtime root used by shared runtime helpers.
 func RuntimeRoot() string {
 	return filepath.Join(GlobalRoot(), "runtime")
 }

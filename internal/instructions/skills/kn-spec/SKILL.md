@@ -23,7 +23,7 @@ Create a specification document for a feature using SDD (Spec-Driven Development
 - Create new specs under `specs/<yyyy-mm-dd>/<slug>` using today's date and a stable slug.
 - Keep the date in the folder, not the title: `specs/2026-06-17/lsp-runtime-wrapper`.
 - Use the exact spec path in all follow-up commands and task links.
-- Do not split a normal spec into `requirements.md`, `design.md`, and `tasks.md`. Keep one spec doc with sections; detailed execution belongs in Knowns Tasks.
+- Do not split a normal spec into `requirements.md`, `design.md`, and `tasks.md`. Keep one spec doc with sections; detailed execution belongs in Know-Me Tasks.
 - If a spec already exists at `specs/<slug>`, keep using its existing path instead of moving it during normal spec work.
 
 ## Spec Quality Rules

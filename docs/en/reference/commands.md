@@ -12,7 +12,7 @@ Use `knowns <command> --help` for the exact syntax accepted by the current binar
 
 ### `knowns init`
 
-Initializes Knowns in the current project.
+Initializes Know-Me in the current project.
 
 ```bash
 knowns init
@@ -65,7 +65,7 @@ knowns sync --instructions --platform cursor
 Typical uses:
 
 - after cloning a repo
-- after updating Knowns
+- after updating Know-Me
 - after changing selected platforms
 - after changing local generated artifacts manually and wanting to restore them
 
@@ -251,7 +251,7 @@ knowns lsp install <language>      # Download and install an LSP server
 knowns lsp cleanup                 # Remove old LSP server versions
 ```
 
-Knowns auto-detects project languages and checks for LSP binaries. If a binary is missing, `knowns lsp list` shows install guidance.
+Know-Me auto-detects project languages and checks for LSP binaries. If a binary is missing, `knowns lsp list` shows install guidance.
 
 ### Code operations (via MCP)
 

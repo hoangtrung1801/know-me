@@ -1,6 +1,6 @@
 # Memory System
 
-Memory is where Knowns stores durable context that should be recalled later.
+Memory is where Know-Me stores durable context that should be recalled later.
 
 ## The three layers
 

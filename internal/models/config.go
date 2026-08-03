@@ -279,7 +279,7 @@ type RuntimeMemorySettings struct {
 
 // OpenCodeServerConfig holds settings for the OpenCode server API.
 type OpenCodeServerConfig struct {
-	// Mode controls whether Knowns manages the runtime itself or attaches to an
+	// Mode controls whether Know-Me manages the runtime itself or attaches to an
 	// already running external OpenCode server. Supported values: "managed",
 	// "external". Empty defaults to managed for backward compatibility.
 	Mode string `json:"mode,omitempty"`

@@ -22,7 +22,7 @@ func RegisterInitialTool(s *server.MCPServer, getStore func() *storage.Store, ge
 func RegisterInitialToolWithStatusProvider(s *server.MCPServer, getStore func() *storage.Store, getLSPStatuses func(context.Context) []lsp.LanguageRuntimeStatus, getLSPManager ...func() *lsp.Manager) {
 	s.AddTool(
 		mcp.NewTool("initial",
-			mcp.WithDescription(`Provides the Knowns session-ready instructions for AI agents.
+			mcp.WithDescription(`Provides the Know-Me session-ready instructions for AI agents.
 
 - initial: Return dynamic project state, required code-intelligence rules, workflow guidance, and tool summary. Required: none. Optional: none. Returns: plain-text instructions to read before performing project work.
 `),
@@ -52,7 +52,7 @@ func buildInitialInstructionsWithStatuses(getStore func() *storage.Store, manage
 		statuses = manager.RuntimeStatuses(context.Background())
 	}
 
-	b.WriteString("# Knowns MCP — Session Ready\n\n")
+	b.WriteString("# Know-Me MCP — Session Ready\n\n")
 	writeProjectState(&b, store, statuses)
 	b.WriteString("\n")
 	writeCodeIntelligenceRules(&b)
@@ -297,7 +297,7 @@ func codeIndexCounts(store *storage.Store) (symbols int, relations int) {
 
 func writeCodeIntelligenceRules(b *strings.Builder) {
 	b.WriteString(`## Code Intelligence Rules
-**CRITICAL**: Use Knowns code actions for code discovery, navigation, and structural edits. This is the operating path for code work.
+**CRITICAL**: Use Know-Me code actions for code discovery, navigation, and structural edits. This is the operating path for code work.
 
 Discovery and navigation:
 - code.find: search symbols before opening files

@@ -35,8 +35,8 @@ Research trước khi:
 
 `kn-research` bắt đầu từ context do project sở hữu trước khi đi ra ngoài repo:
 
-- Knowns `search` và `retrieve` cho docs, tasks, memory, và decisions
-- Knowns `code` tools cho symbols, definitions, references, diagnostics, và code navigation an toàn
+- Know-Me `search` và `retrieve` cho docs, tasks, memory, và decisions
+- Know-Me `code` tools cho symbols, definitions, references, diagnostics, và code navigation an toàn
 - specialized external MCP providers, nếu runtime có, cho upstream/library facts như Context7/library docs, GitHub/source MCP, hoặc official docs MCP
 - general web search chỉ khi specialized MCP provider không có, không đủ, hoặc user yêu cầu internet research rõ ràng
 

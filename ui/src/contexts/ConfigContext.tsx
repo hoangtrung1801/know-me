@@ -100,7 +100,7 @@ const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
 // Default config values
 const DEFAULT_CONFIG: Config = {
-	name: "Knowns",
+	name: "Know-Me",
 	defaultPriority: "medium",
 	defaultLabels: [],
 	statuses: ["todo", "in-progress", "in-review", "done", "blocked", "on-hold", "urgent"],

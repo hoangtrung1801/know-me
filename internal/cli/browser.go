@@ -24,8 +24,8 @@ import (
 
 var browserCmd = &cobra.Command{
 	Use:   "browser",
-	Short: "Launch the Knowns web UI",
-	Long:  "Start the Knowns HTTP server and optionally open it in a browser.\nCan be launched outside a repo to use the workspace picker.",
+	Short: "Launch the Know-Me web UI",
+	Long:  "Start the Know-Me HTTP server and optionally open it in a browser.\nCan be launched outside a repo to use the workspace picker.",
 	RunE:  runBrowser,
 }
 
@@ -146,7 +146,7 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 
 	url := fmt.Sprintf("http://localhost:%d", port)
 	fmt.Println()
-	fmt.Printf("  %s  %s %s\n", StyleSuccess.Render("●"), StyleBold.Render("Knowns"), StyleDim.Render("v"+util.Version))
+	fmt.Printf("  %s  %s %s\n", StyleSuccess.Render("●"), StyleBold.Render("Know-Me"), StyleDim.Render("v"+util.Version))
 	fmt.Println()
 	fmt.Printf("  %s  %s\n", StyleInfo.Render("→"), StyleBold.Render(url))
 	if ip := getLocalIP(); ip != "" {

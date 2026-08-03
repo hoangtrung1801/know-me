@@ -1,6 +1,6 @@
 # Workflow
 
-Cách làm việc đề xuất khi kết hợp người và AI với Knowns.
+Cách làm việc đề xuất khi kết hợp người và AI với Know-Me.
 
 Mục tiêu là giữ planning, context, implementation notes, và validation ở ngoài một chat session đơn lẻ. Người có thể điều khiển workflow từ CLI hoặc Web UI; AI assistant có thể dùng cùng context đó qua MCP tools và skills.
 
@@ -28,7 +28,7 @@ knowns sync
 
 ## Workflow do người điều khiển
 
-Dùng cách này khi muốn Knowns làm project organization layer:
+Dùng cách này khi muốn Know-Me làm project organization layer:
 
 1. Tạo task với acceptance criteria.
 2. Thêm doc cho architecture, decision, hoặc onboarding context.
@@ -71,4 +71,4 @@ knowns validate --plain
 knowns sync
 ```
 
-Validation kiểm tra project integrity. Sync giữ generated shim files và platform artifacts khớp với Knowns config hiện tại.
+Validation kiểm tra project integrity. Sync giữ generated shim files và platform artifacts khớp với Know-Me config hiện tại.

@@ -1,12 +1,12 @@
 # User Guide
 
-This guide is for people using Knowns in an actual project, not just trying the CLI once.
+This guide is for people using Know-Me in an actual project, not just trying the CLI once.
 
-Knowns is most useful when you treat it as the shared project context beside your source code. The CLI, MCP server, and Web UI all read and update the same project state, so work created in one surface is visible in the others.
+Know-Me is most useful when you treat it as the shared project context beside your source code. The CLI, MCP server, and Web UI all read and update the same project state, so work created in one surface is visible in the others.
 
 ## Core model
 
-Knowns works best when you think of it as a project context layer with five connected parts:
+Know-Me works best when you think of it as a project context layer with five connected parts:
 
 - **tasks** for planned work, status, acceptance criteria, implementation plans, and notes
 - **docs** for durable project knowledge such as architecture, specs, decisions, and onboarding
@@ -14,7 +14,7 @@ Knowns works best when you think of it as a project context layer with five conn
 - **templates** for repeated project scaffolding
 - **search / retrieval** for finding the relevant context when people or AI need it
 
-The important habit is to put reusable context into Knowns instead of leaving it only in chat messages.
+The important habit is to put reusable context into Know-Me instead of leaving it only in chat messages.
 
 ## What you will see during `knowns init`
 

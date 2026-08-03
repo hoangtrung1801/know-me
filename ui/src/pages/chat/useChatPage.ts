@@ -856,7 +856,7 @@ export function useChatPage() {
 	const chatDisabled = opencodeStatusLoading || Boolean(opencodeBlockedReason);
 
 	useEffect(() => {
-		document.title = activeSession ? `${activeSession.title || "New Chat"} - Knowns` : "Knowns";
+		document.title = activeSession ? `${activeSession.title || "New Chat"} - Know-Me` : "Know-Me";
 	}, [activeSession]);
 
 	// ─── Notifications ─────────────────────────────────────────────────────────

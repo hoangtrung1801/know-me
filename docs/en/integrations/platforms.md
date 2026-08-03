@@ -1,6 +1,6 @@
 # Platforms
 
-Knowns can generate and sync different artifacts for different AI platforms via `knowns setup <target> --global` for user-level setup, or `knowns setup <target>` for repo-local setup.
+Know-Me can generate and sync different artifacts for different AI platforms via `knowns setup <target> --global` for user-level setup, or `knowns setup <target>` for repo-local setup.
 
 ## Platform IDs
 

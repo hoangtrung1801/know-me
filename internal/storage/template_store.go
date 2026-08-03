@@ -214,6 +214,6 @@ messages:
 	}
 
 	// Create a starter Handlebars template.
-	hbsContent := "// Generated: {{name}}\n// Created by Knowns template: " + name + "\n"
+	hbsContent := "// Generated: {{name}}\n// Created by Know-Me template: " + name + "\n"
 	return atomicWrite(filepath.Join(templateDir, "main.hbs"), []byte(hbsContent))
 }

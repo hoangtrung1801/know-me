@@ -11,7 +11,7 @@ type Template struct {
 	// Destination is the base output path relative to the project root.
 	Destination string `yaml:"destination,omitempty" json:"destination,omitempty"`
 
-	// Doc is the path to a Knowns documentation page linked to this template
+	// Doc is the path to a Know-Me documentation page linked to this template
 	// (e.g., "patterns/controller").
 	Doc string `yaml:"doc,omitempty" json:"doc,omitempty"`
 

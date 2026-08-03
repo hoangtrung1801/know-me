@@ -1,6 +1,6 @@
 # Semantic search
 
-Semantic search giúp Knowns tìm docs, tasks, và memories theo ý nghĩa, không chỉ khớp keyword chính xác.
+Semantic search giúp Know-Me tìm docs, tasks, và memories theo ý nghĩa, không chỉ khớp keyword chính xác.
 
 Code search không còn thuộc semantic search. Code intelligence hiện dựa trên LSP và có qua MCP `code` tool.
 

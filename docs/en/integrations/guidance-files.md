@@ -1,8 +1,8 @@
 # Guidance Files
 
-Knowns uses lightweight compatibility files for AI runtimes that auto-detect repository instruction files. These files should be small entrypoints that tell the assistant to start with Knowns MCP `initial` and use on-demand `help` for tool schemas and workflow guidance.
+Know-Me uses lightweight compatibility files for AI runtimes that auto-detect repository instruction files. These files should be small entrypoints that tell the assistant to start with Know-Me MCP `initial` and use on-demand `help` for tool schemas and workflow guidance.
 
-Runtime-critical guidance lives in MCP `initial` and `help`, not in a large repository prompt file. This lets Knowns update agent behavior without requiring every repository to change generated markdown.
+Runtime-critical guidance lives in MCP `initial` and `help`, not in a large repository prompt file. This lets Know-Me update agent behavior without requiring every repository to change generated markdown.
 
 ## Compatibility files
 

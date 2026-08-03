@@ -1,6 +1,6 @@
 # Web UI
 
-Knowns includes a browser UI for people who prefer to inspect project context visually instead of only through CLI output. It reads the same project state as the CLI and MCP server, so tasks, docs, memory, graph views, config, and chat workflows stay connected.
+Know-Me includes a browser UI for people who prefer to inspect project context visually instead of only through CLI output. It reads the same project state as the CLI and MCP server, so tasks, docs, memory, graph views, config, and chat workflows stay connected.
 
 ## Open it
 
@@ -9,7 +9,7 @@ knowns browser
 knowns browser --open
 ```
 
-Run the command from a Knowns project. Use `--open` when you want Knowns to start the local server and open your default browser automatically.
+Run the command from a Know-Me project. Use `--open` when you want Know-Me to start the local server and open your default browser automatically.
 
 ## Main areas
 

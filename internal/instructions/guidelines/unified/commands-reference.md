@@ -7,7 +7,7 @@
 
 ### mcp__knowns__detect_projects
 
-Scan for all Knowns projects on the system:
+Scan for all Know-Me projects on the system:
 
 ```json
 {}

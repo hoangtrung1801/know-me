@@ -1,6 +1,6 @@
 # Cài đặt
 
-Cài `knowns` CLI trước. Việc cài đặt chỉ làm cho command khả dụng; bạn vẫn cần chạy `knowns init` trong từng repository muốn quản lý bằng Knowns.
+Cài `knowns` CLI trước. Việc cài đặt chỉ làm cho command khả dụng; bạn vẫn cần chạy `knowns init` trong từng repository muốn quản lý bằng Know-Me.
 
 ## Yêu cầu
 
@@ -20,7 +20,7 @@ Cài `knowns` CLI trước. Việc cài đặt chỉ làm cho command khả dụ
 
 Trên macOS Intel, toàn bộ CLI và tìm kiếm từ khóa/BM25 vẫn hoạt động. Các thiết lập Local ONNX được tắt vì ONNX Runtime không còn cung cấp thư viện macOS x86_64 dựng sẵn tương thích. Để dùng semantic search, hãy chọn Ollama hoặc API tương thích OpenAI.
 
-Người dùng nâng cao có thể chủ động đặt `KNOWN_ORT_LIB` trỏ đến `libonnxruntime.dylib` x86_64 tương thích; khi đó Knowns sẽ bật lại provider Local ONNX.
+Người dùng nâng cao có thể chủ động đặt `KNOWN_ORT_LIB` trỏ đến `libonnxruntime.dylib` x86_64 tương thích; khi đó Know-Me sẽ bật lại provider Local ONNX.
 
 ## Homebrew
 
@@ -56,7 +56,7 @@ irm https://knowns.sh/script/install.ps1 | iex
 go build -o ./bin/knowns ./cmd/knowns
 ```
 
-Dùng khi đang dev chính Knowns.
+Dùng khi đang dev chính Know-Me.
 
 ## Kiểm tra
 

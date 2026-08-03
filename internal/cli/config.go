@@ -689,7 +689,7 @@ func configureGitTrackingSettings(settings *models.ProjectSettings) error {
 	selected := gitTrackingSelectedSections(&tracking)
 	sectionForm := huh.NewForm(huh.NewGroup(
 		huh.NewMultiSelect[string]().
-			Title("Knowns sections to track in git").
+			Title("Know-Me sections to track in git").
 			Options(
 				huh.NewOption("Tasks", "tasks").Selected(sectionSelected(selected, "tasks")),
 				huh.NewOption("Docs", "docs").Selected(sectionSelected(selected, "docs")),

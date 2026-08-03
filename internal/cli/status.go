@@ -12,7 +12,7 @@ import (
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show project readiness summary",
-	Long: `Display a unified readiness summary for the active Knowns project.
+	Long: `Display a unified readiness summary for the active Know-Me project.
 
 Shows project identity, knowledge counts, search status, runtime health,
 and available capabilities in one view.

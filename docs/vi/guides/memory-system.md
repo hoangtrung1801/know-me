@@ -1,6 +1,6 @@
 # Memory
 
-Memory là nơi Knowns lưu context cần nhớ lại sau này.
+Memory là nơi Know-Me lưu context cần nhớ lại sau này.
 
 ## Ba layer
 

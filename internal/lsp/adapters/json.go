@@ -44,7 +44,7 @@ func (a *JSONAdapter) InstallGuide() lsp.InstallGuide {
 		Command:   "npm install -g vscode-json-languageserver@" + jsonLanguageServerVersion,
 		KnownsCmd: "knowns lsp install json",
 		URL:       "https://www.npmjs.com/package/vscode-json-languageserver",
-		Notes:     "Requires Node.js; Knowns installs the recommended integrity-pinned version",
+		Notes:     "Requires Node.js; Know-Me installs the recommended integrity-pinned version",
 	}
 }
 func (a *JSONAdapter) CanInstall() bool { return true }

@@ -1,6 +1,6 @@
 # Developer Guide
 
-Start here if you are contributing to Knowns.
+Start here if you are contributing to Know-Me.
 
 ## Read first
 

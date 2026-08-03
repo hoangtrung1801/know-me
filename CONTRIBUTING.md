@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering contributing to Knowns!
+Thank you for considering contributing to Know-Me!
 
 Before you start, please read our [Philosophy](./PHILOSOPHY.md) to understand the principles that guide this project.
 
@@ -10,7 +10,7 @@ Before you start, please read our [Philosophy](./PHILOSOPHY.md) to understand th
 
 ### 1. Keep it simple
 
-Knowns is intentionally minimal. Before adding a feature, ask:
+Know-Me is intentionally minimal. Before adding a feature, ask:
 
 - Does this align with the [philosophy](./PHILOSOPHY.md)?
 - Can this be achieved with existing primitives (tasks, docs, refs)?
@@ -24,7 +24,7 @@ Any new feature must respect that `.knowns/` files are the source of truth.
 
 - Don't introduce hidden state
 - Don't require a database
-- Make sure data survives without Knowns
+- Make sure data survives without Know-Me
 
 ### 3. CLI-first
 

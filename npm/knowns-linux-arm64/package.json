@@ -1,7 +1,7 @@
 {
   "name": "@knowns/linux-arm64",
   "version": "0.0.0",
-  "description": "Knowns binary for linux arm64",
+  "description": "Know-Me binary for linux arm64",
   "os": [
     "linux"
   ],

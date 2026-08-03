@@ -1,17 +1,17 @@
 # Compatibility
 
-This document explains the main compatibility behaviors Knowns preserves when platform integrations or generated artifact layouts change.
+This document explains the main compatibility behaviors Know-Me preserves when platform integrations or generated artifact layouts change.
 
 ## Why this exists
 
-Knowns manages generated files such as:
+Know-Me manages generated files such as:
 
 - skills directories
 - MCP configuration files
 - instruction files
 - runtime hooks
 
-As integrations evolve, older projects may still contain previously generated layouts. Knowns tries to preserve safe compatibility instead of breaking those projects immediately.
+As integrations evolve, older projects may still contain previously generated layouts. Know-Me tries to preserve safe compatibility instead of breaking those projects immediately.
 
 ## Skills directory compatibility
 
@@ -27,7 +27,7 @@ The `.agent/skills` legacy path has been removed. All agent-compatible platforms
 
 ## Platform-specific MCP compatibility
 
-Knowns now manages project-local MCP config for several platforms, for example:
+Know-Me now manages project-local MCP config for several platforms, for example:
 
 - Claude Code -> `.mcp.json`
 - Kiro -> `.kiro/settings/mcp.json`

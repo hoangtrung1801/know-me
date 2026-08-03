@@ -1,5 +1,5 @@
-// Package mcp implements the Model Context Protocol server for the Knowns CLI.
-// It exposes all Knowns operations as MCP tools that can be called by AI agents.
+// Package mcp implements the Model Context Protocol server for the Know-Me CLI.
+// It exposes all Know-Me operations as MCP tools that can be called by AI agents.
 package mcp
 
 import (

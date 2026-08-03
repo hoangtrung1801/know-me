@@ -36,7 +36,7 @@ knowns settings --global
 
 `knowns init` tạo `.knowns/`, config, git tracking, semantic setup, và lightweight project instruction shims như `CLAUDE.md`/`AGENTS.md`. Runtime-critical AI guidance nằm trong MCP `initial` và on-demand `help`. Dùng `knowns setup <target> --global` cho personal assistant setup thông thường vì nó update user-level MCP config, skills, và runtime hooks trên nhiều repository. Ví dụ: `knowns setup hermes --global` cấu hình Hermes MCP config và skills ở user scope. Chỉ dùng `knowns setup <target>` khi bạn chủ ý muốn project-level integration artifacts trong repo. Dùng `knowns setup agents` khi chỉ muốn repo-local agent shims.
 
-`knowns settings` mở settings center để chỉnh project name, git tracking, AI platforms, search, code intelligence, Browser/Chat UI, và maintenance guidance. Trong Search settings, Local ONNX models hiển thị trạng thái downloaded/not downloaded; nếu chọn model chưa download, Knowns có thể hỏi xác nhận rồi download trước khi lưu. `knowns settings --global` lưu defaults cho các lần `knowns init` sau. Dùng `knowns config get/set/list/reset` khi cần thao tác config bằng script hoặc agent.
+`knowns settings` mở settings center để chỉnh project name, git tracking, AI platforms, search, code intelligence, Browser/Chat UI, và maintenance guidance. Trong Search settings, Local ONNX models hiển thị trạng thái downloaded/not downloaded; nếu chọn model chưa download, Know-Me có thể hỏi xác nhận rồi download trước khi lưu. `knowns settings --global` lưu defaults cho các lần `knowns init` sau. Dùng `knowns config get/set/list/reset` khi cần thao tác config bằng script hoặc agent.
 
 ## Task
 
@@ -139,7 +139,7 @@ knowns lsp install <language>      # Tải và cài đặt LSP server
 knowns lsp cleanup                 # Xóa các phiên bản LSP server cũ
 ```
 
-Knowns tự động phát hiện ngôn ngữ trong project và kiểm tra LSP binaries. Nếu thiếu binary, `knowns lsp list` sẽ hiển thị hướng dẫn cài đặt.
+Know-Me tự động phát hiện ngôn ngữ trong project và kiểm tra LSP binaries. Nếu thiếu binary, `knowns lsp list` sẽ hiển thị hướng dẫn cài đặt.
 
 ### Code operations (qua MCP)
 

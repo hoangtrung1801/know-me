@@ -66,7 +66,7 @@ export default function ProjectsPage() {
 			<PageHeader
 				size="full"
 				title="Projects"
-				description="All workspace projects available in your shared Knowns store."
+				description="All workspace projects available in your shared Know-Me store."
 				context="Workspace registry"
 				status={<span className="tabular-nums">{projects.length} {projects.length === 1 ? "project" : "projects"}</span>}
 				actions={<Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" />Add project</Button>}
@@ -127,7 +127,7 @@ export default function ProjectsPage() {
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Remove {removing?.name}?</DialogTitle>
-						<DialogDescription>This removes only the project from the shared registry. Its files and Knowns data stay on disk.</DialogDescription>
+						<DialogDescription>This removes only the project from the shared registry. Its files and Know-Me data stay on disk.</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
 						<Button variant="outline" onClick={() => setRemoving(null)} disabled={busy}>Cancel</Button>

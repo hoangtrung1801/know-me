@@ -48,7 +48,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Knowns CLI Version
+      label: Know-Me CLI Version
       description: Run `knowns --version`
       placeholder: "0.6.0"
     validations:

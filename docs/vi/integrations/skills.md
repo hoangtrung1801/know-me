@@ -1,6 +1,6 @@
 # Skills
 
-Skills là reusable workflow instructions, embedded trong Knowns binary và sync ra platform-specific directories.
+Skills là reusable workflow instructions, embedded trong Know-Me binary và sync ra platform-specific directories.
 
 Skills tách biệt với MCP tools. MCP tools hiện trong client dưới dạng structured domain tools như `tasks`, `docs`, `memory`, `search`, và `code`; skills được gọi bằng skill-command syntax của từng agent.
 
@@ -49,8 +49,8 @@ $kn-flow @doc/<spec-path> --sequential # Opt out Codex sub-agent delegation
 
 `kn-research` là MCP-first:
 
-- dùng Knowns `search`/`retrieve` cho project docs, tasks, memory, và decisions
-- dùng Knowns `code` tools trước raw file search để xem code structure, symbols, definitions, và references
+- dùng Know-Me `search`/`retrieve` cho project docs, tasks, memory, và decisions
+- dùng Know-Me `code` tools trước raw file search để xem code structure, symbols, definitions, và references
 - dùng specialized external MCP providers như Context7/library docs, GitHub/source MCP, hoặc official docs MCP khi cần upstream facts
 - dùng general web search chỉ khi specialized MCP providers không có, không đủ, hoặc user yêu cầu rõ
 

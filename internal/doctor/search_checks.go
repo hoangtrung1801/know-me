@@ -96,7 +96,7 @@ func searchConfigChecker(state *localState) Checker {
 						"provider": provider,
 					},
 					Remediation: &Remediation{
-						Description: "Choose an embedding model in Knowns settings.",
+						Description: "Choose an embedding model in Know-Me settings.",
 						Command:     "knowns settings",
 					},
 				}, nil
@@ -136,7 +136,7 @@ func searchModelChecker(state *localState) Checker {
 					Status:  StatusWarn,
 					Summary: "No semantic model is configured",
 					Remediation: &Remediation{
-						Description: "Choose an embedding model in Knowns settings.",
+						Description: "Choose an embedding model in Know-Me settings.",
 						Command:     "knowns settings",
 					},
 				}, nil
@@ -296,7 +296,7 @@ func searchONNXRuntimeChecker(state *localState) Checker {
 						"errorCode": "onnx_runtime_unavailable",
 					},
 					Remediation: &Remediation{
-						Description: "Reinstall Knowns using the original package manager so its ONNX Runtime library is restored.",
+						Description: "Reinstall Know-Me using the original package manager so its ONNX Runtime library is restored.",
 					},
 				}, nil
 			}

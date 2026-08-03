@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./images/logo.png" alt="Knowns" width="120">
+  <img src="./images/logo.png" alt="Know-Me" width="120">
 </p>
 
-<h1 align="center">Knowns</h1>
+<h1 align="center">Know-Me</h1>
 
 <p align="center">
   <a href="https://go.dev/"><img src="https://img.shields.io/badge/go-%3E%3D1.24.2-00ADD8?style=flat-square&logo=go" alt="Go"></a>
@@ -27,13 +27,13 @@
 
 Mỗi lần mở session mới với AI, bạn lại phải giải thích lại architecture, paste doc, nhắc lại convention, làm rõ decision cũ. AI rất mạnh — nhưng nó không nhớ gì giữa các session.
 
-**Knowns fix đúng chỗ đó.** Cho AI assistants như Claude, Cursor, Copilot truy cập bền vững vào task, doc, spec, acceptance criteria, và architectural decisions của project. Thay vì prompt từ đầu, AI đọc đúng phần nó cần và tiếp tục từ chỗ bạn dừng.
+**Know-Me fix đúng chỗ đó.** Cho AI assistants như Claude, Cursor, Copilot truy cập bền vững vào task, doc, spec, acceptance criteria, và architectural decisions của project. Thay vì prompt từ đầu, AI đọc đúng phần nó cần và tiếp tục từ chỗ bạn dừng.
 
-Nếu bạn nghĩ AI nên thực sự hiểu software project, cho **Knowns** một star nhé.
+Nếu bạn nghĩ AI nên thực sự hiểu software project, cho **Know-Me** một star nhé.
 
 <p align="center">
   <a href="https://player.cloudinary.com/embed/?cloud_name=dkxhoyenc&public_id=knowns-full-pipeline_uwhyk1">
-    <img src="./images/knowns-full-pipeline-20s.gif" alt="Knowns full pipeline demo preview" width="100%">
+    <img src="./images/knowns-full-pipeline-20s.gif" alt="Know-Me full pipeline demo preview" width="100%">
   </a>
 </p>
 <p align="center">
@@ -42,14 +42,14 @@ Nếu bạn nghĩ AI nên thực sự hiểu software project, cho **Knowns** m�
 
 ## Mục lục
 
-- [Tại sao cần Knowns?](#tại-sao-cần-knowns)
+- [Tại sao cần Know-Me?](#tại-sao-cần-know-me)
 - [Trước và sau](#trước-và-sau)
-- [Knowns là gì?](#knowns-là-gì)
+- [Know-Me là gì?](#knowns-là-gì)
 - [Dành cho ai?](#dành-cho-ai)
 - [Cách hoạt động](#cách-hoạt-động)
 - [Quick start](#quick-start)
 - [Khả năng chính](#khả-năng-chính)
-- [Xây được gì với Knowns?](#xây-được-gì-với-knowns)
+- [Xây được gì với Know-Me?](#xây-được-gì-với-know-me)
 - [Agent skills workflow](#agent-skills-workflow)
 - [Cài đặt](#cài-đặt)
 - [Tài liệu](#tài-liệu)
@@ -59,7 +59,7 @@ Nếu bạn nghĩ AI nên thực sự hiểu software project, cho **Knowns** m�
 
 ---
 
-## Tại sao cần Knowns?
+## Tại sao cần Know-Me?
 
 AI coding assistants là stateless. Mỗi session bắt đầu từ zero.
 
@@ -73,13 +73,13 @@ Kết quả là bạn phải làm đi làm lại:
 
 AI không thiếu thông minh. **Nó thiếu quyền truy cập vào những gì project đã biết.**
 
-Knowns cho nó quyền truy cập đó.
+Know-Me cho nó quyền truy cập đó.
 
 ---
 
 ## Trước và sau
 
-| Không có Knowns | Có Knowns |
+| Không có Know-Me | Có Know-Me |
 |---|---|
 | "Bọn tôi dùng repository pattern..." _(paste 50 dòng)_ | AI tự đọc `@doc/patterns/repository` |
 | "Đây là task, AC là..." _(gõ lại từ đầu)_ | AI đọc task, AC, linked spec và related docs |
@@ -90,17 +90,17 @@ Knowns cho nó quyền truy cập đó.
 
 ---
 
-## Knowns là gì?
+## Know-Me là gì?
 
-Knowns là **local-first, self-hostable project context layer** cho AI-native development.
+Know-Me là **local-first, self-hostable project context layer** cho AI-native development.
 
 Lưu project knowledge dưới dạng structured, AI-readable files — và expose cho AI assistants qua CLI và [MCP (Model Context Protocol)](https://modelcontextprotocol.io/).
 
 <p align="center">
-  <img src="./images/how-knowns-works.png" alt="How Knowns Works" width="100%">
+  <img src="./images/how-knowns-works.png" alt="How Know-Me Works" width="100%">
 </p>
 
-Cụ thể, Knowns quản lý:
+Cụ thể, Know-Me quản lý:
 
 - **Tasks** với acceptance criteria, implementation plans, status tracking
 - **Documentation** trong nested markdown folders có cross-references
@@ -125,10 +125,10 @@ Tất cả nằm trong `.knowns/` của repo. Plain files. Commit vào Git đư�
 
 ## Cách hoạt động
 
-Knowns nằm cạnh tools bạn đang dùng. Stack hiện tại không cần đổi.
+Know-Me nằm cạnh tools bạn đang dùng. Stack hiện tại không cần đổi.
 
 <p align="center">
-  <img src="./images/architecture.png" alt="Knowns Architecture" width="100%">
+  <img src="./images/architecture.png" alt="Know-Me Architecture" width="100%">
 </p>
 
 1. **Bạn cấu trúc project knowledge** — task, doc, spec, decision — bằng CLI hoặc Web UI
@@ -180,7 +180,7 @@ knowns doc create "Auth Architecture" \
 # Mở Web UI
 knowns browser --open
 
-# Update Knowns sau này
+# Update Know-Me sau này
 knowns update
 
 # Kết nối AI assistant qua MCP
@@ -221,7 +221,7 @@ knowns memory add "We use repository pattern for data access" --category pattern
 knowns memory list --plain
 ```
 
-Knowns có hai miền Decision: **Spec Decision** là các rule `D1`, `D2`, … đã khóa trong spec được approve mà người implement phải tuân thủ và report; **System Decision** là record first-class về thay đổi bền vững của project. System Decision mới luôn bắt đầu ở trạng thái draft và chỉ trở thành current sau khi evidence liên kết đã được verify.
+Know-Me có hai miền Decision: **Spec Decision** là các rule `D1`, `D2`, … đã khóa trong spec được approve mà người implement phải tuân thủ và report; **System Decision** là record first-class về thay đổi bền vững của project. System Decision mới luôn bắt đầu ở trạng thái draft và chỉ trở thành current sau khi evidence liên kết đã được verify.
 
 ```bash
 knowns decision create "Use Postgres for metadata" --decision "Use Postgres as the metadata store."
@@ -286,7 +286,7 @@ knowns browser --open
 
 ---
 
-## Xây được gì với Knowns?
+## Xây được gì với Know-Me?
 
 | Khả năng | Mô tả |
 |---|---|
@@ -308,10 +308,10 @@ knowns browser --open
 
 ## Agent skills workflow
 
-Khi dùng Knowns với agent runtime như Claude Code hoặc Codex, skills tạo guided workflow:
+Khi dùng Know-Me với agent runtime như Claude Code hoặc Codex, skills tạo guided workflow:
 
 <p align="center">
-  <img src="./images/workflow.png" alt="Knowns AI Workflow" width="100%">
+  <img src="./images/workflow.png" alt="Know-Me AI Workflow" width="100%">
 </p>
 
 ```

@@ -22,7 +22,7 @@ func (a *ClangdAdapter) Binaries() []lsp.BinaryCandidate {
 func (a *ClangdAdapter) Prerequisites() []lsp.Prerequisite            { return nil }
 func (a *ClangdAdapter) CheckPrerequisites(ctx context.Context) error { return nil }
 func (a *ClangdAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{KnownsCmd: "knowns lsp install c_cpp", URL: "https://clangd.llvm.org/installation", Notes: "Standalone clangd binaries can be installed by Knowns for supported platforms"}
+	return lsp.InstallGuide{KnownsCmd: "knowns lsp install c_cpp", URL: "https://clangd.llvm.org/installation", Notes: "Standalone clangd binaries can be installed by Know-Me for supported platforms"}
 }
 func (a *ClangdAdapter) CanInstall() bool { return true }
 func (a *ClangdAdapter) RuntimeDeps() []lsp.RuntimeDependency {

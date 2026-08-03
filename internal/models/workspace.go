@@ -8,7 +8,7 @@ type Workspace struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 
-	// TaskID optionally links this workspace to a Knowns task.
+	// TaskID optionally links this workspace to a Know-Me task.
 	TaskID string `json:"taskId,omitempty"`
 
 	// UseWorktree indicates whether the workspace runs in an isolated git

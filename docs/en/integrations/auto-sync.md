@@ -1,6 +1,6 @@
 # Auto Sync
 
-Knowns uses `knowns sync` and `knowns update` to keep generated artifacts aligned with the current binary and project config.
+Know-Me uses `knowns sync` and `knowns update` to keep generated artifacts aligned with the current binary and project config.
 
 ## What gets synced
 

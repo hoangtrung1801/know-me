@@ -727,7 +727,7 @@ jobs:
             -X POST \
             -d "{
               \"embeds\": [{
-                \"title\": \"Knowns CLI v${VERSION} Released!\",
+                \"title\": \"Know-Me CLI v${VERSION} Released!\",
                 \"description\": ${CHANGELOG},
                 \"color\": 5814783,
                 \"fields\": [
@@ -743,7 +743,7 @@ jobs:
                   }
                 ],
                 \"footer\": {
-                  \"text\": \"Knowns CLI\"
+                  \"text\": \"Know-Me CLI\"
                 },
                 \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
               }]

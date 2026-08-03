@@ -245,9 +245,9 @@ export function WelcomePage({ onProjectSelected }: WelcomePageProps) {
 
         {/* Header */}
         <div className="text-center space-y-3">
-          <img src={logoImage} alt="Knowns" className="mx-auto h-16 w-16 rounded-2xl object-contain" />
+          <img src={logoImage} alt="Know-Me" className="mx-auto h-16 w-16 rounded-2xl object-contain" />
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">Knowns</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Know-Me</h1>
             <p className="text-sm text-muted-foreground">Your project memory, always within reach.</p>
           </div>
         </div>

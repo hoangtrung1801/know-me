@@ -1,17 +1,17 @@
 # Tương thích
 
-Giải thích các compatibility behaviors mà Knowns giữ lại khi platform integrations hoặc generated artifact layouts thay đổi.
+Giải thích các compatibility behaviors mà Know-Me giữ lại khi platform integrations hoặc generated artifact layouts thay đổi.
 
 ## Tại sao cần
 
-Knowns quản lý nhiều loại generated files:
+Know-Me quản lý nhiều loại generated files:
 
 - skills directories
 - MCP config files
 - instruction files
 - runtime hooks
 
-Khi integrations thay đổi, project cũ có thể còn layout trước đây. Knowns giữ safe compatibility thay vì break ngay.
+Khi integrations thay đổi, project cũ có thể còn layout trước đây. Know-Me giữ safe compatibility thay vì break ngay.
 
 ## Skills directory
 
@@ -27,7 +27,7 @@ Path `.agent/skills` đã bị xóa. Tất cả agent-compatible platforms giờ
 
 ## MCP config
 
-Knowns quản lý project-local MCP config:
+Know-Me quản lý project-local MCP config:
 
 - Claude Code → `.mcp.json`
 - Kiro → `.kiro/settings/mcp.json`

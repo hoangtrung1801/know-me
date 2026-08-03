@@ -1,8 +1,8 @@
 # Quick start
 
-Cách nhanh nhất để có một project Knowns chạy được. Sau trang này, repository của bạn sẽ có Knowns project state, một task, một doc, validation chạy được, và Web UI có thể mở lại sau.
+Cách nhanh nhất để có một project Know-Me chạy được. Sau trang này, repository của bạn sẽ có Know-Me project state, một task, một doc, validation chạy được, và Web UI có thể mở lại sau.
 
-Chạy các command này từ repository bạn muốn Knowns quản lý.
+Chạy các command này từ repository bạn muốn Know-Me quản lý.
 
 ## 1. Init project
 
@@ -20,12 +20,12 @@ Init wizard cho phép cấu hình:
 - semantic search
 - embedding model
 
-`knowns init` tạo local Knowns project store và lightweight compatibility shims. Runtime-critical AI guidance nằm trong MCP `initial` và on-demand `help`, nên các file này nên nhỏ gọn. AI platform integrations như MCP configs, skills, runtime hooks được cấu hình riêng bằng `knowns setup <target> --global` cho user-level setup, hoặc `knowns setup <target>` khi bạn chủ ý muốn repo-local integration files.
+`knowns init` tạo local Know-Me project store và lightweight compatibility shims. Runtime-critical AI guidance nằm trong MCP `initial` và on-demand `help`, nên các file này nên nhỏ gọn. AI platform integrations như MCP configs, skills, runtime hooks được cấu hình riêng bằng `knowns setup <target> --global` cho user-level setup, hoặc `knowns setup <target>` khi bạn chủ ý muốn repo-local integration files.
 
 ## 2. Tạo task
 
 ```bash
-knowns task create "Setup project" -d "Init project với Knowns"
+knowns task create "Setup project" -d "Init project với Know-Me"
 ```
 
 Task là đơn vị work chính. Nó cho cả người và AI assistant một mục tiêu cụ thể.
@@ -45,7 +45,7 @@ knowns search "architecture" --plain
 knowns validate --plain
 ```
 
-Search xác nhận retrieval tìm được project context. Validate kiểm tra cấu trúc Knowns project trước khi bạn xây workflow nhiều hơn lên trên nó.
+Search xác nhận retrieval tìm được project context. Validate kiểm tra cấu trúc Know-Me project trước khi bạn xây workflow nhiều hơn lên trên nó.
 
 ## 5. Mở Web UI
 
@@ -65,7 +65,7 @@ knowns setup claude --global
 knowns setup agents
 ```
 
-Dùng `--global` cho personal assistant setup thông thường để Knowns update user-level MCP config, skills, và runtime hooks trên nhiều repository. Dùng `knowns setup agents` khi chỉ cần repo-local compatibility shims như `AGENTS.md`.
+Dùng `--global` cho personal assistant setup thông thường để Know-Me update user-level MCP config, skills, và runtime hooks trên nhiều repository. Dùng `knowns setup agents` khi chỉ cần repo-local compatibility shims như `AGENTS.md`.
 
 Sau setup, agent workflows có thể dùng lightweight shim files, MCP config, và skill cho platform đó. Claude dùng skill command dạng `/kn-*`; Codex dùng skill command dạng `$kn-*`.
 
@@ -78,7 +78,7 @@ knowns sync
 knowns update
 ```
 
-Chạy `knowns sync` sau khi clone repo, đổi selected platforms, hoặc update CLI. Dùng `knowns update` khi muốn Knowns refresh generated project artifacts theo behavior hiện tại của CLI.
+Chạy `knowns sync` sau khi clone repo, đổi selected platforms, hoặc update CLI. Dùng `knowns update` khi muốn Know-Me refresh generated project artifacts theo behavior hiện tại của CLI.
 
 ## 8. Mở lại Web UI
 
@@ -88,7 +88,7 @@ knowns browser --open
 
 ## Bây giờ bạn đã có gì?
 
-- một Knowns project đã init trong repository này
+- một Know-Me project đã init trong repository này
 - lightweight compatibility shims cho agent
 - một task và một doc để kiểm tra project model hoạt động
 - cách search, validate, và browse project context

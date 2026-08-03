@@ -1,6 +1,6 @@
 ---
 name: kn-flow
-description: Use when orchestrating a full Knowns spec or task wave through planning, implementation, review, integration, and verification, optionally using sub-agents when scopes are parallel-safe.
+description: Use when orchestrating a full Know-Me spec or task wave through planning, implementation, review, integration, and verification, optionally using sub-agents when scopes are parallel-safe.
 ---
 
 # Spec Flow Orchestration
@@ -33,13 +33,13 @@ Coordinate an approved spec, linked task set, or explicit task wave from plannin
 
 ## Startup
 
-1. Start with Knowns MCP `initial`.
+1. Start with Know-Me MCP `initial`.
 2. Read `kn-plan`, `kn-implement`, and `kn-review` before using their procedures.
 3. Read the spec or each explicit task.
 4. For every linked spec, read the complete canonical `Locked Decisions` section and keep its stable D-IDs as execution gates.
 5. Retrieve relevant accepted/current System Decisions with a feature/task query, `sourceTypes:["decision"]`, `status:"accepted"`, `includeHistorical:false`, and a bounded limit.
 6. Search first, then follow explicit refs and retrieve only relevant context.
-7. Do not manually edit Knowns-managed task or doc markdown.
+7. Do not manually edit Know-Me-managed task or doc markdown.
 
 ## Task Discovery
 

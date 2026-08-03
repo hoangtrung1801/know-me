@@ -1,10 +1,10 @@
-# Knowns Documentation
+# Know-Me Documentation
 
-Knowns is a project context layer for software teams and AI agents. It gives a repository one shared place for tasks, docs, memory, templates, semantic search, and AI integrations.
+Know-Me is a project context layer for software teams and AI agents. It gives a repository one shared place for tasks, docs, memory, templates, semantic search, and AI integrations.
 
 Use these docs if you want to:
 
-- set up Knowns in an existing repository
+- set up Know-Me in an existing repository
 - keep project work, decisions, and docs readable by both humans and AI
 - connect assistants through MCP, skills, or lightweight shim files
 - use the Web UI for boards, docs, graph views, and chat workflows
@@ -23,7 +23,7 @@ Use these docs if you want to:
 1. [Installation](./getting-started/installation.md)
 2. [Quick start](./getting-started/quick-start.md)
 3. [First project](./getting-started/first-project.md)
-4. [Why Knowns exists](./guides/why-knowns.md)
+4. [Why Know-Me exists](./guides/why-knowns.md)
 5. [User guide](./guides/user-guide.md)
 6. [Task Management](./guides/task-management.md)
 7. [AI Agent Guide](./guides/ai-agent-guide.md)
@@ -59,7 +59,7 @@ Use these docs if you want to:
 
 ### Guides
 
-- [Why Knowns exists](./guides/why-knowns.md)
+- [Why Know-Me exists](./guides/why-knowns.md)
 - [User guide](./guides/user-guide.md)
 - [Task Management](./guides/task-management.md)
 - [AI Agent Guide](./guides/ai-agent-guide.md)

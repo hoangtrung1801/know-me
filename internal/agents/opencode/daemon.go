@@ -14,7 +14,7 @@ import (
 )
 
 // Daemon manages a shared OpenCode server process that persists across
-// Knowns server restarts. Only one daemon runs at a time, identified by
+// Know-Me server restarts. Only one daemon runs at a time, identified by
 // a PID file under ~/.knowns scoped to the target host/port.
 type Daemon struct {
 	Host    string

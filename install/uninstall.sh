@@ -1,5 +1,5 @@
 #!/bin/sh
-# Knowns CLI uninstaller
+# Know-Me CLI uninstaller
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/knowns-dev/knowns/main/install/uninstall.sh | sh
 #   wget -qO- https://raw.githubusercontent.com/knowns-dev/knowns/main/install/uninstall.sh | sh
@@ -45,7 +45,7 @@ remove_path() {
 }
 
 main() {
-    printf "\n  ${BOLD}${CYAN}Knowns CLI Uninstaller${RESET}\n\n"
+    printf "\n  ${BOLD}${CYAN}Know-Me CLI Uninstaller${RESET}\n\n"
     info "Install:  ${INSTALL_DIR}"
     printf "\n"
 
@@ -62,7 +62,7 @@ main() {
     fi
 
     if [ "$removed" -eq 0 ]; then
-        warn "No Knowns binaries found in ${INSTALL_DIR}"
+        warn "No Know-Me binaries found in ${INSTALL_DIR}"
     fi
 
     if [ -d "$INSTALL_DIR" ] && [ -z "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]; then
@@ -74,7 +74,7 @@ main() {
     fi
 
     printf "\n"
-    success "Knowns CLI uninstall complete"
+    success "Know-Me CLI uninstall complete"
     info "Project folders and .knowns data were left untouched"
     printf "\n"
 }

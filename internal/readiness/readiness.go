@@ -1,4 +1,4 @@
-// Package readiness provides a unified readiness payload for Knowns projects.
+// Package readiness provides a unified readiness payload for Know-Me projects.
 // It collects knowledge counts, search status, runtime health, and capabilities
 // into one canonical model consumed by CLI, server API, and MCP.
 package readiness

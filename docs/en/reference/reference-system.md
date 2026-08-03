@@ -1,6 +1,6 @@
 # Reference System
 
-Knowns supports structured references between tasks, docs, memory, and templates.
+Know-Me supports structured references between tasks, docs, memory, and templates.
 
 ## Common forms
 

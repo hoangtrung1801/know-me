@@ -1,6 +1,6 @@
 # Architecture
 
-Technical overview of how Knowns is built.
+Technical overview of how Know-Me is built.
 
 For design principles, see [PHILOSOPHY.md](./PHILOSOPHY.md).
 
@@ -266,7 +266,7 @@ When CLI modifies a task:
 
 ### Why Express over Bun.serve?
 
-Node.js compatibility. Knowns should run anywhere Node runs, not just Bun.
+Node.js compatibility. Know-Me should run anywhere Node runs, not just Bun.
 
 ### Why no database?
 

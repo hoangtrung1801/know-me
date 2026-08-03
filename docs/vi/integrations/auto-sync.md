@@ -1,6 +1,6 @@
 # Auto sync
 
-Knowns dùng `knowns sync` và `knowns update` để giữ generated artifacts đồng bộ với binary và project config.
+Know-Me dùng `knowns sync` và `knowns update` để giữ generated artifacts đồng bộ với binary và project config.
 
 ## Sync được gì
 

@@ -1,6 +1,6 @@
 # Developer guide
 
-Bắt đầu từ đây nếu muốn đóng góp cho Knowns.
+Bắt đầu từ đây nếu muốn đóng góp cho Know-Me.
 
 ## Đọc trước
 

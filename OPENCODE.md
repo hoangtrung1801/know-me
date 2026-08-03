@@ -8,7 +8,7 @@ Compatibility entrypoint for runtimes that auto-detect `OPENCODE.md`.
 
 ## Canonical Guidance
 
-- Knowns is the repository memory layer for humans and the AI-friendly working layer for agents.
+- Know-Me is the repository memory layer for humans and the AI-friendly working layer for agents.
 - The source of truth for repo-level agent guidance is `KNOWNS.md`.
 - Read `KNOWNS.md` first whenever the runtime supports reading repository files.
 - Load behavior, memory policy, and workflow rules from `KNOWNS.md`; treat this file only as a compatibility entrypoint.
@@ -16,8 +16,8 @@ Compatibility entrypoint for runtimes that auto-detect `OPENCODE.md`.
 
 ## Minimum Rules
 
-- Use Knowns as the canonical system for tasks, docs, templates, and workflow state.
-- Never manually edit Knowns-managed task or doc markdown.
+- Use Know-Me as the canonical system for tasks, docs, templates, and workflow state.
+- Never manually edit Know-Me-managed task or doc markdown.
 - Search first, then read only relevant docs and code.
 - Use `search` for discovery; use MCP `retrieve` tool when a workflow needs structured context with citations. Fall back to CLI `knowns retrieve` if MCP is unavailable.
 - For code operations, use `code` tool: `symbols` for structure, `find` for search, `references`/`definition` for navigation, `rename`/`replace`/`insert`/`delete` for editing. Use `help("code.*")` for details.

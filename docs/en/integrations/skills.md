@@ -1,6 +1,6 @@
 # Skills
 
-Skills are reusable workflow instructions embedded in the Knowns binary and synced to platform-specific directories.
+Skills are reusable workflow instructions embedded in the Know-Me binary and synced to platform-specific directories.
 
 Skills are separate from MCP tools. MCP tools appear in clients as structured domain tools such as `tasks`, `docs`, `memory`, `search`, and `code`; skills are invoked through each agent's skill-command syntax.
 
@@ -49,8 +49,8 @@ $kn-flow @doc/<spec-path> --sequential # Opt out of Codex sub-agent delegation
 
 `kn-research` is MCP-first:
 
-- use Knowns `search`/`retrieve` for project docs, tasks, memory, and decisions
-- use Knowns `code` tools before raw file search for code structure, symbols, definitions, and references
+- use Know-Me `search`/`retrieve` for project docs, tasks, memory, and decisions
+- use Know-Me `code` tools before raw file search for code structure, symbols, definitions, and references
 - use specialized external MCP providers such as Context7/library docs, GitHub/source MCP, or official docs MCP when upstream facts matter
 - use general web search only when specialized MCP providers are unavailable, insufficient, or explicitly requested
 

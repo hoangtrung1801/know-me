@@ -50,7 +50,7 @@ func TestBuildInitialInstructionsContainsExpectedSections(t *testing.T) {
 	got := buildInitialInstructions(func() *storage.Store { return nil }, nil)
 
 	expectedSections := []string{
-		"# Knowns MCP — Session Ready",
+		"# Know-Me MCP — Session Ready",
 		"## Code Intelligence Rules",
 		"**CRITICAL**",
 		"**FORBIDDEN**",

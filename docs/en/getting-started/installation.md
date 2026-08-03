@@ -1,6 +1,6 @@
 # Installation
 
-Install the `knowns` CLI first. Installation only makes the command available; you still need to run `knowns init` inside each repository where you want Knowns-managed project context.
+Install the `knowns` CLI first. Installation only makes the command available; you still need to run `knowns init` inside each repository where you want Know-Me-managed project context.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ Install the `knowns` CLI first. Installation only makes the command available; y
 
 On macOS Intel, the full CLI and keyword/BM25 search remain available. Local ONNX controls are disabled because ONNX Runtime no longer provides a compatible prebuilt macOS x86_64 library. For semantic search, use Ollama or an OpenAI-compatible API provider.
 
-Advanced users can explicitly set `KNOWN_ORT_LIB` to a compatible x86_64 `libonnxruntime.dylib`; Knowns will then enable the local ONNX provider.
+Advanced users can explicitly set `KNOWN_ORT_LIB` to a compatible x86_64 `libonnxruntime.dylib`; Know-Me will then enable the local ONNX provider.
 
 ## Homebrew
 
@@ -56,7 +56,7 @@ irm https://knowns.sh/script/install.ps1 | iex
 go build -o ./bin/knowns ./cmd/knowns
 ```
 
-Best option when developing Knowns itself.
+Best option when developing Know-Me itself.
 
 ## Verify
 
@@ -68,7 +68,7 @@ If the command prints a version, the CLI is installed. Next, move into the repos
 
 ## No-global-install option
 
-If you do not want a global install, you can still run Knowns through npm:
+If you do not want a global install, you can still run Know-Me through npm:
 
 ```bash
 npx knowns init

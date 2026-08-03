@@ -4,11 +4,11 @@ Compatibility entrypoint for runtimes that auto-detect `AGENTS.md`.
 
 <!-- KNOWNS GUIDELINES START -->
 
-**CRITICAL: Start with Knowns MCP `initial` when available. Use `help("tool.*")` or `help("workflow.*")` for domain details on demand.**
+**CRITICAL: Start with Know-Me MCP `initial` when available. Use `help("tool.*")` or `help("workflow.*")` for domain details on demand.**
 
 ## Runtime Guidance
 
-- Knowns is the repository memory layer for humans and the AI-friendly working layer for agents.
+- Know-Me is the repository memory layer for humans and the AI-friendly working layer for agents.
 - MCP `initial` is the primary AI bootstrap: project state, tool domains, code rules, and workflow routing.
 - MCP `help` is the primary on-demand source for action schemas and recipes.
 - `KNOWNS.md` is a human-readable reference and fallback, not a required startup read.
@@ -16,8 +16,8 @@ Compatibility entrypoint for runtimes that auto-detect `AGENTS.md`.
 
 ## Minimum Rules
 
-- Use Knowns as the canonical system for tasks, docs, templates, and workflow state.
-- Never manually edit Knowns-managed task or doc markdown.
+- Use Know-Me as the canonical system for tasks, docs, templates, and workflow state.
+- Never manually edit Know-Me-managed task or doc markdown.
 - Search first, then read only relevant docs and code.
 - Use `search` for discovery; use MCP `retrieve` tool when a workflow needs structured context with citations. Fall back to CLI `knowns retrieve` if MCP is unavailable.
 - For code operations, use `code` tool: `find`/`symbols` for structure, `references`/`definition` for navigation, `rename`/`replace`/`replace_body`/`insert`/`delete` for editing. Use `help("code.*")` or `help("workflow.code-edit")` for details.

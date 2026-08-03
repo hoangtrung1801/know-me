@@ -1,5 +1,5 @@
 #!/bin/sh
-# Knowns CLI installer
+# Know-Me CLI installer
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/knowns-dev/knowns/main/install/install.sh | sh
 #   wget -qO- https://raw.githubusercontent.com/knowns-dev/knowns/main/install/install.sh | sh
@@ -141,7 +141,7 @@ verify_checksum() {
 # ─── Main ─────────────────────────────────────────────────────────────
 
 main() {
-    printf "\n  ${BOLD}${CYAN}Knowns CLI Installer${RESET}\n\n"
+    printf "\n  ${BOLD}${CYAN}Know-Me CLI Installer${RESET}\n\n"
 
     detect_platform
     resolve_version
@@ -226,9 +226,9 @@ main() {
     printf "\n"
     if command -v knowns >/dev/null 2>&1; then
         INSTALLED_VERSION=$(knowns --version 2>/dev/null || echo "unknown")
-        printf "  ${GREEN}${BOLD}Knowns CLI ${INSTALLED_VERSION} installed successfully!${RESET}\n"
+        printf "  ${GREEN}${BOLD}Know-Me CLI ${INSTALLED_VERSION} installed successfully!${RESET}\n"
     else
-        printf "  ${GREEN}${BOLD}Knowns CLI installed successfully!${RESET}\n"
+        printf "  ${GREEN}${BOLD}Know-Me CLI installed successfully!${RESET}\n"
         # Check if install dir is in PATH
         case ":$PATH:" in
             *":${INSTALL_DIR}:"*) ;;

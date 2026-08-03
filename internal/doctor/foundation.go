@@ -46,12 +46,12 @@ func projectActiveChecker(store *storage.Store) Checker {
 			if store == nil {
 				return CheckResult{
 					Status:  StatusFail,
-					Summary: "No active Knowns project",
+					Summary: "No active Know-Me project",
 					Evidence: Evidence{
 						"active": false,
 					},
 					Remediation: &Remediation{
-						Description: "Initialize a Knowns project in the current workspace.",
+						Description: "Initialize a Know-Me project in the current workspace.",
 						Command:     "knowns init",
 					},
 				}, nil
@@ -59,7 +59,7 @@ func projectActiveChecker(store *storage.Store) Checker {
 			info := ProjectFromStore(store)
 			return CheckResult{
 				Status:  StatusPass,
-				Summary: "Active Knowns project detected",
+				Summary: "Active Know-Me project detected",
 				Evidence: Evidence{
 					"active": true,
 					"name":   info.Name,
@@ -117,7 +117,7 @@ func projectStorageChecker(store *storage.Store) Checker {
 			if err != nil || !info.IsDir() {
 				return CheckResult{
 					Status:  StatusFail,
-					Summary: "Knowns storage root is unavailable",
+					Summary: "Know-Me storage root is unavailable",
 					Evidence: Evidence{
 						"path":      store.Root,
 						"errorCode": "storage_root_unavailable",
@@ -131,7 +131,7 @@ func projectStorageChecker(store *storage.Store) Checker {
 			if _, err := os.ReadDir(store.Root); err != nil {
 				return CheckResult{
 					Status:  StatusFail,
-					Summary: "Knowns storage root is not readable",
+					Summary: "Know-Me storage root is not readable",
 					Evidence: Evidence{
 						"path":      store.Root,
 						"mode":      info.Mode().Perm().String(),
@@ -160,17 +160,17 @@ func projectStorageChecker(store *storage.Store) Checker {
 				evidence["missingPaths"] = missing
 				return CheckResult{
 					Status:   StatusWarn,
-					Summary:  fmt.Sprintf("%d Knowns storage directories are missing", len(missing)),
+					Summary:  fmt.Sprintf("%d Know-Me storage directories are missing", len(missing)),
 					Evidence: evidence,
 					Remediation: &Remediation{
-						Description: "Recreate the missing Knowns storage directories.",
+						Description: "Recreate the missing Know-Me storage directories.",
 						Command:     "knowns init",
 					},
 				}, nil
 			}
 			return CheckResult{
 				Status:   StatusPass,
-				Summary:  "Knowns storage paths are readable",
+				Summary:  "Know-Me storage paths are readable",
 				Evidence: evidence,
 			}, nil
 		},

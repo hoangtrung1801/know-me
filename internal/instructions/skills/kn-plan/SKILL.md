@@ -317,7 +317,7 @@ Scan spec for:
 Group related items into logical tasks.
 
 Token control rules:
-- Generate tasks in Knowns Tasks, not as a long task list inside the spec body.
+- Generate tasks in Know-Me Tasks, not as a long task list inside the spec body.
 - Keep task descriptions concise; put implementation detail in each task plan later.
 - The spec should only receive or keep a short `Task Links` section after task creation.
 

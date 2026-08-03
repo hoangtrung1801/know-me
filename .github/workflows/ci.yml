@@ -218,7 +218,7 @@ jobs:
       - name: Build UI
         run: cd ui && bun install --frozen-lockfile && bun run build
 
-      - name: Build Knowns
+      - name: Build Know-Me
         run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowns ./cmd/knowns
 
       - name: Install pinned ONNX Runtime

@@ -1,4 +1,4 @@
-# Knowns Guidelines
+# Know-Me Guidelines
 
 > These rules are NON-NEGOTIABLE. Violating them causes data corruption.
 

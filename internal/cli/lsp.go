@@ -244,7 +244,7 @@ func confirmLSPInstall(cmd *cobra.Command, selector lsp.InstallSelector, yes boo
 	if selector.Latest {
 		requested = "latest"
 	}
-	fmt.Fprintf(cmd.ErrOrStderr(), "WARNING: %s is not the recommended Knowns-verified LSP version.\n", requested)
+	fmt.Fprintf(cmd.ErrOrStderr(), "WARNING: %s is not the recommended Know-Me-verified LSP version.\n", requested)
 	if yes {
 		return nil
 	}

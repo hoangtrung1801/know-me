@@ -16,7 +16,7 @@ description: Use at the start of a new session to read project docs, understand 
 
 ## Preflight
 
-- Confirm this is a Knowns project
+- Confirm this is a Know-Me project
 - Call MCP `initial` first when available; it is the runtime bootstrap
 - Use `help("tool.*")` or `help("workflow.*")` when an action schema or workflow route is not visible
 - Prefer project docs over guessing from code structure

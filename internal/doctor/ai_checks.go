@@ -107,25 +107,25 @@ func aiRuntimeHookCheckers(state *localState) []Checker {
 				if status.Installed {
 					return CheckResult{
 						Status:   StatusPass,
-						Summary:  fmt.Sprintf("%s Knowns runtime-memory hook is installed", status.DisplayName),
+						Summary:  fmt.Sprintf("%s Know-Me runtime-memory hook is installed", status.DisplayName),
 						Evidence: evidence,
 					}, nil
 				}
 
 				evidence["statusSummary"] = status.Summary
 				description := fmt.Sprintf(
-					"Install or refresh the Knowns runtime-memory hook for %s.",
+					"Install or refresh the Know-Me runtime-memory hook for %s.",
 					status.DisplayName,
 				)
 				if !status.Available {
 					description = fmt.Sprintf(
-						"Install %s, then install or refresh its Knowns runtime-memory hook.",
+						"Install %s, then install or refresh its Know-Me runtime-memory hook.",
 						status.DisplayName,
 					)
 				}
 				return CheckResult{
 					Status:   StatusWarn,
-					Summary:  fmt.Sprintf("%s Knowns runtime-memory hook is missing or out of sync", status.DisplayName),
+					Summary:  fmt.Sprintf("%s Know-Me runtime-memory hook is missing or out of sync", status.DisplayName),
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: description,
