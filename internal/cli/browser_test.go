@@ -32,13 +32,16 @@ func TestBindBrowserPortReturnsRequestedPortWhenFree(t *testing.T) {
 	port := listener.Addr().(*net.TCPAddr).Port
 	listener.Close()
 
-	ln, got, err := bindBrowserPort(port, 3)
+	ln, got, err := bindBrowserPort("127.0.0.1", port, 3)
 	if err != nil {
 		t.Fatalf("bindBrowserPort returned error: %v", err)
 	}
-	ln.Close()
+	defer ln.Close()
 	if got != port {
-		t.Fatalf("bindBrowserPort(%d, 3) = %d, want %d", port, got, port)
+		t.Fatalf("bindBrowserPort(127.0.0.1, %d, 3) = %d, want %d", port, got, port)
+	}
+	if addr := ln.Addr().String(); addr != fmt.Sprintf("127.0.0.1:%d", port) {
+		t.Fatalf("listener address = %q, want %q", addr, fmt.Sprintf("127.0.0.1:%d", port))
 	}
 }
 
@@ -56,7 +59,7 @@ func TestBindBrowserPortFallsForwardWhenBusy(t *testing.T) {
 	}
 	defer busyNext.Close()
 
-	ln, got, err := bindBrowserPort(startPort, 50)
+	ln, got, err := bindBrowserPort("127.0.0.1", startPort, 50)
 	if err != nil {
 		t.Fatalf("bindBrowserPort returned error: %v", err)
 	}
@@ -74,7 +77,7 @@ func TestWaitForHTTPServer(t *testing.T) {
 	defer listener.Close()
 
 	port := listener.Addr().(*net.TCPAddr).Port
-	if err := waitForHTTPServer(port, time.Second); err != nil {
+	if err := waitForHTTPServer("127.0.0.1", port, time.Second); err != nil {
 		t.Fatalf("waitForHTTPServer returned error: %v", err)
 	}
 }

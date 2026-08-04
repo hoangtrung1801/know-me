@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -12,9 +11,10 @@ import (
 )
 
 func TestTaskLifecycleCLIPreviewExplicitExecuteAndHardDeleteIntent(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
 	t.Chdir(projectRoot)
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	if err := store.Init("cli"); err != nil {
 		t.Fatal(err)
 	}
@@ -69,9 +69,10 @@ func TestTaskLifecycleCLIPreviewExplicitExecuteAndHardDeleteIntent(t *testing.T)
 }
 
 func TestTaskLifecycleCLIEmptyBatchUsesStableErrorAndHumanOutputIsComplete(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
 	t.Chdir(projectRoot)
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	if err := store.Init("cli-contract"); err != nil {
 		t.Fatal(err)
 	}

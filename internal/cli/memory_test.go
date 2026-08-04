@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -41,7 +40,7 @@ func TestRunMemoryCreateWritesProposedAndListHidesByDefault(t *testing.T) {
 		}
 	})
 
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	entries, err := store.Memory.ListPersistent(models.MemoryLayerProject)
 	if err != nil {
 		t.Fatalf("list persistent: %v", err)
@@ -98,7 +97,7 @@ func TestRunMemoryCreateRejectsLegacyDecisionCategory(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "System Decision") {
 		t.Fatalf("runMemoryCreate error = %v", err)
 	}
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	entries, listErr := store.Memory.ListPersistent("")
 	if listErr != nil || len(entries) != 0 {
 		t.Fatalf("rejected write persisted entries=%+v err=%v", entries, listErr)
@@ -153,7 +152,7 @@ func setupMemoryCleanupCLIProject(t *testing.T) string {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	if err := store.Init("memory-cleanup-cli-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -185,7 +184,7 @@ func setupEmptyMemoryCLIProject(t *testing.T) string {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	if err := store.Init("memory-cli-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

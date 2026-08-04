@@ -15,7 +15,6 @@ func setupMCPTest(t *testing.T) (*MCPClient, string) {
 	dir := setupTestProject(t)
 	client := startMCPServer(t)
 	client.Initialize()
-	client.SetProject(dir)
 	return client, dir
 }
 

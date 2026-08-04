@@ -25,11 +25,15 @@ import (
 )
 
 func TestTaskLifecycleCrossSurfaceContractMatrix(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	const taskID = "matrix-life"
 	fixedNow := time.Date(2026, 7, 22, 7, 0, 0, 0, time.UTC)
 	root := t.TempDir()
 	cliRoot := filepath.Join(root, "cli")
-	cliStore := newMatrixLifecycleStore(t, cliRoot, taskID, fixedNow)
+	if err := os.MkdirAll(cliRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cliStore := newMatrixLifecycleStore(t, storage.GlobalRootPath(), taskID, fixedNow)
 	t.Chdir(cliRoot)
 	httpRoot := filepath.Join(root, "http")
 	httpStore := newMatrixLifecycleStore(t, httpRoot, taskID, fixedNow)
@@ -460,7 +464,7 @@ func matrixMCPRunner(t *testing.T, store *storage.Store) func(tasklifecycle.Requ
 
 func newMatrixLifecycleStore(t *testing.T, root, taskID string, now time.Time) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(root, ".knowns"))
+	store := storage.NewStore(root)
 	if err := store.Init("matrix"); err != nil {
 		t.Fatal(err)
 	}
