@@ -70,7 +70,7 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	// Determine whether to open browser: --open enables, --no-open disables
 	shouldOpen := openFlag && !noOpen
 
-	srv := server.NewServer(store, projectRoot, port, server.Options{Dev: dev, Tunnel: tunnelFlag, Password: passwordFlag, AllowTaskHardDelete: allowTaskHardDelete})
+	srv := server.NewServer(store, projectRoot, port, server.Options{Dev: dev, Tunnel: tunnelFlag, Password: passwordFlag, AllowTaskHardDelete: allowTaskHardDelete, DisableLSP: true, DisableOpenCode: true})
 
 	url := fmt.Sprintf("http://localhost:%d", port)
 	fmt.Println()

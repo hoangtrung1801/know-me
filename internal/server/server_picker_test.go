@@ -34,6 +34,21 @@ func TestNewServerAllowsPickerMode(t *testing.T) {
 	}
 }
 
+func TestNewServerCanDisableLSPAndOpenCode(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	store := storage.NewStore(storage.GlobalRootPath())
+	if err := store.Init(""); err != nil {
+		t.Fatal(err)
+	}
+	s := NewServer(store, "", 0, Options{DisableLSP: true, DisableOpenCode: true})
+	if s.lspManager != nil || s.runtimeOpenCode != nil {
+		t.Fatalf("lsp = %#v, opencode = %#v", s.lspManager, s.runtimeOpenCode)
+	}
+	if _, configured := s.openCodeConfig(); configured {
+		t.Fatal("OpenCode must remain disabled")
+	}
+}
+
 // newActiveServer creates a Server with a real project store.
 func newActiveServer(t *testing.T) (*Server, string) {
 	t.Helper()
