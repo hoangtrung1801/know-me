@@ -44,7 +44,7 @@ func TestRunDecisionLifecycleCommands(t *testing.T) {
 		}
 	})
 
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	entries, err := store.Decisions.List()
 	if err != nil {
 		t.Fatalf("List: %v", err)
@@ -212,7 +212,7 @@ func TestRunDecisionMigrationCommands(t *testing.T) {
 	}
 	defer os.Chdir(origDir)
 	memoryID := "legacy1"
-	memoryPath := filepath.Join(projectRoot, ".knowns", "memory", models.MemoryFileName(memoryID))
+	memoryPath := filepath.Join(storage.GlobalRootPath(), "memory", models.MemoryFileName(memoryID))
 	raw := "---\nid: legacy1\ntitle: Legacy CLI decision\nlayer: project\ncategory: decision\nstatus: active\nsources: []\ntags: []\ncreatedAt: '2026-07-23T10:00:00Z'\nupdatedAt: '2026-07-23T10:00:00Z'\n---\n\nUse first-class System Decisions.\n"
 	if err := os.WriteFile(memoryPath, []byte(raw), 0o644); err != nil {
 		t.Fatal(err)
@@ -247,7 +247,7 @@ func TestRunDecisionMigrationCommands(t *testing.T) {
 	if err := json.Unmarshal([]byte(applyOutput), &applied); err != nil || len(applied.Results) != 1 || applied.Results[0].DecisionID == "" {
 		t.Fatalf("apply = %+v err=%v output=%s", applied, err, applyOutput)
 	}
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	decision, err := store.Decisions.Get(applied.Results[0].DecisionID)
 	if err != nil || decision.Status != models.DecisionStatusDraft {
 		t.Fatalf("migrated decision = %+v err=%v", decision, err)
@@ -341,7 +341,7 @@ func setupEmptyDecisionCLIProject(t *testing.T) string {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	if err := store.Init("decision-cli-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

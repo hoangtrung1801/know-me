@@ -36,6 +36,7 @@ const defaultBrowserPort = 6420
 const maxBrowserPortAttempts = 10
 
 func runBrowser(cmd *cobra.Command, args []string) error {
+	host, _ := cmd.Flags().GetString("host")
 	port, _ := cmd.Flags().GetInt("port")
 	openFlag, _ := cmd.Flags().GetBool("open")
 	noOpen, _ := cmd.Flags().GetBool("no-open")
@@ -55,10 +56,10 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	// Handle restart: attempt to stop existing server first
 	if restart {
 		fmt.Printf("%s Attempting to stop existing server on port %d...\n", StyleWarning.Render("↻"), port)
-		stopExistingServer(port)
+		stopExistingServer(host, port)
 	}
 
-	listener, selectedPort, err := bindBrowserPort(port, maxBrowserPortAttempts)
+	listener, selectedPort, err := bindBrowserPort(host, port, maxBrowserPortAttempts)
 	if err != nil {
 		return err
 	}
@@ -72,14 +73,11 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 
 	srv := server.NewServer(store, projectRoot, port, server.Options{Dev: dev, Tunnel: tunnelFlag, Password: passwordFlag, AllowTaskHardDelete: allowTaskHardDelete, DisableLSP: true, DisableOpenCode: true})
 
-	url := fmt.Sprintf("http://localhost:%d", port)
+	url := "http://" + net.JoinHostPort(host, fmt.Sprint(port))
 	fmt.Println()
 	fmt.Printf("  %s  %s %s\n", StyleSuccess.Render("●"), StyleBold.Render("Know-Me"), StyleDim.Render("v"+util.Version))
 	fmt.Println()
 	fmt.Printf("  %s  %s\n", StyleInfo.Render("→"), StyleBold.Render(url))
-	if ip := getLocalIP(); ip != "" {
-		fmt.Printf("  %s  %s\n", StyleInfo.Render("→"), StyleInfo.Render(fmt.Sprintf("http://%s:%d", ip, port)))
-	}
 	fmt.Printf("  %s  %s\n", StyleInfo.Render("◇"), StyleDim.Render("global knowledge store"))
 	fmt.Println()
 
@@ -105,7 +103,7 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	}()
 
 	if shouldOpen {
-		if err := waitForHTTPServer(port, 3*time.Second); err != nil {
+		if err := waitForHTTPServer(host, port, 3*time.Second); err != nil {
 			return <-errCh
 		}
 		openBrowser(url)
@@ -114,29 +112,17 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	return <-errCh
 }
 
-func getLocalIP() string {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		return ""
-	}
-	defer conn.Close()
-	addr, ok := conn.LocalAddr().(*net.UDPAddr)
-	if !ok {
-		return ""
-	}
-	return addr.IP.String()
-}
-
-func bindBrowserPort(startPort int, attempts int) (net.Listener, int, error) {
+func bindBrowserPort(host string, startPort int, attempts int) (net.Listener, int, error) {
 	for offset := 0; offset < attempts; offset++ {
 		port := startPort + offset
+		address := net.JoinHostPort(host, fmt.Sprint(port))
 		// First check if anything is already listening (catches IPv4/IPv6 conflicts)
-		conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 200*time.Millisecond)
+		conn, err := net.DialTimeout("tcp", address, 200*time.Millisecond)
 		if err == nil {
 			conn.Close()
 			continue // port in use by another process
 		}
-		listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
+		listener, err := net.Listen("tcp", address)
 		if err == nil {
 			return listener, port, nil
 		}
@@ -147,17 +133,18 @@ func bindBrowserPort(startPort int, attempts int) (net.Listener, int, error) {
 	return nil, 0, fmt.Errorf("no available port in range %d-%d", startPort, startPort+attempts-1)
 }
 
-func waitForHTTPServer(port int, timeout time.Duration) error {
+func waitForHTTPServer(host string, port int, timeout time.Duration) error {
+	address := net.JoinHostPort(host, fmt.Sprint(port))
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 200*time.Millisecond)
+		conn, err := net.DialTimeout("tcp", address, 200*time.Millisecond)
 		if err == nil {
 			_ = conn.Close()
 			return nil
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	return fmt.Errorf("server on port %d did not become ready in time", port)
+	return fmt.Errorf("server on %s did not become ready in time", address)
 }
 
 func isAddrInUse(err error) bool {
@@ -186,10 +173,11 @@ func isAddrInUse(err error) bool {
 // stopExistingServer sends a shutdown request to any existing server on the
 // given port and waits for the port to be released. Returns true if the port
 // was freed, false if no server was found or the stop timed out.
-func stopExistingServer(port int) bool {
+func stopExistingServer(host string, port int) bool {
+	address := net.JoinHostPort(host, fmt.Sprint(port))
 	client := &http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Post(
-		fmt.Sprintf("http://localhost:%d/api/shutdown", port),
+		"http://"+address+"/api/shutdown",
 		"application/json", nil,
 	)
 	if err != nil {
@@ -203,7 +191,7 @@ func stopExistingServer(port int) bool {
 	// Poll until the port is released (max ~3s).
 	for i := 0; i < 10; i++ {
 		conn, dialErr := net.DialTimeout("tcp",
-			fmt.Sprintf("localhost:%d", port), 200*time.Millisecond)
+			address, 200*time.Millisecond)
 		if dialErr != nil {
 			fmt.Println(StyleSuccess.Render("Previous server stopped."))
 			return true // Port released
@@ -232,6 +220,7 @@ func openBrowser(url string) {
 }
 
 func init() {
+	browserCmd.Flags().String("host", "127.0.0.1", "HTTP server host")
 	browserCmd.Flags().Int("port", 0, "HTTP server port (default: 6420; tries next ports if busy)")
 	browserCmd.Flags().Bool("open", false, "Open browser after starting")
 	browserCmd.Flags().Bool("no-open", false, "Don't automatically open browser")

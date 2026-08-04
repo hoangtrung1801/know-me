@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -100,7 +99,7 @@ func setupResolveCLIProject(t *testing.T) string {
 	t.Setenv("HOME", t.TempDir())
 
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(storage.GlobalRootPath())
 	if err := store.Init("resolve-cli-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

@@ -155,6 +155,28 @@ Legacy body.
 	}
 }
 
+func TestMemoryStoreGlobalRootDoesNotDuplicateEntries(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	store := NewStore(GlobalRootPath())
+	if err := store.Init("global"); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Memory.Create(&models.MemoryEntry{ID: "once", Title: "Once", Layer: models.MemoryLayerProject, Category: "pattern"}); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := store.Memory.List("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("len(entries) = %d, want 1", len(entries))
+	}
+	if _, err := store.Memory.ResolveReferenceTarget("once"); err != nil {
+		t.Fatalf("ResolveReferenceTarget: %v", err)
+	}
+}
+
 func TestRenderMemoryLifecycleRoundTrip(t *testing.T) {
 	lastVerified := time.Date(2026, 6, 18, 4, 0, 0, 0, time.UTC)
 	entry := &models.MemoryEntry{

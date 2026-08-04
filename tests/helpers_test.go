@@ -89,6 +89,7 @@ func ensureTestBinary(t *testing.T, abs string) {
 // Returns the project dir. Cleanup is automatic via t.Cleanup.
 func setupTestProject(t *testing.T) string {
 	t.Helper()
+	t.Setenv("HOME", t.TempDir())
 
 	dir := t.TempDir() // automatically cleaned up
 

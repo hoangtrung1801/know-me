@@ -92,6 +92,9 @@ func (ms *MemoryStore) listLayers(layers []string) ([]*models.MemoryEntry, error
 	var entries []*models.MemoryEntry
 
 	for _, l := range layers {
+		if l == models.MemoryLayerGlobal && filepath.Clean(ms.root) == filepath.Clean(ms.globalRoot) {
+			continue
+		}
 		dir, _ := ms.dirForLayer(l)
 		found, err := ms.listDir(dir, l)
 		if err != nil {
@@ -157,21 +160,19 @@ func (ms *MemoryStore) ResolveReferenceTarget(target string) (*models.MemoryEntr
 		return nil, fmt.Errorf("memory %q not found", target)
 	}
 
+	entries, err := ms.List("")
+	if err != nil {
+		return nil, err
+	}
 	var match *models.MemoryEntry
-	for _, layer := range []string{models.MemoryLayerProject, models.MemoryLayerGlobal} {
-		entries, err := ms.List(layer)
-		if err != nil {
+	for _, entry := range entries {
+		if slugifyMemoryReferenceTitle(entry.Title) != target {
 			continue
 		}
-		for _, entry := range entries {
-			if slugifyMemoryReferenceTitle(entry.Title) != target {
-				continue
-			}
-			if match != nil {
-				return nil, fmt.Errorf("memory ref %q is ambiguous", target)
-			}
-			match = entry
+		if match != nil {
+			return nil, fmt.Errorf("memory ref %q is ambiguous", target)
 		}
+		match = entry
 	}
 
 	if match == nil {
