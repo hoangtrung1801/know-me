@@ -5,23 +5,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
-func TestResolveProjectStoreUsesRegistryWithoutLocalKnowns(t *testing.T) {
+func TestResolveProjectStoreUsesGlobalStore(t *testing.T) {
 	home, repo := t.TempDir(), t.TempDir()
 	t.Setenv("HOME", home)
-	r := registry.NewRegistry()
-	if err := r.Load(); err != nil {
-		t.Fatal(err)
-	}
-	p, err := r.Add(repo)
-	if err != nil {
-		t.Fatal(err)
-	}
 	store, err := resolveProjectStore(filepath.Join(repo, "subdir"))
-	if err != nil || store.ProjectID != p.ID || store.RepositoryRoot() != repo {
+	if err != nil || store.ProjectID != "" || store.Root != storage.GlobalRootPath() {
 		t.Fatalf("store = %#v, err = %v", store, err)
 	}
 	if _, err := os.Stat(filepath.Join(repo, ".knowns")); !os.IsNotExist(err) {

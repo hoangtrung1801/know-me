@@ -10,6 +10,7 @@ import (
 
 	"github.com/hoangtrung1801/known-me/internal/models"
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -211,7 +212,13 @@ var (
 	dimStyle     = StyleDim
 )
 
-func runInit(_ *cobra.Command, _ []string) error { return nil }
+func runInit(_ *cobra.Command, args []string) error {
+	name := ""
+	if len(args) > 0 {
+		name = args[0]
+	}
+	return storage.NewStore(storage.GlobalRootPath()).Init(name)
+}
 
 func gitTrackingSelectedSections(tracking *models.GitTracking) []string {
 	defaults := models.GitTrackingDefaults()

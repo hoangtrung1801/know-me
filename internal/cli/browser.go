@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/server"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/hoangtrung1801/known-me/internal/util"
@@ -29,69 +27,9 @@ var browserCmd = &cobra.Command{
 	RunE:  runBrowser,
 }
 
-// resolveProject determines which project to open using a fallback chain:
-//  1. --project <path> flag
-//  2. --scan <dirs> flag (pre-populate registry)
-//  3. cwd-based .knowns/ discovery
-//  4. Picker mode (nil store) — welcome screen handles project selection
+// resolveProject always uses the global knowledge store; projects are logical records.
 func resolveProject(cmd *cobra.Command) (store *storage.Store, projectRoot string) {
-	projectFlag, _ := cmd.Flags().GetString("project")
-	scanFlag, _ := cmd.Flags().GetString("scan")
-
-	// 1. Explicit --project flag
-	if projectFlag != "" {
-		absPath, err := filepath.Abs(projectFlag)
-		if err == nil {
-			reg := registry.NewRegistry()
-			if err := reg.Load(); err != nil {
-				if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
-					return storage.NewStore(filepath.Join(absPath, ".knowns")), absPath
-				}
-				return nil, ""
-			}
-			project, err := reg.Add(absPath)
-			if err != nil {
-				if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
-					return storage.NewStore(filepath.Join(absPath, ".knowns")), absPath
-				}
-				return nil, ""
-			}
-			store = storage.NewProjectStore(storage.GlobalRootPath(), project.ID, absPath)
-			if _, centralErr := os.Stat(filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), project.ID), "config.json")); centralErr != nil {
-				if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
-					store = storage.NewStore(filepath.Join(absPath, ".knowns"))
-				}
-			}
-			projectRoot = absPath
-			return
-		}
-	}
-
-	// 2. --scan flag: pre-populate registry before resolution
-	if scanFlag != "" {
-		dirs := strings.Split(scanFlag, ",")
-		for i := range dirs {
-			dirs[i] = strings.TrimSpace(dirs[i])
-		}
-		reg := registry.NewRegistry()
-		if err := reg.Load(); err == nil {
-			added, _ := reg.Scan(dirs)
-			if len(added) > 0 {
-				fmt.Printf("  %s  Discovered %d project(s)\n", StyleInfo.Render("⊕"), len(added))
-			}
-		}
-	}
-
-	// 3. Try cwd-based discovery
-	s, err := getStoreErr()
-	if err == nil {
-		store = s
-		projectRoot = s.RepositoryRoot()
-		return
-	}
-
-	// 4. Picker mode — no project found in cwd
-	return nil, ""
+	return storage.NewStore(storage.GlobalRootPath()), ""
 }
 
 const defaultBrowserPort = 6420
@@ -112,16 +50,6 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 
 	if port == 0 {
 		port = defaultBrowserPort
-	}
-
-	// Auto-register this project in the global registry (only if we have a project).
-	if store != nil {
-		reg := registry.NewRegistry()
-		if err := reg.Load(); err == nil {
-			if p, err := reg.Add(projectRoot); err == nil {
-				_ = reg.SetActive(p.ID)
-			}
-		}
 	}
 
 	// Handle restart: attempt to stop existing server first
@@ -152,11 +80,7 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	if ip := getLocalIP(); ip != "" {
 		fmt.Printf("  %s  %s\n", StyleInfo.Render("→"), StyleInfo.Render(fmt.Sprintf("http://%s:%d", ip, port)))
 	}
-	if projectRoot != "" {
-		fmt.Printf("  %s  %s\n", StyleInfo.Render("⌁"), StyleBold.Render(projectRoot))
-	} else {
-		fmt.Printf("  %s  %s\n", StyleWarning.Render("◇"), StyleWarning.Render("No project — workspace picker mode"))
-	}
+	fmt.Printf("  %s  %s\n", StyleInfo.Render("◇"), StyleDim.Render("global knowledge store"))
 	fmt.Println()
 
 	if passwordFlag != "" {
@@ -313,8 +237,6 @@ func init() {
 	browserCmd.Flags().Bool("no-open", false, "Don't automatically open browser")
 	browserCmd.Flags().Bool("restart", false, "Restart server if already running")
 	browserCmd.Flags().Bool("dev", false, "Enable development mode (verbose logging)")
-	browserCmd.Flags().String("project", "", "Project path to open directly")
-	browserCmd.Flags().String("scan", "", "Comma-separated directories to scan for projects")
 	browserCmd.Flags().Bool("watch", false, "Enable file watcher for auto-indexing on code changes")
 	browserCmd.Flags().Bool("tunnel", false, "Expose via a Cloudflare Quick Tunnel (requires cloudflared)")
 	browserCmd.Flags().String("password", "", "Protect WebUI with a password (in-memory only)")

@@ -27,6 +27,13 @@ func newPickerServer(t *testing.T) *Server {
 	return s
 }
 
+func TestNewServerAllowsPickerMode(t *testing.T) {
+	s := NewServer(nil, "", 0, Options{})
+	if s == nil || s.manager == nil || s.manager.GetStore() != nil {
+		t.Fatalf("picker server = %#v", s)
+	}
+}
+
 // newActiveServer creates a Server with a real project store.
 func newActiveServer(t *testing.T) (*Server, string) {
 	t.Helper()
@@ -96,6 +103,27 @@ func TestStatusEndpoint_ActiveProject(t *testing.T) {
 	}
 }
 
+func TestStatusEndpoint_GlobalStoreDoesNotStartLSPDaemon(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	store := storage.NewStore(storage.GlobalRootPath())
+	if err := store.Init(""); err != nil {
+		t.Fatal(err)
+	}
+	s := &Server{store: store, sse: NewSSEBroker(), shutdownCh: make(chan struct{}, 1)}
+	s.manager = storage.NewManager(store, registry.NewRegistry())
+	s.router = s.buildRouter()
+
+	rr := httptest.NewRecorder()
+	s.router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/status", nil))
+	if rr.Code != http.StatusOK {
+		t.Fatalf("GET /api/status status = %d", rr.Code)
+	}
+	var resp map[string]interface{}
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil || resp["active"] != true || resp["projectPath"] != "" {
+		t.Fatalf("status = %s, err = %v", rr.Body, err)
+	}
+}
+
 func TestProjectScopedRoutes_Return503_WhenNoStore(t *testing.T) {
 	t.Parallel()
 	s := newPickerServer(t)
@@ -142,17 +170,16 @@ func TestWorkspaceRoutes_AvailableInPickerMode(t *testing.T) {
 	}
 }
 
-func TestWorkspaceSwitch_UpdatesActiveStore(t *testing.T) {
+func TestWorkspaceSwitchSelectsLogicalProject(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
-
-	// Start in picker mode (nil store)
-	proj := filepath.Join(tmpDir, "proj-a")
-	os.MkdirAll(filepath.Join(proj, ".knowns"), 0755)
-	os.WriteFile(filepath.Join(proj, ".knowns", "config.json"), []byte(`{"name":"proj-a"}`), 0644)
-
 	reg := registry.NewRegistry()
-	p, _ := reg.Add(proj)
+	if err := reg.Load(); err != nil {
+		t.Fatal(err)
+	}
+	p, err := reg.Create("Project A")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	s := &Server{
 		store:      nil,
@@ -162,12 +189,6 @@ func TestWorkspaceSwitch_UpdatesActiveStore(t *testing.T) {
 	s.manager = storage.NewManager(nil, reg)
 	s.router = s.buildRouter()
 
-	// Before switch: no active store
-	if s.manager.GetStore() != nil {
-		t.Fatal("expected nil store before switch")
-	}
-
-	// Switch to proj-a
 	body := strings.NewReader(`{"id":"` + p.ID + `"}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/workspaces/switch", body)
 	req.Header.Set("Content-Type", "application/json")
@@ -178,11 +199,7 @@ func TestWorkspaceSwitch_UpdatesActiveStore(t *testing.T) {
 		t.Fatalf("POST /api/workspaces/switch status = %d, want 200: %s", rr.Code, rr.Body.String())
 	}
 
-	// After switch: store should be active
-	if s.manager.GetStore() == nil {
-		t.Fatal("expected active store after switch")
-	}
-	if s.manager.GetStore().Root != filepath.Join(proj, ".knowns") {
-		t.Fatalf("store root = %q, want %q", s.manager.GetStore().Root, filepath.Join(proj, ".knowns"))
+	if active := reg.GetActive(); active == nil || active.ID != p.ID {
+		t.Fatalf("active = %#v", active)
 	}
 }

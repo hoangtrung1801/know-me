@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -14,190 +13,64 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
-// fakeBroadcaster records broadcast calls for assertions.
-type fakeBroadcaster struct {
-	events []SSEEvent
-}
+type fakeBroadcaster struct{ events []SSEEvent }
 
-func (fb *fakeBroadcaster) Broadcast(e SSEEvent) {
-	fb.events = append(fb.events, e)
-}
+func (b *fakeBroadcaster) Broadcast(e SSEEvent) { b.events = append(b.events, e) }
 
-// setupWorkspaceTest creates a test environment with registry, manager, and router.
-func setupWorkspaceTest(t *testing.T) (*chi.Mux, *fakeBroadcaster, *storage.Manager, string) {
+func setupWorkspaceTest(t *testing.T) (*chi.Mux, *storage.Manager) {
 	t.Helper()
-	tmpDir := t.TempDir()
 	t.Setenv("HOME", t.TempDir())
-
-	// Create a fake project with .knowns/config.json
-	projDir := filepath.Join(tmpDir, "test-project")
-	os.MkdirAll(filepath.Join(projDir, ".knowns"), 0755)
-	os.WriteFile(filepath.Join(projDir, ".knowns", "config.json"), []byte(`{"name":"test-project"}`), 0644)
-
-	regFile := filepath.Join(tmpDir, "registry.json")
-	reg := registry.NewRegistryWithPath(regFile)
-	reg.Load()
-	reg.Add(projDir)
-
-	store := storage.NewStore(filepath.Join(projDir, ".knowns"))
-	mgr := storage.NewManager(store, reg)
-	sse := &fakeBroadcaster{}
-
-	r := chi.NewRouter()
-	wr := &WorkspaceRoutes{manager: mgr, sse: sse}
-	wr.Register(r)
-
-	return r, sse, mgr, tmpDir
+	r := registry.NewRegistryWithPath(filepath.Join(t.TempDir(), "registry.json"))
+	if err := r.Load(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Create("Existing"); err != nil {
+		t.Fatal(err)
+	}
+	m := storage.NewManager(nil, r)
+	router := chi.NewRouter()
+	(&WorkspaceRoutes{manager: m}).Register(router)
+	return router, m
 }
 
 func TestWorkspaceList(t *testing.T) {
-	r, _, _, _ := setupWorkspaceTest(t)
-
-	req := httptest.NewRequest("GET", "/workspaces", nil)
+	r, _ := setupWorkspaceTest(t)
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/workspaces", nil))
 	if w.Code != http.StatusOK {
-		t.Fatalf("GET /workspaces status = %d, want 200", w.Code)
+		t.Fatalf("status = %d", w.Code)
 	}
-
 	var projects []registry.Project
-	if err := json.Unmarshal(w.Body.Bytes(), &projects); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(projects) != 1 {
-		t.Fatalf("expected 1 project, got %d", len(projects))
-	}
-	if projects[0].Name != "test-project" {
-		t.Fatalf("project name = %q, want %q", projects[0].Name, "test-project")
+	if err := json.Unmarshal(w.Body.Bytes(), &projects); err != nil || len(projects) != 1 {
+		t.Fatalf("projects = %s", w.Body.String())
 	}
 }
 
-func TestWorkspaceCreate(t *testing.T) {
-	r, _, mgr, tmpDir := setupWorkspaceTest(t)
-	projectPath := filepath.Join(tmpDir, "added-project")
-	if err := os.MkdirAll(projectPath, 0755); err != nil {
-		t.Fatalf("create project directory: %v", err)
-	}
-
-	body, _ := json.Marshal(map[string]string{"name": "Added project", "path": projectPath})
-	req := httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewReader(body))
+func TestWorkspaceCreateLogicalProject(t *testing.T) {
+	r, m := setupWorkspaceTest(t)
 	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewBufferString(`{"name":"Launch"}`))
 	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusCreated {
-		t.Fatalf("POST /workspaces status = %d, want %d: %s", w.Code, http.StatusCreated, w.Body.String())
-	}
-	if project := mgr.GetRegistry().FindByPath(projectPath); project == nil || project.Name != "Added project" {
-		t.Fatalf("project %q was not registered", projectPath)
+	if w.Code != http.StatusCreated || len(m.GetRegistry().Projects) != 2 {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body.String())
 	}
 }
 
-func TestWorkspaceCreateWithoutLocalPath(t *testing.T) {
-	r, _, mgr, _ := setupWorkspaceTest(t)
-	body, _ := json.Marshal(map[string]string{"name": "Pathless project"})
-	req := httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewReader(body))
+func TestWorkspaceCreateRejectsBlankName(t *testing.T) {
+	r, _ := setupWorkspaceTest(t)
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusCreated {
-		t.Fatalf("POST /workspaces status = %d, want %d: %s", w.Code, http.StatusCreated, w.Body.String())
-	}
-	var project registry.Project
-	if err := json.Unmarshal(w.Body.Bytes(), &project); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if project.Path != "" || project.Name != "Pathless project" {
-		t.Fatalf("project = %#v, want pathless project", project)
-	}
-	if _, err := os.Stat(filepath.Join(storage.ProjectConfigRoot(storage.GlobalRootPath(), project.ID), "config.json")); err != nil {
-		t.Fatalf("project config not initialized: %v", err)
-	}
-	if listed := mgr.GetRegistry().FindByPath(""); listed != nil {
-		t.Fatal("pathless project should not be resolved by path")
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewBufferString(`{"name":" "}`)))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d", w.Code)
 	}
 }
 
-func TestWorkspaceSwitch(t *testing.T) {
-	r, sse, mgr, tmpDir := setupWorkspaceTest(t)
-
-	// Create a second project
-	proj2 := filepath.Join(tmpDir, "proj2")
-	os.MkdirAll(filepath.Join(proj2, ".knowns"), 0755)
-	os.WriteFile(filepath.Join(proj2, ".knowns", "config.json"), []byte(`{"name":"proj2"}`), 0644)
-	reg := mgr.GetRegistry()
-	p2, _ := reg.Add(proj2)
-
-	body, _ := json.Marshal(map[string]string{"id": p2.ID})
-	req := httptest.NewRequest("POST", "/workspaces/switch", bytes.NewReader(body))
+func TestWorkspaceRemove(t *testing.T) {
+	r, m := setupWorkspaceTest(t)
+	p := m.GetRegistry().Projects[0]
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("POST /workspaces/switch status = %d, want 200", w.Code)
-	}
-
-	// Verify store was switched
-	if mgr.GetStore().Root != filepath.Join(proj2, ".knowns") {
-		t.Fatalf("store root = %q, want %q", mgr.GetStore().Root, filepath.Join(proj2, ".knowns"))
-	}
-
-	// Verify SSE refresh event was broadcast
-	if len(sse.events) != 1 {
-		t.Fatalf("expected 1 SSE event, got %d", len(sse.events))
-	}
-	if sse.events[0].Type != "refresh" {
-		t.Fatalf("SSE event type = %q, want %q", sse.events[0].Type, "refresh")
-	}
-}
-
-func TestWorkspaceScan(t *testing.T) {
-	r, _, _, tmpDir := setupWorkspaceTest(t)
-
-	// Create a scan directory with 2 projects
-	scanDir := filepath.Join(tmpDir, "scan-parent")
-	os.MkdirAll(filepath.Join(scanDir, "repo-a", ".knowns"), 0755)
-	os.WriteFile(filepath.Join(scanDir, "repo-a", ".knowns", "config.json"), []byte(`{"name":"repo-a"}`), 0644)
-	os.MkdirAll(filepath.Join(scanDir, "repo-b", ".knowns"), 0755)
-	os.WriteFile(filepath.Join(scanDir, "repo-b", ".knowns", "config.json"), []byte(`{"name":"repo-b"}`), 0644)
-
-	body, _ := json.Marshal(map[string][]string{"dirs": {scanDir}})
-	req := httptest.NewRequest("POST", "/workspaces/scan", bytes.NewReader(body))
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("POST /workspaces/scan status = %d, want 200", w.Code)
-	}
-
-	var added []registry.Project
-	if err := json.Unmarshal(w.Body.Bytes(), &added); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(added) != 2 {
-		t.Fatalf("expected 2 discovered projects, got %d", len(added))
-	}
-}
-
-func TestWorkspaceDelete(t *testing.T) {
-	r, _, mgr, _ := setupWorkspaceTest(t)
-
-	reg := mgr.GetRegistry()
-	if len(reg.Projects) == 0 {
-		t.Fatal("expected at least 1 project in registry")
-	}
-	id := reg.Projects[0].ID
-
-	req := httptest.NewRequest("DELETE", "/workspaces/"+id, nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusNoContent {
-		t.Fatalf("DELETE /workspaces/%s status = %d, want 204", id, w.Code)
-	}
-
-	// Verify removed
-	if len(reg.Projects) != 0 {
-		t.Fatalf("expected 0 projects after delete, got %d", len(reg.Projects))
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodDelete, "/workspaces/"+p.ID, nil))
+	if w.Code != http.StatusNoContent || len(m.GetRegistry().Projects) != 0 {
+		t.Fatalf("status = %d", w.Code)
 	}
 }

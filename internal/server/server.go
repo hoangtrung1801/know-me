@@ -312,9 +312,12 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 		log.SetOutput(io.Discard)
 	}
 
-	// Only initialize OpenCode runtime if Chat UI is enabled
-	project, _ := store.Config.Load()
-	chatEnabled := project != nil && (project.Settings.EnableChatUI == nil || *project.Settings.EnableChatUI)
+	// Picker mode has no active store, so there is no project runtime to start.
+	chatEnabled := false
+	if store != nil {
+		project, _ := store.Config.Load()
+		chatEnabled = project != nil && (project.Settings.EnableChatUI == nil || *project.Settings.EnableChatUI)
+	}
 
 	var runtimeOpenCode *opencode.Config
 	var daemon *opencode.Daemon
@@ -926,9 +929,9 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	readinessOpts := serverreadiness.Options{
-		Runtime: rtStatus,
-		LSP:     s.lspRuntimeStatuses(r.Context(), store, true),
+	readinessOpts := serverreadiness.Options{Runtime: rtStatus, LSP: []lsp.LanguageRuntimeStatus{}}
+	if store.RepositoryRoot() != "" {
+		readinessOpts.LSP = s.lspRuntimeStatuses(r.Context(), store, true)
 	}
 	payload := serverreadiness.BuildReadiness(store, readinessOpts)
 	writeJSON(w, http.StatusOK, payload)

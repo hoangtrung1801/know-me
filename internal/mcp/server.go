@@ -23,7 +23,6 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/mcp/handlers"
 	"github.com/hoangtrung1801/known-me/internal/memos"
 	"github.com/hoangtrung1801/known-me/internal/permissions"
-	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -484,25 +483,9 @@ func NewMCPServer(projectHint string) *MCPServer {
 	return s
 }
 
-// autoDetectProject tries to find and set the project store automatically.
-// It checks the hint path first, then walks up from cwd.
+// autoDetectProject initializes the global store. Projects are logical records.
 func (s *MCPServer) autoDetectProject(setStore func(*storage.Store, string), hint string) {
-	reg := registry.NewRegistry()
-	if err := reg.Load(); err != nil {
-		return
-	}
-	start := hint
-	if start == "" {
-		start, _ = os.Getwd()
-	}
-	project := reg.FindByWorkingDir(start)
-	if project == nil {
-		return
-	}
-	store := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path)
-	if _, err := store.Config.Load(); err == nil {
-		setStore(store, project.Path)
-	}
+	setStore(storage.NewStore(storage.GlobalRootPath()), "")
 }
 
 // Start begins serving MCP requests over stdio transport.

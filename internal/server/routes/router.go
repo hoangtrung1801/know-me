@@ -146,11 +146,7 @@ func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadca
 
 	// Workspaces (multi-project management, always available)
 	if manager != nil {
-		var switchCb func(string)
-		if len(onWorkspaceSwitch) > 0 {
-			switchCb = onWorkspaceSwitch[0]
-		}
-		wsr := &WorkspaceRoutes{manager: manager, sse: sse, onSwitch: switchCb}
+		wsr := &WorkspaceRoutes{manager: manager}
 		wsr.Register(r)
 	}
 }

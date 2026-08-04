@@ -3,110 +3,24 @@ package cli
 import (
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/registry"
+	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
 
 // newTestCmd creates a cobra command with browser flags for testing resolveProject.
 func newTestCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "test"}
-	cmd.Flags().String("project", "", "")
-	cmd.Flags().String("scan", "", "")
-	return cmd
+	return &cobra.Command{Use: "test"}
 }
 
-func TestResolveProjectFromFlag(t *testing.T) {
-	tmpDir := t.TempDir()
-	projDir := filepath.Join(tmpDir, "my-proj")
-	os.MkdirAll(filepath.Join(projDir, ".knowns"), 0755)
-	os.WriteFile(filepath.Join(projDir, ".knowns", "config.json"), []byte(`{"name":"my-proj"}`), 0644)
-
-	cmd := newTestCmd()
-	cmd.Flags().Set("project", projDir)
-
-	store, projectRoot := resolveProject(cmd)
-	if store == nil {
-		t.Fatal("expected store from --project flag, got nil")
-	}
-	if projectRoot != projDir {
-		t.Fatalf("projectRoot = %q, want %q", projectRoot, projDir)
-	}
-	if store.Root != filepath.Join(projDir, ".knowns") {
-		t.Fatalf("store.Root = %q, want %q", store.Root, filepath.Join(projDir, ".knowns"))
-	}
-}
-
-func TestResolveProjectFromRegistry(t *testing.T) {
-	tmpDir := t.TempDir()
-	projDir := filepath.Join(tmpDir, "reg-proj")
-	os.MkdirAll(filepath.Join(projDir, ".knowns"), 0755)
-	os.WriteFile(filepath.Join(projDir, ".knowns", "config.json"), []byte(`{"name":"reg-proj"}`), 0644)
-
-	// Set up a registry with one project
-	regFile := filepath.Join(tmpDir, "registry.json")
-	reg := registry.NewRegistryWithPath(regFile)
-	reg.Load()
-	p, _ := reg.Add(projDir)
-	reg.SetActive(p.ID)
-
-	// Override the default registry path for this test by using --project
-	// Since we can't easily override NewRegistry() path, test via --project flag
-	// which is the primary path. The registry fallback is tested implicitly
-	// through the integration flow.
-	cmd := newTestCmd()
-	cmd.Flags().Set("project", projDir)
-
-	store, root := resolveProject(cmd)
-	if store == nil {
-		t.Fatal("expected store, got nil")
-	}
-	if root != projDir {
-		t.Fatalf("root = %q, want %q", root, projDir)
-	}
-}
-
-func TestResolveProjectPickerMode(t *testing.T) {
-	// Run from a temp dir with no .knowns/ and no registry
-	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
-
+func TestResolveProjectUsesGlobalStore(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	cmd := newTestCmd()
 	store, root := resolveProject(cmd)
-
-	// In picker mode, store may be nil (if registry is empty) or from registry
-	// Since we can't control the global registry in unit tests, just verify
-	// that the function doesn't panic and returns something reasonable.
-	if store != nil && root == "" {
-		t.Fatal("if store is non-nil, root should also be non-empty")
-	}
-}
-
-func TestResolveProjectFromCwd(t *testing.T) {
-	tmpDir := t.TempDir()
-	// Resolve symlinks (macOS /private/var vs /var)
-	tmpDir, _ = filepath.EvalSymlinks(tmpDir)
-	os.MkdirAll(filepath.Join(tmpDir, ".knowns"), 0755)
-	os.WriteFile(filepath.Join(tmpDir, ".knowns", "config.json"), []byte(`{"name":"test"}`), 0644)
-
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
-
-	cmd := newTestCmd()
-	store, root := resolveProject(cmd)
-
-	if store == nil {
-		t.Fatal("expected store from cwd, got nil")
-	}
-	if root != tmpDir {
-		t.Fatalf("root = %q, want %q", root, tmpDir)
+	if store == nil || store.Root != storage.GlobalRootPath() || root != "" {
+		t.Fatalf("store = %#v, root = %q", store, root)
 	}
 }
 

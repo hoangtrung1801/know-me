@@ -54,7 +54,7 @@ func TestCreateOpenCodeConfigQuietCreatesConfig(t *testing.T) {
 	}
 }
 
-func TestRunInitDoesNotCreateAProject(t *testing.T) {
+func TestRunInitCreatesGlobalDefaultConfig(t *testing.T) {
 	t.Setenv("KNOWN_LSP_AUTO_INSTALL", "0")
 	home := t.TempDir()
 	projectRoot := t.TempDir()
@@ -109,9 +109,9 @@ func TestRunInitDoesNotCreateAProject(t *testing.T) {
 		t.Fatalf("runInit returned error: %v", err)
 	}
 
-	configs, err := filepath.Glob(filepath.Join(storage.GlobalRootPath(), "projects", "*", "config.json"))
-	if err != nil || len(configs) != 0 {
-		t.Fatalf("expected no project config, got %v (%v)", configs, err)
+	config, err := storage.NewStore(storage.GlobalRootPath()).Config.Load()
+	if err != nil || config.Name != "knowns" {
+		t.Fatalf("global config = %#v, err = %v", config, err)
 	}
 	for _, path := range []string{"KNOWNS.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "OPENCODE.md"} {
 		if _, err := os.Stat(filepath.Join(projectRoot, path)); !os.IsNotExist(err) {
