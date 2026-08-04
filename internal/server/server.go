@@ -55,6 +55,8 @@ type Options struct {
 	Tunnel              bool   // start tunnel automatically on server boot
 	Password            string // initial password for WebUI protection (in-memory only)
 	AllowTaskHardDelete bool   // trusted server capability; default false
+	DisableLSP          bool
+	DisableOpenCode     bool
 }
 
 // Server is the top-level HTTP server.
@@ -314,7 +316,7 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 
 	// Picker mode has no active store, so there is no project runtime to start.
 	chatEnabled := false
-	if store != nil {
+	if store != nil && !opts.DisableOpenCode {
 		project, _ := store.Config.Load()
 		chatEnabled = project != nil && (project.Settings.EnableChatUI == nil || *project.Settings.EnableChatUI)
 	}
@@ -361,7 +363,7 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 	s.manager = storage.NewManager(store, reg)
 
 	// Create LSP manager if a project store is available.
-	if store != nil {
+	if store != nil && !opts.DisableLSP {
 		if cfg, err := store.Config.Load(); err == nil {
 			var defaults *storage.ProjectDefaults
 			if settings, err := storage.NewEmbeddingSettingsStore().Load(); err == nil {
@@ -405,7 +407,9 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 	// Know-Me SSE stream so each browser tab needs only one SSE connection.
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancelSSEFwd = cancel
-	s.startOpenCodeSSEForwarder(ctx)
+	if !opts.DisableOpenCode {
+		s.startOpenCodeSSEForwarder(ctx)
+	}
 	monitorCtx, monitorCancel := context.WithCancel(context.Background())
 	s.cancelRuntimeMon = monitorCancel
 	s.startOpenCodeRuntimeMonitor(monitorCtx)
@@ -536,6 +540,9 @@ func (s *Server) releaseLSPDaemonLease() {
 // reinitOpenCode tears down the existing OpenCode runtime and starts a fresh
 // one for the newly active project. Called after a workspace switch.
 func (s *Server) reinitOpenCode(projectPath string) {
+	if s.opts.DisableOpenCode {
+		return
+	}
 	// Stop the old daemon if we started it.
 	s.cleanupOpenCodeServer()
 	if s.cancelSSEFwd != nil {
@@ -691,6 +698,9 @@ func fetchLSPRuntimeStatuses(ctx context.Context, client lspRuntimeStatusClient,
 }
 
 func (s *Server) lspRuntimeStatuses(ctx context.Context, store *storage.Store, acquireLease bool) []lsp.LanguageRuntimeStatus {
+	if s.opts.DisableLSP {
+		return nil
+	}
 	if store == nil {
 		return nil
 	}
@@ -1102,6 +1112,9 @@ func (s *Server) buildRouter() chi.Router {
 }
 
 func (s *Server) openCodeConfig() (opencode.Config, bool) {
+	if s.opts.DisableOpenCode {
+		return opencode.DefaultConfig(), false
+	}
 	if s.runtimeOpenCode != nil {
 		return *s.runtimeOpenCode, true
 	}
@@ -1114,6 +1127,9 @@ func (s *Server) openCodeConfig() (opencode.Config, bool) {
 
 func (s *Server) refreshRuntimeStatus() opencode.RuntimeStatus {
 	status := s.runtimeStatusSnapshot()
+	if s.opts.DisableOpenCode {
+		return status
+	}
 	if !status.Configured {
 		return status
 	}
