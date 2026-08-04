@@ -3,8 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"os"
-	"path/filepath"
 
 	"github.com/hoangtrung1801/known-me/internal/lsp"
 	"github.com/hoangtrung1801/known-me/internal/readiness"
@@ -36,9 +34,9 @@ func RegisterProjectToolWithStatusProvider(
 		mcp.NewTool("project",
 			mcp.WithDescription(`Project management operations. Use 'action' to specify: detect, current, set, status.
 
-- detect: Find Know-Me projects in common or supplied directories. Required: none. Optional: additionalPaths. Returns: discovered project roots with names and status metadata.
-- current: Show the currently active project. Required: none. Optional: none. Returns: active project name, root path, and store status.
-- set: Switch the active project. Required: projectRoot. Optional: none. Returns: selected project metadata and readiness status.
+- detect: List logical project records. Required: none.
+- current: Show the selected logical project. Required: none.
+- set: Select a logical project. Required: projectId.
 - status: Inspect active project readiness. Required: none. Optional: none. Returns: project metadata, knowledge counts, search/model/index readiness, permissions, and capabilities.
 `),
 			mcp.WithString("action",
@@ -46,12 +44,8 @@ func RegisterProjectToolWithStatusProvider(
 				mcp.Description("Action to perform"),
 				mcp.Enum("detect", "current", "set", "status"),
 			),
-			mcp.WithString("projectRoot",
-				mcp.Description("Absolute path to the project root directory (required for set)"),
-			),
-			mcp.WithArray("additionalPaths",
-				mcp.Description("Additional directory paths to scan for projects (detect)"),
-				mcp.WithStringItems(),
+			mcp.WithString("projectId",
+				mcp.Description("Logical project ID (required for set)"),
 			),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -78,129 +72,49 @@ func RegisterProjectToolWithStatusProvider(
 		},
 	)
 
-	registerHelp(s, "project.detect", HelpEntry{When: "Find Know-Me projects in common locations or additional directories before switching context.", Params: map[string]string{"additionalPaths": "extra directory paths to scan"}})
-	registerHelp(s, "project.current", HelpEntry{When: "Show active project root, name, and store state.", Params: map[string]string{}})
-	registerHelp(s, "project.set", HelpEntry{When: "Switch active Know-Me project for subsequent MCP operations.", Params: map[string]string{"projectRoot": "required — absolute project root path"}, Flow: "Detect projects first when unsure of path, then set target project."})
+	registerHelp(s, "project.detect", HelpEntry{When: "List logical projects before selecting context.", Params: map[string]string{}})
+	registerHelp(s, "project.current", HelpEntry{When: "Show the selected logical project.", Params: map[string]string{}})
+	registerHelp(s, "project.set", HelpEntry{When: "Select a logical project for subsequent MCP operations.", Params: map[string]string{"projectId": "required project record ID"}})
 	registerHelp(s, "project.status", HelpEntry{When: "Inspect active project readiness, knowledge counts, permissions, capabilities, and search/index health.", Params: map[string]string{}, Flow: "Use at session start or when diagnosing project/index readiness."})
 }
 
-func handleProjectDetect(req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := req.GetArguments()
-
-	home, _ := os.UserHomeDir()
-	dirs := []string{
-		filepath.Join(home, "Desktop"),
-		filepath.Join(home, "Documents"),
-		filepath.Join(home, "Workspaces"),
-		filepath.Join(home, "workspace"),
-		filepath.Join(home, "projects"),
-		filepath.Join(home, "Projects"),
-		filepath.Join(home, "dev"),
-		filepath.Join(home, "Dev"),
-		"/tmp",
-	}
-
-	if extra, ok := args["additionalPaths"]; ok {
-		switch v := extra.(type) {
-		case []any:
-			for _, item := range v {
-				if s, ok := item.(string); ok {
-					dirs = append(dirs, s)
-				}
-			}
-		case []string:
-			dirs = append(dirs, v...)
-		}
-	}
-
-	type projectInfo struct {
-		ProjectRoot string `json:"projectRoot"`
-		Name        string `json:"name,omitempty"`
-	}
-
-	seen := make(map[string]bool)
-	var projects []projectInfo
-
+func handleProjectDetect(_ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	reg := registry.NewRegistry()
-	if err := reg.Load(); err == nil {
-		for _, project := range reg.Projects {
-			for _, dir := range dirs {
-				rel, relErr := filepath.Rel(dir, project.Path)
-				if relErr != nil || rel == ".." || (len(rel) > 2 && rel[:3] == ".."+string(filepath.Separator)) {
-					continue
-				}
-				if seen[project.Path] {
-					break
-				}
-				seen[project.Path] = true
-				projects = append(projects, projectInfo{ProjectRoot: project.Path, Name: project.Name})
-				break
-			}
-		}
+	if err := reg.Load(); err != nil {
+		return errResult(err.Error())
 	}
-
-	out, _ := json.MarshalIndent(projects, "", "  ")
+	out, _ := json.MarshalIndent(reg.Projects, "", "  ")
 	return mcp.NewToolResultText(string(out)), nil
 }
 
-func handleProjectCurrent(getStore func() *storage.Store, getRoot func() string) (*mcp.CallToolResult, error) {
-	root := getRoot()
-	store := getStore()
-
-	if store == nil || root == "" {
-		result := map[string]any{
-			"projectRoot": nil,
-			"valid":       false,
-			"message":     ErrNoProject,
-		}
-		out, _ := json.MarshalIndent(result, "", "  ")
-		return mcp.NewToolResultText(string(out)), nil
+func handleProjectCurrent(_ func() *storage.Store, _ func() string) (*mcp.CallToolResult, error) {
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err != nil {
+		return errResult(err.Error())
 	}
-
-	result := map[string]any{
-		"projectRoot": root,
-		"valid":       true,
-	}
-
-	if proj, err := store.Config.Load(); err == nil {
-		result["projectName"] = proj.Name
-	}
-
+	result := map[string]any{"project": reg.GetActive(), "valid": true}
 	out, _ := json.MarshalIndent(result, "", "  ")
 	return mcp.NewToolResultText(string(out)), nil
 }
 
 func handleProjectSet(setStore func(*storage.Store, string), req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	projectRoot, err := req.RequireString("projectRoot")
+	projectID, err := req.RequireString("projectId")
 	if err != nil {
 		return errResult(err.Error())
 	}
 
-	absRoot, err := filepath.Abs(projectRoot)
-	if err != nil {
-		return errResult(err.Error())
-	}
 	reg := registry.NewRegistry()
 	if err := reg.Load(); err != nil {
 		return errResult(err.Error())
 	}
-	project, err := reg.Add(absRoot)
-	if err != nil {
+	if err := reg.SetActive(projectID); err != nil {
 		return errResult(err.Error())
 	}
-	store := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, absRoot)
-
-	proj, err := store.Config.Load()
-	if err != nil {
-		return errResultf(ErrLoadConfig, err.Error())
-	}
-
-	setStore(store, projectRoot)
+	setStore(storage.NewStore(storage.GlobalRootPath()), "")
 
 	result := map[string]any{
-		"success":     true,
-		"projectRoot": projectRoot,
-		"projectName": proj.Name,
+		"success": true,
+		"project": reg.GetActive(),
 	}
 	out, _ := json.MarshalIndent(result, "", "  ")
 	return mcp.NewToolResultText(string(out)), nil

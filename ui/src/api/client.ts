@@ -1897,15 +1897,7 @@ export async function getProjectStatus(): Promise<ProjectStatus> {
 export interface WorkspaceProject {
 	id: string;
 	name: string;
-	path: string;
 	lastUsed: string;
-}
-
-export interface DirEntry {
-	name: string;
-	path: string;
-	isProject: boolean;
-	hasChildren: boolean;
 }
 
 export const workspaceApi = {
@@ -1915,7 +1907,7 @@ export const workspaceApi = {
 		return res.json();
 	},
 
-	async create(project: { name: string; path?: string }): Promise<WorkspaceProject> {
+	async create(project: { name: string }): Promise<WorkspaceProject> {
 		const res = await apiFetch(`${API_BASE}/api/workspaces`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -1925,34 +1917,14 @@ export const workspaceApi = {
 		return res.json();
 	},
 
-	async switchProject(id: string): Promise<WorkspaceProject> {
+	async switchProject(id: string): Promise<void> {
 		const res = await apiFetch(`${API_BASE}/api/workspaces/switch`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ id }),
 		});
 		if (!res.ok) throw new Error("Failed to switch workspace");
-		return res.json();
-	},
-
-	async switchByPath(path: string): Promise<WorkspaceProject> {
-		const res = await apiFetch(`${API_BASE}/api/workspaces/switch`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ path }),
-		});
-		if (!res.ok) throw new Error("Failed to switch workspace");
-		return res.json();
-	},
-
-	async scan(dirs: string[]): Promise<WorkspaceProject[]> {
-		const res = await apiFetch(`${API_BASE}/api/workspaces/scan`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ dirs }),
-		});
-		if (!res.ok) throw new Error("Failed to scan workspaces");
-		return res.json();
+		await res.json();
 	},
 
 	async remove(id: string): Promise<void> {
@@ -1962,22 +1934,6 @@ export const workspaceApi = {
 		if (!res.ok) throw new Error("Failed to remove workspace");
 	},
 
-	async autoScan(): Promise<WorkspaceProject[]> {
-		const res = await apiFetch(`${API_BASE}/api/workspaces/auto-scan`, {
-			method: "POST",
-		});
-		if (!res.ok) throw new Error("Failed to auto-scan workspaces");
-		return res.json();
-	},
-
-	async browse(path?: string): Promise<DirEntry[]> {
-		const url = path
-			? `${API_BASE}/api/workspaces/browse?path=${encodeURIComponent(path)}`
-			: `${API_BASE}/api/workspaces/browse`;
-		const res = await apiFetch(url);
-		if (!res.ok) throw new Error("Failed to browse directory");
-		return res.json();
-	},
 };
 
 // --- Graph API ---

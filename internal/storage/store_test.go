@@ -49,3 +49,10 @@ func TestNewProjectStoreSeparatesDataAndRepositoryRoots(t *testing.T) {
 		t.Fatalf("config path = %q", got)
 	}
 }
+
+func TestGlobalStoreHasNoRepositoryRoot(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	if got := NewStore(GlobalRootPath()).RepositoryRoot(); got != "" {
+		t.Fatalf("repository root = %q, want empty", got)
+	}
+}

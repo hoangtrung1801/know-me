@@ -4,16 +4,12 @@
 package storage
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/hoangtrung1801/known-me/internal/registry"
 )
 
-// Manager coordinates runtime project switching. All route handlers call
-// GetStore() to obtain the currently active Store.
+// Manager coordinates access to the active store and logical project registry.
 type Manager struct {
 	active *Store
 	reg    *registry.Registry
@@ -38,47 +34,6 @@ func (m *Manager) GetStore() *Store {
 // GetRegistry returns the underlying project registry.
 func (m *Manager) GetRegistry() *registry.Registry {
 	return m.reg
-}
-
-// Switch changes the active project to the one at projectPath.
-// It validates that the project directory exists, creates a new Store,
-// and updates the registry's active project.
-func (m *Manager) Switch(projectPath string) (*Store, error) {
-	absPath, err := filepath.Abs(projectPath)
-	if err != nil {
-		return nil, fmt.Errorf("resolve path: %w", err)
-	}
-
-	if info, err := os.Stat(absPath); err != nil || !info.IsDir() {
-		return nil, fmt.Errorf("project directory not found at %s", absPath)
-	}
-
-	// Update registry: add if new, then set active.
-	var projectID string
-	if m.reg != nil {
-		p, err := m.reg.Add(absPath)
-		if err != nil {
-			return nil, err
-		}
-		if p != nil {
-			projectID = p.ID
-			_ = m.reg.SetActive(p.ID)
-		}
-	}
-	newStore := NewProjectStore(GlobalRootPath(), projectID, absPath)
-	// Preserve access to pre-centralization projects until they are initialized
-	// into the global registry store.
-	if _, err := os.Stat(filepath.Join(ProjectConfigRoot(GlobalRootPath(), projectID), "config.json")); err != nil {
-		if _, localErr := os.Stat(filepath.Join(absPath, ".knowns", "config.json")); localErr == nil {
-			newStore = NewStore(filepath.Join(absPath, ".knowns"))
-		}
-	}
-
-	m.mu.Lock()
-	m.active = newStore
-	m.mu.Unlock()
-
-	return newStore, nil
 }
 
 // ActiveProjectRoot returns the repository root for the currently active store.

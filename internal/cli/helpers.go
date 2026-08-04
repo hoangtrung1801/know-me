@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/hoangtrung1801/known-me/internal/lsp"
 	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
 	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
@@ -41,20 +39,8 @@ func getStoreErr() (*storage.Store, error) {
 	return resolveProjectStore(cwd)
 }
 
-func resolveProjectStore(start string) (*storage.Store, error) {
-	reg := registry.NewRegistry()
-	if err := reg.Load(); err != nil {
-		return nil, err
-	}
-	project := reg.FindByWorkingDir(start)
-	if project == nil {
-		legacy := filepath.Join(start, ".knowns", "config.json")
-		if _, statErr := os.Stat(legacy); statErr == nil {
-			return storage.NewStore(filepath.Dir(legacy)), nil
-		}
-		return nil, fmt.Errorf("no registered Know-Me project found from %s", start)
-	}
-	return storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path), nil
+func resolveProjectStore(_ string) (*storage.Store, error) {
+	return storage.NewStore(storage.GlobalRootPath()), nil
 }
 
 // isPlain returns true if the --plain flag is set.

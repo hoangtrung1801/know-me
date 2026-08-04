@@ -85,6 +85,9 @@ func (s *Store) RepositoryRoot() string {
 	if s.ProjectRoot != "" {
 		return s.ProjectRoot
 	}
+	if filepath.Clean(s.Root) == filepath.Clean(GlobalRootPath()) {
+		return ""
+	}
 	if filepath.Base(s.Root) == ".knowns" {
 		return filepath.Dir(s.Root)
 	}
