@@ -2,16 +2,26 @@
 
 ## Goal
 
-Provide a small Linux script for installing an existing local Debian package.
+Provide a small Linux script for installing an existing local Debian package
+or the Linux ARM64 `knowns` archive.
 
 ## Behavior
 
-- Accept exactly one `.deb` path as an argument.
-- Reject missing, unreadable, or non-`.deb` paths with a non-zero exit.
-- Reject non-Linux systems and missing `apt-get` with a useful error.
-- Install through `sudo apt-get install` using the local path, allowing APT to resolve dependencies.
-- Do not download packages, build packages, detect architectures, or modify shell configuration.
+- Accept exactly one package path as an argument.
+- On Linux ARM64 (`arm64` or `aarch64`), accept
+  `knowns-linux-arm64.tar.gz`, extract its `knowns` binary, and install it to
+  `/usr/local/bin/knowns`.
+- Accept a local `.deb` path on supported Linux systems and install it through
+  APT.
+- Reject missing, unreadable, or unsupported package paths with a non-zero exit.
+- Reject non-Linux systems, and reject `.deb` files if `apt-get` is missing,
+  with a useful error.
+- Install `.deb` files through `sudo apt-get install`, allowing APT to resolve
+  dependencies.
+- Do not download packages, build packages, or modify shell configuration.
 
 ## File and verification
 
-Add `scripts/install-deb.sh` with strict shell settings and executable permissions. Verify its syntax with `bash -n` and exercise its validation paths without invoking package installation.
+Update `scripts/install-deb.sh` with strict shell settings and executable
+permissions. Verify its syntax and exercise the ARM64 archive branch without
+modifying the system installation.
