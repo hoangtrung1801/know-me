@@ -293,34 +293,6 @@ func (m *setupModel) cleanup() {
 	}
 }
 
-// ─── public API ──────────────────────────────────────────────────────
-
-// buildSemanticDownloadSteps returns initSteps for downloading ONNX Runtime
-// and embedding model files. Returns (steps, alreadyInstalled, error).
-// Used by the init command to integrate downloads into the progressive step UI.
-func buildSemanticDownloadSteps(modelID string) ([]initStep, bool, error) {
-	if err := search.RequireLocalONNX(); err != nil {
-		return nil, false, err
-	}
-	var selected *embeddingModel
-	for i := range supportedModels {
-		if supportedModels[i].ID == modelID {
-			selected = &supportedModels[i]
-			break
-		}
-	}
-	if selected == nil {
-		return nil, false, fmt.Errorf("unknown model %q", modelID)
-	}
-
-	// Model files are downloaded lazily on first embed call,
-	// using transformers.js's own cache layout.
-	if isModelInstalled(selected) {
-		return nil, true, nil
-	}
-	return nil, true, nil
-}
-
 // runSemanticSetup downloads ONNX Runtime (if needed) and the embedding model
 // using a unified bubbletea multi-step progress UI.
 // Pass force=true to re-download even if already installed.

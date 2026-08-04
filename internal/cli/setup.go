@@ -266,33 +266,6 @@ func buildSetupSteps(cwd string, force bool, target string, platforms []string) 
 	return steps
 }
 
-func hasExistingAIIntegrationFiles(projectRoot string) bool {
-	paths := []string{
-		canonicalInstructionFile,
-		"CLAUDE.md",
-		"OPENCODE.md",
-		"GEMINI.md",
-		"AGENTS.md",
-		filepath.Join(".github", "copilot-instructions.md"),
-		filepath.Join(".kiro", "steering", "knowns.md"),
-		filepath.Join(".kiro", "settings", "mcp.json"),
-	}
-	for _, rel := range paths {
-		if _, err := os.Stat(filepath.Join(projectRoot, rel)); err == nil {
-			return true
-		}
-	}
-	return false
-}
-
-func printSetupSuggestion(projectRoot string) {
-	if hasExistingAIIntegrationFiles(projectRoot) {
-		fmt.Println(dimStyle.Render("  Run 'knowns setup all' to update existing AI tool integrations"))
-		return
-	}
-	fmt.Println(dimStyle.Render("  Run 'knowns setup all' to configure AI tool integrations"))
-}
-
 func init() {
 	setupCmd.Flags().BoolP("force", "f", false, "Overwrite generated files where supported")
 	setupCmd.Flags().Bool("global", false, "Install to user-level paths (no project required)")

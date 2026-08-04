@@ -12,7 +12,7 @@ Use `knowns <command> --help` for the exact syntax accepted by the current binar
 
 ### `knowns init`
 
-Initializes Know-Me in the current project.
+Does not create a project by default.
 
 ```bash
 knowns init
@@ -20,15 +20,8 @@ knowns init my-project --no-wizard
 knowns init --force
 ```
 
-What `init` configures:
-
-- project name
-- git tracking mode (with per-section toggles)
-- lightweight project instruction shims such as `CLAUDE.md` and `AGENTS.md`
-- semantic search
-- embedding model
-
-`knowns init` creates lightweight project shims, but leaves MCP configs, skills, and runtime hooks to `knowns setup`.
+`knowns init` is currently a no-op: it does not prompt, register a project,
+create a config/store, initialize Git, or configure integrations.
 
 ### `knowns setup`
 

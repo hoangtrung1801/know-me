@@ -401,26 +401,6 @@ func firstBinaryName(adapter lsp.LanguageAdapter) string {
 	return binaries[0].Name
 }
 
-func findLspBinary(ctx context.Context, adapter lsp.LanguageAdapter, override string) (string, bool) {
-	cfg := lsp.Config{}
-	if override != "" {
-		cfg.Languages = map[string]lsp.LanguageConfig{adapter.ID(): {Binary: override}}
-	}
-	statuses := lsp.CollectRuntimeStatuses(ctx, lsp.RuntimeStatusOptions{
-		Root:     currentProjectRoot(),
-		Config:   cfg,
-		Adapters: []lsp.LanguageAdapter{adapter},
-	})
-	if len(statuses) == 0 {
-		return "", false
-	}
-	status := statuses[0]
-	if status.InstallState == lsp.RuntimeInstallInstalled && status.BinaryPath != "" {
-		return status.BinaryPath, true
-	}
-	return "", false
-}
-
 func validateRuntimeDeps(adapter lsp.LanguageAdapter) error {
 	for _, dep := range adapter.RuntimeDeps() {
 		if strings.EqualFold(dep.Source, "nuget") || strings.EqualFold(dep.ArchiveType, "nupkg") {

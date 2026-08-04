@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -11,65 +10,9 @@ import (
 
 	"github.com/hoangtrung1801/known-me/internal/models"
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
-	"github.com/hoangtrung1801/known-me/internal/search"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"gopkg.in/yaml.v3"
 )
-
-func TestApplyLocalONNXInitCapabilityForMacOSIntel(t *testing.T) {
-	unsupported := search.LocalONNXCapabilityForPlatform("darwin", "amd64", "")
-
-	local := initConfig{EnableSemantic: true, EmbeddingSource: "local"}
-	if changed := applyLocalONNXInitCapabilityFor(&local, unsupported); !changed {
-		t.Fatal("local semantic init should be changed on macOS Intel")
-	}
-	if local.EnableSemantic {
-		t.Fatal("local semantic init should fall back to keyword/BM25 search")
-	}
-
-	ollama := initConfig{EnableSemantic: true, EmbeddingSource: "ollama"}
-	if changed := applyLocalONNXInitCapabilityFor(&ollama, unsupported); changed {
-		t.Fatal("Ollama semantic init should remain enabled")
-	}
-	if !ollama.EnableSemantic {
-		t.Fatal("Ollama semantic init was unexpectedly disabled")
-	}
-
-	customRuntime := search.LocalONNXCapabilityForPlatform("darwin", "amd64", "/opt/onnx/libonnxruntime.dylib")
-	custom := initConfig{EnableSemantic: true, EmbeddingSource: "local"}
-	if changed := applyLocalONNXInitCapabilityFor(&custom, customRuntime); changed {
-		t.Fatal("explicit compatible ONNX runtime should keep local semantic init enabled")
-	}
-	if !custom.EnableSemantic {
-		t.Fatal("custom local ONNX semantic init was unexpectedly disabled")
-	}
-}
-
-func TestLocalONNXUnsupportedForCapability(t *testing.T) {
-	unsupported := search.LocalONNXCapabilityForPlatform("darwin", "amd64", "")
-	supported := search.LocalONNXCapabilityForPlatform("darwin", "amd64", "/opt/onnx/libonnxruntime.dylib")
-
-	tests := []struct {
-		name       string
-		settings   *models.SemanticSearchSettings
-		capability search.LocalONNXCapability
-		want       bool
-	}{
-		{name: "default provider uses local ONNX", capability: unsupported, want: true},
-		{name: "explicit local provider", settings: &models.SemanticSearchSettings{Provider: "local"}, capability: unsupported, want: true},
-		{name: "Ollama remains available", settings: &models.SemanticSearchSettings{Provider: "ollama"}, capability: unsupported},
-		{name: "API remains available", settings: &models.SemanticSearchSettings{Provider: "api"}, capability: unsupported},
-		{name: "custom local runtime re-enables ONNX", settings: &models.SemanticSearchSettings{Provider: "local"}, capability: supported},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			if got := localONNXUnsupportedForCapability(test.settings, test.capability); got != test.want {
-				t.Fatalf("localONNXUnsupportedForCapability() = %v, want %v", got, test.want)
-			}
-		})
-	}
-}
 
 func TestCreateOpenCodeConfigQuietCreatesConfig(t *testing.T) {
 	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
@@ -111,72 +54,7 @@ func TestCreateOpenCodeConfigQuietCreatesConfig(t *testing.T) {
 	}
 }
 
-func TestRunInitStopsWhenTerminalTooNarrow(t *testing.T) {
-	t.Setenv("KNOWN_LSP_AUTO_INSTALL", "0")
-	projectRoot := t.TempDir()
-	oldWD, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("getwd: %v", err)
-	}
-	defer func() { _ = os.Chdir(oldWD) }()
-	if err := os.Chdir(projectRoot); err != nil {
-		t.Fatalf("chdir: %v", err)
-	}
-
-	terminalWidthFn = func() int { return 60 }
-	isTTYFn = func() bool { return true }
-	execLookPath = func(name string) (string, error) {
-		switch name {
-		case "git", "knowns":
-			return "/usr/local/bin/" + name, nil
-		default:
-			return "", os.ErrNotExist
-		}
-	}
-	t.Cleanup(func() {
-		terminalWidthFn = terminalWidth
-		isTTYFn = isTTY
-		execLookPath = defaultExecLookPath
-	})
-
-	cmd := initCmd
-	cmd.SetArgs([]string{"e2e-test", "--no-open"})
-
-	var stdout bytes.Buffer
-	oldStdout := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("pipe: %v", err)
-	}
-	os.Stdout = w
-	defer func() { os.Stdout = oldStdout }()
-
-	done := make(chan struct{})
-	go func() {
-		_, _ = stdout.ReadFrom(r)
-		close(done)
-	}()
-
-	if err := runInit(cmd, []string{"e2e-test"}); err != nil {
-		w.Close()
-		<-done
-		t.Fatalf("runInit returned error: %v", err)
-	}
-	_ = w.Close()
-	<-done
-
-	if !strings.Contains(stdout.String(), "Terminal is too small for the interactive setup wizard") {
-		t.Fatalf("expected narrow-terminal warning, got:\n%s", stdout.String())
-	}
-	if !strings.Contains(stdout.String(), "knowns init --no-wizard") {
-		t.Fatalf("expected no-wizard guidance, got:\n%s", stdout.String())
-	}
-	if _, err := os.Stat(filepath.Join(projectRoot, ".knowns", "config.json")); !os.IsNotExist(err) {
-		t.Fatalf("expected init to stop without config creation, got err: %v", err)
-	}
-}
-
-func TestRunInitNoWizardUsesGlobalDefaults(t *testing.T) {
+func TestRunInitDoesNotCreateAProject(t *testing.T) {
 	t.Setenv("KNOWN_LSP_AUTO_INSTALL", "0")
 	home := t.TempDir()
 	projectRoot := t.TempDir()
@@ -231,66 +109,20 @@ func TestRunInitNoWizardUsesGlobalDefaults(t *testing.T) {
 		t.Fatalf("runInit returned error: %v", err)
 	}
 
-	config := readJSONFile(t, filepath.Join(projectRoot, ".knowns", "config.json"))
-	if got := config["name"]; got != "global-default-project" {
-		t.Fatalf("expected global project name, got %#v", got)
+	configs, err := filepath.Glob(filepath.Join(storage.GlobalRootPath(), "projects", "*", "config.json"))
+	if err != nil || len(configs) != 0 {
+		t.Fatalf("expected no project config, got %v (%v)", configs, err)
 	}
-	settings := getMap(t, config, "settings")
-	if got := settings["gitTrackingMode"]; got != "git-ignored" {
-		t.Fatalf("expected global gitTrackingMode, got %#v", got)
-	}
-	if got := settings["enableChatUI"]; got != false {
-		t.Fatalf("expected global enableChatUI false, got %#v", got)
-	}
-	taskLifecycle := getMap(t, settings, "taskLifecycle")
-	if got := taskLifecycle["autoArchive"]; got != false {
-		t.Fatalf("expected global autoArchive false, got %#v", got)
-	}
-	if got := taskLifecycle["excludeDoneFromDefaultRetrieval"]; got != true {
-		t.Fatalf("expected partial global lifecycle to inherit excludeDone=true, got %#v", got)
-	}
-	if got := taskLifecycle["archiveAfter"]; got != "30d" {
-		t.Fatalf("expected partial global lifecycle to inherit archiveAfter=30d, got %#v", got)
-	}
-	platforms, ok := settings["platforms"].([]any)
-	if !ok || len(platforms) != 2 || platforms[0] != "codex" || platforms[1] != "agents" {
-		t.Fatalf("expected global platforms, got %#v", settings["platforms"])
-	}
-	assertContains(t, readTextFile(t, filepath.Join(projectRoot, "KNOWNS.md")), "# KNOWNS")
-	assertContains(t, readTextFile(t, filepath.Join(projectRoot, "AGENTS.md")), "Compatibility entrypoint")
-	if _, err := os.Stat(filepath.Join(projectRoot, "CLAUDE.md")); !os.IsNotExist(err) {
-		t.Fatalf("expected CLAUDE.md not to be created when global defaults select codex+agents, got err=%v", err)
+	for _, path := range []string{"KNOWNS.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "OPENCODE.md"} {
+		if _, err := os.Stat(filepath.Join(projectRoot, path)); !os.IsNotExist(err) {
+			t.Fatalf("expected %s not to be created, got err=%v", path, err)
+		}
 	}
 	if _, err := os.Stat(filepath.Join(projectRoot, ".codex", "config.toml")); !os.IsNotExist(err) {
 		t.Fatalf("expected init not to create project Codex config, got err=%v", err)
 	}
 	if _, err := os.Stat(filepath.Join(projectRoot, ".mcp.json")); !os.IsNotExist(err) {
 		t.Fatalf("expected init not to create project MCP config, got err=%v", err)
-	}
-}
-
-func TestLifecycleSeedForForcedInitPreservesExistingProject(t *testing.T) {
-	root := filepath.Join(t.TempDir(), ".knowns")
-	store := storage.NewStore(root)
-	if err := store.Init("existing"); err != nil {
-		t.Fatalf("Init existing project: %v", err)
-	}
-	project, err := store.Config.Load()
-	if err != nil {
-		t.Fatalf("Load existing project: %v", err)
-	}
-	project.Settings.TaskLifecycle.AutoArchive = false
-	project.Settings.TaskLifecycle.ArchiveAfter = "7d"
-	if err := store.Config.Save(project); err != nil {
-		t.Fatalf("Save existing project: %v", err)
-	}
-
-	globalLifecycle := models.DefaultTaskLifecycleSettings()
-	globalLifecycle.ArchiveAfter = "1d"
-	defaults := &storage.ProjectDefaults{Settings: models.ProjectSettings{TaskLifecycle: &globalLifecycle}}
-	seed := lifecycleSeedForInit(root, true, defaults)
-	if seed == nil || seed.AutoArchive || seed.ArchiveAfter != "7d" {
-		t.Fatalf("forced-init lifecycle seed = %#v, want existing project settings", seed)
 	}
 }
 
