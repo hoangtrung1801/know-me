@@ -39,6 +39,16 @@ Prefer `--json` for agent parsing and `--plain` for human-facing output. Search 
 | Local models, language servers, integrations | `model`, `lsp`, `provider`, `browser`, `runtime`, `tunnel`, `update` |
 | Source navigation and edits | `code` |
 
+## Capture routing
+
+When asked to add a record to Know-Me, choose the smallest matching record type:
+
+| Input | Create |
+| --- | --- |
+| Quick note, idea, or other short item | Memo: `knowns memo add "<content>"` |
+| Work or a task to track | Task: `knowns task create "<title>" --ac "<acceptance criteria>"` |
+| A URL or link | Link: `knowns link add <url>` |
+
 ## Tasks
 
 Use tasks for bounded, traceable work. Inspect first with `knowns task list --plain` and `knowns task <id> --plain`; create with a title and acceptance criteria, then update status, assignee, plan, notes, or criteria through `knowns task edit <id> --help`. Use `history` before resolving disputed changes. Archive completed or inactive work; use `hard-delete` only after confirming the exact ID and recovery is unnecessary.
