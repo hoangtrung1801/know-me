@@ -1,7 +1,7 @@
 {
   "name": "knowns-ui",
   "private": true,
-  "version": "0.13.0",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
