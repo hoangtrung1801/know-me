@@ -437,7 +437,7 @@ export default function AppShell() {
 
 						<div
 							className={cn(
-								"flex-1 w-full overflow-x-hidden flex flex-col",
+								"flex-1 w-full overflow-x-hidden flex flex-col overscroll-y-contain",
 								isChatPage ? "min-h-0 overflow-hidden bg-muted/10" : "overflow-y-auto",
 							)}
 						>
