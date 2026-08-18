@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
@@ -96,12 +98,28 @@ func TestRunResolvePlainAndJSONOutput(t *testing.T) {
 
 func setupResolveCLIProject(t *testing.T) string {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 
 	projectRoot := t.TempDir()
-	store := storage.NewStore(storage.GlobalRootPath())
-	if err := store.Init("resolve-cli-test"); err != nil {
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatalf("load registry: %v", err)
+	}
+	project, err := reg.Create("resolve-cli-test")
+	if err != nil {
+		t.Fatalf("create project: %v", err)
+	}
+	if err := storage.NewStore(storage.GlobalRootPath()).Init(project.Name); err != nil {
 		t.Fatalf("init store: %v", err)
+	}
+	store := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, projectRoot)
+	if err := store.Init(project.Name); err != nil {
+		t.Fatalf("init project store: %v", err)
+	}
+	if err := writeWorkspaceProjectLink(projectRoot, project.ID); err != nil {
+		t.Fatalf("write workspace link: %v", err)
 	}
 
 	now := time.Now().UTC()

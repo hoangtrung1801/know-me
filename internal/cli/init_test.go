@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"gopkg.in/yaml.v3"
@@ -110,8 +111,8 @@ func TestRunInitCreatesGlobalDefaultConfig(t *testing.T) {
 	}
 
 	config, err := storage.NewStore(storage.GlobalRootPath()).Config.Load()
-	if err != nil || config.Name != "knowns" {
-		t.Fatalf("global config = %#v, err = %v", config, err)
+	if err != nil || config.Name != filepath.Base(projectRoot) {
+		t.Fatalf("global config = %#v, err = %v, want name %q", config, err, filepath.Base(projectRoot))
 	}
 	for _, path := range []string{"KNOWNS.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "OPENCODE.md"} {
 		if _, err := os.Stat(filepath.Join(projectRoot, path)); !os.IsNotExist(err) {
@@ -123,6 +124,91 @@ func TestRunInitCreatesGlobalDefaultConfig(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(projectRoot, ".mcp.json")); !os.IsNotExist(err) {
 		t.Fatalf("expected init not to create project MCP config, got err=%v", err)
+	}
+}
+
+func TestRunInitRegistersNamedProject(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Chdir(t.TempDir())
+
+	if err := runInit(initCmd, []string{"Launch"}); err != nil {
+		t.Fatalf("runInit returned error: %v", err)
+	}
+
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatalf("load registry: %v", err)
+	}
+	if len(reg.Projects) != 1 {
+		t.Fatalf("projects = %#v, want one project", reg.Projects)
+	}
+	project := reg.Projects[0]
+	if project.Name != "Launch" || len(project.ID) != 6 {
+		t.Fatalf("project = %#v, want generated ID and name Launch", project)
+	}
+	if active := reg.GetActive(); active == nil || active.ID != project.ID {
+		t.Fatalf("active = %#v, want %q", active, project.ID)
+	}
+}
+
+func TestRunInitWritesWorkspaceProjectLink(t *testing.T) {
+	home, projectRoot := t.TempDir(), t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Chdir(projectRoot)
+
+	if err := runInit(initCmd, []string{"Launch"}); err != nil {
+		t.Fatal(err)
+	}
+
+	link := readJSONFile(t, filepath.Join(projectRoot, ".known-me.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatal(err)
+	}
+	if len(reg.Projects) != 1 || link["projectId"] != reg.Projects[0].ID {
+		t.Fatalf("link = %#v, projects = %#v", link, reg.Projects)
+	}
+	projectStore := storage.NewProjectStore(filepath.Join(home, ".knowns"), reg.Projects[0].ID, projectRoot)
+	if _, err := projectStore.Config.Load(); err != nil {
+		t.Fatalf("project config: %v", err)
+	}
+}
+
+func TestRunInitDefaultsProjectNameToDirectory(t *testing.T) {
+	home := t.TempDir()
+	projectRoot := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Chdir(projectRoot)
+
+	if err := runInit(initCmd, nil); err != nil {
+		t.Fatalf("runInit returned error: %v", err)
+	}
+
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatalf("load registry: %v", err)
+	}
+	if len(reg.Projects) != 1 || reg.Projects[0].Name != filepath.Base(projectRoot) {
+		t.Fatalf("projects = %#v, want directory name %q", reg.Projects, filepath.Base(projectRoot))
+	}
+}
+
+func TestRunInitRejectsExplicitBlankProjectName(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Chdir(t.TempDir())
+
+	err := runInit(initCmd, []string{"  "})
+	if err == nil || !strings.Contains(err.Error(), "project name is required") {
+		t.Fatalf("runInit error = %v, want project name validation", err)
+	}
+	if _, statErr := os.Stat(filepath.Join(home, ".knowns", "registry.json")); !os.IsNotExist(statErr) {
+		t.Fatalf("registry exists after rejected name, stat error = %v", statErr)
 	}
 }
 

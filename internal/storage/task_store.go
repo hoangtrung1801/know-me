@@ -176,18 +176,34 @@ func (ts *TaskStore) scanForID(dir, id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	prefix := "task-" + id + " - "
-	exact := "task-" + id + ".md"
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		n := e.Name()
-		if n == exact || strings.HasPrefix(n, prefix) {
-			return filepath.Join(dir, n), nil
+	for _, key := range ts.taskFilenameKeys(id) {
+		prefix := "task-" + key + " - "
+		exact := "task-" + key + ".md"
+		for _, e := range entries {
+			if e.IsDir() {
+				continue
+			}
+			n := e.Name()
+			if n == exact || strings.HasPrefix(n, prefix) {
+				return filepath.Join(dir, n), nil
+			}
 		}
 	}
 	return "", fmt.Errorf("task %q not found in %s", id, dir)
+}
+
+func (ts *TaskStore) taskFilenameKeys(id string) []string {
+	projectID, localID := SplitScopedKey(id)
+	if localID == "" {
+		localID = id
+	}
+	if projectID == "" {
+		projectID = ts.projectID
+	}
+	if projectID == "" {
+		return []string{localID}
+	}
+	return []string{projectID + "--" + localID, localID}
 }
 
 // Create writes a new task file to .knowns/tasks/.
@@ -300,10 +316,8 @@ func (ts *TaskStore) deleteAllUnlocked(id string) (int, error) {
 		if err != nil {
 			return removed, err
 		}
-		prefix := "task-" + id + " - "
-		exact := "task-" + id + ".md"
 		for _, entry := range entries {
-			if entry.IsDir() || (entry.Name() != exact && !strings.HasPrefix(entry.Name(), prefix)) {
+			if entry.IsDir() || !taskFilenameMatches(entry.Name(), ts.taskFilenameKeys(id)) {
 				continue
 			}
 			if err := os.Remove(filepath.Join(dir, entry.Name())); err != nil && !os.IsNotExist(err) {
@@ -313,6 +327,15 @@ func (ts *TaskStore) deleteAllUnlocked(id string) (int, error) {
 		}
 	}
 	return removed, nil
+}
+
+func taskFilenameMatches(name string, keys []string) bool {
+	for _, key := range keys {
+		if name == "task-"+key+".md" || strings.HasPrefix(name, "task-"+key+" - ") {
+			return true
+		}
+	}
+	return false
 }
 
 // Archive moves a task from tasks/ to archive/.

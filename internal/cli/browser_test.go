@@ -3,9 +3,11 @@ package cli
 import (
 	"fmt"
 	"net"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
@@ -15,11 +17,29 @@ func newTestCmd() *cobra.Command {
 	return &cobra.Command{Use: "test"}
 }
 
-func TestResolveProjectUsesGlobalStore(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+func TestResolveProjectUsesWorkspaceLink(t *testing.T) {
+	home, repo := t.TempDir(), t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Chdir(repo)
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatal(err)
+	}
+	project, err := reg.Create("browser")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writeWorkspaceProjectLink(repo, project.ID); err != nil {
+		t.Fatal(err)
+	}
+
 	cmd := newTestCmd()
-	store, root := resolveProject(cmd)
-	if store == nil || store.Root != storage.GlobalRootPath() || root != "" {
+	store, root, err := resolveProject(cmd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if store == nil || store.Root != storage.GlobalRootPath() || store.ProjectID != project.ID || root != repo {
 		t.Fatalf("store = %#v, root = %q", store, root)
 	}
 }

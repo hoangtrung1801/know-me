@@ -12,16 +12,17 @@ Use `knowns <command> --help` for the exact syntax accepted by the current binar
 
 ### `knowns init`
 
-Does not create a project by default.
+Registers a pathless logical project, selects it, initializes the shared
+Know-Me store, and writes `.known-me.json` in the current directory. The link
+contains the generated project ID, so commands from this directory or its
+subdirectories use that project. When no name is provided, the current
+directory name is used.
 
 ```bash
 knowns init
 knowns init my-project --no-wizard
 knowns init --force
 ```
-
-`knowns init` is currently a no-op: it does not prompt, register a project,
-create a config/store, initialize Git, or configure integrations.
 
 ### `knowns setup`
 

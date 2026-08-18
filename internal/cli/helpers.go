@@ -4,14 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hoangtrung1801/known-me/internal/lsp"
 	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
+
+type workspaceProjectLink struct {
+	ProjectID string `json:"projectId"`
+}
 
 // getStore finds the project root and returns a Store instance.
 // On error it prints to stderr and exits.
@@ -39,8 +45,69 @@ func getStoreErr() (*storage.Store, error) {
 	return resolveProjectStore(cwd)
 }
 
-func resolveProjectStore(_ string) (*storage.Store, error) {
-	return storage.NewStore(storage.GlobalRootPath()), nil
+func resolveProjectStore(start string) (*storage.Store, error) {
+	projectID, projectRoot, err := findWorkspaceProjectLink(start)
+	if err != nil {
+		return nil, err
+	}
+
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err != nil {
+		return nil, fmt.Errorf("load project registry: %w", err)
+	}
+
+	if projectID == "" {
+		active := reg.GetActive()
+		if active == nil {
+			return nil, fmt.Errorf("no active project; run 'knowns init'")
+		}
+		projectID = active.ID
+	} else {
+		known := false
+		for _, project := range reg.Projects {
+			if project.ID == projectID {
+				known = true
+				break
+			}
+		}
+		if !known {
+			return nil, fmt.Errorf("workspace link references unknown project %q", projectID)
+		}
+	}
+
+	return storage.NewProjectStore(storage.GlobalRootPath(), projectID, projectRoot), nil
+}
+
+func findWorkspaceProjectLink(start string) (string, string, error) {
+	dir, err := filepath.Abs(start)
+	if err != nil {
+		return "", "", fmt.Errorf("resolve workspace directory: %w", err)
+	}
+
+	for {
+		path := filepath.Join(dir, ".known-me.json")
+		data, readErr := os.ReadFile(path)
+		if readErr == nil {
+			var link workspaceProjectLink
+			if err := json.Unmarshal(data, &link); err != nil {
+				return "", "", fmt.Errorf("parse workspace link %s: %w", path, err)
+			}
+			link.ProjectID = strings.TrimSpace(link.ProjectID)
+			if link.ProjectID == "" {
+				return "", "", fmt.Errorf("workspace link %s has no projectId", path)
+			}
+			return link.ProjectID, dir, nil
+		}
+		if !os.IsNotExist(readErr) {
+			return "", "", fmt.Errorf("read workspace link %s: %w", path, readErr)
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", "", nil
+		}
+		dir = parent
+	}
 }
 
 // isPlain returns true if the --plain flag is set.

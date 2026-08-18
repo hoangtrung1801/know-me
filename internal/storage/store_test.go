@@ -50,6 +50,26 @@ func TestNewProjectStoreSeparatesDataAndRepositoryRoots(t *testing.T) {
 	}
 }
 
+func TestProjectStoreInitWritesConfigWhenGlobalConfigExists(t *testing.T) {
+	globalRoot, repo := t.TempDir(), t.TempDir()
+	if err := NewStore(globalRoot).Init("global"); err != nil {
+		t.Fatal(err)
+	}
+
+	store := NewProjectStore(globalRoot, "p12345", repo)
+	if err := store.Init("demo"); err != nil {
+		t.Fatal(err)
+	}
+
+	project, err := store.Config.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if project.ID != "p12345" || project.Name != "demo" {
+		t.Fatalf("project = %#v, want registry ID and name", project)
+	}
+}
+
 func TestGlobalStoreHasNoRepositoryRoot(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	if got := NewStore(GlobalRootPath()).RepositoryRoot(); got != "" {

@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
@@ -150,12 +152,7 @@ func TestRunMemoryCleanupPlain(t *testing.T) {
 
 func setupMemoryCleanupCLIProject(t *testing.T) string {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
-	projectRoot := t.TempDir()
-	store := storage.NewStore(storage.GlobalRootPath())
-	if err := store.Init("memory-cleanup-cli-test"); err != nil {
-		t.Fatalf("init store: %v", err)
-	}
+	projectRoot, store := setupMemoryCLIStore(t, "memory-cleanup-cli-test")
 	now := time.Now().UTC()
 	if err := store.Memory.Create(&models.MemoryEntry{
 		ID:        "stale1",
@@ -182,13 +179,35 @@ func setupMemoryCleanupCLIProject(t *testing.T) string {
 
 func setupEmptyMemoryCLIProject(t *testing.T) string {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
+	projectRoot, _ := setupMemoryCLIStore(t, "memory-cli-test")
+	return projectRoot
+}
+
+func setupMemoryCLIStore(t *testing.T, name string) (string, *storage.Store) {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	projectRoot := t.TempDir()
-	store := storage.NewStore(storage.GlobalRootPath())
-	if err := store.Init("memory-cli-test"); err != nil {
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatalf("load registry: %v", err)
+	}
+	project, err := reg.Create(name)
+	if err != nil {
+		t.Fatalf("create project: %v", err)
+	}
+	if err := storage.NewStore(storage.GlobalRootPath()).Init(name); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
-	return projectRoot
+	store := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, projectRoot)
+	if err := store.Init(name); err != nil {
+		t.Fatalf("init project store: %v", err)
+	}
+	if err := writeWorkspaceProjectLink(projectRoot, project.ID); err != nil {
+		t.Fatalf("write workspace link: %v", err)
+	}
+	return projectRoot, store
 }
 
 func captureMemoryStdout(t *testing.T, fn func()) string {
