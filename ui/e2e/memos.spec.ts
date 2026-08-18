@@ -23,3 +23,18 @@ test("memos can be added, searched, edited, and deleted", async ({ page }) => {
 	await page.getByRole("button", { name: "Delete permanently" }).click();
 	await expect(page.getByText("No memos yet")).toBeVisible();
 });
+
+test("memos can be filtered by hashtag", async ({ page }) => {
+	await page.route("**/api/memos", (route) => route.fulfill({ json: [
+		{ id: "memo-work", content: "Ship #work", createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+		{ id: "memo-home", content: "Clean #home", createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+		{ id: "memo-heading", content: "# Heading", createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+	] }));
+	await page.goto(`${server.baseURL}/memos`);
+	await page.getByRole("button", { name: "work" }).click();
+	await expect(page.getByText("Ship #work")).toBeVisible();
+	await expect(page.getByText("Clean #home")).not.toBeVisible();
+	await expect(page.getByRole("button", { name: "Heading" })).not.toBeVisible();
+	await page.getByRole("button", { name: "All tags" }).click();
+	await expect(page.getByText("Clean #home")).toBeVisible();
+});

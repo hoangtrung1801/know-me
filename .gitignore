@@ -28,3 +28,6 @@ ui/playwright-report/
 ui/test-results/
 playwright-report/
 test-results/
+
+.claude
+.knowns

@@ -1,0 +1,161 @@
+<style>
+  .direction-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 22px;
+  }
+  .direction-card {
+    appearance: none;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--card-foreground);
+    padding: 0;
+    overflow: hidden;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+  .direction-card:hover { transform: translateY(-2px); }
+  .direction-card.is-selected {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+  .preview {
+    height: 230px;
+    display: grid;
+    grid-template-columns: 82px 1fr;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    overflow: hidden;
+  }
+  .preview-sidebar { padding: 13px 9px; }
+  .preview-main { padding: 19px 20px; }
+  .preview-brand { font-size: 8px; font-weight: 700; margin-bottom: 15px; }
+  .preview-nav { display: grid; gap: 4px; }
+  .preview-nav span {
+    display: block;
+    border-radius: 4px;
+    font-size: 6px;
+    padding: 5px 6px;
+  }
+  .eyebrow { font-size: 6px; letter-spacing: .08em; text-transform: uppercase; opacity: .56; }
+  .page-title { font-size: 19px; font-weight: 650; letter-spacing: -.04em; margin: 4px 0 4px; }
+  .page-copy { font-size: 7px; opacity: .58; margin-bottom: 17px; }
+  .property-row { display: flex; gap: 6px; font-size: 6px; margin: 6px 0; }
+  .property-label { width: 34px; opacity: .46; }
+  .divider { height: 1px; margin: 14px 0 10px; }
+  .row { display: flex; align-items: center; gap: 7px; padding: 7px 2px; font-size: 7px; }
+  .dot { width: 7px; height: 7px; border-radius: 2px; }
+  .preview-a { background: #fbfaf8; color: #37352f; }
+  .preview-a .preview-sidebar { background: #f7f6f3; border-right: 1px solid #ebe9e5; }
+  .preview-a .preview-nav .active { background: #ebeae6; }
+  .preview-a .divider, .preview-a .row { border-bottom: 1px solid #eeecea; }
+  .preview-a .dot { background: #e3b341; }
+  .preview-b { background: #fcfbf9; color: #2f2e2a; }
+  .preview-b .preview-sidebar { background: #f2f0ec; border-right: 1px solid #e4e1db; }
+  .preview-b .preview-nav .active { background: #e1dfd9; }
+  .preview-b .preview-main { background: linear-gradient(180deg, #fcfbf9 0, #faf8f5 100%); }
+  .preview-b .property-row { background: #f2f0ec; border: 1px solid #e5e2dc; border-radius: 7px; padding: 7px; }
+  .preview-b .divider, .preview-b .row { border-bottom: 1px solid #e7e3dd; }
+  .preview-b .dot { background: #699a7b; border-radius: 999px; }
+  .preview-c { background: #ffffff; color: #20201e; }
+  .preview-c .preview-sidebar { background: #f5f5f3; border-right: 1px solid #dcdcd8; }
+  .preview-c .preview-nav span { border-radius: 2px; }
+  .preview-c .preview-nav .active { background: #deded9; }
+  .preview-c .preview-main { padding: 15px 15px; }
+  .preview-c .page-title { font-size: 17px; }
+  .preview-c .divider, .preview-c .row { border-bottom: 1px solid #d9d9d5; }
+  .preview-c .row { padding: 6px 2px; }
+  .preview-c .dot { background: #5d72a7; border-radius: 0; }
+  .direction-copy { padding: 15px 16px 17px; border-top: 1px solid var(--border); }
+  .direction-copy h3 { margin: 0 0 5px; }
+  .direction-copy p { margin: 0; color: var(--muted-foreground); font-size: 13px; line-height: 1.45; }
+  .recommended { display: inline-block; margin-bottom: 8px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+  @media (max-width: 760px) {
+    .direction-grid { grid-template-columns: 1fr; }
+    .preview { height: 220px; }
+  }
+</style>
+
+<h2>Which Notion-inspired tone should guide the visual system?</h2>
+<p class="subtitle">All three preserve the current navigation, routes, and behavior. The difference is density, surface treatment, and page rhythm.</p>
+
+<div class="direction-grid">
+  <button type="button" class="direction-card" data-choice="quiet-paper" onclick="toggleSelect(this)">
+    <div class="preview preview-a" aria-label="Quiet Paper interface preview">
+      <aside class="preview-sidebar">
+        <div class="preview-brand">KNOWNs</div>
+        <div class="preview-nav">
+          <span>Search</span><span class="active">Dashboard</span><span>Projects</span><span>Tasks</span><span>Docs</span><span>Memory</span>
+        </div>
+      </aside>
+      <main class="preview-main">
+        <div class="eyebrow">Workspace / Overview</div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-copy">Your project knowledge, work, and recent signals.</div>
+        <div class="property-row"><span class="property-label">Status</span><span>Active</span></div>
+        <div class="property-row"><span class="property-label">Updated</span><span>Today at 14:32</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="dot"></span><span>Continue current task</span></div>
+        <div class="row"><span class="dot"></span><span>Review recent decisions</span></div>
+      </main>
+    </div>
+    <div class="direction-copy">
+      <span class="recommended">Recommended</span>
+      <h3>A · Quiet Paper</h3>
+      <p>Warm canvas, flat document flow, hairline separators, and compact navigation. Closest to Notion without cloning it.</p>
+    </div>
+  </button>
+
+  <button type="button" class="direction-card" data-choice="soft-workspace" onclick="toggleSelect(this)">
+    <div class="preview preview-b" aria-label="Soft Workspace interface preview">
+      <aside class="preview-sidebar">
+        <div class="preview-brand">KNOWNs</div>
+        <div class="preview-nav">
+          <span>Search</span><span class="active">Dashboard</span><span>Projects</span><span>Tasks</span><span>Docs</span><span>Memory</span>
+        </div>
+      </aside>
+      <main class="preview-main">
+        <div class="eyebrow">Workspace / Overview</div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-copy">Your project knowledge, work, and recent signals.</div>
+        <div class="property-row"><span class="property-label">Status</span><span>Active</span></div>
+        <div class="property-row"><span class="property-label">Updated</span><span>Today at 14:32</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="dot"></span><span>Continue current task</span></div>
+        <div class="row"><span class="dot"></span><span>Review recent decisions</span></div>
+      </main>
+    </div>
+    <div class="direction-copy">
+      <h3>B · Soft Workspace</h3>
+      <p>Warmer surfaces and gentle panels. Easiest transition from the current UI, but retains more dashboard character.</p>
+    </div>
+  </button>
+
+  <button type="button" class="direction-card" data-choice="editorial-database" onclick="toggleSelect(this)">
+    <div class="preview preview-c" aria-label="Editorial Database interface preview">
+      <aside class="preview-sidebar">
+        <div class="preview-brand">KNOWNs</div>
+        <div class="preview-nav">
+          <span>Search</span><span class="active">Dashboard</span><span>Projects</span><span>Tasks</span><span>Docs</span><span>Memory</span>
+        </div>
+      </aside>
+      <main class="preview-main">
+        <div class="eyebrow">Workspace / Overview</div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-copy">Your project knowledge, work, and recent signals.</div>
+        <div class="property-row"><span class="property-label">Status</span><span>Active</span></div>
+        <div class="property-row"><span class="property-label">Updated</span><span>Today at 14:32</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="dot"></span><span>Continue current task</span></div>
+        <div class="row"><span class="dot"></span><span>Review recent decisions</span></div>
+        <div class="row"><span class="dot"></span><span>Browse project documents</span></div>
+      </main>
+    </div>
+    <div class="direction-copy">
+      <h3>C · Editorial Database</h3>
+      <p>Sharper, denser, and more table-forward. Excellent for scanning; less calm on long-form document pages.</p>
+    </div>
+  </button>
+</div>
