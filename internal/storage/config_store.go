@@ -97,13 +97,16 @@ func (cs *ConfigStore) loadRaw() (map[string]any, error) {
 }
 
 // initDefault writes a minimal default config.json for a new project.
-func (cs *ConfigStore) initDefault(name string) error {
+func (cs *ConfigStore) initDefault(name, projectID string) error {
 	if name == "" {
 		name = "knowns"
 	}
+	if projectID == "" {
+		projectID = sanitizeTitle(name)
+	}
 	p := models.Project{
 		Name:      name,
-		ID:        sanitizeTitle(name),
+		ID:        projectID,
 		CreatedAt: time.Now().UTC(),
 		Settings:  models.DefaultProjectSettings(),
 	}

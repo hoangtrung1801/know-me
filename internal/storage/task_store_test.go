@@ -86,6 +86,25 @@ func TestTaskLifecycleMetadataRoundTripAndArchiveState(t *testing.T) {
 	}
 }
 
+func TestProjectScopedTaskArchiveUsesScopedFilename(t *testing.T) {
+	store := NewProjectStore(t.TempDir(), "p1", t.TempDir())
+	if err := store.Init("scoped-lifecycle"); err != nil {
+		t.Fatal(err)
+	}
+	task := &models.Task{ID: "scope-life", Title: "Scoped lifecycle", Status: "done", Priority: "medium"}
+	if err := store.Tasks.Create(task); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.Tasks.Archive(task.ID); err != nil {
+		t.Fatalf("Archive: %v", err)
+	}
+	archived, err := store.Tasks.Get(task.ID)
+	if err != nil || !archived.Archived {
+		t.Fatalf("archived task = %#v, err = %v", archived, err)
+	}
+}
+
 func TestTaskStoreMoveProjectMovesScopedTaskWithoutDuplicate(t *testing.T) {
 	store := NewStore(t.TempDir())
 	task := &models.Task{ID: "scope01", ProjectID: "alpha", Title: "Move scope", Status: "todo", Priority: "medium"}

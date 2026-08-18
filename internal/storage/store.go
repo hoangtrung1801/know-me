@@ -224,9 +224,9 @@ func (s *Store) Init(name string) error {
 	}
 
 	// Write default config if it does not exist yet.
-	configPath := filepath.Join(s.Root, "config.json")
+	configPath := s.Config.configPath()
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		if err := s.Config.initDefault(name); err != nil {
+		if err := s.Config.initDefault(name, s.ProjectID); err != nil {
 			return fmt.Errorf("init: write config: %w", err)
 		}
 	}

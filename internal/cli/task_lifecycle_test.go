@@ -1,23 +1,20 @@
 package cli
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/hoangtrung1801/known-me/internal/tasklifecycle"
 )
 
 func TestTaskLifecycleCLIPreviewExplicitExecuteAndHardDeleteIntent(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	projectRoot := t.TempDir()
+	projectRoot, store := setupTaskLifecycleCLIProject(t, "cli")
 	t.Chdir(projectRoot)
-	store := storage.NewStore(storage.GlobalRootPath())
-	if err := store.Init("cli"); err != nil {
-		t.Fatal(err)
-	}
 	now := time.Now().UTC()
 	completed := now.Add(-time.Hour)
 	if err := store.Tasks.Create(&models.Task{ID: "cli-life", Title: "cli-life", Status: "done", Priority: "medium", CreatedAt: now.Add(-2 * time.Hour), UpdatedAt: completed, CompletedAt: &completed}); err != nil {
@@ -69,13 +66,8 @@ func TestTaskLifecycleCLIPreviewExplicitExecuteAndHardDeleteIntent(t *testing.T)
 }
 
 func TestTaskLifecycleCLIEmptyBatchUsesStableErrorAndHumanOutputIsComplete(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	projectRoot := t.TempDir()
+	projectRoot, _ := setupTaskLifecycleCLIProject(t, "cli-contract")
 	t.Chdir(projectRoot)
-	store := storage.NewStore(storage.GlobalRootPath())
-	if err := store.Init("cli-contract"); err != nil {
-		t.Fatal(err)
-	}
 	output := captureStdout(t, func() {
 		if err := taskBatchUnarchiveCmd.RunE(taskBatchUnarchiveCmd, nil); err == nil {
 			t.Error("empty batch-unarchive returned success exit")
@@ -104,4 +96,31 @@ func TestTaskLifecycleCLIEmptyBatchUsesStableErrorAndHumanOutputIsComplete(t *te
 			t.Fatalf("human output missing %q: %s", observable, output)
 		}
 	}
+}
+
+func setupTaskLifecycleCLIProject(t *testing.T, name string) (string, *storage.Store) {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	projectRoot := t.TempDir()
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatal(err)
+	}
+	project, err := reg.Create(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := storage.NewStore(storage.GlobalRootPath()).Init(name); err != nil {
+		t.Fatal(err)
+	}
+	store := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, projectRoot)
+	if err := store.Init(name); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeWorkspaceProjectLink(projectRoot, project.ID); err != nil {
+		t.Fatal(err)
+	}
+	return projectRoot, store
 }

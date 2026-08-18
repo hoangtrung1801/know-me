@@ -17,6 +17,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/mcp/handlers"
 	"github.com/hoangtrung1801/known-me/internal/models"
 	"github.com/hoangtrung1801/known-me/internal/permissions"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/server/routes"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/hoangtrung1801/known-me/internal/tasklifecycle"
@@ -33,7 +34,22 @@ func TestTaskLifecycleCrossSurfaceContractMatrix(t *testing.T) {
 	if err := os.MkdirAll(cliRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	reg := registry.NewRegistryWithPath(filepath.Join(storage.GlobalRootPath(), "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatal(err)
+	}
+	project, err := reg.Create("matrix")
+	if err != nil {
+		t.Fatal(err)
+	}
 	cliStore := newMatrixLifecycleStore(t, storage.GlobalRootPath(), taskID, fixedNow)
+	projectStore := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, cliRoot)
+	if err := projectStore.Init(project.Name); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeWorkspaceProjectLink(cliRoot, project.ID); err != nil {
+		t.Fatal(err)
+	}
 	t.Chdir(cliRoot)
 	httpRoot := filepath.Join(root, "http")
 	httpStore := newMatrixLifecycleStore(t, httpRoot, taskID, fixedNow)

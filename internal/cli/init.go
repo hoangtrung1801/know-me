@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
@@ -103,8 +104,8 @@ var defaultInstructionFiles = []instructionFile{
 var initCmd = &cobra.Command{
 	Use:   "init [name]",
 	Short: "Initialize a new Know-Me project",
-	Long: `Initialize a new Know-Me project in the current directory.
-Creates a .knowns/ directory with the required structure and a default config.json.`,
+	Long: `Register a project in the shared Know-Me store and bind the current workspace.
+Writes .known-me.json with the registered project ID.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runInit,
 }
@@ -213,11 +214,55 @@ var (
 )
 
 func runInit(_ *cobra.Command, args []string) error {
-	name := ""
-	if len(args) > 0 {
-		name = args[0]
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("determine project directory: %w", err)
 	}
-	return storage.NewStore(storage.GlobalRootPath()).Init(name)
+
+	name := ""
+	if len(args) == 0 {
+		name = filepath.Base(cwd)
+	} else {
+		name = strings.TrimSpace(args[0])
+		if name == "" {
+			return fmt.Errorf("project name is required")
+		}
+	}
+
+	if err := storage.NewStore(storage.GlobalRootPath()).Init(name); err != nil {
+		return err
+	}
+
+	reg := registry.NewRegistry()
+	if err := reg.Load(); err != nil {
+		return fmt.Errorf("load project registry: %w", err)
+	}
+	project, err := reg.Create(name)
+	if err != nil {
+		return fmt.Errorf("register project: %w", err)
+	}
+	if err := reg.SetActive(project.ID); err != nil {
+		return fmt.Errorf("select project: %w", err)
+	}
+	projectStore := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, cwd)
+	if err := projectStore.Init(name); err != nil {
+		return err
+	}
+	if err := writeWorkspaceProjectLink(cwd, project.ID); err != nil {
+		return fmt.Errorf("write workspace project link: %w", err)
+	}
+
+	fmt.Printf("Registered project %q (%s)\n", project.Name, project.ID)
+	return nil
+}
+
+func writeWorkspaceProjectLink(dir, projectID string) error {
+	data, err := json.MarshalIndent(workspaceProjectLink{ProjectID: projectID}, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	return os.WriteFile(filepath.Join(dir, ".known-me.json"), data, 0644)
 }
 
 func gitTrackingSelectedSections(tracking *models.GitTracking) []string {

@@ -27,9 +27,14 @@ var browserCmd = &cobra.Command{
 	RunE:  runBrowser,
 }
 
-// resolveProject always uses the global knowledge store; projects are logical records.
-func resolveProject(cmd *cobra.Command) (store *storage.Store, projectRoot string) {
-	return storage.NewStore(storage.GlobalRootPath()), ""
+// resolveProject returns the store selected by the current workspace link or
+// the registry's active project.
+func resolveProject(_ *cobra.Command) (store *storage.Store, projectRoot string, err error) {
+	store, err = getStoreErr()
+	if err != nil {
+		return nil, "", err
+	}
+	return store, store.RepositoryRoot(), nil
 }
 
 const defaultBrowserPort = 6420
@@ -47,7 +52,10 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	passwordFlag, _ := cmd.Flags().GetString("password")
 	allowTaskHardDelete, _ := cmd.Flags().GetBool("allow-task-hard-delete")
 
-	store, projectRoot := resolveProject(cmd)
+	store, projectRoot, err := resolveProject(cmd)
+	if err != nil {
+		return err
+	}
 
 	if port == 0 {
 		port = defaultBrowserPort

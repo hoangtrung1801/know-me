@@ -8,15 +8,29 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
 
 func TestRunCodeSearchDoesNotUseRegexFallbackWhenLSPUnavailable(t *testing.T) {
-	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	home, projectRoot := t.TempDir(), t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatalf("load registry: %v", err)
+	}
+	project, err := reg.Create("code-search-lsp-only")
+	if err != nil {
+		t.Fatalf("create project: %v", err)
+	}
+	store := storage.NewProjectStore(filepath.Join(home, ".knowns"), project.ID, projectRoot)
 	if err := store.Init("code-search-lsp-only"); err != nil {
 		t.Fatalf("init store: %v", err)
+	}
+	if err := writeWorkspaceProjectLink(projectRoot, project.ID); err != nil {
+		t.Fatalf("write workspace link: %v", err)
 	}
 	sourcePath := filepath.Join(projectRoot, "Sample.java")
 	if err := os.WriteFile(sourcePath, []byte("public class RegexOnlySymbol {}\n"), 0o644); err != nil {
