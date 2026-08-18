@@ -96,7 +96,6 @@ export default defineConfig({
             id.includes("node_modules/vfile") ||
             id.includes("node_modules/unist") ||
             id.includes("node_modules/marked/") ||
-            id.includes("node_modules/react-markdown-editor-lite/") ||
             id.includes("node_modules/turndown/") ||
             id.includes("node_modules/diff/")
           ) {
