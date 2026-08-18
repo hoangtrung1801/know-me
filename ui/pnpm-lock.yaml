@@ -89,9 +89,6 @@ importers:
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.4)
-      marked:
-        specifier: ^17.0.1
-        version: 17.0.4
       mermaid:
         specifier: ^11.12.2
         version: 11.13.0
@@ -107,9 +104,6 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.14)(react@19.2.4)
-      react-markdown-editor-lite:
-        specifier: ^1.4.2
-        version: 1.4.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
@@ -1823,9 +1817,6 @@ packages:
   estree-util-is-identifier-name@3.0.0:
     resolution: {integrity: sha512-hFtqIDZTIUZ9BXLb8y4pYGyk6+wekIivNVTcmvk8NoOh+VeRn5y6cEHzbURrWbfp1fIqdVipilzj+lfaadNZmg==}
 
-  eventemitter3@4.0.7:
-    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
-
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
@@ -2093,11 +2084,6 @@ packages:
     engines: {node: '>= 20'}
     hasBin: true
 
-  marked@17.0.4:
-    resolution: {integrity: sha512-NOmVMM+KAokHMvjWmC5N/ZOvgmSWuqJB8FoYI019j4ogb/PeRMKoKIjReZ2w3376kkA8dSJIP8uD993Kxc0iRQ==}
-    engines: {node: '>= 20'}
-    hasBin: true
-
   mdast-util-find-and-replace@3.0.2:
     resolution: {integrity: sha512-Tmd1Vg/m3Xz43afeNxDIhWRtFZgM2VLyaf4vSTYwudTyeuTneoL3qtWMA5jeLyz/O1vDJmmV4QuScFCA2tBPwg==}
 
@@ -2253,11 +2239,6 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@4.0.2:
-    resolution: {integrity: sha512-7ZtY5KTCNheRGfEFxnedV5zFiORN1+Y1N6zvPTnHQd8ENUvfaDBeuJDZb2bN/oXwXxu3qkTXDzy57W5vAmDTBw==}
-    engines: {node: ^14 || ^16 || >=18}
-    hasBin: true
-
   node-releases@2.0.36:
     resolution: {integrity: sha512-TdC8FSgHz8Mwtw9g5L4gR/Sh9XhSP/0DEkQxfEFXOpiul5IiHgHan2VhYYb6agDSfp4KuvltmGApc8HMgUrIkA==}
 
@@ -2400,12 +2381,6 @@ packages:
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
-
-  react-markdown-editor-lite@1.4.2:
-    resolution: {integrity: sha512-NHbsNP6s6IxUwZow4h1wZzusfhrgWC6ZeSFgtUgEMVFlHH4TsW4MHUBLDbbnvjOn++sqCuaBB9HJsFxoQpVEBQ==}
-    peerDependencies:
-      react: '>=16.9.0'
-      react-dom: '>=16.9.0'
 
   react-markdown@10.1.0:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
@@ -4415,8 +4390,6 @@ snapshots:
 
   estree-util-is-identifier-name@3.0.0: {}
 
-  eventemitter3@4.0.7: {}
-
   extend@3.0.2: {}
 
   fdir@6.5.0(picomatch@4.0.3):
@@ -4633,8 +4606,6 @@ snapshots:
   markdown-table@3.0.4: {}
 
   marked@16.4.2: {}
-
-  marked@17.0.4: {}
 
   mdast-util-find-and-replace@3.0.2:
     dependencies:
@@ -5025,8 +4996,6 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  nanoid@4.0.2: {}
-
   node-releases@2.0.36: {}
 
   orderedmap@2.1.1: {}
@@ -5219,14 +5188,6 @@ snapshots:
       scheduler: 0.27.0
 
   react-is@16.13.1: {}
-
-  react-markdown-editor-lite@1.4.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
-    dependencies:
-      classnames: 2.5.1
-      eventemitter3: 4.0.7
-      nanoid: 4.0.2
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
 
   react-markdown@10.1.0(@types/react@19.2.14)(react@19.2.4):
     dependencies:
