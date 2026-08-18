@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import {
-	Pencil,
 	Check,
 	X,
 	Copy,
@@ -17,7 +16,7 @@ import { updateDoc } from "../api/client";
 import { useGlobalTask } from "../contexts/GlobalTaskContext";
 import { useDocsOptional } from "../contexts/DocsContext";
 import { DocsFileManager } from "../components/organisms/DocsFileManager";
-import { toDisplayPath, normalizePathForAPI } from "../lib/utils";
+import { toDisplayPath, normalizePathForAPI, type Doc } from "../lib/utils";
 import { navigateTo } from "../lib/navigation";
 import { DocsTOC } from "../components/molecules/DocsTOC";
 import { TaskPreviewDialog } from "../components/organisms/TaskDetail/TaskPreviewDialog";
@@ -34,6 +33,8 @@ import { AnnotationProvider, useAnnotationContext } from "../contexts/Annotation
 import { AnnotationSelectionToolbar } from "../components/annotations/AnnotationSelectionToolbar";
 import { AnnotationHighlighter } from "../components/annotations/AnnotationHighlighter";
 import { AnnotationBubble } from "../components/annotations/AnnotationBubble";
+
+const DOC_AUTOSAVE_INTERVAL_MS = 5 * 60 * 1000;
 
 export default function DocsPage() {
 	return (
@@ -58,7 +59,7 @@ function DocsPageInner() {
 
 	const {
 		docs, loading, error, selectedDoc, setSelectedDoc,
-		isEditing, setIsEditing, editedContent, setEditedContent,
+		isEditing, editedContent, setEditedContent,
 		linkedTasks, showSpecsOnly, setShowSpecsOnly,
 		linkedTasksExpanded, setLinkedTasksExpanded,
 		loadDocs, currentFolder, navigateToFolder,
@@ -76,6 +77,7 @@ function DocsPageInner() {
 	const [metaTitle, setMetaTitle] = useState("");
 	const [metaDescription, setMetaDescription] = useState("");
 	const [metaTags, setMetaTags] = useState("");
+	const [saveError, setSaveError] = useState<string | null>(null);
 
 	const markdownPreviewRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -83,6 +85,13 @@ function DocsPageInner() {
 	const scrollAnimationRef = useRef<number | null>(null);
 	const lineHighlightRef = useRef<HTMLDivElement>(null);
 	const docViewerRef = useRef<HTMLDivElement>(null);
+	const selectedDocRef = useRef(selectedDoc);
+	const draftRef = useRef(editedContent);
+	const savePromiseRef = useRef<Promise<void> | null>(null);
+	const previousDocRef = useRef(selectedDoc);
+	const previousDraftRef = useRef(editedContent);
+	selectedDocRef.current = selectedDoc;
+	draftRef.current = editedContent;
 
 	// Annotation context
 	const annotationCtx = useAnnotationContext();
@@ -286,7 +295,81 @@ function DocsPageInner() {
 	}, [docs, navigateToHeading, openTask, selectedDoc]);
 
 	// --- Handlers ---
-	const handleEdit = () => { if (selectedDoc) { setEditedContent(selectedDoc.content); setIsEditing(true); } };
+	const saveDraft = useCallback((doc: Doc | null, content: string, keepalive = false) => {
+		if (!doc || doc.isImported || content === (doc.content || "")) return Promise.resolve();
+		if (savePromiseRef.current) return savePromiseRef.current;
+
+		setSaving(true);
+		setSaveError(null);
+		const promise = updateDoc(
+			normalizePathForAPI(doc.path),
+			{ content },
+			keepalive ? { keepalive: true } : undefined,
+		)
+			.then(() => {
+				const current = selectedDocRef.current;
+				if (current?.path === doc.path) setSelectedDoc({ ...current, content });
+			})
+			.catch((err) => {
+				setSaveError(err instanceof Error ? err.message : "Failed to save document");
+				console.error("Failed to save doc:", err);
+			})
+			.finally(() => {
+				savePromiseRef.current = null;
+				setSaving(false);
+			});
+		savePromiseRef.current = promise;
+		return promise;
+	}, [setSelectedDoc]);
+
+	const flushDraft = useCallback(() => {
+		const doc = selectedDocRef.current;
+		const content = draftRef.current;
+		if (doc && !doc.isImported && content !== (doc.content || "")) void saveDraft(doc, content, true);
+	}, [saveDraft]);
+
+	useEffect(() => {
+		const previousDoc = previousDocRef.current;
+		if (previousDoc?.path !== selectedDoc?.path && previousDoc && previousDraftRef.current !== (previousDoc.content || "")) {
+			void saveDraft(previousDoc, previousDraftRef.current, true);
+		}
+		previousDocRef.current = selectedDoc;
+		previousDraftRef.current = editedContent;
+	}, [editedContent, saveDraft, selectedDoc?.content, selectedDoc?.path]);
+
+	const handleSelectDoc = useCallback((doc: Doc | null) => {
+		flushDraft();
+		setSelectedDoc(doc);
+	}, [flushDraft, setSelectedDoc]);
+
+	const handleNavigateToFolder = useCallback((folder: string | null) => {
+		flushDraft();
+		navigateToFolder(folder);
+	}, [flushDraft, navigateToFolder]);
+
+	useEffect(() => {
+		if (!selectedDoc) return;
+		const interval = window.setInterval(() => flushDraft(), DOC_AUTOSAVE_INTERVAL_MS);
+		return () => window.clearInterval(interval);
+	}, [flushDraft, selectedDoc?.path]);
+
+	useEffect(() => {
+		const flushWhenLeaving = () => {
+			if (document.visibilityState === "hidden") flushDraft();
+		};
+		document.addEventListener("visibilitychange", flushWhenLeaving);
+		window.addEventListener("pagehide", flushDraft);
+		window.addEventListener("beforeunload", flushDraft);
+		return () => {
+			document.removeEventListener("visibilitychange", flushWhenLeaving);
+			window.removeEventListener("pagehide", flushDraft);
+			window.removeEventListener("beforeunload", flushDraft);
+			flushDraft();
+		};
+	}, [flushDraft]);
+
+	useEffect(() => setSaveError(null), [editedContent, selectedDoc?.path]);
+
 	const handleCopyPath = () => {
 		if (selectedDoc) {
 			navigator.clipboard.writeText(`@doc/${toDisplayPath(selectedDoc.path).replace(/\.md$/, "")}`).then(() => {
@@ -295,15 +378,9 @@ function DocsPageInner() {
 			});
 		}
 	};
-	const handleSave = async () => {
-		if (!selectedDoc) return;
-		setSaving(true);
-		try { await updateDoc(normalizePathForAPI(selectedDoc.path), { content: editedContent }); loadDocs(); setIsEditing(false); }
-		catch (err) { console.error("Failed to save doc:", err); }
-		finally { setSaving(false); }
-	};
-	const handleCancel = () => { setIsEditing(false); setEditedContent(""); };
-	const openCreateView = () => { setShowCreateView(true); setMobileSidebarOpen(false); };
+	const handleSave = () => { void saveDraft(selectedDoc, editedContent); };
+	const handleCancel = () => { if (selectedDoc) setEditedContent(selectedDoc.content || ""); };
+	const openCreateView = () => { flushDraft(); setShowCreateView(true); setMobileSidebarOpen(false); };
 	const dismissLineHighlight = () => {
 		setLineHighlight(null);
 		window.history.replaceState(window.history.state, "", window.location.pathname + window.location.hash);
@@ -321,14 +398,29 @@ function DocsPageInner() {
 
 	const currentDocPath = selectedDoc ? toDisplayPath(selectedDoc.path).replace(/\.md$/, "") : "";
 	const currentDocAnnotations = selectedDoc ? annotationCtx.getByDoc(currentDocPath) : [];
+	const isDraftDirty = Boolean(selectedDoc && editedContent !== (selectedDoc.content || ""));
+	const saveState = saving ? "saving" : saveError ? "error" : isDraftDirty ? "dirty" : "saved";
+	const docHeader = selectedDoc ? (
+		<DocsDocHeader
+			selectedDoc={selectedDoc}
+			metaTitle={metaTitle} setMetaTitle={setMetaTitle}
+			metaDescription={metaDescription} setMetaDescription={setMetaDescription}
+			metaTags={metaTags} setMetaTags={setMetaTags}
+			handleSaveMetadata={handleSaveMetadata}
+			handleProjectChange={handleProjectChange}
+			linkedTasks={linkedTasks}
+			linkedTasksExpanded={linkedTasksExpanded} setLinkedTasksExpanded={setLinkedTasksExpanded}
+			openTask={openTask}
+		/>
+	) : null;
 
 	const sidebarContent = (
 		<DocsFileManager
 			onCreateDoc={openCreateView}
 			docs={docs}
 			currentFolder={currentFolder}
-			navigateToFolder={navigateToFolder}
-			setSelectedDoc={setSelectedDoc}
+			navigateToFolder={handleNavigateToFolder}
+			setSelectedDoc={handleSelectDoc}
 			showSpecsOnly={showSpecsOnly}
 			setShowSpecsOnly={setShowSpecsOnly}
 			searchQuery={docSearchQuery}
@@ -373,7 +465,7 @@ function DocsPageInner() {
 							<Button variant="ghost" size="sm" onClick={() => setMobileSidebarOpen(true)} className="h-7 px-2 text-muted-foreground hover:text-foreground lg:hidden">
 								<Menu className="w-3.5 h-3.5" />
 							</Button>
-							<Button variant="ghost" size="sm" onClick={() => navigateToFolder(selectedDoc.folder || currentFolder || null)} className="h-7 px-2 text-muted-foreground hover:text-foreground">
+							<Button variant="ghost" size="sm" onClick={() => handleNavigateToFolder(selectedDoc.folder || currentFolder || null)} className="h-7 px-2 text-muted-foreground hover:text-foreground">
 								<ArrowLeft className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline text-xs">Back</span>
 							</Button>
 							<button type="button" onClick={handleCopyPath} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors min-w-0 rounded-full px-2 py-1 hover:bg-accent/60" title="Click to copy reference">
@@ -384,26 +476,24 @@ function DocsPageInner() {
 							</button>
 							{pathCopied && <span className="text-green-600 text-[11px]">Copied</span>}
 							<div className="flex-1" />
-							{!isEditing && (
-								<Button variant="ghost" size="sm" onClick={() => setWideMode(!wideMode)} className="h-7 px-2 text-muted-foreground hover:text-foreground" title={wideMode ? "Normal width" : "Full width"}>
-									{wideMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-								</Button>
-							)}
-							{!isEditing && (
-								<Button variant="ghost" size="sm" onClick={() => setHistoryOpen(true)} className="h-7 px-2 text-muted-foreground hover:text-foreground" title="Document history">
-									<History className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline text-xs">History</span>
-								</Button>
-							)}
-							{!isEditing ? (
-								<Button size="sm" variant="ghost" onClick={handleEdit} disabled={selectedDoc.isImported} className="h-7 px-2" title={selectedDoc.isImported ? "Imported docs are read-only" : "Edit document"}>
-									<Pencil className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline text-xs">Edit</span>
-								</Button>
+							<Button variant="ghost" size="sm" onClick={() => setWideMode(!wideMode)} className="h-7 px-2 text-muted-foreground hover:text-foreground" title={wideMode ? "Normal width" : "Full width"}>
+								{wideMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+							</Button>
+							<Button variant="ghost" size="sm" onClick={() => setHistoryOpen(true)} className="h-7 px-2 text-muted-foreground hover:text-foreground" title="Document history">
+								<History className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline text-xs">History</span>
+							</Button>
+							{selectedDoc.isImported ? (
+								<span className="px-2 text-xs text-muted-foreground">Read only</span>
 							) : (
 								<>
-									<Button size="sm" onClick={handleSave} disabled={saving} className="h-7 px-2.5 rounded-full">
+									<span role="status" aria-live="polite" data-save-state={saveState} className={`docs-save-status px-1.5 text-[11px] ${saveError ? "text-destructive" : "text-muted-foreground"}`}>
+										<span className="docs-save-status-dot" aria-hidden="true" />
+										<span className="hidden md:inline">{saving ? "Saving..." : saveError ? "Save failed" : isDraftDirty ? "Unsaved changes" : "Saved"}</span>
+									</span>
+									<Button size="sm" onClick={handleSave} disabled={saving || !isDraftDirty} className="h-7 px-2.5 rounded-full">
 										<Check className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline text-xs">{saving ? "Saving..." : "Save"}</span>
 									</Button>
-									<Button size="sm" variant="secondary" onClick={handleCancel} disabled={saving} className="h-7 px-2.5 rounded-full">
+									<Button size="sm" variant="secondary" onClick={handleCancel} disabled={saving || !isDraftDirty} className="h-7 px-2.5 rounded-full">
 										<X className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline text-xs">Cancel</span>
 									</Button>
 								</>
@@ -411,24 +501,17 @@ function DocsPageInner() {
 						</div>
 
 						{isEditing ? (
-							<div className="flex-1 min-h-0 overflow-hidden p-4 sm:p-6">
-								<MDEditor markdown={editedContent} onChange={setEditedContent} placeholder="Write your documentation here..." height="100%" className="h-full" />
+							<div className="docs-editor-stage flex-1 min-h-0 overflow-hidden p-3 sm:p-5 lg:p-6">
+								<div className={`docs-editor-frame h-full min-h-0 w-full mx-auto overflow-y-auto ${wideMode ? "max-w-[1040px]" : "max-w-[880px]"}`}>
+									<div className={`docs-editor-header mx-auto w-full px-5 pt-8 sm:px-10 sm:pt-12 ${wideMode ? "max-w-[96ch]" : "max-w-[78ch]"}`}>{docHeader}</div>
+									<MDEditor markdown={editedContent} onChange={setEditedContent} placeholder="Start writing…" readOnly={selectedDoc.isImported} height="auto" className={`docs-live-editor ${wideMode ? "docs-live-editor-wide" : ""}`} />
+								</div>
 							</div>
 						) : (
 							<div className="flex-1 overflow-y-auto relative" ref={scrollContainerRef}>
 								<div ref={docViewerRef} className="flex justify-center relative">
 									<article data-document-surface="doc" key={selectedDoc.path} className={`w-full px-6 sm:px-8 py-10 sm:py-12 transition-[max-width] duration-300 ease-in-out animate-doc-in ${wideMode ? "max-w-[1040px]" : "max-w-[880px]"}`}>
-										<DocsDocHeader
-											selectedDoc={selectedDoc}
-											metaTitle={metaTitle} setMetaTitle={setMetaTitle}
-											metaDescription={metaDescription} setMetaDescription={setMetaDescription}
-											metaTags={metaTags} setMetaTags={setMetaTags}
-											handleSaveMetadata={handleSaveMetadata}
-											handleProjectChange={handleProjectChange}
-											linkedTasks={linkedTasks}
-											linkedTasksExpanded={linkedTasksExpanded} setLinkedTasksExpanded={setLinkedTasksExpanded}
-											openTask={openTask}
-										/>
+										{docHeader}
 										<div ref={markdownPreviewRef} className="prose-neutral dark:prose-invert relative">
 											<MDRenderWithHighlight
 												ref={lineHighlightRef}

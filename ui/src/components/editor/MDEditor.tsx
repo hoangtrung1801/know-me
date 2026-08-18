@@ -1,28 +1,9 @@
-import { forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
-import MdEditor from "react-markdown-editor-lite";
-import "react-markdown-editor-lite/lib/index.css";
-import { marked } from "marked";
-import hljs from "highlight.js";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { Crepe } from "@milkdown/crepe";
+import { replaceAll } from "@milkdown/kit/utils";
+import "@milkdown/crepe/theme/common/style.css";
+import "@milkdown/crepe/theme/frame.css";
 import { useTheme } from "../../App";
-
-// Configure marked to use highlight.js
-marked.setOptions({
-	highlight: (code: string, lang: string) => {
-		if (lang && hljs.getLanguage(lang)) {
-			try {
-				return hljs.highlight(code, { language: lang }).value;
-			} catch {
-				// Fall through to auto-detection
-			}
-		}
-		// Auto-detect language
-		try {
-			return hljs.highlightAuto(code).value;
-		} catch {
-			return code;
-		}
-	},
-});
 
 interface MDEditorComponentProps {
 	markdown: string;
@@ -31,7 +12,7 @@ interface MDEditorComponentProps {
 	readOnly?: boolean;
 	className?: string;
 	height?: number | string;
-	/** Preview mode: "edit" (no preview), "live" (split), "preview" (read-only) */
+	/** Kept for compatibility; Milkdown always renders one WYSIWYG surface. */
 	preview?: "edit" | "live" | "preview";
 }
 
@@ -49,71 +30,104 @@ const MDEditorComponent = forwardRef<MDEditorRef, MDEditorComponentProps>(
 			readOnly = false,
 			className = "",
 			height = 400,
-			preview: previewMode,
+			preview,
 		},
 		ref,
 	) => {
 		const { isDark } = useTheme();
+		const rootRef = useRef<HTMLDivElement>(null);
+		const editorRef = useRef<Crepe | null>(null);
+		const markdownRef = useRef(markdown);
+		const onChangeRef = useRef(onChange);
+		const readOnlyRef = useRef(readOnly || preview === "preview");
+		const pendingSyncRef = useRef<string | null>(null);
 
-		// Markdown renderer using marked
-		const renderHTML = useCallback((text: string) => {
-			return marked.parse(text, { async: false }) as string;
-		}, []);
+		markdownRef.current = markdown;
+		onChangeRef.current = onChange;
+		readOnlyRef.current = readOnly || preview === "preview";
 
-		const handleEditorChange = useCallback(
-			({ text }: { text: string }) => {
-				onChange(text);
-			},
-			[onChange],
-		);
+		useEffect(() => {
+			if (!rootRef.current) return;
 
-		// Expose ref methods
+			let disposed = false;
+			let created = false;
+			const editor = new Crepe({
+				root: rootRef.current,
+				defaultValue: markdownRef.current,
+				featureConfigs: {
+					[Crepe.Feature.Placeholder]: { text: placeholder, mode: "block" },
+				},
+			});
+
+			editor.on((listener) => {
+				listener.markdownUpdated((_ctx, value) => {
+					if (pendingSyncRef.current === value) {
+						pendingSyncRef.current = null;
+						return;
+					}
+					pendingSyncRef.current = null;
+					onChangeRef.current(value);
+				});
+			});
+
+			void editor.create().then(() => {
+				created = true;
+				if (disposed) {
+					void editor.destroy();
+					return;
+				}
+
+				editorRef.current = editor;
+				editor.setReadonly(readOnlyRef.current);
+				if (editor.getMarkdown() !== markdownRef.current) {
+					pendingSyncRef.current = markdownRef.current;
+					editor.editor.action(replaceAll(markdownRef.current));
+				}
+			});
+
+			return () => {
+				disposed = true;
+				if (editorRef.current === editor) editorRef.current = null;
+				if (created) void editor.destroy();
+			};
+		}, [placeholder]);
+
+		useEffect(() => {
+			editorRef.current?.setReadonly(readOnly || preview === "preview");
+		}, [preview, readOnly]);
+
+		useEffect(() => {
+			const editor = editorRef.current;
+			if (!editor || editor.getMarkdown() === markdown) return;
+
+			pendingSyncRef.current = markdown;
+			editor.editor.action(replaceAll(markdown));
+		}, [markdown]);
+
 		useImperativeHandle(
 			ref,
 			() => ({
-				setMarkdown: (md: string) => {
-					onChange(md);
-				},
-				getMarkdown: () => markdown,
+				setMarkdown: (value: string) => onChangeRef.current(value),
+				getMarkdown: () => editorRef.current?.getMarkdown() ?? markdownRef.current,
 			}),
-			[markdown, onChange],
+			[],
 		);
 
-		// Map preview mode to react-markdown-editor-lite view
-		// "edit" = editor only, "live" = split, "preview" = preview only
-		const view = useMemo(() => {
-			if (readOnly || previewMode === "preview") {
-				return { menu: false, md: false, html: true };
-			}
-			if (previewMode === "live") {
-				return { menu: true, md: true, html: true };
-			}
-			// Default: edit only (no preview)
-			return { menu: true, md: true, html: false };
-		}, [readOnly, previewMode]);
-
-		// Handle height - support both pixel values and percentage/full height
 		const isFullHeight = height === "100%" || height === "full";
-		const editorStyle = isFullHeight
-			? { height: "100%" }
-			: { height: typeof height === "number" ? height : 400 };
+		const editorStyle = {
+			height: isFullHeight ? "100%" : typeof height === "number" ? `${height}px` : height,
+		};
 
 		return (
 			<div
-				className={`md-editor-lite-wrapper ${className} ${isDark ? "dark-mode" : ""} ${isFullHeight ? "h-full" : ""}`}
+				ref={rootRef}
+				className={`milkdown-editor-wrapper ${className} ${isDark ? "dark-mode" : ""} ${isFullHeight ? "h-full" : ""}`}
 				data-color-mode={isDark ? "dark" : "light"}
-			>
-				<MdEditor
-					value={markdown}
-					onChange={handleEditorChange}
-					renderHTML={renderHTML}
-					placeholder={placeholder}
-					readOnly={readOnly}
-					view={view}
-					canView={{ menu: !readOnly, md: true, html: false, both: false, fullScreen: true, hideMenu: false }}
-					style={editorStyle}
-				/>
-			</div>
+				data-editor-readonly={readOnly || preview === "preview" ? "true" : "false"}
+				role="region"
+				aria-label={readOnly || preview === "preview" ? "Document preview" : "Live Markdown editor"}
+				style={editorStyle}
+			/>
 		);
 	},
 );

@@ -108,9 +108,13 @@ export function DocsProvider({ children }: { children: React.ReactNode }) {
 	useSSEEvent("tasks:refresh", () => refreshLinkedTasks());
 
 	const setSelectedDoc = useCallback((doc: Doc | null) => {
+		const changedDoc = doc?.path !== selectedDocRef.current?.path;
 		setSelectedDocState(doc);
-		setIsEditing(false);
-		setLinkedTasksExpanded(false);
+		if (changedDoc) {
+			setEditedContent(doc?.content ?? "");
+			setLinkedTasksExpanded(false);
+		}
+		setIsEditing(Boolean(doc));
 	}, []);
 
 	const findDocByPath = useCallback((docPath: string, docsList: Doc[]): Doc | undefined => {
@@ -157,6 +161,7 @@ export function DocsProvider({ children }: { children: React.ReactNode }) {
 		setCurrentFolder(folder);
 		setSelectedDocState(null);
 		setIsEditing(false);
+		setEditedContent("");
 		navigateTo(folder ? `/docs/${folder}` : "/docs");
 	}, []);
 
@@ -179,7 +184,7 @@ export function DocsProvider({ children }: { children: React.ReactNode }) {
 				// No doc match - treat as folder navigation
 				const folderPath = docPath.replace(/\/$/, "");
 				setCurrentFolder(folderPath);
-				setSelectedDocState(null);
+				setSelectedDoc(null);
 			}
 		} else if (pathname === "/docs" || pathname === "/docs/") {
 			setSelectedDoc(null);

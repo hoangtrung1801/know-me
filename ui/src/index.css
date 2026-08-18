@@ -392,179 +392,270 @@ h6 {
   animation: shimmer 1.5s infinite;
 }
 
-/* ===== Markdown Editor (react-markdown-editor-lite) ===== */
+/* ===== Milkdown WYSIWYG Markdown Editor ===== */
+.docs-editor-stage {
+  background: color-mix(in srgb, var(--muted) 28%, var(--background));
+}
 
-/* Base wrapper */
-.md-editor-lite-wrapper {
+.docs-editor-frame {
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--foreground));
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--foreground);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.docs-editor-frame:focus-within {
+  border-color: color-mix(in srgb, var(--ring) 72%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 16%, transparent);
+}
+
+.milkdown-editor-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--foreground));
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--foreground);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-/* Fullscreen mode - ensure it covers everything */
-.md-editor-lite-wrapper .rc-md-editor.full {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 99999 !important;
-  border-radius: 0 !important;
+.milkdown-editor-wrapper:focus-within {
+  border-color: color-mix(in srgb, var(--ring) 72%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 16%, transparent);
 }
 
-/* Full height support - editor fills parent container */
-.md-editor-lite-wrapper.h-full {
-  height: 100%;
+.milkdown-editor-wrapper.docs-live-editor {
+  min-height: 360px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.milkdown-editor-wrapper.docs-live-editor:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.milkdown-editor-wrapper.h-full {
   display: flex;
   flex-direction: column;
 }
 
-.md-editor-lite-wrapper.h-full .rc-md-editor {
-  flex: 1;
-  height: 100% !important;
-  display: flex;
-  flex-direction: column;
-}
-
-.md-editor-lite-wrapper.h-full .rc-md-editor .editor-container {
+.milkdown-editor-wrapper.h-full .milkdown {
   flex: 1;
   min-height: 0;
 }
 
-.md-editor-lite-wrapper.h-full .rc-md-editor .editor-container .sec-md {
-  height: 100%;
+.milkdown-editor-wrapper .milkdown {
+  --crepe-color-background: var(--background);
+  --crepe-color-on-background: var(--foreground);
+  --crepe-color-surface: var(--popover);
+  --crepe-color-surface-low: var(--muted);
+  --crepe-color-on-surface: var(--foreground);
+  --crepe-color-on-surface-variant: var(--muted-foreground);
+  --crepe-color-outline: var(--border);
+  --crepe-color-primary: var(--primary);
+  --crepe-color-secondary: var(--secondary);
+  --crepe-color-on-secondary: var(--secondary-foreground);
+  --crepe-color-inverse: var(--foreground);
+  --crepe-color-on-inverse: var(--background);
+  --crepe-color-inline-code: var(--foreground);
+  --crepe-color-error: var(--destructive);
+  --crepe-color-hover: var(--accent);
+  --crepe-color-selected: var(--accent);
+  --crepe-color-inline-area: var(--muted);
+  --crepe-base-font-size: var(--editor-font-size);
+  --crepe-font-title: var(--font-display);
+  --crepe-font-default: var(--editor-font-family);
+  --crepe-font-code: var(--editor-code-font);
+  min-height: 100%;
+  background: transparent;
+  color: var(--foreground);
+  overflow: auto;
 }
 
-.md-editor-lite-wrapper.h-full .rc-md-editor .editor-container .sec-md .input {
-  height: 100% !important;
-  min-height: 100% !important;
+.milkdown-editor-wrapper.docs-live-editor .milkdown {
+  overflow: visible;
 }
 
-.md-editor-lite-wrapper .rc-md-editor {
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-/* Dark mode support */
-.md-editor-lite-wrapper.dark-mode .rc-md-editor {
-  background-color: hsl(var(--background));
-  border-color: hsl(var(--border));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container {
-  background-color: hsl(var(--background));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-md .input {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .rc-md-navigation {
-  background-color: hsl(var(--muted));
-  border-bottom-color: hsl(var(--border));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .rc-md-navigation .button-wrap .button {
-  color: hsl(var(--muted-foreground));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .rc-md-navigation .button-wrap .button:hover {
-  color: hsl(var(--foreground));
-  background-color: hsl(var(--accent));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style {
-  color: hsl(var(--foreground)) !important;
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style * {
-  color: inherit;
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style code {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--foreground));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style pre {
-  background-color: hsl(var(--muted));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style a {
-  color: hsl(var(--primary));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style blockquote {
-  border-left-color: hsl(var(--border));
-  color: hsl(var(--muted-foreground));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style table th,
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style table td {
-  border-color: hsl(var(--border));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .sec-html .custom-html-style hr {
-  border-color: hsl(var(--border));
-}
-
-.md-editor-lite-wrapper.dark-mode .rc-md-editor .editor-container .section-divider {
-  background-color: hsl(var(--border));
-}
-
-/* Light mode refinements */
-.md-editor-lite-wrapper .rc-md-editor .rc-md-navigation {
-  background-color: hsl(var(--muted));
-  border-bottom: 1px solid hsl(var(--border));
-}
-
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-md .input {
+.milkdown-editor-wrapper .milkdown .ProseMirror {
+  width: 100%;
+  max-width: 78ch;
+  margin-inline: auto;
+  min-height: 100%;
+  padding: clamp(32px, 5vw, 56px) clamp(20px, 5vw, 48px) 96px;
   font-family: var(--editor-font-family);
+  line-height: 1.6;
+  caret-color: var(--primary);
+}
+
+.milkdown-editor-wrapper.docs-live-editor .milkdown .ProseMirror {
+  min-height: 360px;
+}
+
+.milkdown-editor-wrapper.docs-live-editor-wide .milkdown .ProseMirror {
+  max-width: 96ch;
+}
+
+.milkdown-editor-wrapper .milkdown .ProseMirror > :first-child {
+  margin-top: 0;
+}
+
+.milkdown-editor-wrapper .milkdown .ProseMirror p {
+  padding: var(--editor-block-padding);
   font-size: var(--editor-font-size);
-  line-height: 1.75;
-  padding: 12px 16px;
 }
 
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html {
-  font-family: var(--editor-font-family);
-  font-size: var(--editor-font-size);
-  line-height: 1.75;
-  padding: 12px 16px;
+.milkdown-editor-wrapper .milkdown .ProseMirror h1,
+.milkdown-editor-wrapper .milkdown .ProseMirror h2,
+.milkdown-editor-wrapper .milkdown .ProseMirror h3,
+.milkdown-editor-wrapper .milkdown .ProseMirror h4,
+.milkdown-editor-wrapper .milkdown .ProseMirror h5,
+.milkdown-editor-wrapper .milkdown .ProseMirror h6 {
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  line-height: var(--editor-heading-line-height);
 }
 
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html .custom-html-style {
-  line-height: 1.75;
+.milkdown-editor-wrapper .milkdown .ProseMirror h1,
+.milkdown-editor-wrapper .milkdown .ProseMirror h2,
+.milkdown-editor-wrapper .milkdown .ProseMirror h3 {
+  font-weight: 500;
 }
 
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html .custom-html-style p {
-  margin-bottom: 0.75em;
+.milkdown-editor-wrapper .milkdown .ProseMirror a {
+  color: var(--primary);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
 
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html .custom-html-style ul,
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html .custom-html-style ol {
-  margin-bottom: 0.75em;
-  padding-left: 1.5em;
-}
-
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html .custom-html-style li {
-  margin-bottom: 0.25em;
-}
-
-/* Code block styling in editor preview */
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html pre {
-  border-radius: 0.5rem;
+.milkdown-editor-wrapper .milkdown .ProseMirror pre {
   overflow-x: auto;
+  background: var(--muted);
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 10px;
+  padding: 16px 18px;
 }
 
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html pre code {
-  font-family: var(--editor-code-font);
-  font-size: 0.875rem;
-  line-height: 1.5;
+.milkdown-editor-wrapper .milkdown .ProseMirror blockquote {
+  color: var(--muted-foreground);
+  border-left: 1px solid var(--border);
+  padding-left: 18px;
+}
+
+.milkdown-editor-wrapper .milkdown .ProseMirror code {
+  border-radius: 5px;
+  background: var(--muted);
+  padding: 2px 5px;
+  font-size: var(--editor-code-font-size);
+}
+
+.milkdown-editor-wrapper .milkdown .milkdown-toolbar {
+  border: 1px solid color-mix(in srgb, var(--border) 86%, var(--foreground));
+  border-radius: 10px;
+  box-shadow: 0 12px 28px -20px color-mix(in srgb, var(--foreground) 48%, transparent);
+  padding: 2px;
+}
+
+.milkdown-editor-wrapper .milkdown .milkdown-toolbar .toolbar-item svg {
+  color: var(--muted-foreground);
+  fill: var(--muted-foreground);
+}
+
+.milkdown-editor-wrapper .milkdown .milkdown-toolbar .toolbar-item {
+  width: 30px;
+  height: 30px;
+  margin: 4px;
+  padding: 5px;
+  border-radius: 6px;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.milkdown-editor-wrapper .milkdown .milkdown-toolbar .toolbar-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+.milkdown-editor-wrapper .milkdown .milkdown-toolbar .toolbar-item:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.milkdown-editor-wrapper .milkdown .milkdown-toolbar .divider {
+  height: 20px;
+  margin: 9px 5px;
+}
+
+.milkdown-editor-wrapper .milkdown .crepe-placeholder::before {
+  color: color-mix(in srgb, var(--muted-foreground) 82%, transparent);
+}
+
+.milkdown-editor-wrapper[data-editor-readonly="true"] .milkdown .ProseMirror {
+  cursor: default;
+}
+
+.milkdown-editor-wrapper .milkdown .milkdown-toolbar .toolbar-item:hover {
+  background: var(--accent);
+}
+
+.milkdown-editor-wrapper.dark-mode .milkdown .ProseMirror pre {
+  background: var(--muted);
+}
+
+.docs-save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  white-space: nowrap;
+}
+
+.docs-save-status-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--muted-foreground);
+}
+
+.docs-save-status[data-save-state="dirty"] .docs-save-status-dot {
+  background: #b7791f;
+}
+
+.docs-save-status[data-save-state="saving"] .docs-save-status-dot {
+  background: var(--ring);
+  animation: docs-save-pulse 1.2s ease-in-out infinite;
+}
+
+.docs-save-status[data-save-state="error"] .docs-save-status-dot {
+  background: var(--destructive);
+}
+
+@keyframes docs-save-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 640px) {
+  .milkdown-editor-wrapper .milkdown .ProseMirror,
+  .milkdown-editor-wrapper.docs-live-editor-wide .milkdown .ProseMirror {
+    max-width: 100%;
+    padding-inline: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .docs-save-status[data-save-state="saving"] .docs-save-status-dot {
+    animation: none;
+  }
 }
 
 /* Legacy wrapper for backward compatibility */
@@ -841,13 +932,8 @@ h6 {
   border-top: 1px solid hsl(var(--border));
 }
 
-.md-editor-lite-wrapper .rc-md-editor .editor-container .sec-html pre {
-  background-color: #f6f8fa;
-  margin: 1rem 0;
-}
-
 /* ===== Highlight.js Dark Mode (GitHub Dark theme) ===== */
-/* Applied to both MDEditor preview and MDRender */
+/* Applied to rendered Markdown and code blocks */
 .dark .hljs,
 .dark-mode .hljs,
 [data-color-mode="dark"] .hljs {

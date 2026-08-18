@@ -661,12 +661,14 @@ export async function createDoc(data: Record<string, unknown>): Promise<unknown>
 export async function updateDoc(
 	path: string,
 	data: { content?: string; title?: string; description?: string; tags?: string[]; projectId?: string },
+	options?: Pick<RequestInit, "keepalive">,
 ): Promise<Doc> {
 	const encodedPath = encodeDocPath(path);
 	const res = await apiFetch(`${API_BASE}/api/docs/${encodedPath}`, {
 		method: "PUT",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(data),
+		...options,
 	});
 	if (!res.ok) {
 		const error = await res.json().catch(() => ({ error: "Failed to update doc" }));
