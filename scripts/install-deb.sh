@@ -8,7 +8,7 @@ fi
 
 deb=$1
 
-if [[ $OSTYPE != linux* ]]; then
+if [[ $(uname -s) != Linux ]]; then
   echo "This installer only supports Linux." >&2
   exit 1
 fi
@@ -16,6 +16,20 @@ fi
 if [[ ! -f $deb || ! -r $deb ]]; then
   echo "File not found or unreadable: $deb" >&2
   exit 1
+fi
+
+if [[ $deb == */knowns-linux-arm64.tar.gz || $deb == knowns-linux-arm64.tar.gz ]]; then
+  case $(uname -m) in
+    aarch64|arm64) ;;
+    *) echo "knowns-linux-arm64.tar.gz requires Linux ARM64." >&2; exit 1 ;;
+  esac
+
+  tmp=$(mktemp -d)
+  trap 'rm -rf "$tmp"' EXIT
+  tar -xzf "$deb" -C "$tmp" knowns
+  [[ -f $tmp/knowns ]] || { echo "Archive does not contain knowns." >&2; exit 1; }
+  sudo install -m 0755 "$tmp/knowns" /usr/local/bin/knowns
+  exit
 fi
 
 case $deb in

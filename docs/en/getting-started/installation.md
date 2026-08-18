@@ -58,6 +58,46 @@ go build -o ./bin/knowns ./cmd/knowns
 
 Best option when developing Know-Me itself.
 
+## Manual binary install
+
+Use this when you already downloaded a release archive or want to install one
+without the installer script. The private repository requires a GitHub PAT
+with read access to repository contents.
+
+```bash
+export GITHUB_PAT=ghp_...
+VERSION=v1.0.1
+PLATFORM=linux-x64 # darwin-arm64, darwin-x64, or linux-arm64
+ARCHIVE="knowns-${PLATFORM}.tar.gz"
+BASE_URL="https://github.com/hoangtrung1801/known-me/releases/download/${VERSION}"
+
+mkdir -p "$HOME/.knowns/bin"
+curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
+  -o "/tmp/$ARCHIVE" "$BASE_URL/$ARCHIVE"
+curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
+  -o "/tmp/$ARCHIVE.sha256" "$BASE_URL/$ARCHIVE.sha256"
+
+echo "$(awk '{print $1}' "/tmp/$ARCHIVE.sha256")  /tmp/$ARCHIVE" \
+  | shasum -a 256 -c -
+tar -xzf "/tmp/$ARCHIVE" -C "$HOME/.knowns/bin"
+chmod +x "$HOME/.knowns/bin/knowns"
+ln -sf "$HOME/.knowns/bin/knowns" "$HOME/.knowns/bin/kn"
+
+export PATH="$HOME/.knowns/bin:$PATH"
+knowns --version
+```
+
+For a binary already extracted, copy it directly:
+
+```bash
+mkdir -p "$HOME/.knowns/bin"
+cp ./knowns "$HOME/.knowns/bin/knowns"
+chmod +x "$HOME/.knowns/bin/knowns"
+ln -sf "$HOME/.knowns/bin/knowns" "$HOME/.knowns/bin/kn"
+export PATH="$HOME/.knowns/bin:$PATH"
+knowns --version
+```
+
 ## Verify
 
 ```bash
