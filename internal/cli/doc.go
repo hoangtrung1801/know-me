@@ -40,7 +40,7 @@ var docListCmd = &cobra.Command{
 func runDocList(cmd *cobra.Command, args []string) error {
 	store := getStore()
 	tagFilter, _ := cmd.Flags().GetString("tag")
-	projectID, _ := cmd.Flags().GetString("project-id")
+	projectID := projectIDFlagOrStore(cmd, store)
 
 	docs, err := store.Docs.List(projectID)
 	if err != nil {

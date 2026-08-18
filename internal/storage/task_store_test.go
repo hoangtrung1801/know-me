@@ -272,14 +272,19 @@ func TestTaskStoreScopesDuplicateIDs(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, err := p1.Tasks.Get("same01"); err == nil || !strings.Contains(err.Error(), "ambiguous") {
-		t.Fatalf("error = %v", err)
+	got, err := p1.Tasks.Get("same01")
+	if err != nil || got.ProjectID != "p1" {
+		t.Fatalf("default task = %#v, err = %v; want p1 task", got, err)
 	}
-	got, err := p1.Tasks.Get("p2:same01")
+	got, err = p1.Tasks.Get("p2:same01")
 	if err != nil || got.ProjectID != "p2" {
 		t.Fatalf("task = %#v, err = %v", got, err)
 	}
-	filtered, err := p1.Tasks.List("p1")
+	filtered, err := p1.Tasks.List()
+	if err != nil || len(filtered) != 1 || filtered[0].ProjectID != "p1" {
+		t.Fatalf("default tasks = %#v, err = %v; want p1 task", filtered, err)
+	}
+	filtered, err = p1.Tasks.List("p1")
 	if err != nil || len(filtered) != 1 || filtered[0].ProjectID != "p1" {
 		t.Fatalf("tasks = %#v, err = %v", filtered, err)
 	}

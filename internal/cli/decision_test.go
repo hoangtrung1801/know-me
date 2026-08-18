@@ -71,7 +71,11 @@ func TestRunDecisionLifecycleCommands(t *testing.T) {
 	if accepted.Status != models.DecisionStatusDraft {
 		t.Fatalf("linked decision status = %q, want draft", accepted.Status)
 	}
-	if err := store.Tasks.Create(&models.Task{
+	projectStore, err := resolveProjectStore(projectRoot)
+	if err != nil {
+		t.Fatalf("resolve project store: %v", err)
+	}
+	if err := projectStore.Tasks.Create(&models.Task{
 		ID: "verify1", Title: "Verify decision", Status: "done", Priority: "medium", Labels: []string{},
 		AcceptanceCriteria: []models.AcceptanceCriterion{{Text: "Verified", Completed: true}},
 	}); err != nil {

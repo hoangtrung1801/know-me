@@ -45,6 +45,14 @@ func getStoreErr() (*storage.Store, error) {
 	return resolveProjectStore(cwd)
 }
 
+func projectIDFlagOrStore(cmd *cobra.Command, store *storage.Store) string {
+	projectID, _ := cmd.Flags().GetString("project-id")
+	if projectID == "" && store != nil {
+		return store.ProjectID
+	}
+	return projectID
+}
+
 func resolveProjectStore(start string) (*storage.Store, error) {
 	projectID, projectRoot, err := findWorkspaceProjectLink(start)
 	if err != nil {
