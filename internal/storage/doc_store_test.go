@@ -3,7 +3,6 @@ package storage
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -157,12 +156,17 @@ func TestDocStoreScopesDuplicatePaths(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, err := p1.Docs.Get("specs/auth"); err == nil || !strings.Contains(err.Error(), "ambiguous") {
-		t.Fatalf("error = %v", err)
+	got, err := p1.Docs.Get("specs/auth")
+	if err != nil || got.ProjectID != "p1" {
+		t.Fatalf("default doc = %#v, err = %v; want p1 doc", got, err)
 	}
-	got, err := p1.Docs.Get("p2:specs/auth")
+	got, err = p1.Docs.Get("p2:specs/auth")
 	if err != nil || got.ProjectID != "p2" {
 		t.Fatalf("doc = %#v, err = %v", got, err)
+	}
+	filtered, err := p1.Docs.List()
+	if err != nil || len(filtered) != 1 || filtered[0].ProjectID != "p1" {
+		t.Fatalf("default docs = %#v, err = %v; want p1 doc", filtered, err)
 	}
 	if _, err := os.Stat(filepath.Join(root, "docs", "p2--specs", "auth.md")); err != nil {
 		t.Fatal(err)

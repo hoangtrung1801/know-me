@@ -144,7 +144,7 @@ func runTaskList(cmd *cobra.Command, args []string) error {
 	assigneeFilter, _ := cmd.Flags().GetString("assignee")
 	priorityFilter, _ := cmd.Flags().GetString("priority")
 	labelFilter, _ := cmd.Flags().GetString("label")
-	projectID, _ := cmd.Flags().GetString("project-id")
+	projectID := projectIDFlagOrStore(cmd, store)
 	treeMode, _ := cmd.Flags().GetBool("tree")
 
 	tasks, err := store.Tasks.List(projectID)

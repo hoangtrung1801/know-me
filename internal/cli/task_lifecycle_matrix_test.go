@@ -42,7 +42,7 @@ func TestTaskLifecycleCrossSurfaceContractMatrix(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cliStore := newMatrixLifecycleStore(t, storage.GlobalRootPath(), taskID, fixedNow)
+	cliStore := newMatrixLifecycleStore(t, storage.GlobalRootPath(), taskID, fixedNow, project.ID)
 	projectStore := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, cliRoot)
 	if err := projectStore.Init(project.Name); err != nil {
 		t.Fatal(err)
@@ -478,9 +478,12 @@ func matrixMCPRunner(t *testing.T, store *storage.Store) func(tasklifecycle.Requ
 	}
 }
 
-func newMatrixLifecycleStore(t *testing.T, root, taskID string, now time.Time) *storage.Store {
+func newMatrixLifecycleStore(t *testing.T, root, taskID string, now time.Time, projectID ...string) *storage.Store {
 	t.Helper()
 	store := storage.NewStore(root)
+	if len(projectID) > 0 {
+		store = storage.NewProjectStore(root, projectID[0], "")
+	}
 	if err := store.Init("matrix"); err != nil {
 		t.Fatal(err)
 	}

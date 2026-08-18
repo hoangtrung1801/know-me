@@ -51,19 +51,19 @@ type taskFrontmatter struct {
 
 // List returns all tasks from .knowns/tasks/.
 func (ts *TaskStore) List(projectID ...string) ([]*models.Task, error) {
-	return ts.listDir(ts.tasksDir(), firstProjectID(projectID))
+	return ts.listDir(ts.tasksDir(), firstProjectID(projectID, ts.projectID))
 }
 
 // ListArchived returns all tasks from .knowns/archive/.
 func (ts *TaskStore) ListArchived(projectID ...string) ([]*models.Task, error) {
-	return ts.listDir(ts.archiveDir(), firstProjectID(projectID))
+	return ts.listDir(ts.archiveDir(), firstProjectID(projectID, ts.projectID))
 }
 
-func firstProjectID(projectID []string) string {
-	if len(projectID) == 0 {
-		return ""
+func firstProjectID(projectID []string, fallback string) string {
+	if len(projectID) > 0 && projectID[0] != "" {
+		return projectID[0]
 	}
-	return projectID[0]
+	return fallback
 }
 
 func (ts *TaskStore) listDir(dir, projectID string) ([]*models.Task, error) {
@@ -133,6 +133,10 @@ func (ts *TaskStore) Get(id string) (*models.Task, error) {
 
 func (ts *TaskStore) findFile(id string) (string, error) {
 	projectID, localID := SplitScopedKey(id)
+	if projectID == "" && ts.projectID != "" {
+		projectID = ts.projectID
+		return ts.findFileExact(projectID, localID, true)
+	}
 	return ts.findFileExact(projectID, localID, projectID != "")
 }
 

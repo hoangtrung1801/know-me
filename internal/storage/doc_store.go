@@ -53,7 +53,7 @@ type docFrontmatter struct {
 // List returns all docs from .knowns/docs/ and .knowns/imports/*/docs/.
 func (ds *DocStore) List(projectID ...string) ([]*models.Doc, error) {
 	var docs []*models.Doc
-	filter := firstProjectID(projectID)
+	filter := firstProjectID(projectID, ds.projectID)
 
 	local, err := ds.walkDocs(ds.docsDir(), "", false, "", filter)
 	if err != nil {
@@ -148,7 +148,7 @@ func (ds *DocStore) walkDocs(dir, relBase string, imported bool, importSource, f
 func (ds *DocStore) Get(path string) (*models.Doc, error) {
 	path = strings.TrimSuffix(strings.TrimPrefix(path, "/"), ".md")
 	projectID, localPath := SplitScopedKey(path)
-	docs, err := ds.List()
+	docs, err := ds.List(projectID)
 	if err != nil {
 		return nil, err
 	}

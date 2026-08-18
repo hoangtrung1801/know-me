@@ -9,6 +9,7 @@ import (
 
 	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/spf13/cobra"
 )
 
 func TestResolveProjectStoreUsesWorkspaceLink(t *testing.T) {
@@ -118,5 +119,21 @@ func TestProjectStoreInitWritesCentralConfig(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(repo, ".knowns")); !os.IsNotExist(err) {
 		t.Fatalf("unexpected repository-local store: %v", err)
+	}
+}
+
+func TestProjectIDFlagDefaultsToStoreAndHonorsOverride(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("project-id", "", "project filter")
+	store := storage.NewProjectStore(t.TempDir(), "p12345", t.TempDir())
+
+	if got := projectIDFlagOrStore(cmd, store); got != "p12345" {
+		t.Fatalf("default project ID = %q, want %q", got, store.ProjectID)
+	}
+	if err := cmd.Flags().Set("project-id", "p67890"); err != nil {
+		t.Fatal(err)
+	}
+	if got := projectIDFlagOrStore(cmd, store); got != "p67890" {
+		t.Fatalf("overridden project ID = %q, want %q", got, "p67890")
 	}
 }
