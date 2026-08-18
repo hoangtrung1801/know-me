@@ -2,20 +2,7 @@ import { FileText, ListChecks, ChevronDown, ChevronUp } from "lucide-react";
 import { Progress } from "../../components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { useWorkspaceProjects } from "../../hooks/useWorkspaceProjects";
-import { toDisplayPath, isSpec, getSpecStatus, parseACProgress } from "../../lib/utils";
-
-interface DocData {
-  path: string;
-	projectId?: string;
-  content: string;
-  isImported?: boolean;
-  metadata: {
-    title?: string;
-    description?: string;
-    tags?: string[];
-    updatedAt: string;
-  };
-}
+import { toDisplayPath, isSpec, getSpecStatus, parseACProgress, type Doc } from "../../lib/utils";
 
 interface LinkedTask {
   id: string;
@@ -24,7 +11,7 @@ interface LinkedTask {
 }
 
 interface DocsDocHeaderProps {
-  selectedDoc: DocData;
+  selectedDoc: Doc;
   metaTitle: string;
   setMetaTitle: (v: string) => void;
   metaDescription: string;
