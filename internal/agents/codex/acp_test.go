@@ -190,6 +190,17 @@ func TestACPProcessAcceptsResponseBeforeChildExit(t *testing.T) {
 	}
 }
 
+func TestNewACPProcessBoundsInitializeCleanup(t *testing.T) {
+	command, _ := fakeACPCommand(t, "init-error-hang")
+	started := time.Now()
+	if _, err := NewACPProcess(context.Background(), t.TempDir(), command, nil); err == nil {
+		t.Fatal("expected initialize failure")
+	}
+	if elapsed := time.Since(started); elapsed > 5*time.Second {
+		t.Fatalf("initialize cleanup took %s", elapsed)
+	}
+}
+
 func TestACPProcessRespondsMethodNotFound(t *testing.T) {
 	command, logPath := fakeACPCommand(t, "unsupported")
 	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
@@ -334,6 +345,16 @@ func TestACPHelperProcess(t *testing.T) {
 		}
 		switch message.Method {
 		case "initialize":
+			if scenario == "init-error-hang" {
+				if err := json.NewEncoder(os.Stdout).Encode(map[string]any{
+					"jsonrpc": "2.0",
+					"id":      message.ID,
+					"error":   map[string]any{"code": 401, "message": "not authenticated"},
+				}); err != nil {
+					panic(err)
+				}
+				time.Sleep(10 * time.Second)
+			}
 			writeResponse(message.ID, map[string]any{"protocolVersion": 1})
 		case "session/new":
 			writeLog(helperLogEntry{Method: "session/new", SessionID: sessionID})
