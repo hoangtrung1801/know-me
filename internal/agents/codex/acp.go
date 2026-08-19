@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -71,7 +72,9 @@ type ACPProcess struct {
 	done         chan struct{}
 	doneOnce     sync.Once
 
-	waitDone chan struct{}
+	waitDone   chan struct{}
+	stdoutDone chan struct{}
+	stderrDone chan struct{}
 
 	sessionMu sync.RWMutex
 	sessionID string
@@ -83,7 +86,8 @@ type ACPProcess struct {
 	updateNext      uint64
 	updateDelivered uint64
 	updateDone      chan struct{}
-	updateQueue     chan acpUpdateEvent
+	updateQueue     []acpUpdateEvent
+	updateSignal    chan struct{}
 
 	closeOnce  sync.Once
 	closeDone  chan struct{}
@@ -124,18 +128,20 @@ func NewACPProcess(ctx context.Context, root string, command []string, logger *r
 	}
 
 	process := &ACPProcess{
-		root:        root,
-		command:     append([]string(nil), command...),
-		cmd:         cmd,
-		stdin:       stdin,
-		stdout:      stdout,
-		logger:      logger,
-		pending:     make(map[int64]chan acpRPCResponse),
-		done:        make(chan struct{}),
-		waitDone:    make(chan struct{}),
-		updateDone:  make(chan struct{}),
-		updateQueue: make(chan acpUpdateEvent, 64),
-		closeDone:   make(chan struct{}),
+		root:         root,
+		command:      append([]string(nil), command...),
+		cmd:          cmd,
+		stdin:        stdin,
+		stdout:       stdout,
+		logger:       logger,
+		pending:      make(map[int64]chan acpRPCResponse),
+		done:         make(chan struct{}),
+		waitDone:     make(chan struct{}),
+		stdoutDone:   make(chan struct{}),
+		stderrDone:   make(chan struct{}),
+		updateDone:   make(chan struct{}),
+		updateSignal: make(chan struct{}, 1),
+		closeDone:    make(chan struct{}),
 	}
 	go process.readStdout()
 	go process.readStderr(stderr)
@@ -157,7 +163,9 @@ func NewACPProcess(ctx context.Context, root string, command []string, logger *r
 			"terminal": false,
 		},
 	}); err != nil {
-		_ = process.Close(context.Background())
+		closeCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		_ = process.Close(closeCtx)
+		cancel()
 		return nil, fmt.Errorf("ACP initialize: %w", err)
 	}
 	return process, nil
@@ -366,21 +374,39 @@ func (p *ACPProcess) request(ctx context.Context, method string, params any) (js
 		p.removePending(id)
 		return nil, err
 	}
-	select {
-	case response := <-response:
-		if response.err != nil {
-			return nil, response.err
+	for {
+		select {
+		case response := <-response:
+			if response.err != nil {
+				return nil, response.err
+			}
+			return response.result, nil
+		default:
 		}
-		return response.result, nil
-	case <-ctx.Done():
-		p.removePending(id)
-		return nil, ctx.Err()
-	case <-p.done:
-		p.removePending(id)
-		if err := p.currentError(); err != nil {
-			return nil, err
+		select {
+		case response := <-response:
+			if response.err != nil {
+				return nil, response.err
+			}
+			return response.result, nil
+		case <-ctx.Done():
+			p.removePending(id)
+			return nil, ctx.Err()
+		case <-p.done:
+			select {
+			case response := <-response:
+				if response.err != nil {
+					return nil, response.err
+				}
+				return response.result, nil
+			default:
+			}
+			p.removePending(id)
+			if err := p.currentError(); err != nil {
+				return nil, err
+			}
+			return nil, errors.New("ACP process closed")
 		}
-		return nil, errors.New("ACP process closed")
 	}
 }
 
@@ -415,6 +441,7 @@ func (p *ACPProcess) write(message acpRPCMessage) error {
 }
 
 func (p *ACPProcess) readStdout() {
+	defer close(p.stdoutDone)
 	scanner := bufio.NewScanner(p.stdout)
 	scanner.Buffer(make([]byte, 64*1024), maxRunLogBytes)
 	for scanner.Scan() {
@@ -475,6 +502,7 @@ func (p *ACPProcess) readStdout() {
 }
 
 func (p *ACPProcess) readStderr(stderr io.ReadCloser) {
+	defer close(p.stderrDone)
 	defer stderr.Close()
 	scanner := bufio.NewScanner(stderr)
 	scanner.Buffer(make([]byte, 64*1024), maxRunLogBytes)
@@ -493,6 +521,8 @@ func (p *ACPProcess) readStderr(stderr io.ReadCloser) {
 
 func (p *ACPProcess) wait() {
 	err := p.cmd.Wait()
+	<-p.stdoutDone
+	<-p.stderrDone
 	if err != nil && !p.isClosing() {
 		p.markTerminal(fmt.Errorf("ACP adapter exited: %w", err))
 	} else {
@@ -592,8 +622,14 @@ func choosePermission(options []struct {
 
 func (p *ACPProcess) dispatchUpdates() {
 	for {
-		select {
-		case event := <-p.updateQueue:
+		p.updateMu.Lock()
+		if len(p.updateQueue) > 0 {
+			event := p.updateQueue[0]
+			p.updateQueue = p.updateQueue[1:]
+			if len(p.updateQueue) == 0 {
+				p.updateQueue = nil
+			}
+			p.updateMu.Unlock()
 			if event.callback != nil {
 				event.callback(event.update)
 			}
@@ -604,6 +640,11 @@ func (p *ACPProcess) dispatchUpdates() {
 			close(p.updateDone)
 			p.updateDone = make(chan struct{})
 			p.updateMu.Unlock()
+			continue
+		}
+		p.updateMu.Unlock()
+		select {
+		case <-p.updateSignal:
 		case <-p.done:
 			return
 		}
@@ -614,16 +655,11 @@ func (p *ACPProcess) dispatchUpdate(update ACPUpdate) {
 	p.updateMu.Lock()
 	p.updateNext++
 	event := acpUpdateEvent{seq: p.updateNext, update: update, callback: p.updateCallback}
+	p.updateQueue = append(p.updateQueue, event)
 	p.updateMu.Unlock()
 	select {
-	case p.updateQueue <- event:
+	case p.updateSignal <- struct{}{}:
 	default:
-		go func() {
-			select {
-			case p.updateQueue <- event:
-			case <-p.done:
-			}
-		}()
 	}
 }
 
@@ -653,7 +689,18 @@ func (p *ACPProcess) waitForUpdates(ctx context.Context, target uint64) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-p.done:
-			return p.currentError()
+			p.updateMu.Lock()
+			if p.updateDelivered >= target {
+				p.updateMu.Unlock()
+				return nil
+			}
+			updateDone := p.updateDone
+			p.updateMu.Unlock()
+			select {
+			case <-updateDone:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 }

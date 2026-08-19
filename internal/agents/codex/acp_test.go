@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 type helperLogEntry struct {
@@ -16,6 +17,7 @@ type helperLogEntry struct {
 	SessionID string `json:"sessionId,omitempty"`
 	Outcome   string `json:"outcome,omitempty"`
 	OptionID  string `json:"optionId,omitempty"`
+	ErrorCode int    `json:"errorCode,omitempty"`
 }
 
 func TestACPProcessReusesSessionAcrossPromptsAndLoad(t *testing.T) {
@@ -139,12 +141,115 @@ func TestACPProcessStreamsAgentMessageChunkAndDecodesPhaseResult(t *testing.T) {
 	if len(updates) != 2 || updates[0].Kind != "agent_message_chunk" {
 		t.Fatalf("updates = %#v", updates)
 	}
+	wantRaw := `{"implementationPlan":"1. Change code","implementationNotes":"looked","summary":"done","tests":[]}`
+	if raw != wantRaw {
+		t.Fatalf("raw result = %q, want %q", raw, wantRaw)
+	}
 	result, err := decodePhaseResult([]byte(raw))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got, want := result.Summary, "done"; got != want {
 		t.Fatalf("summary = %q, want %q", got, want)
+	}
+}
+
+func TestACPProcessReportsPendingExit(t *testing.T) {
+	command, _ := fakeACPCommand(t, "exit")
+	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process.NewSession(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if _, err := process.Prompt(ctx, "inspect", nil); err == nil {
+		t.Fatal("expected pending prompt to fail when child exits")
+	}
+	if err := process.Close(context.Background()); err != nil {
+		t.Logf("close after child exit: %v", err)
+	}
+}
+
+func TestACPProcessAcceptsResponseBeforeChildExit(t *testing.T) {
+	command, _ := fakeACPCommand(t, "exit-after-response")
+	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process.NewSession(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := process.Prompt(context.Background(), "inspect", nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := process.Close(context.Background()); err != nil {
+		t.Logf("close after child exit: %v", err)
+	}
+}
+
+func TestACPProcessRespondsMethodNotFound(t *testing.T) {
+	command, logPath := fakeACPCommand(t, "unsupported")
+	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process.NewSession(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := process.Prompt(context.Background(), "inspect", nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := process.Close(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range readHelperLog(t, logPath) {
+		if entry.Method == "unsupported-response" {
+			if entry.ErrorCode != -32601 {
+				t.Fatalf("error code = %d, want -32601", entry.ErrorCode)
+			}
+			return
+		}
+	}
+	t.Fatal("method-not-found response was not recorded")
+}
+
+func TestACPProcessPermissionFallbacks(t *testing.T) {
+	for _, test := range []struct {
+		scenario string
+		outcome  string
+		optionID string
+	}{
+		{scenario: "once", outcome: "selected", optionID: "once-1"},
+		{scenario: "no-permission", outcome: "cancelled"},
+	} {
+		t.Run(test.scenario, func(t *testing.T) {
+			command, logPath := fakeACPCommand(t, test.scenario)
+			process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := process.NewSession(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := process.Prompt(context.Background(), "inspect", nil); err != nil {
+				t.Fatal(err)
+			}
+			if err := process.Close(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			for _, entry := range readHelperLog(t, logPath) {
+				if entry.Method == "permission-response" {
+					if entry.Outcome != test.outcome || entry.OptionID != test.optionID {
+						t.Fatalf("permission response = %#v", entry)
+					}
+					return
+				}
+			}
+			t.Fatal("permission response was not recorded")
+		})
 	}
 }
 
@@ -253,17 +358,24 @@ func TestACPHelperProcess(t *testing.T) {
 			}
 			writeLog(helperLogEntry{Method: "session/prompt", SessionID: params.SessionID})
 			switch scenario {
-			case "permission":
+			case "permission", "once", "no-permission":
+				options := []map[string]any{
+					{"id": "once-1", "outcome": "allow_once"},
+					{"id": "always-1", "outcome": "allow_always"},
+				}
+				if scenario == "once" {
+					options = options[:1]
+				}
+				if scenario == "no-permission" {
+					options = nil
+				}
 				if err := json.NewEncoder(os.Stdout).Encode(map[string]any{
 					"jsonrpc": "2.0",
 					"id":      9001,
 					"method":  "session/request_permission",
 					"params": map[string]any{
 						"sessionId": params.SessionID,
-						"options": []map[string]any{
-							{"id": "once-1", "outcome": "allow_once"},
-							{"id": "always-1", "outcome": "allow_always"},
-						},
+						"options":   options,
 					},
 				}); err != nil {
 					panic(err)
@@ -287,10 +399,38 @@ func TestACPHelperProcess(t *testing.T) {
 				})
 				emitChunk(t, params.SessionID, `{"implementationPlan":"1. Change code","implementationNotes":"looked","summary":"done","tests":[]}`)
 				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
-			case "chunks", "reuse", "version":
+			case "unsupported":
+				if err := json.NewEncoder(os.Stdout).Encode(map[string]any{
+					"jsonrpc": "2.0",
+					"id":      9002,
+					"method":  "session/unknown",
+					"params":  map[string]any{},
+				}); err != nil {
+					panic(err)
+				}
+				if !scanner.Scan() {
+					panic("missing method-not-found response")
+				}
+				var response struct {
+					Error struct {
+						Code int `json:"code"`
+					} `json:"error"`
+				}
+				if err := json.Unmarshal(scanner.Bytes(), &response); err != nil {
+					panic(err)
+				}
+				writeLog(helperLogEntry{Method: "unsupported-response", ErrorCode: response.Error.Code})
+				emitChunk(t, params.SessionID, `{"implementationPlan":"1. Change code","implementationNotes":"looked","summary":"done","tests":[]}`)
+				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
+			case "exit":
+				os.Exit(0)
+			case "chunks", "reuse", "version", "exit-after-response":
 				emitChunk(t, params.SessionID, `{"implementationPlan":"1. Change code",`)
 				emitChunk(t, params.SessionID, `"implementationNotes":"looked","summary":"done","tests":[]}`)
 				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
+				if scenario == "exit-after-response" {
+					os.Exit(0)
+				}
 			case "malformed":
 				emitChunk(t, params.SessionID, "```json\n{}\n```")
 				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
