@@ -1,7 +1,6 @@
 package codex
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -12,7 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -40,33 +38,56 @@ type Status struct {
 
 func Detect(ctx context.Context, executable string) Status {
 	status := Status{
-		LoginCommand: "codex",
-		DocsURL:      codexDocsURL,
+		LoginCommand:   "codex login",
+		DocsURL:        codexDocsURL,
+		InstallCommand: "npm install -g @agentclientprotocol/codex-acp",
 	}
-	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		status.InstallCommand = "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
-	}
-	if executable == "" {
-		executable = "codex"
-	}
-	path, err := exec.LookPath(executable)
+	command, err := configuredACPCommand(executable)
 	if err != nil {
-		status.Error = "Codex executable was not found"
+		status.Error = err.Error()
+		return status
+	}
+	path, err := exec.LookPath(command[0])
+	if err != nil {
+		status.Error = "codex-acp adapter was not found"
 		return status
 	}
 	status.Installed = true
 
-	versionOutput, err := exec.CommandContext(ctx, path, "--version").Output()
+	versionArgs := append(append([]string(nil), command[1:]...), "--version")
+	versionOutput, err := exec.CommandContext(ctx, path, versionArgs...).Output()
 	if err != nil {
-		status.Error = "Codex version check failed"
+		status.Error = "codex-acp adapter version check failed"
 		return status
 	}
 	status.Version = strings.TrimSpace(string(versionOutput))
-
-	loginCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-	status.LoggedIn = exec.CommandContext(loginCtx, path, "login", "status").Run() == nil
+	// The adapter has no separate, stable auth-status command. The first
+	// session/new call reports authentication failures; keep this field for
+	// the existing setup UI and show codex login as the remediation.
+	status.LoggedIn = true
 	return status
+}
+
+func configuredACPCommand(executable string) ([]string, error) {
+	if executable != "" {
+		return []string{executable}, nil
+	}
+	if raw := strings.TrimSpace(os.Getenv("KNOWS_CODEX_ACP_COMMAND")); raw != "" {
+		var command []string
+		if err := json.Unmarshal([]byte(raw), &command); err != nil {
+			return nil, fmt.Errorf("KNOWS_CODEX_ACP_COMMAND must be a JSON array: %w", err)
+		}
+		if len(command) == 0 {
+			return nil, errors.New("KNOWS_CODEX_ACP_COMMAND must not be empty")
+		}
+		for _, part := range command {
+			if strings.TrimSpace(part) == "" {
+				return nil, errors.New("KNOWS_CODEX_ACP_COMMAND must not contain empty command parts")
+			}
+		}
+		return command, nil
+	}
+	return []string{"codex-acp"}, nil
 }
 
 type Request struct {
@@ -128,22 +149,6 @@ func (logger *runLogger) close() error {
 	return err
 }
 
-func (r Runner) BuildArgs(req Request) []string {
-	sandbox := "read-only"
-	if req.Phase != models.AgentRunPhaseInvestigation {
-		sandbox = "workspace-write"
-	}
-	return []string{
-		"exec",
-		"--json",
-		"--cd", req.Root,
-		"--sandbox", sandbox,
-		"--output-schema", req.SchemaPath,
-		"--output-last-message", req.ResultPath,
-		req.Prompt,
-	}
-}
-
 type StreamEvent struct {
 	Type     string
 	ThreadID string
@@ -152,161 +157,94 @@ type StreamEvent struct {
 
 func (r Runner) Run(ctx context.Context, req Request, onEvent func(StreamEvent)) (Result, error) {
 	if req.Root == "" {
-		return Result{}, errors.New("Codex workspace root is required")
+		return Result{}, errors.New("ACP workspace root is required")
 	}
-	if req.SchemaPath == "" || req.ResultPath == "" {
-		return Result{}, errors.New("Codex result paths are required")
-	}
-	if r.Executable == "" {
-		r.Executable = "codex"
-	}
-	if err := os.MkdirAll(filepath.Dir(req.SchemaPath), 0o755); err != nil {
-		return Result{}, fmt.Errorf("create Codex schema directory: %w", err)
-	}
-	if err := os.MkdirAll(filepath.Dir(req.ResultPath), 0o755); err != nil {
-		return Result{}, fmt.Errorf("create Codex result directory: %w", err)
-	}
-	if err := os.WriteFile(req.SchemaPath, []byte(strictResultSchema), 0o600); err != nil {
-		return Result{}, fmt.Errorf("write Codex result schema: %w", err)
+	command, err := configuredACPCommand(r.Executable)
+	if err != nil {
+		return Result{}, err
 	}
 
 	var logger *runLogger
 	if req.LogPath != "" {
 		if err := os.MkdirAll(filepath.Dir(req.LogPath), 0o755); err != nil {
-			return Result{}, fmt.Errorf("create Codex log directory: %w", err)
+			return Result{}, fmt.Errorf("create ACP log directory: %w", err)
 		}
 		var err error
 		logFile, err := os.OpenFile(req.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
 		if err != nil {
-			return Result{}, fmt.Errorf("open Codex log: %w", err)
+			return Result{}, fmt.Errorf("open ACP log: %w", err)
 		}
 		logger = newRunLogger(logFile)
 		defer logger.close()
 	}
 
-	cmd := exec.CommandContext(ctx, r.Executable, r.BuildArgs(req)...)
-	cmd.Dir = req.Root
-	stdout, err := cmd.StdoutPipe()
+	process, err := NewACPProcess(ctx, req.Root, command, logger)
 	if err != nil {
-		return Result{}, fmt.Errorf("open Codex stdout: %w", err)
+		return Result{}, err
 	}
-	stderr, err := cmd.StderrPipe()
+	closeProcess := func() {
+		closeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = process.Close(closeCtx)
+	}
+	defer closeProcess()
+	if err := process.NewSession(ctx); err != nil {
+		return Result{}, err
+	}
+	mode := ACPModeAgent
+	if req.Phase == models.AgentRunPhaseInvestigation {
+		mode = ACPModeReadOnly
+	}
+	if err := process.SetMode(ctx, mode); err != nil {
+		return Result{}, err
+	}
+	raw, err := process.Prompt(ctx, req.Prompt, func(update ACPUpdate) {
+		if onEvent != nil {
+			onEvent(StreamEvent{Type: update.Kind, Message: update.Text})
+		}
+	})
 	if err != nil {
-		return Result{}, fmt.Errorf("open Codex stderr: %w", err)
+		return Result{}, err
 	}
-	if err := cmd.Start(); err != nil {
-		return Result{}, fmt.Errorf("start Codex: %w", err)
-	}
-
-	writeLog := func(line []byte) error {
-		if logger == nil {
-			return nil
-		}
-		return logger.write(line)
-	}
-
-	var threadID string
-	var parseErr error
-	var stdoutErr, stderrErr error
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		scanner := bufio.NewScanner(stdout)
-		scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
-		for scanner.Scan() {
-			line := append([]byte(nil), scanner.Bytes()...)
-			if err := writeLog(line); err != nil && stdoutErr == nil {
-				stdoutErr = err
-			}
-			event, err := parseStreamEvent(line)
-			if err != nil {
-				if parseErr == nil {
-					parseErr = err
-				}
-				continue
-			}
-			if event.ThreadID != "" {
-				threadID = event.ThreadID
-			}
-			if onEvent != nil {
-				onEvent(event)
-			}
-		}
-		if err := scanner.Err(); err != nil && stdoutErr == nil {
-			stdoutErr = err
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		scanner := bufio.NewScanner(stderr)
-		scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
-		for scanner.Scan() {
-			if err := writeLog(scanner.Bytes()); err != nil && stderrErr == nil {
-				stderrErr = err
-			}
-		}
-		stderrErr = scanner.Err()
-	}()
-
-	waitErr := cmd.Wait()
-	wg.Wait()
-	result := Result{ThreadID: threadID}
-	if cmd.ProcessState != nil {
-		result.ExitCode = cmd.ProcessState.ExitCode()
-	}
-	if stdoutErr != nil {
-		return result, fmt.Errorf("read Codex output: %w", stdoutErr)
-	}
-	if stderrErr != nil {
-		return result, fmt.Errorf("read Codex diagnostics: %w", stderrErr)
-	}
-	if waitErr != nil {
-		if parseErr != nil {
-			return result, fmt.Errorf("parse Codex output: %w", parseErr)
-		}
-		return result, fmt.Errorf("Codex exited with code %d: %w", result.ExitCode, waitErr)
-	}
-	if parseErr != nil {
-		return result, fmt.Errorf("parse Codex output: %w", parseErr)
-	}
-
-	data, err := os.ReadFile(req.ResultPath)
+	decoded, err := decodePhaseResult([]byte(raw))
 	if err != nil {
-		return result, fmt.Errorf("read Codex result: %w", err)
+		return Result{}, fmt.Errorf("decode ACP result: %w", err)
 	}
-	decoded, err := decodePhaseResult(data)
-	if err != nil {
-		return result, fmt.Errorf("decode Codex result: %w", err)
+	if err := validateResult(req.Phase, decoded); err != nil {
+		return Result{}, err
 	}
-	result.Output = decoded
-	if err := validateResult(req.Phase, result.Output); err != nil {
-		return result, err
-	}
-	return result, nil
+	return Result{Output: decoded}, nil
 }
 
 func decodePhaseResult(data []byte) (PhaseResult, error) {
+	decoder := json.NewDecoder(bytes.NewReader(data))
 	var fields map[string]json.RawMessage
-	if err := json.Unmarshal(data, &fields); err != nil {
+	if err := decoder.Decode(&fields); err != nil {
 		return PhaseResult{}, err
+	}
+	if fields == nil {
+		return PhaseResult{}, errors.New("result must be a JSON object")
 	}
 	for _, field := range []string{"implementationPlan", "implementationNotes", "summary", "tests"} {
 		if _, ok := fields[field]; !ok {
 			return PhaseResult{}, fmt.Errorf("required field %q is missing", field)
 		}
 	}
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	var result PhaseResult
-	if err := decoder.Decode(&result); err != nil {
-		return PhaseResult{}, err
-	}
 	var extra any
 	if err := decoder.Decode(&extra); err != io.EOF {
 		if err == nil {
 			return PhaseResult{}, errors.New("multiple JSON values are not allowed")
 		}
+		return PhaseResult{}, err
+	}
+	object, err := json.Marshal(fields)
+	if err != nil {
+		return PhaseResult{}, err
+	}
+	decoder = json.NewDecoder(bytes.NewReader(object))
+	decoder.DisallowUnknownFields()
+	var result PhaseResult
+	if err := decoder.Decode(&result); err != nil {
 		return PhaseResult{}, err
 	}
 	return result, nil
