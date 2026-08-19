@@ -108,6 +108,31 @@ func TestTaskHTTPListHistoricalVisibilityAndStableLifecycleGrouping(t *testing.T
 	}
 }
 
+func TestTaskHTTPListUsesProjectIDOnlyWhenProvided(t *testing.T) {
+	root := t.TempDir()
+	projectOne := storage.NewProjectStore(root, "p1", t.TempDir())
+	projectTwo := storage.NewProjectStore(root, "p2", t.TempDir())
+	if err := projectOne.Init("project one"); err != nil {
+		t.Fatal(err)
+	}
+	if err := projectTwo.Init("project two"); err != nil {
+		t.Fatal(err)
+	}
+	createTaskLifecycleRouteTask(t, projectOne, "p1-task")
+	createTaskLifecycleRouteTask(t, projectTwo, "p2-task")
+
+	router := taskHTTPContractRouter(projectOne)
+	all := callTaskHTTPList(t, router, "/api/tasks", http.StatusOK)
+	if len(all) != 2 {
+		t.Fatalf("all-project task count = %d, want 2: %#v", len(all), all)
+	}
+
+	filtered := callTaskHTTPList(t, router, "/api/tasks?projectId=p2", http.StatusOK)
+	if len(filtered) != 1 || filtered[0].ID != "p2-task" {
+		t.Fatalf("filtered tasks = %#v, want p2-task", filtered)
+	}
+}
+
 func taskHTTPContractRouter(store *storage.Store) http.Handler {
 	api := chi.NewRouter()
 	(&TaskRoutes{store: store, sse: &fakeBroadcaster{}}).Register(api)
