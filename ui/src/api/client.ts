@@ -1,4 +1,5 @@
 import type { Task, TimeEntry } from "@/ui/models/task";
+import type { AgentAction, AgentTaskSnapshot, CodexStatus } from "@/ui/models/agent";
 import type { TaskChange, TaskVersion } from "@/ui/models/version";
 import type {
 	TaskLifecycleEvent,
@@ -318,6 +319,34 @@ export const {
 	hardDeleteTask,
 	reorderTasks,
 } = api;
+
+async function agentFetch<T>(path: string, init?: RequestInit): Promise<T> {
+	const res = await apiFetch(`${API_BASE}${path}`, init);
+	const data = await res.json().catch(() => ({}));
+	if (!res.ok) {
+		throw new Error(data?.error || `Codex agent request failed (${res.status})`);
+	}
+	return data as T;
+}
+
+export const codexAgentApi = {
+	status(): Promise<CodexStatus> {
+		return agentFetch<CodexStatus>("/api/codex/status");
+	},
+	snapshot(taskId: string): Promise<AgentTaskSnapshot> {
+		return agentFetch<AgentTaskSnapshot>(`/api/tasks/${encodeURIComponent(taskId)}/agent`);
+	},
+	action(taskId: string, action: AgentAction, comment = ""): Promise<AgentTaskSnapshot> {
+		return agentFetch<AgentTaskSnapshot>(`/api/tasks/${encodeURIComponent(taskId)}/agent/${encodeURIComponent(action)}`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ comment }),
+		});
+	},
+	log(taskId: string, runId: string): Promise<{ content: string }> {
+		return agentFetch<{ content: string }>(`/api/tasks/${encodeURIComponent(taskId)}/agent/runs/${encodeURIComponent(runId)}/log`);
+	},
+};
 
 // Config API
 export interface LSPLanguageInfo {
