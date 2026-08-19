@@ -32,6 +32,7 @@ type Store struct {
 	Chats       *ChatStore
 	Memory      *MemoryStore
 	Decisions   *DecisionStore
+	Agent       *AgentStore
 
 	taskLifecycleLock     *taskLifecycleLock
 	decisionMigrationLock *decisionMemoryMigrationLock
@@ -73,6 +74,7 @@ func newStore(root, projectID, projectRoot string) *Store {
 	s.Chats = &ChatStore{root: root}
 	s.Memory = &MemoryStore{root: root, globalRoot: globalRoot}
 	s.Decisions = &DecisionStore{root: root, lifecycleLock: decisionLock}
+	s.Agent = &AgentStore{root: root, projectID: projectID}
 	return s
 }
 
