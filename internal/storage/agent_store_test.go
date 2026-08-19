@@ -9,6 +9,11 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
+func testAgentStore(t *testing.T) *Store {
+	t.Helper()
+	return NewProjectStore(t.TempDir(), "alpha", t.TempDir())
+}
+
 func TestAgentRunLockSerializesStores(t *testing.T) {
 	root := t.TempDir()
 	first := NewProjectStore(root, "alpha", t.TempDir())
@@ -56,18 +61,30 @@ func TestAgentStoreScopesDuplicateTaskIDsByProject(t *testing.T) {
 	}
 }
 
-func TestAgentStoreMarksRunningRunsInterrupted(t *testing.T) {
-	store := NewProjectStore(t.TempDir(), "alpha", t.TempDir())
-	started := time.Date(2026, 8, 19, 2, 0, 0, 0, time.UTC)
-	finished := started.Add(time.Minute)
-	state := models.AgentState{
-		Workflows: []models.AgentWorkflow{{ProjectID: "alpha", TaskID: "task01", Phase: models.AgentPhaseImplementing, ActiveRunID: "run01"}},
-		Runs:      []models.AgentRun{{ID: "run01", ProjectID: "alpha", TaskID: "task01", Phase: models.AgentRunPhaseImplementation, Status: models.AgentRunStatusRunning, StartedAt: started}},
-	}
-	if err := store.Agent.Save(state); err != nil {
+func TestAgentStoreMarksRunInterruptedAndKeepsSessionResumable(t *testing.T) {
+	store := testAgentStore(t)
+	now := time.Date(2026, 8, 19, 3, 0, 0, 0, time.UTC)
+	err := store.Agent.Save(models.AgentState{
+		Workflows: []models.AgentWorkflow{{
+			ProjectID:      store.ProjectID,
+			TaskID:         "task01",
+			Phase:          models.AgentPhaseImplementing,
+			ActiveRunID:    "run01",
+			CodexSessionID: "session01",
+		}},
+		Runs: []models.AgentRun{{
+			ID:             "run01",
+			ProjectID:      store.ProjectID,
+			TaskID:         "task01",
+			Phase:          models.AgentRunPhaseImplementation,
+			Status:         models.AgentRunStatusRunning,
+			CodexSessionID: "session01",
+		}},
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := store.Agent.MarkRunningInterrupted(finished); err != nil {
+	if err := store.Agent.MarkRunningInterrupted(now); err != nil {
 		t.Fatal(err)
 	}
 
@@ -75,10 +92,64 @@ func TestAgentStoreMarksRunningRunsInterrupted(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if snapshot.Workflow.ActiveRunID != "" || snapshot.Workflow.Phase != models.AgentPhasePlanReview {
+	if snapshot.Workflow.Phase != models.AgentPhaseInterrupted {
+		t.Fatalf("phase = %q", snapshot.Workflow.Phase)
+	}
+	if snapshot.Workflow.ResumePhase != models.AgentRunPhaseImplementation {
+		t.Fatalf("resume phase = %q", snapshot.Workflow.ResumePhase)
+	}
+	if snapshot.Workflow.CodexSessionID != "session01" || snapshot.Workflow.ActiveRunID != "" {
 		t.Fatalf("workflow = %#v", snapshot.Workflow)
 	}
 	if snapshot.Runs[0].Status != models.AgentRunStatusInterrupted {
 		t.Fatalf("run = %#v", snapshot.Runs[0])
+	}
+	if snapshot.AdapterState != "stopped" || !snapshot.Resumable || !snapshot.Interrupted {
+		t.Fatalf("snapshot = %#v", snapshot)
+	}
+}
+
+func TestAgentStoreRoundTripPreservesSessionFieldsAndEmptySlices(t *testing.T) {
+	store := testAgentStore(t)
+	now := time.Date(2026, 8, 19, 4, 0, 0, 0, time.UTC)
+	state := models.AgentState{
+		Workflows: []models.AgentWorkflow{{
+			ProjectID:      store.ProjectID,
+			TaskID:         "task01",
+			Phase:          models.AgentPhaseInterrupted,
+			CodexSessionID: "session01",
+			ResumePhase:    models.AgentRunPhaseImplementation,
+			UpdatedAt:      now,
+		}},
+		Runs: []models.AgentRun{{
+			ID:             "run01",
+			ProjectID:      store.ProjectID,
+			TaskID:         "task01",
+			Phase:          models.AgentRunPhaseImplementation,
+			Status:         models.AgentRunStatusInterrupted,
+			CodexSessionID: "session01",
+			StartedAt:      now,
+		}},
+		ReviewComments: []models.ReviewComment{},
+	}
+	if err := store.Agent.Save(state); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := store.Agent.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Workflows) != 1 || len(got.Runs) != 1 {
+		t.Fatalf("state = %#v", got)
+	}
+	if got.Workflows[0].CodexSessionID != "session01" || got.Workflows[0].ResumePhase != models.AgentRunPhaseImplementation {
+		t.Fatalf("workflow = %#v", got.Workflows[0])
+	}
+	if got.Runs[0].CodexSessionID != "session01" {
+		t.Fatalf("run = %#v", got.Runs[0])
+	}
+	if got.ReviewComments == nil || len(got.ReviewComments) != 0 {
+		t.Fatalf("review comments = %#v", got.ReviewComments)
 	}
 }
