@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"bufio"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -39,6 +42,30 @@ func TestAgentRoutesReturnSnapshotAndLog(t *testing.T) {
 	}
 }
 
+func TestAgentRoutesExposeACPResumeStateAndStartResume(t *testing.T) {
+	router, store, _ := setupAgentRoutes(t)
+	seedAgentResumeWorkflow(t, store)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/tasks/task01/agent", nil))
+	if w.Code != http.StatusOK {
+		t.Fatalf("snapshot status = %d body = %s", w.Code, w.Body.String())
+	}
+	var snapshot models.AgentTaskSnapshot
+	if err := json.Unmarshal(w.Body.Bytes(), &snapshot); err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Workflow.CodexSessionID != "session-1" || !snapshot.Resumable || !snapshot.Interrupted || snapshot.AdapterState != "interrupted" {
+		t.Fatalf("snapshot = %#v", snapshot)
+	}
+
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/tasks/task01/agent/resume", nil))
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("resume status = %d body = %s", w.Code, w.Body.String())
+	}
+}
+
 func setupAgentRoutes(t *testing.T) (http.Handler, *storage.Store, *codex.Manager) {
 	t.Helper()
 	store := storage.NewProjectStore(t.TempDir(), "project01", t.TempDir())
@@ -54,10 +81,76 @@ func setupAgentRoutes(t *testing.T) (http.Handler, *storage.Store, *codex.Manage
 	if err := store.Tasks.Create(&models.Task{ID: "task01", ProjectID: store.ProjectID, Title: "Example", Status: "in-progress", Priority: "medium", Labels: []string{}, CreatedAt: now, UpdatedAt: now}); err != nil {
 		t.Fatal(err)
 	}
-	manager := codex.NewManager("fake-codex", nil)
+	command, err := json.Marshal([]string{os.Args[0], "-test.run=^TestAgentACPHelperProcess$", "--"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("KNOWS_CODEX_ACP_COMMAND", string(command))
+	t.Setenv("GO_WANT_AGENT_ACP_HELPER_PROCESS", "1")
+	manager := codex.NewManager("", nil)
 	router := chi.NewRouter()
 	(&AgentRoutes{store: store, agent: manager}).Register(router)
 	return router, store, manager
+}
+
+func seedAgentResumeWorkflow(t *testing.T, store *storage.Store) {
+	t.Helper()
+	if err := store.Agent.Save(models.AgentState{Workflows: []models.AgentWorkflow{{
+		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhaseInterrupted,
+		CodexSessionID: "session-1", ResumePhase: models.AgentRunPhaseInvestigation,
+	}}}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAgentACPHelperProcess(t *testing.T) {
+	if os.Getenv("GO_WANT_AGENT_ACP_HELPER_PROCESS") != "1" {
+		return
+	}
+	for _, arg := range os.Args[1:] {
+		if arg == "--version" {
+			fmt.Fprintln(os.Stdout, "codex-acp test")
+			return
+		}
+	}
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		var message struct {
+			ID     any             `json:"id"`
+			Method string          `json:"method"`
+			Params json.RawMessage `json:"params"`
+		}
+		if err := json.Unmarshal(scanner.Bytes(), &message); err != nil {
+			os.Exit(2)
+		}
+		write := func(result any) {
+			_ = json.NewEncoder(os.Stdout).Encode(map[string]any{"jsonrpc": "2.0", "id": message.ID, "result": result})
+		}
+		switch message.Method {
+		case "initialize":
+			write(map[string]any{"protocolVersion": 1})
+		case "session/load", "session/new":
+			write(map[string]any{"sessionId": "session-1"})
+		case "session/set_mode":
+			write(map[string]any{})
+		case "session/prompt":
+			var params struct {
+				SessionID string `json:"sessionId"`
+			}
+			_ = json.Unmarshal(message.Params, &params)
+			_ = json.NewEncoder(os.Stdout).Encode(map[string]any{
+				"jsonrpc": "2.0", "method": "session/update",
+				"params": map[string]any{"sessionId": params.SessionID, "update": map[string]any{
+					"sessionUpdate": "agent_message_chunk",
+					"content":       map[string]any{"type": "text", "text": `{"implementationPlan":"plan","implementationNotes":"notes","summary":"resumed","tests":[]}`},
+				}},
+			})
+			write(map[string]any{"stopReason": "completed"})
+		case "session/close":
+			write(map[string]any{})
+			return
+		}
+	}
 }
 
 func seedAgentTask(t *testing.T, store *storage.Store, phase models.AgentPhase, status string) {

@@ -340,6 +340,21 @@ func TestManagerClosesSessionOnFinalApproval(t *testing.T) {
 	}
 }
 
+func TestManagerClosePersistsInterruptedRun(t *testing.T) {
+	manager, fake := testSessionManager(t, nil)
+	fake.promptStarted = make(chan struct{})
+	fake.promptBlock = make(chan struct{})
+	store := testAgentStore(t, "in-progress")
+	mustAct(t, manager, store, "task01", ActionStartInvestigation, "")
+	<-fake.promptStarted
+	manager.Close()
+	waitForRunStatus(t, manager, store, "task01", models.AgentRunStatusInterrupted)
+	snapshot := mustSnapshot(t, manager, store, "task01")
+	if snapshot.Workflow.Phase != models.AgentPhaseInterrupted || snapshot.Workflow.ResumePhase != models.AgentRunPhaseInvestigation {
+		t.Fatalf("shutdown snapshot = %#v", snapshot)
+	}
+}
+
 func testAgentStore(t *testing.T, status string) *storage.Store {
 	return testAgentStoreAt(t, t.TempDir(), status)
 }
@@ -379,15 +394,17 @@ func testManager(t *testing.T, results []PhaseResult) *Manager {
 }
 
 type recordingSession struct {
-	results      []PhaseResult
-	index        int
-	factoryCalls int
-	promptCalls  int
-	loadCalls    int
-	loadedID     string
-	closeCalls   int
-	promptErr    error
-	sessionID    string
+	results       []PhaseResult
+	index         int
+	factoryCalls  int
+	promptCalls   int
+	loadCalls     int
+	loadedID      string
+	closeCalls    int
+	promptErr     error
+	sessionID     string
+	promptStarted chan struct{}
+	promptBlock   <-chan struct{}
 }
 
 func (s *recordingSession) NewSession(context.Context) error {
@@ -404,8 +421,19 @@ func (s *recordingSession) LoadSession(_ context.Context, sessionID string) erro
 
 func (s *recordingSession) SetMode(context.Context, ACPMode) error { return nil }
 
-func (s *recordingSession) Prompt(_ context.Context, _ string, onUpdate func(ACPUpdate)) (string, error) {
+func (s *recordingSession) Prompt(ctx context.Context, _ string, onUpdate func(ACPUpdate)) (string, error) {
 	s.promptCalls++
+	if s.promptStarted != nil {
+		close(s.promptStarted)
+		s.promptStarted = nil
+	}
+	if s.promptBlock != nil {
+		select {
+		case <-s.promptBlock:
+		case <-ctx.Done():
+			return "", ctx.Err()
+		}
+	}
 	if s.promptErr != nil {
 		return "", s.promptErr
 	}
