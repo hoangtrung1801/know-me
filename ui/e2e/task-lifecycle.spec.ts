@@ -267,6 +267,49 @@ test.describe("Task lifecycle workflows", () => {
 		expect(lateArchived.lifecycleState).toBe("archived");
 	});
 
+	test("keeps a long lifecycle preview scrollable", async ({ page }) => {
+		const itemCount = 36;
+		await page.route("**/api/tasks/batch-archive", async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: "application/json",
+				body: JSON.stringify({
+					operation: "batch_archive",
+					execute: false,
+					completed: true,
+					processed: itemCount,
+					changed: 0,
+					items: Array.from({ length: itemCount }, (_, index) => ({
+						taskId: `long-${index}`,
+						operation: "batch_archive",
+						changed: false,
+						eligible: true,
+						before: "done",
+						after: "done",
+						reasons: [],
+					})),
+				}),
+			});
+		});
+
+		await page.goto(`${server.baseURL}/kanban`);
+		await page.getByRole("button", { name: "Archive completed Tasks" }).click();
+		await page.getByRole("menuitem", { name: /Done before now/ }).click();
+
+		const dialog = page.getByTestId("task-lifecycle-dialog");
+		const scrollRegion = dialog.getByTestId("lifecycle-items").locator("..");
+		const dimensions = await scrollRegion.evaluate((element) => ({
+			clientHeight: element.clientHeight,
+			scrollHeight: element.scrollHeight,
+		}));
+		expect(dimensions.scrollHeight).toBeGreaterThan(dimensions.clientHeight);
+
+		await scrollRegion.evaluate((element) => {
+			element.scrollTop = element.scrollHeight;
+		});
+		await expect.poll(() => scrollRegion.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+	});
+
 	test("renders stable skips and warnings and supports retry after a partial execution response", async ({ page }) => {
 		const doneID = createTask("Lifecycle Partial Retry", "--status done");
 		let executeCalls = 0;

@@ -116,13 +116,13 @@ export function TaskLifecycleDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={(next) => (!loading || allowCancelWhileLoading) && onOpenChange(next)}>
-			<DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden p-0" data-testid="task-lifecycle-dialog">
+			<DialogContent className="grid h-[85vh] max-h-[85vh] max-w-2xl grid-rows-[auto,minmax(0,1fr),auto] overflow-hidden p-0" data-testid="task-lifecycle-dialog">
 				<DialogHeader className="border-b px-6 py-5 pr-12">
 					<DialogTitle>{title}</DialogTitle>
 					<DialogDescription>{description}</DialogDescription>
 				</DialogHeader>
 
-				<div className="overflow-y-auto px-6 py-4">
+				<div className="min-h-0 overflow-y-auto px-6 py-4">
 					{error && (
 						<div role="alert" className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
 							{error}
