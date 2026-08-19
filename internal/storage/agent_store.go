@@ -143,6 +143,7 @@ func (as *AgentStore) TaskSnapshot(taskID string) (models.AgentTaskSnapshot, err
 		Runs:           []models.AgentRun{},
 		ReviewComments: []models.ReviewComment{},
 		DirtyFiles:     []string{},
+		AdapterState:   "stopped",
 	}
 	for _, workflow := range state.Workflows {
 		if workflow.ProjectID == as.projectID && workflow.TaskID == taskID {
@@ -166,6 +167,8 @@ func (as *AgentStore) TaskSnapshot(taskID string) (models.AgentTaskSnapshot, err
 	sort.SliceStable(snapshot.ReviewComments, func(i, j int) bool {
 		return snapshot.ReviewComments[i].CreatedAt.Before(snapshot.ReviewComments[j].CreatedAt)
 	})
+	snapshot.Resumable = snapshot.Workflow.CodexSessionID != "" && snapshot.Workflow.ResumePhase != ""
+	snapshot.Interrupted = snapshot.Workflow.Phase == models.AgentPhaseInterrupted
 	return snapshot, nil
 }
 
@@ -198,17 +201,9 @@ func (as *AgentStore) MarkRunningInterrupted(now time.Time) error {
 		changed = true
 		if workflowIndex, ok := workflowByTask[run.TaskID]; ok {
 			workflow := &state.Workflows[workflowIndex]
-			if workflow.ActiveRunID == run.ID {
-				workflow.ActiveRunID = ""
-			}
-			switch run.Phase {
-			case models.AgentRunPhaseInvestigation:
-				workflow.Phase = models.AgentPhaseIdle
-			case models.AgentRunPhaseImplementation:
-				workflow.Phase = models.AgentPhasePlanReview
-			case models.AgentRunPhaseFix:
-				workflow.Phase = models.AgentPhaseFixReady
-			}
+			workflow.ActiveRunID = ""
+			workflow.Phase = models.AgentPhaseInterrupted
+			workflow.ResumePhase = run.Phase
 			workflow.UpdatedAt = now
 		}
 	}

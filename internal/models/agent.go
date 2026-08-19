@@ -12,6 +12,7 @@ const (
 	AgentPhaseInvestigating AgentPhase = "investigating"
 	AgentPhasePlanReview    AgentPhase = "plan-review"
 	AgentPhaseImplementing  AgentPhase = "implementing"
+	AgentPhaseInterrupted   AgentPhase = "interrupted"
 	AgentPhaseCodeReview    AgentPhase = "code-review"
 	AgentPhaseFixReady      AgentPhase = "fix-ready"
 	AgentPhaseCompleted     AgentPhase = "completed"
@@ -31,27 +32,30 @@ const (
 )
 
 type AgentWorkflow struct {
-	ProjectID   string     `json:"projectId"`
-	TaskID      string     `json:"taskId"`
-	Phase       AgentPhase `json:"phase"`
-	ActiveRunID string     `json:"activeRunId,omitempty"`
-	UpdatedAt   time.Time  `json:"updatedAt"`
+	ProjectID      string        `json:"projectId"`
+	TaskID         string        `json:"taskId"`
+	Phase          AgentPhase    `json:"phase"`
+	ActiveRunID    string        `json:"activeRunId,omitempty"`
+	CodexSessionID string        `json:"codexSessionId,omitempty"`
+	ResumePhase    AgentRunPhase `json:"resumePhase,omitempty"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
 }
 
 type AgentRun struct {
-	ID            string         `json:"id"`
-	ProjectID     string         `json:"projectId"`
-	TaskID        string         `json:"taskId"`
-	Phase         AgentRunPhase  `json:"phase"`
-	Status        AgentRunStatus `json:"status"`
-	CodexThreadID string         `json:"codexThreadId,omitempty"`
-	StartedAt     time.Time      `json:"startedAt"`
-	FinishedAt    *time.Time     `json:"finishedAt,omitempty"`
-	ExitCode      *int           `json:"exitCode,omitempty"`
-	Summary       string         `json:"summary,omitempty"`
-	Tests         []string       `json:"tests,omitempty"`
-	Error         string         `json:"error,omitempty"`
-	LogPath       string         `json:"logPath"`
+	ID             string         `json:"id"`
+	ProjectID      string         `json:"projectId"`
+	TaskID         string         `json:"taskId"`
+	Phase          AgentRunPhase  `json:"phase"`
+	Status         AgentRunStatus `json:"status"`
+	CodexThreadID  string         `json:"codexThreadId,omitempty"`
+	CodexSessionID string         `json:"codexSessionId,omitempty"`
+	StartedAt      time.Time      `json:"startedAt"`
+	FinishedAt     *time.Time     `json:"finishedAt,omitempty"`
+	ExitCode       *int           `json:"exitCode,omitempty"`
+	Summary        string         `json:"summary,omitempty"`
+	Tests          []string       `json:"tests,omitempty"`
+	Error          string         `json:"error,omitempty"`
+	LogPath        string         `json:"logPath"`
 }
 
 type ReviewComment struct {
@@ -75,4 +79,7 @@ type AgentTaskSnapshot struct {
 	Runs           []AgentRun      `json:"runs"`
 	ReviewComments []ReviewComment `json:"reviewComments"`
 	DirtyFiles     []string        `json:"dirtyFiles"`
+	AdapterState   string          `json:"adapterState"`
+	Resumable      bool            `json:"resumable"`
+	Interrupted    bool            `json:"interrupted"`
 }
