@@ -1,11 +1,31 @@
 package storage
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
+
+func TestAgentRunLockSerializesStores(t *testing.T) {
+	root := t.TempDir()
+	first := NewProjectStore(root, "alpha", t.TempDir())
+	second := NewProjectStore(root, "alpha", t.TempDir())
+
+	lock, err := first.Agent.AcquireRunLock(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lock.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
+	if _, err := second.Agent.AcquireRunLock(ctx); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("second lock error = %v, want deadline exceeded", err)
+	}
+}
 
 func TestAgentStoreScopesDuplicateTaskIDsByProject(t *testing.T) {
 	root := t.TempDir()

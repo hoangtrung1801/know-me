@@ -2,13 +2,16 @@ package codex
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -18,6 +21,12 @@ import (
 )
 
 const codexDocsURL = "https://developers.openai.com/codex/cli"
+
+const maxRunLogBytes = 4 * 1024 * 1024
+
+const logTruncatedMarker = "[Codex log truncated after 4 MiB]"
+
+var logSecretPattern = regexp.MustCompile(`(?i)((?:"?(?:api[_-]?key|token|password|secret|authorization)"?\s*[:=]\s*"?))([^"\s,}]+)`)
 
 type Status struct {
 	Installed      bool   `json:"installed"`
@@ -69,6 +78,56 @@ type Runner struct {
 	Executable string
 }
 
+type runLogger struct {
+	file      *os.File
+	mu        sync.Mutex
+	written   int
+	truncated bool
+}
+
+func newRunLogger(file *os.File) *runLogger {
+	return &runLogger{file: file}
+}
+
+func (logger *runLogger) write(line []byte) error {
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
+	if logger.truncated || logger.file == nil {
+		return nil
+	}
+	safeLine := logSecretPattern.ReplaceAll(line, []byte(`$1[REDACTED]`))
+	remaining := maxRunLogBytes - logger.written
+	if len(safeLine)+1 > remaining {
+		marker := []byte(logTruncatedMarker)
+		if len(marker) > remaining {
+			marker = marker[:remaining]
+		}
+		if _, err := logger.file.Write(marker); err != nil {
+			return err
+		}
+		logger.written += len(marker)
+		logger.truncated = true
+		return nil
+	}
+	if _, err := logger.file.Write(safeLine); err != nil {
+		return err
+	}
+	if _, err := logger.file.Write([]byte("\n")); err != nil {
+		return err
+	}
+	logger.written += len(safeLine) + 1
+	return nil
+}
+
+func (logger *runLogger) close() error {
+	if logger == nil || logger.file == nil {
+		return nil
+	}
+	err := logger.file.Close()
+	logger.file = nil
+	return err
+}
+
 func (r Runner) BuildArgs(req Request) []string {
 	sandbox := "read-only"
 	if req.Phase != models.AgentRunPhaseInvestigation {
@@ -111,17 +170,18 @@ func (r Runner) Run(ctx context.Context, req Request, onEvent func(StreamEvent))
 		return Result{}, fmt.Errorf("write Codex result schema: %w", err)
 	}
 
-	var logFile *os.File
+	var logger *runLogger
 	if req.LogPath != "" {
 		if err := os.MkdirAll(filepath.Dir(req.LogPath), 0o755); err != nil {
 			return Result{}, fmt.Errorf("create Codex log directory: %w", err)
 		}
 		var err error
-		logFile, err = os.OpenFile(req.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+		logFile, err := os.OpenFile(req.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
 		if err != nil {
 			return Result{}, fmt.Errorf("open Codex log: %w", err)
 		}
-		defer logFile.Close()
+		logger = newRunLogger(logFile)
+		defer logger.close()
 	}
 
 	cmd := exec.CommandContext(ctx, r.Executable, r.BuildArgs(req)...)
@@ -138,18 +198,11 @@ func (r Runner) Run(ctx context.Context, req Request, onEvent func(StreamEvent))
 		return Result{}, fmt.Errorf("start Codex: %w", err)
 	}
 
-	var logMu sync.Mutex
 	writeLog := func(line []byte) error {
-		if logFile == nil {
+		if logger == nil {
 			return nil
 		}
-		logMu.Lock()
-		defer logMu.Unlock()
-		if _, err := logFile.Write(line); err != nil {
-			return err
-		}
-		_, err := logFile.Write([]byte("\n"))
-		return err
+		return logger.write(line)
 	}
 
 	var threadID string
@@ -222,11 +275,39 @@ func (r Runner) Run(ctx context.Context, req Request, onEvent func(StreamEvent))
 	if err != nil {
 		return result, fmt.Errorf("read Codex result: %w", err)
 	}
-	if err := json.Unmarshal(data, &result.Output); err != nil {
+	decoded, err := decodePhaseResult(data)
+	if err != nil {
 		return result, fmt.Errorf("decode Codex result: %w", err)
 	}
+	result.Output = decoded
 	if err := validateResult(req.Phase, result.Output); err != nil {
 		return result, err
+	}
+	return result, nil
+}
+
+func decodePhaseResult(data []byte) (PhaseResult, error) {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return PhaseResult{}, err
+	}
+	for _, field := range []string{"implementationPlan", "implementationNotes", "summary", "tests"} {
+		if _, ok := fields[field]; !ok {
+			return PhaseResult{}, fmt.Errorf("required field %q is missing", field)
+		}
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	var result PhaseResult
+	if err := decoder.Decode(&result); err != nil {
+		return PhaseResult{}, err
+	}
+	var extra any
+	if err := decoder.Decode(&extra); err != io.EOF {
+		if err == nil {
+			return PhaseResult{}, errors.New("multiple JSON values are not allowed")
+		}
+		return PhaseResult{}, err
 	}
 	return result, nil
 }
@@ -262,6 +343,9 @@ type Result struct {
 func validateResult(phase models.AgentRunPhase, result PhaseResult) error {
 	if phase == models.AgentRunPhaseInvestigation && strings.TrimSpace(result.ImplementationPlan) == "" {
 		return errors.New("Codex result implementationPlan is required for investigation")
+	}
+	if result.Tests == nil {
+		return errors.New("Codex result tests is required")
 	}
 	if strings.TrimSpace(result.Summary) == "" {
 		return errors.New("Codex result summary is required")

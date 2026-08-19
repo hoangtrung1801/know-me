@@ -130,6 +130,74 @@ func TestManagerSerializesRunsPerProjectRoot(t *testing.T) {
 	waitForPhase(t, manager, first, "task01", models.AgentPhasePlanReview)
 }
 
+func TestManagersSerializeRunsAcrossInstances(t *testing.T) {
+	repositoryRoot := t.TempDir()
+	first := testAgentStoreAt(t, repositoryRoot, "in-progress")
+	second := storage.NewProjectStore(first.Root, first.ProjectID, repositoryRoot)
+	managerA := testManager(t, nil)
+	managerB := testManager(t, nil)
+	started := make(chan struct{})
+	release := make(chan struct{})
+	managerA.run = func(ctx context.Context, _ Request, _ func(StreamEvent)) (Result, error) {
+		close(started)
+		select {
+		case <-release:
+			return Result{Output: PhaseResult{ImplementationPlan: "plan", Summary: "done"}}, nil
+		case <-ctx.Done():
+			return Result{}, ctx.Err()
+		}
+	}
+
+	mustAct(t, managerA, first, "task01", ActionStartInvestigation, "")
+	<-started
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
+	if _, _, err := managerB.Act(ctx, second, "task01", ActionStartInvestigation, ""); !errors.Is(err, ErrConflict) {
+		t.Fatalf("second manager run err = %v, want conflict", err)
+	}
+	close(release)
+	waitForPhase(t, managerA, first, "task01", models.AgentPhasePlanReview)
+}
+
+func TestManagerIgnoresStaleRunCompletion(t *testing.T) {
+	store := testAgentStore(t, "in-progress")
+	manager := testManager(t, nil)
+	started := make(chan struct{})
+	release := make(chan struct{})
+	manager.run = func(context.Context, Request, func(StreamEvent)) (Result, error) {
+		close(started)
+		<-release
+		return Result{Output: PhaseResult{ImplementationPlan: "stale plan", Summary: "stale result"}}, nil
+	}
+
+	mustAct(t, manager, store, "task01", ActionStartInvestigation, "")
+	<-started
+	state, err := store.Agent.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	state.Workflows[0].Phase = models.AgentPhaseIdle
+	state.Workflows[0].ActiveRunID = ""
+	state.Runs[0].Status = models.AgentRunStatusInterrupted
+	if err := store.Agent.Save(state); err != nil {
+		t.Fatal(err)
+	}
+	close(release)
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		snapshot := mustSnapshot(t, manager, store, "task01")
+		if snapshot.Runs[0].Status == models.AgentRunStatusInterrupted {
+			if task, _ := store.Tasks.Get("task01"); task.ImplementationPlan != "" {
+				t.Fatalf("stale result changed task plan: %q", task.ImplementationPlan)
+			}
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("stale run was not preserved: %#v", mustSnapshot(t, manager, store, "task01"))
+}
+
 func TestManagerFailureRestoresPhaseAndTaskStatus(t *testing.T) {
 	for _, test := range []struct {
 		name      string

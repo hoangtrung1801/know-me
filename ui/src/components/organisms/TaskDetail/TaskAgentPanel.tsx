@@ -3,7 +3,7 @@ import { AlertTriangle, Check, CircleStop, Loader2, Play, RefreshCw } from "luci
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
-import { codexAgentApi } from "../../../api/client";
+import { api, codexAgentApi } from "../../../api/client";
 import { useSSEEvent } from "../../../contexts/SSEContext";
 import type {
 	AgentAction,
@@ -16,6 +16,7 @@ import type { Task } from "@/ui/models/task";
 
 interface TaskAgentPanelProps {
 	task: Task;
+	onTaskUpdated?: (task: Task) => void;
 }
 
 const phaseLabels: Record<AgentPhase, string> = {
@@ -38,7 +39,7 @@ function isReviewPhase(phase: AgentPhase): boolean {
 	return phase === "plan-review" || phase === "code-review";
 }
 
-export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
+export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
 	const [snapshot, setSnapshot] = useState<AgentTaskSnapshot | null>(null);
 	const [codexStatus, setCodexStatus] = useState<CodexStatus | null>(null);
 	const [comment, setComment] = useState("");
@@ -68,11 +69,23 @@ export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
 		void load();
 	}, [load]);
 
+	const refreshTask = useCallback(async () => {
+		if (!onTaskUpdated) return;
+		try {
+			onTaskUpdated(await api.getTask(task.id));
+		} catch {
+			// The agent snapshot remains useful if the task refresh races a close.
+		}
+	}, [onTaskUpdated, task.id]);
+
 	const handleAgentEvent = useCallback((event: AgentEvent) => {
 		if (event.taskId !== task.id) return;
 		if (event.message) setProgress(event.message);
-		if (event.type !== "progress") void load();
-	}, [load, task.id]);
+		if (event.type !== "progress") {
+			void load();
+			if (event.taskChanged) void refreshTask();
+		}
+	}, [load, refreshTask, task.id]);
 
 	useSSEEvent("agent:updated", handleAgentEvent, [handleAgentEvent]);
 	useSSEEvent("agent:progress", handleAgentEvent, [handleAgentEvent]);
@@ -83,6 +96,7 @@ export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
 		setProgress(null);
 		try {
 			setSnapshot(await codexAgentApi.action(task.id, nextAction, comment));
+			void refreshTask();
 			if (nextAction === "request-plan-changes" || nextAction === "request-implementation-changes") {
 				setComment("");
 			}
@@ -91,7 +105,7 @@ export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
 		} finally {
 			setAction(null);
 		}
-	}, [comment, task.id]);
+	}, [comment, refreshTask, task.id]);
 
 	const latestRun = useMemo(
 		() => snapshot?.runs[snapshot.runs.length - 1],
@@ -149,6 +163,18 @@ export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
 
 					{progress && <p className="mt-3 text-sm text-muted-foreground">{progress}</p>}
 					{error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+					{phase === "idle" && task.status !== "in-progress" && (
+						<p className="mt-3 text-sm text-muted-foreground">Move this task to in-progress to start Codex.</p>
+					)}
+
+					{phase === "fix-ready" && snapshot && snapshot.dirtyFiles.length > 0 && (
+						<div className="mt-4 rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
+							<p className="font-medium">Workspace changes to review</p>
+							<ul className="mt-2 list-disc pl-5 text-muted-foreground">
+								{snapshot.dirtyFiles.map((file) => <li key={file}>{file}</li>)}
+							</ul>
+						</div>
+					)}
 
 					<div className="mt-4 flex flex-wrap gap-2">
 						{phase === "idle" && (
@@ -208,10 +234,15 @@ export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
 								</ul>
 							)}
 							{latestRun.error && <p className="mt-2 text-destructive">{latestRun.error}</p>}
-							<Button variant="link" size="sm" className="mt-2 h-auto px-0" onClick={() => void loadLog()}>
-								View run log
-							</Button>
-							{log && <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">{log}</pre>}
+							<details
+								className="mt-2"
+								onToggle={(event) => {
+									if (event.currentTarget.open && log === null) void loadLog();
+								}}
+							>
+								<summary className="cursor-pointer text-sm text-primary">View run log</summary>
+								{log !== null && <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">{log}</pre>}
+							</details>
 						</div>
 					)}
 
@@ -223,6 +254,7 @@ export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
 									<li key={review.id} className="rounded-md border border-border/50 p-3 text-sm">
 										<div className="flex items-center gap-2">
 											<Badge variant="outline">{review.stage === "plan" ? "Plan review" : "Implementation review"}</Badge>
+											<span className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleString()}</span>
 										</div>
 										<p className="mt-2 whitespace-pre-wrap text-muted-foreground">{review.body}</p>
 									</li>
@@ -231,14 +263,6 @@ export function TaskAgentPanel({ task }: TaskAgentPanelProps) {
 						</div>
 					)}
 
-					{snapshot && snapshot.dirtyFiles.length > 0 && (
-						<div className="mt-5 rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
-							<p className="font-medium">Workspace changes</p>
-							<ul className="mt-2 list-disc pl-5 text-muted-foreground">
-								{snapshot.dirtyFiles.map((file) => <li key={file}>{file}</li>)}
-							</ul>
-						</div>
-					)}
 				</>
 			)}
 		</section>

@@ -93,6 +93,34 @@ func TestRunnerRejectsInvalidStructuredOutput(t *testing.T) {
 	}
 }
 
+func TestRunnerRedactsAndBoundsLogs(t *testing.T) {
+	logPath := filepath.Join(t.TempDir(), "run.jsonl")
+	logFile, err := os.Create(logPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger := newRunLogger(logFile)
+	if err := logger.write([]byte(`{"token":"secret-value"}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := logger.write([]byte(strings.Repeat("x", maxRunLogBytes))); err != nil {
+		t.Fatal(err)
+	}
+	if err := logger.close(); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > maxRunLogBytes+len(logTruncatedMarker)+2 {
+		t.Fatalf("log size = %d, want bounded", len(data))
+	}
+	if strings.Contains(string(data), "secret-value") || !strings.Contains(string(data), "[REDACTED]") {
+		t.Fatalf("log was not redacted: %s", data)
+	}
+}
+
 func TestDirtyFilesReturnsTrackedAndUntrackedPaths(t *testing.T) {
 	root := t.TempDir()
 	runGit(t, root, "init")

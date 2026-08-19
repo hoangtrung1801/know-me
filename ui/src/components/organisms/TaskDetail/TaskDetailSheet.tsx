@@ -334,7 +334,7 @@ export function TaskDetailSheet({
 				type="notes"
 			/>
 
-			<TaskAgentPanel task={task} />
+			<TaskAgentPanel task={task} onTaskUpdated={onUpdate} />
 
 			{/* Time Tracking */}
 			<div className="border-t border-border/40" />
