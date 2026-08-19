@@ -24,6 +24,7 @@ import { TaskHeader } from "./TaskHeader";
 import { TaskDescription } from "./TaskDescription";
 import { TaskAcceptanceCriteria } from "./TaskAcceptanceCriteria";
 import { TaskImplementationSection } from "./TaskImplementationSection";
+import { TaskAgentPanel } from "./TaskAgentPanel";
 import { TaskSidebar } from "./TaskSidebar";
 import { TimeTrackingLogs } from "../../molecules";
 import TaskHistoryPanel from "../TaskHistoryPanel";
@@ -333,7 +334,8 @@ export function TaskDetailSheet({
 				type="notes"
 			/>
 
-			{/* AI Workspace — normal position when not running */}
+			<TaskAgentPanel task={task} />
+
 			{/* Time Tracking */}
 			<div className="border-t border-border/40" />
 			<div className="pt-8">
