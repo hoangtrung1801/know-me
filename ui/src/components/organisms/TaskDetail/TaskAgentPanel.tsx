@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, CircleStop, Loader2, Play, RefreshCw } from "lucide-react";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -24,6 +24,7 @@ const phaseLabels: Record<AgentPhase, string> = {
 	investigating: "Investigating",
 	"plan-review": "Plan review",
 	implementing: "Implementing",
+	interrupted: "Interrupted",
 	"code-review": "Code review",
 	"fix-ready": "Fix ready",
 	completed: "Completed",
@@ -48,6 +49,8 @@ export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [progress, setProgress] = useState<string | null>(null);
 	const [log, setLog] = useState<string | null>(null);
+	const [logOpen, setLogOpen] = useState(false);
+	const logRunIdRef = useRef<string | null>(null);
 
 	const load = useCallback(async () => {
 		setLoading(true);
@@ -78,14 +81,33 @@ export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
 		}
 	}, [onTaskUpdated, task.id]);
 
+	const latestRun = useMemo(
+		() => snapshot?.runs[snapshot.runs.length - 1],
+		[snapshot],
+	);
+
+	const refreshLog = useCallback(async (runId: string) => {
+		logRunIdRef.current = runId;
+		try {
+			const content = (await codexAgentApi.log(task.id, runId)).content;
+			if (logRunIdRef.current === runId) setLog(content);
+		} catch (reason) {
+			if (logRunIdRef.current === runId) {
+				setError(reason instanceof Error ? reason.message : "Unable to load run log");
+			}
+		}
+	}, [task.id]);
+
 	const handleAgentEvent = useCallback((event: AgentEvent) => {
 		if (event.taskId !== task.id) return;
 		if (event.message) setProgress(event.message);
+		const runId = event.runId ?? latestRun?.id;
+		if (logOpen && runId) void refreshLog(runId);
 		if (event.type !== "progress") {
 			void load();
 			if (event.taskChanged) void refreshTask();
 		}
-	}, [load, refreshTask, task.id]);
+	}, [latestRun?.id, load, logOpen, refreshLog, refreshTask, task.id]);
 
 	useSSEEvent("agent:updated", handleAgentEvent, [handleAgentEvent]);
 	useSSEEvent("agent:progress", handleAgentEvent, [handleAgentEvent]);
@@ -107,23 +129,17 @@ export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
 		}
 	}, [comment, refreshTask, task.id]);
 
-	const latestRun = useMemo(
-		() => snapshot?.runs[snapshot.runs.length - 1],
-		[snapshot],
-	);
 	const phase = snapshot?.workflow.phase || "idle";
 	const codexReady = codexStatus?.installed === true && codexStatus.loggedIn === true;
 	const commentAction = phase === "plan-review" ? "request-plan-changes" : "request-implementation-changes";
 	const busy = action !== null;
 
-	const loadLog = async () => {
-		if (!latestRun) return;
-		try {
-			setLog((await codexAgentApi.log(task.id, latestRun.id)).content);
-		} catch (reason) {
-			setError(reason instanceof Error ? reason.message : "Unable to load run log");
-		}
-	};
+	const latestRunId = latestRun?.id;
+	useEffect(() => {
+		setLog(null);
+		logRunIdRef.current = null;
+		if (logOpen && latestRunId) void refreshLog(latestRunId);
+	}, [latestRunId, logOpen, refreshLog]);
 
 	return (
 		<section
@@ -152,12 +168,14 @@ export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
 					<div className="mt-4 flex flex-wrap items-center gap-2">
 						<Badge variant={phaseTone(phase)}>{phaseLabels[phase]}</Badge>
 						{snapshot?.workflow.activeRunId && <span className="text-xs text-muted-foreground">Run in progress</span>}
+						{snapshot?.adapterState && <span className="text-xs text-muted-foreground">Adapter {snapshot.adapterState}</span>}
+						{snapshot?.workflow.codexSessionId && <span className="text-xs text-muted-foreground">ACP session {snapshot.workflow.codexSessionId}</span>}
 					</div>
 
 					{codexStatus && !codexReady && (
 						<div className="mt-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
 							<AlertTriangle className="mt-0.5 shrink-0" />
-							<span>{codexStatus.installed ? "Sign in to Codex before starting a run." : "Install Codex before starting a run."}</span>
+							<span>{codexStatus.installed ? "Sign in to Codex before starting a run." : "Install codex-acp before starting a run."}</span>
 						</div>
 					)}
 
@@ -177,6 +195,11 @@ export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
 					)}
 
 					<div className="mt-4 flex flex-wrap gap-2">
+						{snapshot?.interrupted && snapshot.resumable && (
+							<Button onClick={() => void runAction("resume")} disabled={busy || !codexReady || task.status !== "in-progress"}>
+								<Play /> Resume
+							</Button>
+						)}
 						{phase === "idle" && (
 							<Button onClick={() => void runAction("start-investigation")} disabled={busy || !codexReady || task.status !== "in-progress"}>
 								<Play /> Start investigation
@@ -237,7 +260,7 @@ export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
 							<details
 								className="mt-2"
 								onToggle={(event) => {
-									if (event.currentTarget.open && log === null) void loadLog();
+									setLogOpen(event.currentTarget.open);
 								}}
 							>
 								<summary className="cursor-pointer text-sm text-primary">View run log</summary>

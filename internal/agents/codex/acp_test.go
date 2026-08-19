@@ -154,6 +154,61 @@ func TestACPProcessStreamsAgentMessageChunkAndDecodesPhaseResult(t *testing.T) {
 	}
 }
 
+func TestACPProcessCollectsOnlyFinalAnswerChunks(t *testing.T) {
+	command, _ := fakeACPCommand(t, "phased-message")
+
+	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process.NewSession(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	raw, err := process.Prompt(context.Background(), "inspect", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process.Close(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	want := `{"implementationPlan":"1. Change code","implementationNotes":"looked","summary":"done","tests":[]}`
+	if raw != want {
+		t.Fatalf("raw result = %q, want %q", raw, want)
+	}
+}
+
+func TestACPProcessAcceptsArrayContentUpdate(t *testing.T) {
+	command, _ := fakeACPCommand(t, "array-content")
+
+	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process.NewSession(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	var updates []ACPUpdate
+	if _, err := process.Prompt(context.Background(), "inspect", func(update ACPUpdate) {
+		updates = append(updates, update)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := process.Close(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if len(updates) != 2 {
+		t.Fatalf("updates = %#v", updates)
+	}
+	if got, want := updates[0].Kind, "tool_call"; got != want {
+		t.Fatalf("first update kind = %q, want %q", got, want)
+	}
+	if got, want := updates[0].Text, "running"; got != want {
+		t.Fatalf("first update text = %q, want %q", got, want)
+	}
+}
+
 func TestACPProcessReportsPendingExit(t *testing.T) {
 	command, _ := fakeACPCommand(t, "exit")
 	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
@@ -445,6 +500,14 @@ func TestACPHelperProcess(t *testing.T) {
 				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
 			case "exit":
 				os.Exit(0)
+			case "array-content":
+				emitContentUpdate(t, params.SessionID)
+				emitChunk(t, params.SessionID, `{"implementationPlan":"1. Change code","implementationNotes":"looked","summary":"done","tests":[]}`)
+				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
+			case "phased-message":
+				emitMessageChunk(t, params.SessionID, "I'm applying the approved plan.", "commentary")
+				emitMessageChunk(t, params.SessionID, `{"implementationPlan":"1. Change code","implementationNotes":"looked","summary":"done","tests":[]}`, "final_answer")
+				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
 			case "chunks", "reuse", "version", "exit-after-response":
 				emitChunk(t, params.SessionID, `{"implementationPlan":"1. Change code",`)
 				emitChunk(t, params.SessionID, `"implementationNotes":"looked","summary":"done","tests":[]}`)
@@ -510,6 +573,33 @@ func readHelperLog(t *testing.T, path string) []helperLogEntry {
 }
 
 func emitChunk(t *testing.T, sessionID, text string) {
+	emitMessageChunk(t, sessionID, text, "")
+}
+
+func emitMessageChunk(t *testing.T, sessionID, text, phase string) {
+	t.Helper()
+	update := map[string]any{
+		"type": "agent_message_chunk",
+		"text": text,
+	}
+	if phase != "" {
+		update["_meta"] = map[string]any{
+			"codex": map[string]any{"phase": phase},
+		}
+	}
+	if err := json.NewEncoder(os.Stdout).Encode(map[string]any{
+		"jsonrpc": "2.0",
+		"method":  "session/update",
+		"params": map[string]any{
+			"sessionId": sessionID,
+			"update":    update,
+		},
+	}); err != nil {
+		panic(err)
+	}
+}
+
+func emitContentUpdate(t *testing.T, sessionID string) {
 	t.Helper()
 	if err := json.NewEncoder(os.Stdout).Encode(map[string]any{
 		"jsonrpc": "2.0",
@@ -517,8 +607,11 @@ func emitChunk(t *testing.T, sessionID, text string) {
 		"params": map[string]any{
 			"sessionId": sessionID,
 			"update": map[string]any{
-				"type": "agent_message_chunk",
-				"text": text,
+				"sessionUpdate": "tool_call",
+				"content": []map[string]any{
+					{"type": "terminal", "terminalId": "terminal-1"},
+					{"type": "text", "text": "running"},
+				},
 			},
 		},
 	}); err != nil {

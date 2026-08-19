@@ -55,7 +55,7 @@ func TestAgentRoutesExposeACPResumeStateAndStartResume(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &snapshot); err != nil {
 		t.Fatal(err)
 	}
-	if snapshot.Workflow.CodexSessionID != "session-1" || !snapshot.Resumable || !snapshot.Interrupted || snapshot.AdapterState != "interrupted" {
+	if snapshot.Workflow.CodexSessionID != "session-1" || !snapshot.Resumable || !snapshot.Interrupted || snapshot.AdapterState != "stopped" {
 		t.Fatalf("snapshot = %#v", snapshot)
 	}
 

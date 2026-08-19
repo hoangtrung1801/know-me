@@ -352,11 +352,12 @@ func (m *Manager) Close() {
 	}
 	deadline := time.NewTimer(5 * time.Second)
 	defer deadline.Stop()
+waitForRuns:
 	for _, active := range activeRuns {
 		select {
 		case <-active.done:
 		case <-deadline.C:
-			break
+			break waitForRuns
 		}
 	}
 	m.mu.Lock()
@@ -873,10 +874,9 @@ func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, task
 		return models.AgentTaskSnapshot{}, err
 	}
 	snapshot.DirtyFiles = files
+	snapshot.AdapterState = "stopped"
 	if m.sessions[sessionKey(store.ProjectID, taskID)] != nil {
 		snapshot.AdapterState = "running"
-	} else if snapshot.Workflow.Phase == models.AgentPhaseInterrupted {
-		snapshot.AdapterState = "interrupted"
 	}
 	return snapshot, nil
 }
