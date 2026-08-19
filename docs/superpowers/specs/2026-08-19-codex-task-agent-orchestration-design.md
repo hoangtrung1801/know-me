@@ -75,6 +75,7 @@ It contains independent records linked by task ID and run ID:
 
 ```text
 AgentWorkflow
+  projectID
   taskID
   phase
   activeRunID
@@ -82,6 +83,7 @@ AgentWorkflow
 
 AgentRun
   id
+  projectID
   taskID
   phase
   status
@@ -95,6 +97,7 @@ AgentRun
 
 ReviewComment
   id
+  projectID
   taskID
   stage: plan | implementation
   body
