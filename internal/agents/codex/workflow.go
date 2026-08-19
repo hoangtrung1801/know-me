@@ -47,7 +47,7 @@ type Event struct {
 type Manager struct {
 	mu         sync.Mutex
 	executable string
-	active     map[string]context.CancelFunc
+	active     map[string]activeRun
 	emit       func(Event)
 	run        func(context.Context, Request, func(StreamEvent)) (Result, error)
 	detect     func(context.Context, string) Status
@@ -55,11 +55,16 @@ type Manager struct {
 	now        func() time.Time
 }
 
+type activeRun struct {
+	cancel context.CancelFunc
+	lock   *storage.AgentRunLock
+}
+
 func NewManager(executable string, emit func(Event)) *Manager {
 	runner := Runner{Executable: executable}
 	return &Manager{
 		executable: executable,
-		active:     make(map[string]context.CancelFunc),
+		active:     make(map[string]activeRun),
 		emit:       emit,
 		run:        runner.Run,
 		detect:     Detect,
@@ -92,12 +97,12 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 	if store == nil || store.Agent == nil {
 		return models.AgentTaskSnapshot{}, false, errors.New("agent store is unavailable")
 	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	task, err := store.Tasks.Get(taskID)
 	if err != nil {
 		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: %v", ErrNotFound, err)
 	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
 	state, err := store.Agent.Load()
 	if err != nil {
 		return models.AgentTaskSnapshot{}, false, err
@@ -130,6 +135,11 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if strings.TrimSpace(comment) == "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: review comment is required", ErrInvalid)
 		}
+		agentLock, err := store.Agent.AcquireRunLock(ctx)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: acquire workspace run lock: %v", ErrConflict, err)
+		}
+		defer agentLock.Close()
 		state.ReviewComments = append(state.ReviewComments, models.ReviewComment{
 			ID: uuid.NewString(), ProjectID: store.ProjectID, TaskID: taskID,
 			Stage: models.ReviewStagePlan, Body: strings.TrimSpace(comment), CreatedAt: now,
@@ -146,7 +156,16 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if task.Status != "in-review" || workflow.Phase != models.AgentPhaseCodeReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation is not ready for approval", ErrConflict)
 		}
+		agentLock, err := store.Agent.AcquireRunLock(ctx)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: acquire workspace run lock: %v", ErrConflict, err)
+		}
+		defer agentLock.Close()
+		previousStatus := task.Status
 		if _, err := m.updateTask(ctx, store, taskID, func(task *models.Task) error {
+			if task.Status != "in-review" {
+				return fmt.Errorf("%w: task status changed before final approval", ErrConflict)
+			}
 			task.Status = "done"
 			return nil
 		}); err != nil {
@@ -155,6 +174,15 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		workflow.Phase = models.AgentPhaseCompleted
 		workflow.UpdatedAt = now
 		if err := store.Agent.Save(state); err != nil {
+			_, rollbackErr := m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
+				if task.Status == "done" {
+					task.Status = previousStatus
+				}
+				return nil
+			})
+			if rollbackErr != nil {
+				return models.AgentTaskSnapshot{}, false, fmt.Errorf("save agent state: %v; rollback task: %w", err, rollbackErr)
+			}
 			return models.AgentTaskSnapshot{}, false, err
 		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, TaskChanged: true})
@@ -167,7 +195,16 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if strings.TrimSpace(comment) == "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: review comment is required", ErrInvalid)
 		}
+		agentLock, err := store.Agent.AcquireRunLock(ctx)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: acquire workspace run lock: %v", ErrConflict, err)
+		}
+		defer agentLock.Close()
+		previousStatus := task.Status
 		if _, err := m.updateTask(ctx, store, taskID, func(task *models.Task) error {
+			if task.Status != "in-review" {
+				return fmt.Errorf("%w: task status changed before implementation feedback", ErrConflict)
+			}
 			task.Status = "in-progress"
 			return nil
 		}); err != nil {
@@ -180,6 +217,15 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		workflow.Phase = models.AgentPhaseFixReady
 		workflow.UpdatedAt = now
 		if err := store.Agent.Save(state); err != nil {
+			_, rollbackErr := m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
+				if task.Status == "in-progress" {
+					task.Status = previousStatus
+				}
+				return nil
+			})
+			if rollbackErr != nil {
+				return models.AgentTaskSnapshot{}, false, fmt.Errorf("save agent state: %v; rollback task: %w", err, rollbackErr)
+			}
 			return models.AgentTaskSnapshot{}, false, err
 		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, TaskChanged: true})
@@ -194,11 +240,11 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if workflow.ActiveRunID == "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: no active run", ErrConflict)
 		}
-		cancel, ok := m.active[store.RepositoryRoot()]
+		active, ok := m.active[store.RepositoryRoot()]
 		if !ok {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: active run is not owned by this server", ErrConflict)
 		}
-		cancel()
+		active.cancel()
 		snapshot, err := m.snapshotLocked(ctx, store, taskID)
 		return snapshot, false, err
 	default:
@@ -230,14 +276,18 @@ func (m *Manager) ReadLog(store *storage.Store, taskID, runID string) (string, e
 	if run == nil {
 		return "", fmt.Errorf("%w: run %q", ErrNotFound, runID)
 	}
-	return readLog(store.Agent.LogPath(run.ID))
+	content, err := readLog(store.Agent.LogPath(run.ID))
+	if errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("%w: run log %q", ErrNotFound, runID)
+	}
+	return content, err
 }
 
 func (m *Manager) Close() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	for _, cancel := range m.active {
-		cancel()
+	for _, active := range m.active {
+		active.cancel()
 	}
 }
 
@@ -253,8 +303,13 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 	if _, exists := m.active[root]; exists {
 		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: another Codex run is active for this project", ErrConflict)
 	}
+	runLock, err := store.Agent.AcquireRunLock(ctx)
+	if err != nil {
+		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: another Codex run is active for this project: %v", ErrConflict, err)
+	}
 	tempDir, err := os.MkdirTemp("", "knowns-codex-run-")
 	if err != nil {
+		_ = runLock.Close()
 		return models.AgentTaskSnapshot{}, false, fmt.Errorf("create Codex run directory: %w", err)
 	}
 	runID := uuid.NewString()
@@ -269,18 +324,20 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 	state.Runs = append(state.Runs, run)
 	if err := store.Agent.Save(*state); err != nil {
 		_ = os.RemoveAll(tempDir)
+		_ = runLock.Close()
 		return models.AgentTaskSnapshot{}, false, err
 	}
 	prompt := buildPrompt(task, *state, runPhase)
 	runCtx, cancel := context.WithCancel(context.Background())
-	m.active[root] = cancel
-	go m.execute(runCtx, store, runID, task.ID, root, tempDir, prompt, runPhase, restorePhase)
+	m.active[root] = activeRun{cancel: cancel, lock: runLock}
+	go m.execute(runCtx, store, runID, task.ID, root, tempDir, prompt, runPhase, restorePhase, runLock)
 	snapshot, err := m.snapshotLocked(ctx, store, task.ID)
 	return snapshot, true, err
 }
 
-func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir, prompt string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase) {
+func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir, prompt string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock) {
 	defer os.RemoveAll(tempDir)
+	defer runLock.Close()
 	result, runErr := m.run(ctx, Request{
 		Root: root, Prompt: prompt, Phase: runPhase,
 		SchemaPath: filepath.Join(tempDir, "schema.json"), ResultPath: filepath.Join(tempDir, "result.json"),
@@ -298,11 +355,17 @@ func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, task
 	defer m.mu.Unlock()
 	state, err := store.Agent.Load()
 	if err != nil {
+		delete(m.active, root)
 		return
 	}
 	run := findRun(&state, store.ProjectID, taskID, runID)
 	workflow := findWorkflow(&state, store.ProjectID, taskID)
 	if run == nil || workflow == nil {
+		delete(m.active, root)
+		return
+	}
+	if run.Status != models.AgentRunStatusRunning || workflow.ActiveRunID != runID {
+		delete(m.active, root)
 		return
 	}
 	now := m.now().UTC()
@@ -321,11 +384,19 @@ func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, task
 		workflow.Phase = restorePhase
 		workflow.ActiveRunID = ""
 		workflow.UpdatedAt = now
-		_ = store.Agent.Save(state)
+		if saveErr := store.Agent.Save(state); saveErr != nil {
+			m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save Codex run state: " + saveErr.Error()})
+			return
+		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated"})
 		return
 	}
 
+	var previousTask *models.Task
+	if task, taskErr := store.Tasks.Get(taskID); taskErr == nil {
+		copy := *task
+		previousTask = &copy
+	}
 	var updateErr error
 	if runPhase == models.AgentRunPhaseInvestigation {
 		_, updateErr = m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
@@ -335,6 +406,9 @@ func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, task
 		})
 	} else {
 		_, updateErr = m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
+			if task.Status != "in-progress" {
+				return fmt.Errorf("%w: task status changed before Codex completed", ErrConflict)
+			}
 			task.Status = "in-review"
 			return nil
 		})
@@ -345,7 +419,10 @@ func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, task
 		workflow.Phase = restorePhase
 		workflow.ActiveRunID = ""
 		workflow.UpdatedAt = now
-		_ = store.Agent.Save(state)
+		if saveErr := store.Agent.Save(state); saveErr != nil {
+			m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save Codex run state: " + saveErr.Error()})
+			return
+		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated"})
 		return
 	}
@@ -361,6 +438,26 @@ func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, task
 		workflow.Phase = models.AgentPhaseCodeReview
 	}
 	if err := store.Agent.Save(state); err != nil {
+		if previousTask != nil {
+			_, rollbackErr := m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
+				if runPhase == models.AgentRunPhaseInvestigation {
+					if task.ImplementationPlan == result.Output.ImplementationPlan {
+						task.ImplementationPlan = previousTask.ImplementationPlan
+					}
+					if task.ImplementationNotes == result.Output.ImplementationNotes {
+						task.ImplementationNotes = previousTask.ImplementationNotes
+					}
+				} else if task.Status == "in-review" {
+					task.Status = previousTask.Status
+				}
+				return nil
+			})
+			if rollbackErr != nil {
+				m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save Codex run state: " + err.Error() + "; rollback task: " + rollbackErr.Error()})
+				return
+			}
+		}
+		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save Codex run state: " + err.Error()})
 		return
 	}
 	m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated", TaskChanged: true})
@@ -377,7 +474,9 @@ func (m *Manager) updateThreadID(store *storage.Store, runID, threadID string) {
 	for i := range state.Runs {
 		if state.Runs[i].ProjectID == store.ProjectID && state.Runs[i].ID == runID {
 			state.Runs[i].CodexThreadID = threadID
-			_ = store.Agent.Save(state)
+			if err := store.Agent.Save(state); err != nil {
+				m.emitUpdated(Event{ProjectID: store.ProjectID, RunID: runID, Type: "error", Message: "save Codex thread state: " + err.Error()})
+			}
 			return
 		}
 	}
