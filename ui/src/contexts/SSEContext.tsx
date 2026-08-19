@@ -14,6 +14,7 @@ import type { Task } from "@/ui/models/task";
 import type { ChatSession, ChatMessage } from "@/ui/models/chat";
 import type { ActiveTimer } from "../api/client";
 import type { TaskLifecycleEvent } from "../models/taskLifecycle";
+import type { AgentEvent } from "../models/agent";
 import { toast } from "../components/ui/sonner";
 
 // Event types that can be received from server
@@ -36,7 +37,9 @@ export type SSEEventType =
 	| "chats:deleted"
 	| "chats:message"
 	| "opencode:event"
-	| "opencode:status";
+	| "opencode:status"
+	| "agent:updated"
+	| "agent:progress";
 
 // Event payload types
 export interface SSEEventPayloads {
@@ -59,6 +62,8 @@ export interface SSEEventPayloads {
 	"chats:message": { chatId: string; message: ChatMessage };
 	"opencode:event": Record<string, unknown>;
 	"opencode:status": Record<string, unknown>;
+	"agent:updated": AgentEvent;
+	"agent:progress": AgentEvent;
 }
 
 // Callback type for event listeners
@@ -351,6 +356,14 @@ export function SSEProvider({ children }: { children: ReactNode }) {
 			addHandler(eventSource, "opencode:status", (e) => {
 				const data = JSON.parse(e.data);
 				emit("opencode:status", data);
+			});
+
+			addHandler(eventSource, "agent:updated", (e) => {
+				emit("agent:updated", JSON.parse(e.data));
+			});
+
+			addHandler(eventSource, "agent:progress", (e) => {
+				emit("agent:progress", JSON.parse(e.data));
 			});
 		};
 

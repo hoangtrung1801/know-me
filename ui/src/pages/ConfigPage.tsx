@@ -47,7 +47,8 @@ import { useOpenCodeModelManager } from "../hooks/useOpencodeModelManager";
 import { OpenCodeModelManager } from "../components/organisms/OpenCodeModelManager";
 import DecisionMigrationTool from "../components/organisms/DecisionMigrationTool";
 import { toast } from "../components/ui/sonner";
-import { importApi, saveUserPreferences, getRuntimeServices, getEmbeddingModels, testEmbeddingModel, linkClassifierApi, tunnelApi, lspApi, type EmbeddingModelInfo, type EmbeddingModelsResponse, type EmbeddingModelTestResult, type Import, type ImportDetail, type ImportResult, type RuntimeService, type LSPLanguageInfo } from "../api/client";
+import { importApi, saveUserPreferences, getRuntimeServices, getEmbeddingModels, testEmbeddingModel, linkClassifierApi, tunnelApi, lspApi, codexAgentApi, type EmbeddingModelInfo, type EmbeddingModelsResponse, type EmbeddingModelTestResult, type Import, type ImportDetail, type ImportResult, type RuntimeService, type LSPLanguageInfo } from "../api/client";
+import type { CodexStatus } from "../models/agent";
 
 const DEFAULT_STATUSES = ["todo", "in-progress", "in-review", "done", "blocked", "on-hold", "urgent"];
 const COLOR_OPTIONS = ["gray", "blue", "green", "yellow", "red", "purple", "orange", "pink", "cyan", "indigo"];
@@ -108,7 +109,7 @@ const ALL_CATEGORIES: CategoryDef[] = [
 	{ id: "board", label: "Board", icon: Columns3, description: "Kanban statuses, colors, and visible columns" },
 	{ id: "search", label: "Search", icon: Search, description: "Semantic search configuration" },
 	{ id: "code", label: "Code", icon: Code2, description: "LSP servers and code intelligence" },
-	{ id: "ai", label: "AI", icon: Bot, description: "OpenCode connection used by Chat UI" },
+	{ id: "ai", label: "AI", icon: Bot, description: "Codex task workflows and OpenCode Chat UI" },
 	{ id: "imports", label: "Imports", icon: Download, description: "Imported templates and docs" },
 	{ id: "runtime", label: "Runtime", icon: Monitor, description: "Runtime services and sub-processes" },
 	{ id: "tunnel", label: "Tunnel", icon: Globe, description: "Cloudflare Tunnel for remote access" },
@@ -286,6 +287,24 @@ export default function ConfigPage() {
 	const [newStatus, setNewStatus] = useState("");
 	const { status: openCodeStatus, statusLoading: openCodeStatusLoading, providerResponse, providersLoading, lastLoadedAt, refreshAll } =
 		useOpenCode();
+	const [codexStatus, setCodexStatus] = useState<CodexStatus | null>(null);
+	const [codexStatusLoading, setCodexStatusLoading] = useState(true);
+	const [codexStatusError, setCodexStatusError] = useState<string | null>(null);
+	const loadCodexStatus = useCallback(async () => {
+		setCodexStatusLoading(true);
+		setCodexStatusError(null);
+		try {
+			setCodexStatus(await codexAgentApi.status());
+		} catch (error) {
+			setCodexStatusError(error instanceof Error ? error.message : "Could not check Codex status");
+		} finally {
+			setCodexStatusLoading(false);
+		}
+	}, []);
+
+	useEffect(() => {
+		void loadCodexStatus();
+	}, [loadCodexStatus]);
 
 	// Imports state
 	const [imports, setImports] = useState<Import[]>([]);
@@ -662,14 +681,6 @@ export default function ConfigPage() {
 		if (!ss?.model) return false;
 		return ss.model === model.name;
 	}, [config.semanticSearch]);
-
-	if (loading) {
-		return (
-			<div className="p-6 flex items-center justify-center h-64">
-				<div className="text-lg text-muted-foreground">Loading configuration...</div>
-			</div>
-		);
-	}
 
 	const statuses = config.statuses || DEFAULT_STATUSES;
 	const statusColors = config.statusColors || {};
@@ -1543,6 +1554,12 @@ export default function ConfigPage() {
 	};
 
 	const renderAI = () => {
+		const codexCommand = codexStatus?.installed ? codexStatus.loginCommand : codexStatus?.installCommand;
+		const codexTone = codexStatusLoading
+			? "border-border bg-muted/40 text-muted-foreground"
+			: codexStatus?.installed && codexStatus.loggedIn
+				? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+				: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300";
 		const statusTone = openCodeStatusLoading
 			? "border-border bg-muted/40 text-muted-foreground"
 			: openCodeStatus?.available
@@ -1551,6 +1568,59 @@ export default function ConfigPage() {
 
 		return (
 			<div>
+				<SectionHeader icon={Bot} title="Codex" description="Local coding agent used by task workflows" />
+
+				<FieldRow label="Connection" hint="Know-Me detects Codex but never installs it or changes credentials">
+					<div className="space-y-3">
+						<div className={`flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${codexTone}`} aria-live="polite">
+							{codexStatusLoading ? (
+								<Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" />
+							) : codexStatus?.installed && codexStatus.loggedIn ? (
+								<CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+							) : (
+								<AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+							)}
+							<div className="min-w-0">
+								<div className="font-medium">
+									{codexStatusLoading
+										? "Checking Codex..."
+										: codexStatus?.installed
+											? codexStatus.loggedIn ? "Codex connected" : "Codex needs sign-in"
+											: "Codex is not installed"}
+								</div>
+								{codexStatus?.version && <div className="mt-1 text-xs opacity-80">{codexStatus.version}</div>}
+								{codexStatusError && <div className="mt-1 text-xs text-destructive">{codexStatusError}</div>}
+							</div>
+						</div>
+						{codexCommand && (
+							<div className="flex items-start gap-2 rounded-md bg-muted/50 px-3 py-2">
+								<code className="min-w-0 flex-1 break-all text-xs">{codexCommand}</code>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="shrink-0"
+									aria-label="Copy Codex command"
+									onClick={() => void navigator.clipboard.writeText(codexCommand)}
+								>
+									<Copy className="h-4 w-4" />
+								</Button>
+							</div>
+						)}
+						<div className="flex flex-wrap items-center gap-2">
+							<Button variant="outline" size="sm" onClick={() => void loadCodexStatus()} disabled={codexStatusLoading}>
+								{codexStatusLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
+								Refresh status
+							</Button>
+							{codexStatus?.docsUrl && (
+								<a className="text-sm text-primary underline-offset-4 hover:underline" href={codexStatus.docsUrl} target="_blank" rel="noreferrer">
+									Setup guide
+								</a>
+							)}
+						</div>
+					</div>
+				</FieldRow>
+
+				<Separator className="my-4" />
 				<SectionHeader icon={Bot} title="OpenCode" description="Configure the OpenCode server used by Chat UI" />
 
 				<FieldRow label="Connection" hint="Chat UI is blocked when OpenCode is unavailable">
@@ -2119,6 +2189,13 @@ export default function ConfigPage() {
 	};
 
 	// ── Main layout ───────────────────────────────────────────────
+	if (loading) {
+		return (
+			<div className="p-6 flex items-center justify-center h-64">
+				<div className="text-lg text-muted-foreground">Loading configuration...</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex h-full min-w-0 flex-col overflow-hidden">
