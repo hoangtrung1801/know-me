@@ -89,6 +89,7 @@ type activeRun struct {
 	runID     string
 	store     *storage.Store
 	session   acpSession
+	done      chan struct{}
 }
 
 func NewManager(executable string, emit func(Event)) *Manager {
@@ -342,11 +343,6 @@ func (m *Manager) Close() {
 	for _, active := range m.active {
 		activeRuns = append(activeRuns, active)
 	}
-	sessions := make([]acpSession, 0, len(m.sessions))
-	for key, session := range m.sessions {
-		sessions = append(sessions, session)
-		delete(m.sessions, key)
-	}
 	m.mu.Unlock()
 	for _, active := range activeRuns {
 		if active.session != nil {
@@ -354,6 +350,22 @@ func (m *Manager) Close() {
 		}
 		active.cancel()
 	}
+	deadline := time.NewTimer(5 * time.Second)
+	defer deadline.Stop()
+	for _, active := range activeRuns {
+		select {
+		case <-active.done:
+		case <-deadline.C:
+			break
+		}
+	}
+	m.mu.Lock()
+	sessions := make([]acpSession, 0, len(m.sessions))
+	for key, session := range m.sessions {
+		sessions = append(sessions, session)
+		delete(m.sessions, key)
+	}
+	m.mu.Unlock()
 	for _, session := range sessions {
 		_ = closeSession(session)
 	}
@@ -397,19 +409,21 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 	}
 	prompt := buildPrompt(task, *state, runPhase)
 	runCtx, cancel := context.WithCancel(context.Background())
-	m.active[root] = activeRun{cancel: cancel, lock: runLock, projectID: store.ProjectID, taskID: task.ID, runID: runID, store: store}
+	activeDone := make(chan struct{})
+	m.active[root] = activeRun{cancel: cancel, lock: runLock, projectID: store.ProjectID, taskID: task.ID, runID: runID, store: store, done: activeDone}
 	if m.sessionFactory == nil {
-		go m.execute(runCtx, store, runID, task.ID, root, tempDir, prompt, runPhase, restorePhase, runLock)
+		go m.execute(runCtx, store, runID, task.ID, root, tempDir, prompt, runPhase, restorePhase, runLock, activeDone)
 	} else {
-		go m.executeSession(runCtx, store, runID, task.ID, root, tempDir, runPhase, restorePhase, runLock)
+		go m.executeSession(runCtx, store, runID, task.ID, root, tempDir, runPhase, restorePhase, runLock, activeDone)
 	}
 	snapshot, err := m.snapshotLocked(ctx, store, task.ID)
 	return snapshot, true, err
 }
 
-func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock) {
+func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock, activeDone chan struct{}) {
 	defer os.RemoveAll(tempDir)
 	defer runLock.Close()
+	defer close(activeDone)
 
 	session, runErr := m.ensureSession(ctx, store, taskID, root)
 	if runErr == nil {
@@ -693,9 +707,10 @@ func closeSession(session acpSession) error {
 	return session.Close(ctx)
 }
 
-func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir, prompt string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock) {
+func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir, prompt string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock, activeDone chan struct{}) {
 	defer os.RemoveAll(tempDir)
 	defer runLock.Close()
+	defer close(activeDone)
 	result, runErr := m.run(ctx, Request{
 		Root: root, Prompt: prompt, Phase: runPhase,
 		SchemaPath: filepath.Join(tempDir, "schema.json"), ResultPath: filepath.Join(tempDir, "result.json"),
@@ -732,14 +747,22 @@ func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, task
 	exitCode := result.ExitCode
 	run.ExitCode = &exitCode
 	if runErr != nil {
-		if errors.Is(runErr, context.Canceled) || ctx.Err() != nil {
+		if m.closing || isACPInterruption(runErr) {
+			run.Status = models.AgentRunStatusInterrupted
+			run.Error = runErr.Error()
+			workflow.Phase = models.AgentPhaseInterrupted
+			workflow.ResumePhase = runPhase
+		} else if errors.Is(runErr, context.Canceled) || ctx.Err() != nil {
 			run.Status = models.AgentRunStatusCancelled
 			run.Error = "Codex run cancelled"
+			workflow.Phase = restorePhase
+			workflow.ResumePhase = ""
 		} else {
 			run.Status = models.AgentRunStatusFailed
 			run.Error = runErr.Error()
+			workflow.Phase = restorePhase
+			workflow.ResumePhase = ""
 		}
-		workflow.Phase = restorePhase
 		workflow.ActiveRunID = ""
 		workflow.UpdatedAt = now
 		if saveErr := store.Agent.Save(state); saveErr != nil {
