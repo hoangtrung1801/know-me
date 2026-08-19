@@ -60,7 +60,7 @@ func (ts *TaskStore) ListArchived(projectID ...string) ([]*models.Task, error) {
 }
 
 func firstProjectID(projectID []string, fallback string) string {
-	if len(projectID) > 0 && projectID[0] != "" {
+	if len(projectID) > 0 {
 		return projectID[0]
 	}
 	return fallback
