@@ -1568,9 +1568,9 @@ export default function ConfigPage() {
 
 		return (
 			<div>
-				<SectionHeader icon={Bot} title="Codex" description="Local coding agent used by task workflows" />
+				<SectionHeader icon={Bot} title="Codex" description="Local codex-acp adapter used by task workflows" />
 
-				<FieldRow label="Connection" hint="Know-Me detects Codex but never installs it or changes credentials">
+				<FieldRow label="Connection" hint="Know-Me detects codex-acp but never installs it or changes credentials">
 					<div className="space-y-3">
 						<div className={`flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${codexTone}`} aria-live="polite">
 							{codexStatusLoading ? (
@@ -1583,10 +1583,10 @@ export default function ConfigPage() {
 							<div className="min-w-0">
 								<div className="font-medium">
 									{codexStatusLoading
-										? "Checking Codex..."
+										? "Checking Codex ACP..."
 										: codexStatus?.installed
 											? codexStatus.loggedIn ? "Codex connected" : "Codex needs sign-in"
-											: "Codex is not installed"}
+											: "codex-acp is not installed"}
 								</div>
 								{codexStatus?.version && <div className="mt-1 text-xs opacity-80">{codexStatus.version}</div>}
 								{codexStatusError && <div className="mt-1 text-xs text-destructive">{codexStatusError}</div>}
@@ -1599,7 +1599,7 @@ export default function ConfigPage() {
 									variant="ghost"
 									size="icon"
 									className="shrink-0"
-									aria-label="Copy Codex command"
+									aria-label="Copy Codex ACP setup command"
 									onClick={() => void navigator.clipboard.writeText(codexCommand)}
 								>
 									<Copy className="h-4 w-4" />

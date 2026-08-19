@@ -24,8 +24,42 @@ const (
 type ACPMode string
 
 type ACPUpdate struct {
-	Kind string
-	Text string
+	Kind  string
+	Text  string
+	Phase string
+}
+
+type acpUpdateContent struct {
+	Text string `json:"text"`
+}
+
+func (content *acpUpdateContent) UnmarshalJSON(data []byte) error {
+	data = bytes.TrimSpace(data)
+	content.Text = ""
+	if len(data) == 0 || bytes.Equal(data, []byte("null")) {
+		return nil
+	}
+	if data[0] != '[' {
+		var block struct {
+			Text string `json:"text"`
+		}
+		if err := json.Unmarshal(data, &block); err != nil {
+			return err
+		}
+		content.Text = block.Text
+		return nil
+	}
+
+	var blocks []struct {
+		Text string `json:"text"`
+	}
+	if err := json.Unmarshal(data, &blocks); err != nil {
+		return err
+	}
+	for _, block := range blocks {
+		content.Text += block.Text
+	}
+	return nil
 }
 
 type acpRPCMessage struct {
@@ -250,11 +284,16 @@ func (p *ACPProcess) Prompt(ctx context.Context, prompt string, onUpdate func(AC
 	defer p.promptMu.Unlock()
 
 	var resultMu sync.Mutex
-	var result strings.Builder
+	var result, legacyResult strings.Builder
 	p.setUpdateCallback(func(update ACPUpdate) {
 		if update.Kind == "agent_message_chunk" {
 			resultMu.Lock()
-			result.WriteString(update.Text)
+			switch update.Phase {
+			case "final_answer":
+				result.WriteString(update.Text)
+			case "":
+				legacyResult.WriteString(update.Text)
+			}
 			resultMu.Unlock()
 		}
 		if onUpdate != nil {
@@ -293,6 +332,9 @@ func (p *ACPProcess) Prompt(ctx context.Context, prompt string, onUpdate func(AC
 
 	resultMu.Lock()
 	raw := result.String()
+	if raw == "" {
+		raw = legacyResult.String()
+	}
 	resultMu.Unlock()
 	if err := validateJSONObject([]byte(raw)); err != nil {
 		return "", fmt.Errorf("decode ACP prompt result JSON: %w", err)
@@ -574,13 +616,15 @@ func (p *ACPProcess) handleAgentMessage(id *int64, method string, params json.Ra
 	if method == "session/update" {
 		var payload struct {
 			Update struct {
-				SessionUpdate string `json:"sessionUpdate"`
-				Type          string `json:"type"`
-				Text          string `json:"text"`
-				Content       struct {
-					Type string `json:"type"`
-					Text string `json:"text"`
-				} `json:"content"`
+				SessionUpdate string           `json:"sessionUpdate"`
+				Type          string           `json:"type"`
+				Text          string           `json:"text"`
+				Content       acpUpdateContent `json:"content"`
+				Meta          struct {
+					Codex struct {
+						Phase string `json:"phase"`
+					} `json:"codex"`
+				} `json:"_meta"`
 			} `json:"update"`
 		}
 		if err := json.Unmarshal(params, &payload); err != nil {
@@ -595,7 +639,7 @@ func (p *ACPProcess) handleAgentMessage(id *int64, method string, params json.Ra
 		if text == "" {
 			text = payload.Update.Text
 		}
-		p.dispatchUpdate(ACPUpdate{Kind: kind, Text: text})
+		p.dispatchUpdate(ACPUpdate{Kind: kind, Text: text, Phase: payload.Update.Meta.Codex.Phase})
 		return
 	}
 	if method == "session/request_permission" {

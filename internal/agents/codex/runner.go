@@ -18,7 +18,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
-const codexDocsURL = "https://developers.openai.com/codex/cli"
+const codexDocsURL = "https://github.com/agentclientprotocol/codex-acp"
 
 const maxRunLogBytes = 4 * 1024 * 1024
 

@@ -3,6 +3,7 @@ export type AgentPhase =
 	| "investigating"
 	| "plan-review"
 	| "implementing"
+	| "interrupted"
 	| "code-review"
 	| "fix-ready"
 	| "completed";
@@ -17,6 +18,7 @@ export type AgentAction =
 	| "approve-implementation"
 	| "request-implementation-changes"
 	| "start-fix"
+	| "resume"
 	| "cancel";
 
 export interface AgentWorkflow {
@@ -24,6 +26,8 @@ export interface AgentWorkflow {
 	taskId: string;
 	phase: AgentPhase;
 	activeRunId?: string;
+	codexSessionId?: string;
+	resumePhase?: AgentRunPhase;
 	updatedAt: string;
 }
 
@@ -34,6 +38,7 @@ export interface AgentRun {
 	phase: AgentRunPhase;
 	status: AgentRunStatus;
 	codexThreadId?: string;
+	codexSessionId?: string;
 	startedAt: string;
 	finishedAt?: string;
 	exitCode?: number;
@@ -58,6 +63,9 @@ export interface AgentTaskSnapshot {
 	runs: AgentRun[];
 	reviewComments: ReviewComment[];
 	dirtyFiles: string[];
+	adapterState: "running" | "stopped";
+	resumable: boolean;
+	interrupted: boolean;
 }
 
 export interface CodexStatus {
