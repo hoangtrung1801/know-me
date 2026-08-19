@@ -20,7 +20,9 @@ CLI only.
   action.
 - Run Codex in the current project workspace. Do not create a worktree in this
   version.
-- Treat a clean workspace as a prerequisite for implementation and fix runs.
+- Treat a clean workspace as a prerequisite for the first implementation run.
+  Fix runs intentionally continue over the reviewed implementation changes and
+  show the current dirty-file list before the user starts them.
 - Use `codex exec` for both investigation and implementation. Start a new run
   for each phase so the read-only and workspace-write permission boundaries are
   explicit. App Server is deferred.
@@ -186,9 +188,9 @@ Expose task-scoped agent operations under `/api/tasks/{id}/agent`:
 - Start a fix.
 - Cancel an active run.
 
-Invalid phase transitions, missing comments, dirty write workspaces, missing
-Codex, and active-run conflicts return validation errors without changing task
-state.
+Invalid phase transitions, missing comments, a dirty initial implementation
+workspace, missing Codex, and active-run conflicts return validation errors
+without changing task state.
 
 Broadcast agent state, run progress, and run completion through the existing
 SSE channel. Existing task update events continue to represent task field and
@@ -198,8 +200,9 @@ status changes.
 
 - A missing executable or logged-out Codex blocks the run and leaves the task
   unchanged.
-- A dirty workspace blocks implementation and fix starts and reports the
-  conflicting files.
+- A dirty workspace blocks the first implementation start and reports the
+  conflicting files. Fix starts allow the existing reviewed changes and show
+  their dirty-file list before the explicit action.
 - A non-zero exit, cancellation, malformed JSONL, or invalid final result
   marks the run failed without advancing task status.
 - Implementation can leave partial workspace changes after a failed process;
@@ -243,7 +246,7 @@ Add focused tests for:
 - Valid and invalid agent phase transitions.
 - Run persistence, failure handling, restart interruption, and retry.
 - Separate review-comment persistence and ordering.
-- Dirty-workspace and active-run preflight checks.
+- Initial dirty-workspace and active-run preflight checks.
 - Agent API responses and SSE events.
 
 Use a fake Codex executable in automated tests. Do not invoke a live Codex
