@@ -1,954 +1,508 @@
-# Codex Task Agent Orchestration Implementation Plan
+# Codex ACP Task Agent Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
-**Goal:** Add an explicit, review-gated Codex workflow that investigates Know-Me tasks, implements approved plans in the current workspace, and repeats review/fix cycles until the user marks the task done.
+**Goal:** Replace the one-shot codex exec workflow with one persistent codex-acp stdio session per task while preserving the existing investigation, review, implementation, and fix gates.
 
-**Architecture:** Persist project-scoped agent workflows, runs, and review comments in one global Know-Me JSON store. A small Go manager drives a local `codex exec` process, validates structured output, updates tasks through the existing lifecycle service, and broadcasts progress through the existing SSE broker; React surfaces setup status and task actions without introducing another global context.
+**Architecture:** Keep the current Go manager, JSON agent store, task lifecycle service, SSE broker, and React task panel. Add a small standard-library ACP JSON-RPC client that owns one adapter process/session per task, responds to permission requests with the safest offered allow option, and turns session/update notifications into the existing bounded run log and SSE progress events.
 
-**Tech Stack:** Go standard library, chi, existing Know-Me storage/task lifecycle/SSE code, React 19, TypeScript, existing UI components, Playwright.
+**Tech Stack:** Go 1.24 standard library, existing chi routes and JSON storage, existing task lifecycle/search hooks, React 19/TypeScript, existing SSE context, Playwright.
 
-**Spec:** `docs/superpowers/specs/2026-08-19-codex-task-agent-orchestration-design.md`
+**Spec:** docs/superpowers/specs/2026-08-19-codex-task-agent-orchestration-design.md
 
 ## Global Constraints
 
-- Support the locally installed Codex CLI only.
-- Use `codex exec`; do not add Codex App Server or another agent provider.
-- Investigation runs use `read-only`; implementation and fix runs use `workspace-write`.
-- Never invoke `danger-full-access`.
-- Task status edits never start Codex; every run begins from an explicit agent action.
-- Run in the current registered project root; do not create worktrees or branches.
-- Require a clean Git workspace before the first implementation run. Fix runs continue over the reviewed implementation changes and show the dirty-file list.
-- Keep review comments separate from task implementation notes.
-- Allow one active run per project root.
-- Use argument arrays with `exec.CommandContext`; never interpolate task or review text into a shell command.
-- Do not install Codex, start login, or store credentials automatically.
-- Use the official setup URL `https://developers.openai.com/codex/cli`; on macOS/Linux the current official standalone install command is `curl -fsSL https://chatgpt.com/codex/install.sh | sh`.
-- Add no dependency: reuse the Go standard library, the existing `github.com/google/uuid` module, existing React components, and Playwright.
+- Use the locally installed codex-acp adapter; do not invoke the previous codex exec runner.
+- Use one ACP session and one adapter process per task across investigation, implementation, and fix prompts.
+- Use ACP read-only for investigation and agent/workspace-write for implementation and fixes; never select agent-full-access or danger-full-access.
+- Automatically select an offered allow_always permission option, falling back to allow_once; cancel if no allow option exists.
+- Run in the current registered project root; do not create worktrees, branches, queues, or another provider integration.
+- Record the run before its prompt starts, persist the ACP session ID, and require an explicit Resume after restart or adapter disconnect.
+- Keep review comments separate from task implementation notes and use the existing task lifecycle update path for task changes.
+- Never interpolate task or review text into a shell command; launch the configured adapter as an executable plus argument array.
+- Do not install packages, start authentication, or store credentials automatically. The optional explicit npx -y @agentclientprotocol/codex-acp command must be configured by the user.
+- Keep raw ACP logs redacted and bounded to 4 MiB, and never write environment variables or authentication output to a run log.
+- Add no dependency; use Go standard library, existing UUID/storage/search/lifecycle code, existing UI components, and Playwright.
+
+---
 
 ## File map
 
-- Create `internal/models/agent.go`: shared persisted agent phases, runs, review comments, and task snapshot types.
-- Create `internal/storage/agent_store.go`: atomic `.knowns/agent-workflows.json` persistence, project filtering, log-path resolution, and restart interruption.
-- Modify `internal/storage/store.go`: expose `Store.Agent` and initialize the agent store.
-- Create `internal/storage/agent_store_test.go`: project scoping, round-trip, and interrupted-run coverage.
-- Create `internal/agents/codex/runner.go`: Codex detection, command construction, Git dirty-file check, JSONL parsing, structured output, and raw logging.
-- Create `internal/agents/codex/runner_test.go`: fake-process tests for status, sandbox arguments, event parsing, and invalid output.
-- Create `internal/agents/codex/workflow.go`: action validation, prompts, asynchronous run ownership, task updates, comments, cancellation, and snapshots.
-- Create `internal/agents/codex/workflow_test.go`: the investigation/approval/review/fix state machine and failure recovery.
-- Create `internal/server/routes/agent.go`: Codex status, task snapshot, action, and run-log HTTP handlers.
-- Create `internal/server/routes/agent_test.go`: route status codes, payloads, and SSE-facing manager events.
-- Modify `internal/server/server.go`: own one Codex workflow manager, register routes, interrupt stale runs at startup, and cancel children on shutdown.
-- Create `ui/src/models/agent.ts`: frontend agent contracts.
-- Modify `ui/src/api/client.ts`: Codex status, snapshot, action, and log methods.
-- Modify `ui/src/contexts/SSEContext.tsx`: typed `agent:updated` and `agent:progress` events.
-- Modify `ui/src/pages/ConfigPage.tsx`: Codex setup/status card in the existing AI section.
-- Create `ui/src/components/organisms/TaskDetail/TaskAgentPanel.tsx`: task phase, actions, progress, comments, run result, dirty files, and log UI.
-- Modify `ui/src/components/organisms/TaskDetail/TaskDetailSheet.tsx`: mount the agent panel beside the existing plan and notes.
-- Modify `ui/src/components/organisms/TaskDetail/index.ts`: export the panel.
-- Create `ui/e2e/codex-agent.spec.ts`: setup card and review-loop UI coverage with intercepted agent APIs.
+- Modify internal/models/agent.go: add interrupted/session fields and snapshot adapter-state fields.
+- Modify internal/storage/agent_store.go: persist session metadata and mark active work interrupted with an explicit resume phase.
+- Modify internal/storage/agent_store_test.go: round-trip and restart-resume assertions.
+- Modify internal/agents/codex/runner.go: replace Codex executable detection and JSONL runner helpers with codex-acp command detection, redacted logging, strict result decoding, and dirty-file checks.
+- Create internal/agents/codex/acp.go: newline-delimited JSON-RPC transport, persistent adapter process, session lifecycle, update dispatch, permission replies, cancellation, and process shutdown.
+- Modify internal/agents/codex/runner_test.go: adapter detection/result/logging tests.
+- Create internal/agents/codex/acp_test.go: fake ACP stdio server tests for handshake, session lifecycle, permissions, updates, cancellation, and malformed protocol.
+- Modify internal/agents/codex/workflow.go: task-session ownership, mode changes, Resume action, interrupted/disconnected handling, session close on completion, and progress events.
+- Modify internal/agents/codex/workflow_test.go: persistent-session workflow, resume, ownership, and shutdown tests.
+- Modify internal/server/routes/agent_test.go: Resume payload/action coverage and adapter status expectations.
+- Modify internal/server/server.go: make shutdown close persistent adapter processes and preserve interrupted runs.
+- Modify ui/src/models/agent.ts: add interrupted phase, Resume action, ACP session/adapter state, and updated setup fields.
+- Modify ui/src/api/client.ts: keep existing agent endpoints and add typed resume/log refresh support.
+- Modify ui/src/pages/ConfigPage.tsx: guide installation/authentication for codex-acp.
+- Modify ui/src/components/organisms/TaskDetail/TaskAgentPanel.tsx: show session state, Resume, and live run-log refresh.
+- Modify ui/e2e/codex-agent.spec.ts: update setup command fixtures and cover interrupted resume/live log behavior.
 
----
+Each task below ends with a focused test run and a commit, so a failed later slice can be isolated without reverting unrelated work.
 
-### Task 1: Persist project-scoped agent state
+### Task 1: Persist ACP session and interruption state
 
 **Files:**
-- Create: `internal/models/agent.go`
-- Create: `internal/storage/agent_store.go`
-- Create: `internal/storage/agent_store_test.go`
-- Modify: `internal/storage/store.go`
+- Modify: internal/models/agent.go
+- Modify: internal/storage/agent_store.go
+- Modify: internal/storage/agent_store_test.go
 
 **Interfaces:**
-- Produces: `models.AgentPhase`, `models.AgentRunPhase`, `models.AgentRunStatus`, `models.AgentWorkflow`, `models.AgentRun`, `models.ReviewComment`, `models.AgentState`, and `models.AgentTaskSnapshot`.
-- Produces: `AgentStore.Load()`, `AgentStore.Save(models.AgentState)`, `AgentStore.TaskSnapshot(taskID)`, `AgentStore.MarkRunningInterrupted(time.Time)`, and `AgentStore.LogPath(runID)`.
-- Consumes: existing package-private `storage.writeJSON`, `storage.readJSON`, `storage.Store.Root`, and `storage.Store.ProjectID`.
+- Produces models.AgentPhaseInterrupted, models.AgentWorkflow.CodexSessionID, models.AgentWorkflow.ResumePhase, and models.AgentRun.CodexSessionID.
+- Produces models.AgentTaskSnapshot.AdapterState, Resumable, and Interrupted.
+- Preserves AgentStore.Load, Save, TaskSnapshot, AcquireRunLock, and LogPath signatures.
 
-- [ ] **Step 1: Write failing storage tests**
+- [ ] **Step 1: Write failing persistence tests.**
 
-```go
-func TestAgentStoreScopesDuplicateTaskIDsByProject(t *testing.T) {
-	root := t.TempDir()
-	alpha := NewProjectStore(root, "alpha", t.TempDir())
-	beta := NewProjectStore(root, "beta", t.TempDir())
+Seed a workflow with a session and an active implementation run, call MarkRunningInterrupted, and require durable interrupted/resume state:
 
-	state := models.AgentState{Workflows: []models.AgentWorkflow{
-		{ProjectID: "alpha", TaskID: "same01", Phase: models.AgentPhasePlanReview},
-		{ProjectID: "beta", TaskID: "same01", Phase: models.AgentPhaseFixReady},
-	}}
-	if err := alpha.Agent.Save(state); err != nil { t.Fatal(err) }
-
-	a, err := alpha.Agent.TaskSnapshot("same01")
+~~~go
+func TestAgentStoreMarksRunInterruptedAndKeepsSessionResumable(t *testing.T) {
+	store := testAgentStore(t)
+	now := time.Date(2026, 8, 19, 3, 0, 0, 0, time.UTC)
+	err := store.Agent.Save(models.AgentState{
+		Workflows: []models.AgentWorkflow{{
+			ProjectID: store.ProjectID, TaskID: "task01",
+			Phase: models.AgentPhaseImplementing, ActiveRunID: "run01",
+			CodexSessionID: "session01",
+		}},
+		Runs: []models.AgentRun{{
+			ID: "run01", ProjectID: store.ProjectID, TaskID: "task01",
+			Phase: models.AgentRunPhaseImplementation,
+			Status: models.AgentRunStatusRunning, CodexSessionID: "session01",
+		}},
+	})
 	if err != nil { t.Fatal(err) }
-	b, err := beta.Agent.TaskSnapshot("same01")
-	if err != nil { t.Fatal(err) }
-	if a.Workflow.Phase != models.AgentPhasePlanReview { t.Fatalf("alpha phase = %q", a.Workflow.Phase) }
-	if b.Workflow.Phase != models.AgentPhaseFixReady { t.Fatalf("beta phase = %q", b.Workflow.Phase) }
-}
-
-func TestAgentStoreMarksRunningRunsInterrupted(t *testing.T) {
-	store := NewProjectStore(t.TempDir(), "alpha", t.TempDir())
-	started := time.Date(2026, 8, 19, 2, 0, 0, 0, time.UTC)
-	finished := started.Add(time.Minute)
-	state := models.AgentState{
-		Workflows: []models.AgentWorkflow{{ProjectID: "alpha", TaskID: "task01", Phase: models.AgentPhaseImplementing, ActiveRunID: "run01"}},
-		Runs: []models.AgentRun{{ID: "run01", ProjectID: "alpha", TaskID: "task01", Phase: models.AgentRunPhaseImplementation, Status: models.AgentRunStatusRunning, StartedAt: started}},
-	}
-	if err := store.Agent.Save(state); err != nil { t.Fatal(err) }
-	if err := store.Agent.MarkRunningInterrupted(finished); err != nil { t.Fatal(err) }
+	if err := store.Agent.MarkRunningInterrupted(now); err != nil { t.Fatal(err) }
 
 	snapshot, err := store.Agent.TaskSnapshot("task01")
 	if err != nil { t.Fatal(err) }
-	if snapshot.Workflow.ActiveRunID != "" || snapshot.Workflow.Phase != models.AgentPhasePlanReview { t.Fatalf("workflow = %#v", snapshot.Workflow) }
-	if snapshot.Runs[0].Status != models.AgentRunStatusInterrupted { t.Fatalf("run = %#v", snapshot.Runs[0]) }
+	if snapshot.Workflow.Phase != models.AgentPhaseInterrupted {
+		t.Fatalf("phase = %q", snapshot.Workflow.Phase)
+	}
+	if snapshot.Workflow.ResumePhase != models.AgentRunPhaseImplementation {
+		t.Fatalf("resume phase = %q", snapshot.Workflow.ResumePhase)
+	}
+	if snapshot.Workflow.CodexSessionID != "session01" || snapshot.Workflow.ActiveRunID != "" {
+		t.Fatalf("workflow = %#v", snapshot.Workflow)
+	}
+	if snapshot.Runs[0].Status != models.AgentRunStatusInterrupted {
+		t.Fatalf("run = %#v", snapshot.Runs[0])
+	}
 }
-```
+~~~
 
-- [ ] **Step 2: Run the tests and confirm they fail**
+Add a JSON round-trip assertion for session IDs, ResumePhase, and empty slices. Run:
 
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/storage -run 'TestAgentStore' -count=1`
+~~~bash
+GOCACHE=/tmp/knowns-agent-gocache go test ./internal/storage -run 'TestAgentStore' -count=1
+~~~
 
-Expected: FAIL because `Store.Agent` and the agent model types do not exist.
+Expected: FAIL because the new fields and interrupted phase do not exist yet.
 
-- [ ] **Step 3: Add the model and minimum atomic store**
+- [ ] **Step 2: Add the model fields and phase constants.**
 
-```go
-type AgentPhase string
-type AgentRunPhase string
-type AgentRunStatus string
-type ReviewStage string
+Use the existing JSON-tag convention with these fields:
 
-const (
-	AgentPhaseIdle          AgentPhase = "idle"
-	AgentPhaseInvestigating AgentPhase = "investigating"
-	AgentPhasePlanReview    AgentPhase = "plan-review"
-	AgentPhaseImplementing  AgentPhase = "implementing"
-	AgentPhaseCodeReview    AgentPhase = "code-review"
-	AgentPhaseFixReady      AgentPhase = "fix-ready"
-	AgentPhaseCompleted     AgentPhase = "completed"
-
-	AgentRunPhaseInvestigation  AgentRunPhase = "investigation"
-	AgentRunPhaseImplementation AgentRunPhase = "implementation"
-	AgentRunPhaseFix            AgentRunPhase = "fix"
-
-	AgentRunStatusRunning     AgentRunStatus = "running"
-	AgentRunStatusSucceeded   AgentRunStatus = "succeeded"
-	AgentRunStatusFailed      AgentRunStatus = "failed"
-	AgentRunStatusCancelled   AgentRunStatus = "cancelled"
-	AgentRunStatusInterrupted AgentRunStatus = "interrupted"
-
-	ReviewStagePlan           ReviewStage = "plan"
-	ReviewStageImplementation ReviewStage = "implementation"
-)
+~~~go
+const AgentPhaseInterrupted AgentPhase = "interrupted"
 
 type AgentWorkflow struct {
-	ProjectID  string     `json:"projectId"`
-	TaskID     string     `json:"taskId"`
-	Phase      AgentPhase `json:"phase"`
-	ActiveRunID string    `json:"activeRunId,omitempty"`
-	UpdatedAt  time.Time  `json:"updatedAt"`
+	ProjectID      string
+	TaskID         string
+	Phase          AgentPhase
+	ActiveRunID    string
+	CodexSessionID string
+	ResumePhase    AgentRunPhase
+	UpdatedAt      time.Time
 }
 
 type AgentRun struct {
-	ID            string         `json:"id"`
-	ProjectID     string         `json:"projectId"`
-	TaskID        string         `json:"taskId"`
-	Phase         AgentRunPhase  `json:"phase"`
-	Status        AgentRunStatus `json:"status"`
-	CodexThreadID string         `json:"codexThreadId,omitempty"`
-	StartedAt     time.Time      `json:"startedAt"`
-	FinishedAt    *time.Time     `json:"finishedAt,omitempty"`
-	ExitCode      *int           `json:"exitCode,omitempty"`
-	Summary       string         `json:"summary,omitempty"`
-	Tests         []string       `json:"tests,omitempty"`
-	Error         string         `json:"error,omitempty"`
-	LogPath       string         `json:"logPath"`
-}
-
-type ReviewComment struct {
-	ID        string      `json:"id"`
-	ProjectID string      `json:"projectId"`
-	TaskID    string      `json:"taskId"`
-	Stage     ReviewStage `json:"stage"`
-	Body      string      `json:"body"`
-	CreatedAt time.Time   `json:"createdAt"`
-	RunID     string      `json:"runId,omitempty"`
-}
-
-type AgentState struct {
-	Workflows      []AgentWorkflow `json:"workflows"`
-	Runs           []AgentRun      `json:"runs"`
-	ReviewComments []ReviewComment `json:"reviewComments"`
+	ID             string
+	ProjectID      string
+	TaskID         string
+	Phase          AgentRunPhase
+	Status         AgentRunStatus
+	CodexSessionID string
+	StartedAt      time.Time
+	FinishedAt     *time.Time
+	ExitCode       *int
+	Summary        string
+	Tests          []string
+	Error          string
+	LogPath        string
 }
 
 type AgentTaskSnapshot struct {
-	Workflow       AgentWorkflow   `json:"workflow"`
-	Runs           []AgentRun      `json:"runs"`
-	ReviewComments []ReviewComment `json:"reviewComments"`
-	DirtyFiles     []string        `json:"dirtyFiles"`
+	Workflow       AgentWorkflow
+	Runs           []AgentRun
+	ReviewComments []ReviewComment
+	DirtyFiles     []string
+	AdapterState   string
+	Resumable      bool
+	Interrupted    bool
 }
-```
+~~~
 
-Implement `AgentStore.filePath()` as `<store root>/agent-workflows.json`. Every record carries `ProjectID`; `TaskSnapshot` filters on both `AgentStore.projectID` and `taskID`, sorts runs/comments oldest-first, and returns an in-memory `idle` workflow when none exists. `MarkRunningInterrupted` changes only records matching `AgentStore.projectID` and restores the workflow phase from the run phase (`investigation` to `idle`, `implementation` to `plan-review`, `fix` to `fix-ready`). `Save` uses `writeJSON`, and a missing file loads as empty non-nil slices.
+Apply the existing lower-camel JSON tags to the new fields. Do not add an adapter-process PID to persisted state; process handles are in memory and invalid after restart.
 
-```go
-type AgentStore struct {
-	root      string
-	projectID string
-}
+- [ ] **Step 3: Update restart recovery without changing normal failure restoration.**
 
-func (as *AgentStore) LogPath(runID string) string {
-	return filepath.Join(as.root, "runtime", "codex", as.projectID, filepath.Base(runID)+".jsonl")
-}
-```
+In MarkRunningInterrupted, for each matching running run:
 
-Add `Agent *AgentStore` to `storage.Store` and initialize it in `newStore`.
+~~~go
+run.Status = models.AgentRunStatusInterrupted
+run.Error = "interrupted by server restart"
+run.FinishedAt = &now
+workflow.ActiveRunID = ""
+workflow.Phase = models.AgentPhaseInterrupted
+workflow.ResumePhase = run.Phase
+workflow.UpdatedAt = now
+~~~
 
-- [ ] **Step 4: Run storage tests**
+Leave CodexSessionID intact. Keep project/task filtering and the existing state/run locks. TaskSnapshot returns AdapterState stopped, Resumable when a session and ResumePhase exist, and Interrupted when the workflow phase is interrupted; the manager will override adapter state when its process is alive.
 
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/storage -run 'TestAgentStore|TestNewProjectStore' -count=1`
+- [ ] **Step 4: Run focused persistence tests and commit.**
 
-Expected: PASS.
+~~~bash
+gofmt -w internal/models/agent.go internal/storage/agent_store.go internal/storage/agent_store_test.go
+GOCACHE=/tmp/knowns-agent-gocache go test ./internal/storage -run 'TestAgentStore|TestNewProjectStore' -count=1
+git add internal/models/agent.go internal/storage/agent_store.go internal/storage/agent_store_test.go
+git commit -m "feat: persist ACP task sessions"
+~~~
 
-- [ ] **Step 5: Commit the persistence slice**
+Expected: PASS, with only the persistence slice changed.
 
-```bash
-git add internal/models/agent.go internal/storage/agent_store.go internal/storage/agent_store_test.go internal/storage/store.go
-git commit -m "feat: persist Codex task agent state"
-```
-
----
-
-### Task 2: Detect and run the Codex CLI safely
+### Task 2: Implement the minimal ACP stdio client
 
 **Files:**
-- Create: `internal/agents/codex/runner.go`
-- Create: `internal/agents/codex/runner_test.go`
+- Create: internal/agents/codex/acp.go
+- Modify: internal/agents/codex/runner.go
+- Create: internal/agents/codex/acp_test.go
+- Modify: internal/agents/codex/runner_test.go
 
 **Interfaces:**
-- Consumes: `models.AgentRunPhase` and `AgentStore.LogPath` output.
-- Produces: `Detect(context.Context, string) Status`.
-- Produces: `Runner.BuildArgs(Request) []string` and `Runner.Run(context.Context, Request, func(StreamEvent)) (Result, error)`.
-- Produces: `DirtyFiles(context.Context, string) ([]string, error)`.
+- Produces ACPUpdate with Kind and Text fields.
+- Produces ACPMode values read-only and agent.
+- Produces ACPProcess with NewACPProcess, NewSession, LoadSession, SetMode, Prompt, Cancel, Close, and SessionID methods.
+- Produces Runner command/detection and strict result/logging helpers.
 
-- [ ] **Step 1: Write failing command and parser tests**
+- [ ] **Step 1: Write failing fake-ACP tests.**
 
-```go
-func TestBuildArgsUsesLeastPrivilegeSandbox(t *testing.T) {
-	runner := Runner{Executable: "codex"}
-	readArgs := strings.Join(runner.BuildArgs(Request{Root: "/repo", Phase: models.AgentRunPhaseInvestigation, SchemaPath: "/tmp/schema.json", ResultPath: "/tmp/result.json", Prompt: "inspect"}), " ")
-	writeArgs := strings.Join(runner.BuildArgs(Request{Root: "/repo", Phase: models.AgentRunPhaseImplementation, SchemaPath: "/tmp/schema.json", ResultPath: "/tmp/result.json", Prompt: "implement"}), " ")
+The fake server is an actual child process speaking one JSON object per line. It responds to initialize, session/new, session/load, session/set_mode, session/prompt, and session/close; it sends a session/request_permission request during one prompt and a session/update notification containing an agent_message_chunk before returning.
 
-	if !strings.Contains(readArgs, "--sandbox read-only") { t.Fatalf("read args = %s", readArgs) }
-	if !strings.Contains(writeArgs, "--sandbox workspace-write") { t.Fatalf("write args = %s", writeArgs) }
-	if strings.Contains(readArgs+writeArgs, "danger-full-access") { t.Fatal("unsafe sandbox present") }
+Add four concrete tests: session/new followed by two prompts and session/load must use one persisted session ID; a permission request offering allow_once and allow_always must receive the allow_always option ID; an agent_message_chunk must reach the update callback and its exact JSON text must decode into PhaseResult; malformed input and a cancelled stopReason must return errors without accepting a result.
+
+Run:
+
+~~~bash
+GOCACHE=/tmp/knowns-agent-gocache go test ./internal/agents/codex -run 'TestACP|TestDecode|TestValidate' -count=1
+~~~
+
+Expected: FAIL because the ACP process/client does not exist.
+
+- [ ] **Step 2: Add newline-delimited JSON-RPC transport.**
+
+Use exec.CommandContext(ctx, command[0], command[1:]...) with cmd.Dir set to the project root and stdin/stdout/stderr pipes. The transport must:
+
+1. Write jsonrpc 2.0, monotonically increasing integer IDs, method, and params as one newline-terminated JSON object under a mutex.
+2. Read stdout with a scanner capped at 4 MiB; log every raw line through the existing redacting bounded logger before dispatch.
+3. Route response IDs to pending request channels and route agent requests/notifications without blocking the reader.
+4. Respond to session/request_permission by choosing the first allow_always option, then allow_once, with an outcome selected response. Return outcome cancelled when no allowed option exists. Reply method-not-found for unsupported agent-to-client requests; do not advertise filesystem or terminal capabilities.
+5. Fail all pending requests when stdout closes, the scanner reports malformed JSON, or the child exits.
+
+Keep the transport protocol-only. It must not know task status, review comments, or UI concepts.
+
+- [ ] **Step 3: Implement ACP initialization and session methods.**
+
+Send these payloads:
+
+~~~go
+initialize := map[string]any{
+	"protocolVersion": 1,
+	"clientInfo": map[string]any{"name": "knowns", "title": "Know-Me", "version": "dev"},
+	"clientCapabilities": map[string]any{
+		"fs": map[string]any{"readTextFile": false, "writeTextFile": false},
+		"terminal": false,
+	},
 }
-
-func TestParseStreamEventCapturesThreadAndMessage(t *testing.T) {
-	event, err := parseStreamEvent([]byte(`{"type":"thread.started","thread_id":"thread-1"}`))
-	if err != nil || event.ThreadID != "thread-1" { t.Fatalf("event = %#v, err = %v", event, err) }
-	event, err = parseStreamEvent([]byte(`{"type":"item.completed","item":{"type":"agent_message","text":"done"}}`))
-	if err != nil || event.Message != "done" { t.Fatalf("event = %#v, err = %v", event, err) }
+newSession := map[string]any{"cwd": root, "mcpServers": []any{}}
+loadSession := map[string]any{"sessionId": sessionID, "cwd": root, "mcpServers": []any{}}
+setMode := map[string]any{"sessionId": sessionID, "modeId": string(mode)}
+prompt := map[string]any{
+	"sessionId": sessionID,
+	"prompt": []any{map[string]any{"type": "text", "text": promptText}},
 }
+~~~
 
-func TestValidateResultRequiresInvestigationPlan(t *testing.T) {
-	err := validateResult(models.AgentRunPhaseInvestigation, PhaseResult{Summary: "looked"})
-	if err == nil || !strings.Contains(err.Error(), "implementationPlan") { t.Fatalf("err = %v", err) }
-}
-```
+session/new stores the returned sessionId; session/load reuses the persisted ID after restart. session/set_mode accepts only read-only and agent. session/cancel is a notification, not a request. session/close is sent during task completion and process shutdown.
 
-- [ ] **Step 2: Run the tests and confirm they fail**
+Collect only session/update agent_message_chunk text into the current prompt result. Treat session/prompt stopReason cancelled as cancellation and require a non-empty exact JSON object for every successful prompt. Do not strip Markdown fences or accept extra JSON values.
 
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/agents/codex -run 'TestBuildArgs|TestParseStreamEvent|TestValidateResult' -count=1`
+- [ ] **Step 4: Replace detection and result/log helpers.**
 
-Expected: FAIL because the Codex runner package does not exist.
+Default to the command array ["codex-acp"]. Read optional KNOWS_CODEX_ACP_COMMAND JSON such as ["npx","-y","@agentclientprotocol/codex-acp"]; reject an empty or malformed array and never execute through a shell. Detect resolves the first command element, runs its --version, reports npm install -g @agentclientprotocol/codex-acp, and uses codex login as authentication guidance. Authentication errors from session/new remain visible when a task starts.
 
-- [ ] **Step 3: Implement detection and command construction**
+Keep PhaseResult with the four required fields and additionalProperties false. Keep the existing 4 MiB redacted log ceiling and Git dirty-file parser. Update user-facing errors from Codex executable/JSONL to codex-acp adapter/ACP.
 
-```go
-type Status struct {
-	Installed      bool   `json:"installed"`
-	LoggedIn       bool   `json:"loggedIn"`
-	Version        string `json:"version,omitempty"`
-	Error          string `json:"error,omitempty"`
-	InstallCommand string `json:"installCommand,omitempty"`
-	LoginCommand   string `json:"loginCommand"`
-	DocsURL        string `json:"docsUrl"`
-}
+- [ ] **Step 5: Run ACP client tests and commit.**
 
-type Request struct {
-	Root, Prompt, SchemaPath, ResultPath, LogPath string
-	Phase models.AgentRunPhase
-}
+~~~bash
+gofmt -w internal/agents/codex/acp.go internal/agents/codex/runner.go internal/agents/codex/acp_test.go internal/agents/codex/runner_test.go
+GOCACHE=/tmp/knowns-agent-gocache go test ./internal/agents/codex -run 'TestACP|TestDecode|TestValidate|TestDirtyFiles|TestDetect' -count=1
+git add internal/agents/codex/acp.go internal/agents/codex/acp_test.go internal/agents/codex/runner.go internal/agents/codex/runner_test.go
+git commit -m "feat: add persistent ACP stdio client"
+~~~
 
-func (r Runner) BuildArgs(req Request) []string {
-	sandbox := "read-only"
-	if req.Phase != models.AgentRunPhaseInvestigation { sandbox = "workspace-write" }
-	return []string{"exec", "--json", "--cd", req.Root, "--sandbox", sandbox, "--output-schema", req.SchemaPath, "--output-last-message", req.ResultPath, req.Prompt}
-}
-```
-
-`Detect` resolves `codex` with `exec.LookPath`, runs `--version`, then runs `login status` with a short context timeout. Discard login command output and return only a boolean/generic error. Set `InstallCommand` only on macOS/Linux; set `LoginCommand` to `codex` because the official quickstart signs in on first launch.
-
-- [ ] **Step 4: Implement JSONL execution and structured result validation**
-
-Use `exec.CommandContext` directly with `BuildArgs`. Create the log directory, write stdout JSONL lines and stderr to the run log, use a scanner buffer large enough for a 4 MiB event, parse `thread.started` and item messages for progress, then read the final JSON from `ResultPath`.
-
-```go
-type PhaseResult struct {
-	ImplementationPlan  string   `json:"implementationPlan"`
-	ImplementationNotes string   `json:"implementationNotes"`
-	Summary             string   `json:"summary"`
-	Tests               []string `json:"tests"`
-}
-
-type Result struct {
-	ThreadID string
-	ExitCode int
-	Output   PhaseResult
-}
-```
-
-Embed one strict JSON schema with all four fields required and `additionalProperties: false`; plan/notes may be empty on implementation/fix runs, while `validateResult` requires a non-empty plan for investigation and a non-empty summary for every phase. Never add auth values or the child environment to the log.
-
-- [ ] **Step 5: Add fake-process and Git dirty-file tests**
-
-Use the Go test binary as the child process by setting `Runner.Executable = os.Args[0]` and a test-only environment marker. The helper emits a `thread.started` JSONL line and writes schema-conforming JSON to the path following `--output-last-message`.
-
-```go
-func TestRunnerReadsStructuredOutputWithoutLiveCodex(t *testing.T) {
-	result, err := testRunner(t).Run(context.Background(), testRequest(t, models.AgentRunPhaseInvestigation), nil)
-	if err != nil { t.Fatal(err) }
-	if result.ThreadID != "thread-test" || result.Output.ImplementationPlan != "1. Change code" { t.Fatalf("result = %#v", result) }
-}
-```
-
-Create a temporary Git repository, commit one file, modify it, and assert `DirtyFiles` returns that file. Use `git -C <root> status --porcelain` through `exec.CommandContext`, never a shell.
-
-- [ ] **Step 6: Run runner tests**
-
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/agents/codex -run 'TestBuildArgs|TestParseStreamEvent|TestValidateResult|TestRunner|TestDirtyFiles' -count=1`
-
-Expected: PASS without invoking an installed Codex account.
-
-- [ ] **Step 7: Commit the runner**
-
-```bash
-git add internal/agents/codex/runner.go internal/agents/codex/runner_test.go
-git commit -m "feat: add safe Codex CLI runner"
-```
-
----
-
-### Task 3: Implement the task workflow manager
+### Task 3: Move the workflow manager to one task session
 
 **Files:**
-- Create: `internal/agents/codex/workflow.go`
-- Create: `internal/agents/codex/workflow_test.go`
+- Modify: internal/agents/codex/workflow.go
+- Modify: internal/agents/codex/workflow_test.go
 
 **Interfaces:**
-- Consumes: `Runner.Run`, `Detect`, `DirtyFiles`, `Store.Agent`, `Store.Tasks`, and `tasklifecycle.Service.UpdateTask`.
-- Produces: `NewManager(executable string, emit func(Event)) *Manager`.
-- Produces: `Manager.Status`, `Manager.Snapshot`, `Manager.Act`, `Manager.ReadLog`, and `Manager.Close`.
-- Produces: action constants `start-investigation`, `approve-plan`, `request-plan-changes`, `approve-implementation`, `request-implementation-changes`, `start-fix`, and `cancel`.
+- Consumes ACPProcess from Task 2 and session fields from Task 1.
+- Produces ActionResume and manager snapshots with adapter state, resumable, and interrupted populated.
+- Preserves existing action names and task-status transitions.
 
-- [ ] **Step 1: Write failing state-machine tests**
+- [ ] **Step 1: Write failing manager tests for session reuse and resume.**
 
-```go
-func TestManagerRunsInvestigationImplementationAndReviewLoop(t *testing.T) {
-	store := testAgentStore(t, "in-progress")
-	manager := testManager(t, []PhaseResult{
-		{ImplementationPlan: "1. Implement", ImplementationNotes: "Investigated", Summary: "planned", Tests: []string{}},
+Replace the old per-run fake setup with a fake session factory that records method calls. Assert one session ID is used for investigation, implementation, and fix prompts:
+
+~~~go
+func TestManagerReusesOneACPSessionAcrossReviewGates(t *testing.T) {
+	manager, fake := testSessionManager(t, []PhaseResult{
+		{ImplementationPlan: "plan", ImplementationNotes: "notes", Summary: "investigated", Tests: []string{}},
 		{Summary: "implemented", Tests: []string{"go test ./..."}},
-		{Summary: "fixed review", Tests: []string{"go test ./..."}},
+		{Summary: "fixed", Tests: []string{"go test ./..."}},
 	})
-
+	store := testAgentStore(t, "in-progress")
 	mustAct(t, manager, store, "task01", ActionStartInvestigation, "")
 	waitForPhase(t, manager, store, "task01", models.AgentPhasePlanReview)
 	mustAct(t, manager, store, "task01", ActionApprovePlan, "")
 	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
-
-	mustAct(t, manager, store, "task01", ActionRequestImplementationChanges, "handle the edge case")
-	snapshot := mustSnapshot(t, manager, store, "task01")
-	if snapshot.Workflow.Phase != models.AgentPhaseFixReady || len(snapshot.ReviewComments) != 1 { t.Fatalf("snapshot = %#v", snapshot) }
-
+	mustAct(t, manager, store, "task01", ActionRequestImplementationChanges, "fix edge case")
 	mustAct(t, manager, store, "task01", ActionStartFix, "")
 	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
-	mustAct(t, manager, store, "task01", ActionApproveImplementation, "")
-	if task, _ := store.Tasks.Get("task01"); task.Status != "done" { t.Fatalf("status = %q", task.Status) }
+	if fake.SessionCount() != 1 || fake.PromptCount() != 3 { t.Fatalf("calls = %#v", fake) }
 }
 
-func TestManagerRequiresCleanInitialImplementationButAllowsDirtyFix(t *testing.T) {
-	store := testAgentStore(t, "in-progress")
-	manager := testManager(t, []PhaseResult{{Summary: "fixed", Tests: []string{"go test ./..."}}})
-	manager.dirtyFiles = func(context.Context, string) ([]string, error) {
-		return []string{"internal/example.go"}, nil
-	}
-	seedAgentWorkflow(t, store, models.AgentWorkflow{
-		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhasePlanReview,
-	})
+~~~
 
-	_, _, err := manager.Act(context.Background(), store, "task01", ActionApprovePlan, "")
-	if !errors.Is(err, ErrConflict) { t.Fatalf("approve-plan err = %v", err) }
-	if phase := mustSnapshot(t, manager, store, "task01").Workflow.Phase; phase != models.AgentPhasePlanReview {
-		t.Fatalf("phase after rejected implementation = %q", phase)
-	}
+Add concrete tests: startup recovery must leave the workflow interrupted until ActionResume, which must call LoadSession; a transport disconnect must leave task status unchanged while persisting ResumePhase and the session ID; final implementation approval must call Close exactly once for the task session.
 
-	seedAgentWorkflow(t, store, models.AgentWorkflow{
-		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhaseFixReady,
-	})
-	mustAct(t, manager, store, "task01", ActionStartFix, "")
-	if files := mustSnapshot(t, manager, store, "task01").DirtyFiles; !slices.Equal(files, []string{"internal/example.go"}) {
-		t.Fatalf("dirty files = %#v", files)
-	}
-	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+Preserve focused tests for dirty initial implementation, dirty fix allowance, blank comments, cross-process lock, stale completion, failure, cancellation, and cross-task log access. Run the package tests to verify the new tests fail against the one-shot manager.
+
+- [ ] **Step 2: Add task-keyed in-memory session ownership.**
+
+Key live sessions by project ID plus task ID. Keep active runs keyed by repository root for the project run lock. Store only live ACPProcess handles in memory. Add a session factory field in Manager so tests supply a fake session without adding a production provider:
+
+~~~go
+type sessionFactory func(context.Context, string, []string) (acpSession, error)
+
+type activeSession struct {
+	session acpSession
 }
-```
+~~~
 
-- [ ] **Step 2: Run the tests and confirm they fail**
+ensureSession uses the in-memory session when present; otherwise it launches codex-acp and calls session/new or session/load from persisted workflow state. Persist the returned session ID before sending the first prompt. If loading fails, retain the ID and mark the run interrupted with the error so the UI offers Resume again.
 
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/agents/codex -run 'TestManager' -count=1`
+- [ ] **Step 3: Change execution to mode-switch and prompt on the persistent session.**
 
-Expected: FAIL because `Manager` and its actions do not exist.
+Map phases:
 
-- [ ] **Step 3: Implement synchronous review actions and snapshots**
-
-```go
-type Action string
-
-const (
-	ActionStartInvestigation             Action = "start-investigation"
-	ActionApprovePlan                    Action = "approve-plan"
-	ActionRequestPlanChanges             Action = "request-plan-changes"
-	ActionApproveImplementation          Action = "approve-implementation"
-	ActionRequestImplementationChanges  Action = "request-implementation-changes"
-	ActionStartFix                       Action = "start-fix"
-	ActionCancel                         Action = "cancel"
-)
-
-var (
-	ErrInvalid  = errors.New("invalid agent action")
-	ErrConflict = errors.New("agent action conflict")
-)
-
-type Event struct {
-	Type        string `json:"type"`
-	ProjectID   string `json:"projectId"`
-	TaskID      string `json:"taskId"`
-	RunID       string `json:"runId,omitempty"`
-	Message     string `json:"message,omitempty"`
-	TaskChanged bool   `json:"taskChanged,omitempty"`
+~~~go
+func modeForPhase(phase models.AgentRunPhase) ACPMode {
+	if phase == models.AgentRunPhaseInvestigation { return ACPModeReadOnly }
+	return ACPModeAgent
 }
+~~~
 
-func (m *Manager) Status(ctx context.Context, store *storage.Store) Status
-func (m *Manager) Snapshot(ctx context.Context, store *storage.Store, taskID string) (models.AgentTaskSnapshot, error)
-func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, action Action, comment string) (models.AgentTaskSnapshot, bool, error)
-func (m *Manager) ReadLog(store *storage.Store, taskID, runID string) (string, error)
-func (m *Manager) Close()
-```
+startRunLocked still validates repository root, adapter status, project lock, clean initial implementation, and active-run ownership. It records the run first, starts a goroutine, obtains/reuses the task session, calls SetMode, then calls Prompt with the current task/review context. Load task/state immediately before the prompt so plan feedback is included. Hold the project AgentRunLock only for the active prompt; do not hold it across review gates.
 
-The `bool` returned by `Act` is true only when the action started an asynchronous Codex child; routes use it to choose `202` versus `200`.
+Map every ACP update to the existing event shape. Emit a progress event for every update, using update text when present and update kind otherwise, so the UI can refresh the log while active. Save summary/tests and apply task changes only after strict result validation.
 
-`Snapshot` loads the project/task records under the manager mutex and adds `DirtyFiles`. Review-change actions require non-empty trimmed comments. Plan feedback appends a `plan` comment and returns to `idle`; implementation feedback appends an `implementation` comment, updates the task to `in-progress`, and moves to `fix-ready`; final approval updates the task to `done` and phase to `completed`.
+- [ ] **Step 4: Add Resume and interruption classification.**
 
-All task mutations call `tasklifecycle.New(store, tasklifecycle.WithHooks(...)).UpdateTask` with actor `codex-agent`, preserving lifecycle clocks, task version history, and search indexing.
+Add:
 
-- [ ] **Step 4: Implement asynchronous run ownership**
+~~~go
+const ActionResume Action = "resume"
+~~~
 
-`Manager.Act` validates the task status and phase, checks Codex status, stores a running `AgentRun`, sets `ActiveRunID`, creates a background context, and launches one goroutine. The HTTP request context must not own the child lifetime.
+Resume is valid only for an interrupted workflow with a non-empty CodexSessionID and ResumePhase, no active run, and an in-progress task. It creates a new run with the saved ResumePhase, launches a new adapter process, calls session/load, restores the mode, and sends a continuation prompt. It never sends a prompt from snapshot or SSE read paths.
 
-```go
-type Manager struct {
-	mu        sync.Mutex
-	executable string
-	active    map[string]context.CancelFunc
-	emit      func(Event)
-	run       func(context.Context, Request, func(StreamEvent)) (Result, error)
-	detect    func(context.Context, string) Status
-	dirtyFiles func(context.Context, string) ([]string, error)
-	now       func() time.Time
-}
-```
+Classify explicit Cancel as cancelled. Classify process exit, reader failure, or ACP disconnect as interrupted with ResumePhase and session ID retained. Classify malformed protocol, authentication failure, malformed final JSON, and non-zero prompt errors as failed and restore the pre-run review phase without changing task status. Successful investigation moves to plan-review; successful implementation/fix moves to in-review.
 
-Key `active` by `store.RepositoryRoot()`. Mark the deliberate version-one limit in code:
+- [ ] **Step 5: Close sessions safely and run manager tests.**
 
-```go
-// ponytail: one process per project root; add a queue only when concurrent task demand is real.
-```
+On final implementation approval, set task done and phase completed, then remove and close the task session. Manager.Close marks active runs interrupted before cancelling/closing processes so normal server shutdown is resumable; it does not remove completed historical session IDs. Ensure stale goroutines cannot apply results after cancellation/interruption.
 
-On success:
-
-- Investigation saves `ImplementationPlan` and `ImplementationNotes`, clears `ActiveRunID`, and moves to `plan-review`.
-- Implementation/fix saves the run summary/tests, updates task status to `in-review`, clears `ActiveRunID`, and moves to `code-review`.
-
-On failure/cancel:
-
-- Set run status to `failed` or `cancelled`, save exit/error details, clear `ActiveRunID`, and restore the actionable source phase: `idle`, `plan-review`, or `fix-ready`.
-- Never advance task status.
-
-- [ ] **Step 5: Build exact phase prompts**
-
-Use `strings.Builder` and pass the completed prompt as one argument. Include task title, description, acceptance criteria, plan, notes, and only review comments for the relevant stage. End every prompt with these boundaries:
-
-```text
-Do not edit Know-Me task or document metadata directly.
-Do not change files outside the current project workspace.
-Return only the structured result required by the provided JSON schema.
-```
-
-Investigation adds `Inspect only; do not modify project files.` Implementation adds `Implement the approved plan and run relevant tests.` Fix adds `Continue from the existing reviewed workspace changes and address every supplied review comment.`
-
-- [ ] **Step 6: Complete manager tests**
-
-Use a table for the non-running validation cases:
-
-```go
-func TestManagerRejectsInvalidReviewActionsWithoutMutation(t *testing.T) {
-	tests := []struct {
-		name    string
-		phase   models.AgentPhase
-		action  Action
-		comment string
-		wantErr error
-	}{
-		{"wrong phase", models.AgentPhaseIdle, ActionApproveImplementation, "", ErrConflict},
-		{"blank plan comment", models.AgentPhasePlanReview, ActionRequestPlanChanges, " ", ErrInvalid},
-		{"blank implementation comment", models.AgentPhaseCodeReview, ActionRequestImplementationChanges, "\n", ErrInvalid},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			store := testAgentStore(t, "in-progress")
-			manager := testManager(t, nil)
-			seedAgentWorkflow(t, store, models.AgentWorkflow{ProjectID: store.ProjectID, TaskID: "task01", Phase: tt.phase})
-			before := mustSnapshot(t, manager, store, "task01")
-			_, _, err := manager.Act(context.Background(), store, "task01", tt.action, tt.comment)
-			if !errors.Is(err, tt.wantErr) { t.Fatalf("err = %v, want %v", err, tt.wantErr) }
-			after := mustSnapshot(t, manager, store, "task01")
-			if !reflect.DeepEqual(before, after) { t.Fatalf("state mutated: before=%#v after=%#v", before, after) }
-		})
-	}
-}
-```
-
-Add `TestManagerSerializesRunsPerProjectRoot` with two stores sharing one repository root: block the first fake `run` on a channel, assert the second start returns `ErrConflict`, release the channel, and wait for completion. Add table-driven fake-run failures for investigation and implementation and assert the restored phase/task status. Add a blocking fake run, call `cancel`, and assert the run status is `cancelled`. Finally, save runs for two task IDs, write only through `store.Agent.LogPath`, and assert `ReadLog` serves the matching task and returns `ErrConflict` for the other.
-
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/agents/codex -count=1`
-
-Expected: PASS.
-
-- [ ] **Step 7: Commit the workflow manager**
-
-```bash
+~~~bash
+gofmt -w internal/agents/codex/workflow.go internal/agents/codex/workflow_test.go
+GOCACHE=/tmp/knowns-agent-gocache go test ./internal/agents/codex -count=1
 git add internal/agents/codex/workflow.go internal/agents/codex/workflow_test.go
-git commit -m "feat: orchestrate Codex task workflow"
-```
+git commit -m "feat: reuse ACP sessions across task gates"
+~~~
 
----
-
-### Task 4: Expose the workflow through HTTP and server lifecycle
+### Task 4: Wire restart-safe manager state through HTTP/server lifecycle
 
 **Files:**
-- Create: `internal/server/routes/agent.go`
-- Create: `internal/server/routes/agent_test.go`
-- Modify: `internal/server/server.go`
+- Modify: internal/server/routes/agent_test.go
+- Modify: internal/server/server.go
 
 **Interfaces:**
-- Consumes: `codex.Manager` and `storage.Manager`.
-- Produces: `NewAgentRoutes(store *storage.Store, mgr *storage.Manager, agent *codex.Manager) *AgentRoutes`.
-- Produces: `GET /api/codex/status`.
-- Produces: `GET /api/tasks/{id}/agent`.
-- Produces: `POST /api/tasks/{id}/agent/{action}` with `{ "comment": "..." }`.
-- Produces: `GET /api/tasks/{id}/agent/runs/{runID}/log`.
-- Produces: SSE event types `agent:updated` and `agent:progress`.
+- Consumes ActionResume and manager snapshot fields from Task 3.
+- Produces unchanged task-agent routing with a new resume action and shutdown-safe manager behavior.
 
-- [ ] **Step 1: Write failing route tests**
+- [ ] **Step 1: Add route tests for Resume and session state.**
 
-```go
-func TestAgentRoutesRejectBlankReviewComment(t *testing.T) {
-	router, store, _ := setupAgentRoutes(t)
-	seedAgentTask(t, store, models.AgentPhaseCodeReview, "in-review")
-	req := httptest.NewRequest(http.MethodPost, "/tasks/task01/agent/request-implementation-changes", strings.NewReader(`{"comment":" "}`))
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-	if w.Code != http.StatusBadRequest { t.Fatalf("status = %d body = %s", w.Code, w.Body.String()) }
-}
+Seed an interrupted workflow with CodexSessionID and ResumePhase, POST /tasks/task01/agent/resume, and assert 202 Accepted while the run is active. Add snapshot assertions for codexSessionId, resumable, interrupted, and adapterState. Update status fixtures to the codex-acp install command and GitHub adapter setup URL.
 
-func TestAgentRoutesReturnSnapshotAndLog(t *testing.T) {
-	router, store, _ := setupAgentRoutes(t)
-	seedCompletedAgentRun(t, store, "task01", "run01", "log line\n")
-	for _, path := range []string{"/tasks/task01/agent", "/tasks/task01/agent/runs/run01/log"} {
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
-		if w.Code != http.StatusOK { t.Fatalf("%s status = %d body = %s", path, w.Code, w.Body.String()) }
-	}
-}
-```
+- [ ] **Step 2: Keep startup recovery and active-store routing correct.**
 
-- [ ] **Step 2: Run the tests and confirm they fail**
+Retain store.Agent.MarkRunningInterrupted(time.Now().UTC()) during NewServer startup. Do not create an ACP process at startup. Resolve the current project store before every status/snapshot/action/log request; a session belongs to the task/project key, not the browser tab.
 
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/server/routes -run 'TestAgentRoutes' -count=1`
+- [ ] **Step 3: Make server shutdown close processes without losing resumability.**
 
-Expected: FAIL because the routes do not exist.
+Keep s.codexManager.Close() after HTTP shutdown, with Manager.Close persisting interrupted state before terminating adapter processes. Do not add an HTTP daemon, background auto-resume, package installer, or permission endpoint. Keep SSE names agent:updated, agent:progress, and tasks:refresh unchanged.
 
-- [ ] **Step 3: Implement the route contract**
+- [ ] **Step 4: Run route/server checks and commit.**
 
-```go
-type AgentRoutes struct {
-	store *storage.Store
-	mgr   *storage.Manager
-	agent *codex.Manager
-}
+~~~bash
+gofmt -w internal/server/routes/agent_test.go internal/server/server.go
+GOCACHE=/tmp/knowns-agent-gocache go test ./internal/server/routes ./internal/server -run 'Agent|Server|Startup|Shutdown' -count=1
+git add internal/server/routes/agent_test.go internal/server/server.go
+git commit -m "feat: expose ACP resume state through server"
+~~~
 
-func (ar *AgentRoutes) Register(r chi.Router) {
-	r.Get("/codex/status", ar.status)
-	r.Get("/tasks/{id}/agent", ar.snapshot)
-	r.Post("/tasks/{id}/agent/{action}", ar.action)
-	r.Get("/tasks/{id}/agent/runs/{runID}/log", ar.log)
-}
-```
-
-Return `400` for malformed JSON, unknown actions, and missing required comments; `404` for missing task/run; `409` for phase, workspace, Codex, or active-run conflicts; `500` for storage/process setup failures. Return `202` for actions that start a child and `200` for synchronous review actions. The log response is `{ "content": "..." }`; never accept a filesystem path from the client.
-
-- [ ] **Step 4: Wire one manager into the server**
-
-Add `codexManager *codex.Manager` to `Server`. Construct it after `s.sse` exists:
-
-```go
-s.codexManager = codex.NewManager("", func(event codex.Event) {
-	eventType := "agent:updated"
-	if event.Type == "progress" { eventType = "agent:progress" }
-	s.sse.Broadcast(routes.SSEEvent{Type: eventType, Data: event})
-	if event.TaskChanged {
-		s.sse.Broadcast(routes.SSEEvent{Type: "tasks:refresh", Data: map[string]any{}})
-	}
-})
-```
-
-At startup call `store.Agent.MarkRunningInterrupted(time.Now().UTC())`. In `buildRouter`, register `routes.NewAgentRoutes(s.store, s.manager, s.codexManager)` inside the existing `/api` route. During graceful shutdown call `s.codexManager.Close()` before cleaning up the OpenCode server.
-
-- [ ] **Step 5: Run route and server tests**
-
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/server/routes ./internal/server -run 'TestAgent|TestServer' -count=1`
-
-Expected: PASS and no live Codex invocation.
-
-- [ ] **Step 6: Commit the HTTP slice**
-
-```bash
-git add internal/server/routes/agent.go internal/server/routes/agent_test.go internal/server/server.go
-git commit -m "feat: expose Codex task agent API"
-```
-
----
-
-### Task 5: Add frontend contracts and Codex setup status
+### Task 5: Update setup and task UI, including live logs
 
 **Files:**
-- Create: `ui/src/models/agent.ts`
-- Modify: `ui/src/api/client.ts`
-- Modify: `ui/src/contexts/SSEContext.tsx`
-- Modify: `ui/src/pages/ConfigPage.tsx`
-- Create: `ui/e2e/codex-agent.spec.ts`
+- Modify: ui/src/models/agent.ts
+- Modify: ui/src/api/client.ts
+- Modify: ui/src/pages/ConfigPage.tsx
+- Modify: ui/src/components/organisms/TaskDetail/TaskAgentPanel.tsx
+- Modify: ui/e2e/codex-agent.spec.ts
 
 **Interfaces:**
-- Consumes: the Task 4 HTTP/SSE contracts.
-- Produces: `codexAgentApi.status`, `codexAgentApi.snapshot`, `codexAgentApi.action`, and `codexAgentApi.log`.
-- Produces: typed frontend `AgentTaskSnapshot` and `CodexStatus`.
+- Consumes JSON fields from Task 1 and route behavior from Task 4.
+- Produces existing task-panel controls plus explicit Resume and current ACP adapter/session state.
 
-- [ ] **Step 1: Write the failing setup-card E2E test**
+- [ ] **Step 1: Update TypeScript contracts and setup copy.**
 
-```ts
-test("guides setup when Codex is missing", async ({ page }) => {
-	await page.route("**/api/codex/status", route => route.fulfill({
-		json: {
-			installed: false,
-			loggedIn: false,
-			installCommand: "curl -fsSL https://chatgpt.com/codex/install.sh | sh",
-			loginCommand: "codex",
-			docsUrl: "https://developers.openai.com/codex/cli",
-		},
-	}));
-	await page.goto(`${server.baseURL}/config`);
-	await page.getByRole("tab", { name: "AI" }).click();
-	await expect(page.getByRole("heading", { name: "Codex" })).toBeVisible();
-	await expect(page.getByText("Codex is not installed")).toBeVisible();
-	await expect(page.getByText("curl -fsSL", { exact: false })).toBeVisible();
-});
-```
+Add interrupted to AgentPhase, resume to AgentAction, and fields matching Go:
 
-- [ ] **Step 2: Run the E2E test and confirm it fails**
-
-Run: `cd ui && bun test:e2e -- codex-agent.spec.ts --grep 'guides setup'`
-
-Expected: FAIL because the Codex setup card is absent.
-
-- [ ] **Step 3: Add TypeScript contracts and API methods**
-
-```ts
-export type AgentPhase = "idle" | "investigating" | "plan-review" | "implementing" | "code-review" | "fix-ready" | "completed";
-export type AgentAction = "start-investigation" | "approve-plan" | "request-plan-changes" | "approve-implementation" | "request-implementation-changes" | "start-fix" | "cancel";
+~~~ts
+export interface AgentWorkflow {
+	projectId: string;
+	taskId: string;
+	phase: AgentPhase;
+	activeRunId?: string;
+	codexSessionId?: string;
+	resumePhase?: AgentRunPhase;
+	updatedAt: string;
+}
 
 export interface AgentTaskSnapshot {
 	workflow: AgentWorkflow;
 	runs: AgentRun[];
 	reviewComments: ReviewComment[];
 	dirtyFiles: string[];
+	adapterState: "running" | "stopped";
+	resumable: boolean;
+	interrupted: boolean;
 }
-```
+~~~
 
-Add `codexAgentApi` methods using `apiFetch`, URL-encode IDs/actions, parse JSON error bodies, and throw the backend message. Keep timestamps as ISO strings; the panel can format them at render time.
+Change the Config AI card to say codex-acp, show npm installation/authentication guidance, and link to https://github.com/agentclientprotocol/codex-acp. Keep the no-auto-install/no-auto-login copy.
 
-- [ ] **Step 4: Add typed SSE events**
+- [ ] **Step 2: Add Resume and live-log refresh behavior.**
 
-Extend `SSEEventType` and `SSEEventPayloads` with:
+In TaskAgentPanel:
 
-```ts
-| "agent:updated"
-| "agent:progress"
+1. Render Interrupted and session ID/adapter state when present.
+2. Render Resume only for snapshot.interrupted and snapshot.resumable; call codexAgentApi.action(task.id, "resume").
+3. Keep existing gate buttons and separate review-comment history unchanged.
+4. Reset log state when the selected run changes. When the run-log details element is open, fetch the latest log on every agent:progress or agent:updated event for that task and once after completion. Pass event run ID to the fetch instead of relying on a stale latestRun closure.
+5. Keep action/session/log errors visible.
 
-"agent:updated": AgentEvent;
-"agent:progress": AgentEvent;
-```
+Use a logOpen boolean plus a refreshLog(runID) callback with the existing SSE handler. Do not add a polling library or second event stream.
 
-Register both named event listeners and emit parsed payloads. Do not add another EventSource or provider.
+- [ ] **Step 3: Update browser tests.**
 
-- [ ] **Step 5: Add the Codex card to the existing AI settings section**
+Use these setup fixtures:
 
-Load status when ConfigPage mounts and on Refresh. Render Codex before OpenCode using existing `SectionHeader`, `FieldRow`, `Button`, status colors, `Loader2`, `CheckCircle2`, `AlertCircle`, and `Copy`.
+~~~ts
+installCommand: "npm install -g @agentclientprotocol/codex-acp",
+loginCommand: "codex login",
+docsUrl: "https://github.com/agentclientprotocol/codex-acp",
+~~~
 
-```tsx
-<SectionHeader icon={Bot} title="Codex" description="Local coding agent used by task workflows" />
-<FieldRow label="Connection" hint="Know-Me detects Codex but never installs it or changes credentials">
-	<div className="space-y-3">
-		<div className="flex items-center gap-2">
-			{status?.installed && status.loggedIn ? <CheckCircle2 className="text-green-500" /> : <AlertCircle className="text-amber-500" />}
-			<span>{status?.installed ? (status.loggedIn ? "Codex connected" : "Codex needs sign-in") : "Codex is not installed"}</span>
-			{status?.version && <span className="text-muted-foreground">{status.version}</span>}
-		</div>
-		{command && (
-			<div className="flex items-center gap-2">
-				<code className="break-all">{command}</code>
-				<Button size="icon" variant="ghost" onClick={() => navigator.clipboard.writeText(command)} aria-label="Copy Codex command"><Copy /></Button>
-			</div>
-		)}
-		<div className="flex gap-2">
-			<Button variant="outline" onClick={loadCodexStatus} disabled={loading}>{loading && <Loader2 className="animate-spin" />}Refresh</Button>
-			<a href={status?.docsUrl} target="_blank" rel="noreferrer">Setup guide</a>
-		</div>
-	</div>
-</FieldRow>
-<Separator className="my-6" />
-```
+Extend the intercepted workflow test with an interrupted snapshot and Resume action. Keep plan feedback, implementation feedback, fix, final approval, and review-history assertions. Add a log route whose content changes from initial to updated; emit a mocked agent:progress event while details is open and assert updated is rendered.
 
-Derive `command` as `status?.installed ? status?.loginCommand : status?.installCommand`. Use the exact messages `Codex connected`, `Codex is not installed`, and `Codex needs sign-in`. If status loading fails, show the returned message inline and keep Refresh available. Copy only the returned command; never execute it.
+- [ ] **Step 4: Run UI validation and commit.**
 
-- [ ] **Step 6: Verify setup UI**
+~~~bash
+cd ui
+bun run build
+bunx playwright test e2e/codex-agent.spec.ts --project=chromium
+cd ..
+git add ui/src/models/agent.ts ui/src/api/client.ts ui/src/pages/ConfigPage.tsx ui/src/components/organisms/TaskDetail/TaskAgentPanel.tsx ui/e2e/codex-agent.spec.ts
+git commit -m "feat: add ACP resume and live task logs"
+~~~
 
-Run: `cd ui && bunx tsc --noEmit && bun run build && bun test:e2e -- codex-agent.spec.ts --grep 'guides setup'`
-
-Expected: PASS.
-
-- [ ] **Step 7: Commit setup UI**
-
-```bash
-git add ui/src/models/agent.ts ui/src/api/client.ts ui/src/contexts/SSEContext.tsx ui/src/pages/ConfigPage.tsx ui/e2e/codex-agent.spec.ts
-git commit -m "feat: show Codex setup status"
-```
-
----
-
-### Task 6: Add the task review and fix-loop UI
+### Task 6: Full verification and handoff
 
 **Files:**
-- Create: `ui/src/components/organisms/TaskDetail/TaskAgentPanel.tsx`
-- Modify: `ui/src/components/organisms/TaskDetail/TaskDetailSheet.tsx`
-- Modify: `ui/src/components/organisms/TaskDetail/index.ts`
-- Modify: `ui/e2e/codex-agent.spec.ts`
+- If a verification command fails, modify only the specific source or test file identified by that failure.
+- Test the focused Go/UI suites and repository validation commands below.
 
 **Interfaces:**
-- Consumes: `codexAgentApi`, `useSSEEvent`, `Task`, and existing task-detail UI components.
-- Produces: `TaskAgentPanel({ task, onTaskUpdated })`.
+- Consumes all completed ACP workflow slices.
+- Produces a verified current-workspace implementation with no direct codex exec path.
 
-- [ ] **Step 1: Write the failing task-loop E2E test**
+- [ ] **Step 1: Run focused Go tests.**
 
-Maintain a mutable mocked `AgentTaskSnapshot` inside the Playwright test. Intercept `GET **/api/tasks/*/agent` and `POST **/api/tasks/*/agent/*`; update the phase for each action and append the submitted review comment.
+~~~bash
+GOCACHE=/tmp/knowns-agent-gocache go test ./internal/models ./internal/storage ./internal/agents/codex ./internal/server/routes ./internal/server -count=1
+~~~
 
-```ts
-await expect(page.getByRole("heading", { name: "Coding agent" })).toBeVisible();
-await page.getByRole("button", { name: "Start investigation" }).click();
-await expect(page.getByText("Investigating")).toBeVisible();
+Expected: PASS, including fake ACP lifecycle, auto-permission, mode, cancellation, malformed protocol/final JSON, process exit, explicit resume, cross-process lock, and route tests.
 
-snapshot.workflow.phase = "plan-review";
-await page.reload();
-await page.getByRole("button", { name: "Approve plan and implement" }).click();
-await expect(page.getByText("Implementing")).toBeVisible();
+- [ ] **Step 2: Scan for stale direct-runner behavior.**
 
-snapshot.workflow.phase = "code-review";
-await page.reload();
-await page.getByPlaceholder("Describe what Codex should change").fill("Handle empty input");
-await page.getByRole("button", { name: "Request changes" }).click();
-await expect(page.getByText("Handle empty input")).toBeVisible();
-await expect(page.getByRole("button", { name: "Start fix" })).toBeVisible();
-```
+~~~bash
+rg -n "codex exec|output-schema|output-last-message|codexThreadId|JSONL event" internal ui docs/superpowers/plans/2026-08-19-codex-task-agent-orchestration.md
+~~~
 
-- [ ] **Step 2: Run the task-loop test and confirm it fails**
+Expected: no production implementation references to the old runner.
 
-Run: `cd ui && bun test:e2e -- codex-agent.spec.ts --grep 'review loop'`
+- [ ] **Step 3: Run repository checks.**
 
-Expected: FAIL because the task agent panel is absent.
+~~~bash
+go test ./...
+cd ui && bun run build && cd ..
+git diff --check
+git status --short
+~~~
 
-- [ ] **Step 3: Build the panel state and event refresh**
+Expected: PASS, clean formatting, and only intended ACP changes present.
 
-```tsx
-export function TaskAgentPanel({ task, onTaskUpdated }: {
-	task: Task;
-	onTaskUpdated: (task: Task) => void;
-}) {
-	const [snapshot, setSnapshot] = useState<AgentTaskSnapshot | null>(null);
-	const [status, setStatus] = useState<CodexStatus | null>(null);
-	const [comment, setComment] = useState("");
-	const [busy, setBusy] = useState(false);
-	const [progress, setProgress] = useState("");
-	const load = useCallback(async () => {
-		const [nextStatus, nextSnapshot] = await Promise.all([
-			codexAgentApi.status(),
-			codexAgentApi.snapshot(task.id),
-		]);
-		setStatus(nextStatus);
-		setSnapshot(nextSnapshot);
-	}, [task.id]);
+- [ ] **Step 4: Commit verification fixes and report evidence.**
 
-	useEffect(() => { void load(); }, [load]);
-	useSSEEvent("agent:updated", event => {
-		if (event.taskId === task.id) void load();
-	});
-	useSSEEvent("agent:progress", event => {
-		if (event.taskId === task.id) setProgress(event.message ?? "");
-	});
+If a check exposes a real implementation defect, add the smallest regression test first, fix the shared path, rerun the failing command, then commit the focused fix. Final handoff must state exact commands and results; do not claim live Codex authentication was tested because the suite uses a fake ACP server.
 
-	const act = async (action: AgentAction) => {
-		setBusy(true);
-		try {
-			setSnapshot(await codexAgentApi.action(task.id, action, comment));
-			setComment("");
-			onTaskUpdated(await api.getTask(task.id));
-		} finally {
-			setBusy(false);
-		}
-	};
-}
-```
+## Plan self-review
 
-After every action, store the returned snapshot, clear accepted comments, and call `api.getTask(task.id)` so status changes immediately reach `TaskDetailSheet`.
-
-- [ ] **Step 4: Render only valid phase actions**
-
-Use this exact mapping:
-
-```text
-idle + in-progress      -> Start investigation
-investigating          -> Cancel run
-plan-review            -> Approve plan and implement / Request plan changes
-implementing           -> Cancel run
-code-review            -> Approve implementation / Request changes
-fix-ready              -> Start fix
-completed              -> Completed
-```
-
-When the task is not `in-progress` and no run/review is active, show `Move this task to in-progress to start Codex.` Disable start buttons unless `status.installed && status.loggedIn`. Display backend errors with the existing toast and inline error text.
-
-- [ ] **Step 5: Render run results, dirty files, separate comments, and logs**
-
-Render the latest run status, summary, tests, and error. In `fix-ready`, show `snapshot.dirtyFiles` above Start fix so the explicit action acknowledges the existing implementation changes. Render `reviewComments` chronologically with plan/implementation badges and timestamps.
-
-Use a native `<details>` element for the log. On first expansion call `codexAgentApi.log(task.id, latestRun.id)` and cache the returned content in component state; render it in a wrapping `<pre>`.
-
-- [ ] **Step 6: Mount the panel in task details**
-
-Place the panel after the existing Implementation Notes section and before Time Tracking:
-
-```tsx
-<div className="border-t border-border/40" />
-<TaskAgentPanel task={task} onTaskUpdated={onUpdate} />
-```
-
-Export it from `TaskDetail/index.ts`. Do not alter the existing plan/notes editor; investigation results continue to appear there through normal task updates.
-
-- [ ] **Step 7: Verify task UI and build**
-
-Run: `cd ui && bunx tsc --noEmit && bun run build && bun test:e2e -- codex-agent.spec.ts`
-
-Expected: PASS for setup and review-loop tests.
-
-- [ ] **Step 8: Commit the task UI**
-
-```bash
-git add ui/src/components/organisms/TaskDetail/TaskAgentPanel.tsx ui/src/components/organisms/TaskDetail/TaskDetailSheet.tsx ui/src/components/organisms/TaskDetail/index.ts ui/e2e/codex-agent.spec.ts
-git commit -m "feat: add Codex task review workflow"
-```
-
----
-
-### Task 7: Run integrated verification
-
-**Files:**
-- Verify all files from Tasks 1-6.
-
-**Interfaces:**
-- Consumes: completed backend, API, SSE, and UI slices.
-- Produces: one verified Codex-only task orchestration feature with no live-account test dependency.
-
-- [ ] **Step 1: Format changed Go files**
-
-Run:
-
-```bash
-gofmt -w internal/models/agent.go internal/storage/agent_store.go internal/storage/agent_store_test.go internal/agents/codex/runner.go internal/agents/codex/runner_test.go internal/agents/codex/workflow.go internal/agents/codex/workflow_test.go internal/server/routes/agent.go internal/server/routes/agent_test.go internal/server/server.go
-```
-
-- [ ] **Step 2: Run focused backend tests**
-
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./internal/storage ./internal/agents/codex ./internal/server/routes ./internal/server -run 'Agent|Codex' -count=1`
-
-Expected: PASS.
-
-- [ ] **Step 3: Run the complete Go suite**
-
-Run: `GOCACHE=/tmp/knowns-agent-gocache go test ./... -count=1`
-
-Expected: PASS.
-
-- [ ] **Step 4: Run frontend type/build checks**
-
-Run: `cd ui && bunx tsc --noEmit && bun run build`
-
-Expected: PASS.
-
-- [ ] **Step 5: Build the application and run the focused browser flow**
-
-Run: `make all`
-
-Expected: `bin/knowns` and embedded UI build successfully.
-
-Run: `cd ui && TEST_BINARY=../bin/knowns bun test:e2e -- codex-agent.spec.ts`
-
-Expected: PASS without an installed or authenticated Codex CLI because browser requests are intercepted.
-
-- [ ] **Step 6: Run Know-Me validation and diff checks**
-
-Run: `GOCACHE=/tmp/knowns-agent-gocache go run ./cmd/knowns validate --plain`
-
-Expected: no new validation errors from the agent feature; if the repository's known baseline errors remain, record them verbatim in the handoff.
-
-Run: `git diff --check`
-
-Expected: no output.
-
-- [ ] **Step 7: Review scope and commit any verification-only corrections**
-
-Run: `git status --short` and `git diff --stat`.
-
-Expected: only planned files or generated build artifacts already tracked by the repository are changed. If a verification fix was necessary, stage only its planned files and commit it:
-
-```bash
-git commit -m "fix: complete Codex task agent verification"
-```
+- Spec coverage: session persistence, process reuse, mode switching, permission auto-approval, explicit restart resume, log/SSE streaming, setup guidance, task review loop, lock ownership, and failure behavior map to Tasks 1–5.
+- Placeholder scan: no TODO, TBD, or unspecified implementation step is used; every code-facing step names a file, behavior, and command.
+- Type consistency: AgentRunPhase is the persisted ResumePhase type; codexSessionId, adapterState, resumable, and interrupted are shared by Go/TypeScript; ActionResume is shared by route and panel.
+- Scope check: no worktree, provider, automatic package install/login, direct App Server client, Node bridge, HTTP daemon, parallel queue, or per-permission UI is planned.
