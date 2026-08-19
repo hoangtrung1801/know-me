@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -52,12 +54,13 @@ type acpUpdateEvent struct {
 }
 
 type ACPProcess struct {
-	root    string
-	command []string
-	cmd     *exec.Cmd
-	stdin   io.WriteCloser
-	stdout  io.ReadCloser
-	logger  *runLogger
+	root     string
+	command  []string
+	cmd      *exec.Cmd
+	stdin    io.WriteCloser
+	stdout   io.ReadCloser
+	logger   *runLogger
+	loggerMu sync.RWMutex
 
 	writeMu sync.Mutex
 
@@ -331,14 +334,12 @@ func (p *ACPProcess) Close(ctx context.Context) error {
 			<-p.waitDone
 		}
 		p.markTerminal(nil)
-		if p.logger != nil {
-			if err := p.logger.close(); err != nil {
-				p.closeErrMu.Lock()
-				if p.closeErr == nil {
-					p.closeErr = err
-				}
-				p.closeErrMu.Unlock()
+		if err := p.closeLogger(); err != nil {
+			p.closeErrMu.Lock()
+			if p.closeErr == nil {
+				p.closeErr = err
 			}
+			p.closeErrMu.Unlock()
 		}
 	})
 	<-p.closeDone
@@ -357,6 +358,48 @@ func (p *ACPProcess) setSessionID(sessionID string) {
 	p.sessionMu.Lock()
 	p.sessionID = sessionID
 	p.sessionMu.Unlock()
+}
+
+func (p *ACPProcess) SetLogPath(path string) error {
+	if path == "" {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create ACP log directory: %w", err)
+	}
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	if err != nil {
+		return fmt.Errorf("open ACP log: %w", err)
+	}
+	logger := newRunLogger(file)
+	p.loggerMu.Lock()
+	previous := p.logger
+	p.logger = logger
+	p.loggerMu.Unlock()
+	if previous != nil {
+		_ = previous.close()
+	}
+	return nil
+}
+
+func (p *ACPProcess) writeLog(line []byte) error {
+	p.loggerMu.RLock()
+	defer p.loggerMu.RUnlock()
+	if p.logger == nil {
+		return nil
+	}
+	return p.logger.write(line)
+}
+
+func (p *ACPProcess) closeLogger() error {
+	p.loggerMu.Lock()
+	defer p.loggerMu.Unlock()
+	if p.logger == nil {
+		return nil
+	}
+	err := p.logger.close()
+	p.logger = nil
+	return err
 }
 
 func (p *ACPProcess) request(ctx context.Context, method string, params any) (json.RawMessage, error) {
@@ -446,11 +489,9 @@ func (p *ACPProcess) readStdout() {
 	scanner.Buffer(make([]byte, 64*1024), maxRunLogBytes)
 	for scanner.Scan() {
 		line := append([]byte(nil), scanner.Bytes()...)
-		if p.logger != nil {
-			if err := p.logger.write(line); err != nil {
-				p.markTerminal(fmt.Errorf("write ACP log: %w", err))
-				return
-			}
+		if err := p.writeLog(line); err != nil {
+			p.markTerminal(fmt.Errorf("write ACP log: %w", err))
+			return
 		}
 		var message struct {
 			JSONRPC string          `json:"jsonrpc"`
@@ -507,11 +548,9 @@ func (p *ACPProcess) readStderr(stderr io.ReadCloser) {
 	scanner := bufio.NewScanner(stderr)
 	scanner.Buffer(make([]byte, 64*1024), maxRunLogBytes)
 	for scanner.Scan() {
-		if p.logger != nil {
-			if err := p.logger.write(scanner.Bytes()); err != nil {
-				p.markTerminal(fmt.Errorf("write ACP log: %w", err))
-				return
-			}
+		if err := p.writeLog(scanner.Bytes()); err != nil {
+			p.markTerminal(fmt.Errorf("write ACP log: %w", err))
+			return
 		}
 	}
 	if err := scanner.Err(); err != nil {

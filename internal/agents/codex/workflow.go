@@ -26,6 +26,7 @@ const (
 	ActionApproveImplementation        Action = "approve-implementation"
 	ActionRequestImplementationChanges Action = "request-implementation-changes"
 	ActionStartFix                     Action = "start-fix"
+	ActionResume                       Action = "resume"
 	ActionCancel                       Action = "cancel"
 )
 
@@ -44,20 +45,50 @@ type Event struct {
 	TaskChanged bool   `json:"taskChanged,omitempty"`
 }
 
+type acpSession interface {
+	NewSession(context.Context) error
+	LoadSession(context.Context, string) error
+	SetMode(context.Context, ACPMode) error
+	Prompt(context.Context, string, func(ACPUpdate)) (string, error)
+	Cancel(context.Context) error
+	Close(context.Context) error
+	SessionID() string
+}
+
+type sessionFactory func(context.Context, string, []string) (acpSession, error)
+
+type sessionLogPathSetter interface {
+	SetLogPath(string) error
+}
+
+type sessionLoadError struct{ err error }
+
+func (e sessionLoadError) Error() string { return "ACP session/load: " + e.err.Error() }
+
+func (e sessionLoadError) Unwrap() error { return e.err }
+
 type Manager struct {
-	mu         sync.Mutex
-	executable string
-	active     map[string]activeRun
-	emit       func(Event)
-	run        func(context.Context, Request, func(StreamEvent)) (Result, error)
-	detect     func(context.Context, string) Status
-	dirtyFiles func(context.Context, string) ([]string, error)
-	now        func() time.Time
+	mu             sync.Mutex
+	executable     string
+	active         map[string]activeRun
+	sessions       map[string]acpSession
+	closing        bool
+	emit           func(Event)
+	run            func(context.Context, Request, func(StreamEvent)) (Result, error)
+	sessionFactory sessionFactory
+	detect         func(context.Context, string) Status
+	dirtyFiles     func(context.Context, string) ([]string, error)
+	now            func() time.Time
 }
 
 type activeRun struct {
-	cancel context.CancelFunc
-	lock   *storage.AgentRunLock
+	cancel    context.CancelFunc
+	lock      *storage.AgentRunLock
+	projectID string
+	taskID    string
+	runID     string
+	store     *storage.Store
+	session   acpSession
 }
 
 func NewManager(executable string, emit func(Event)) *Manager {
@@ -65,8 +96,12 @@ func NewManager(executable string, emit func(Event)) *Manager {
 	return &Manager{
 		executable: executable,
 		active:     make(map[string]activeRun),
+		sessions:   make(map[string]acpSession),
 		emit:       emit,
 		run:        runner.Run,
+		sessionFactory: func(ctx context.Context, root string, command []string) (acpSession, error) {
+			return NewACPProcess(ctx, root, command, nil)
+		},
 		detect:     Detect,
 		dirtyFiles: DirtyFiles,
 		now:        func() time.Time { return time.Now().UTC() },
@@ -116,6 +151,12 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: investigation requires an idle in-progress task", ErrConflict)
 		}
 		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseInvestigation, models.AgentPhaseInvestigating, models.AgentPhaseIdle)
+	case ActionResume:
+		if task.Status != "in-progress" || workflow.Phase != models.AgentPhaseInterrupted || workflow.ActiveRunID != "" || workflow.CodexSessionID == "" || workflow.ResumePhase == "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: task has no resumable interrupted ACP session", ErrConflict)
+		}
+		runPhase := workflow.ResumePhase
+		return m.startRunLocked(ctx, store, task, &state, workflow, runPhase, runningPhaseForRun(runPhase), restorePhaseForRun(runPhase))
 	case ActionApprovePlan:
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for approval", ErrConflict)
@@ -185,6 +226,14 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 			}
 			return models.AgentTaskSnapshot{}, false, err
 		}
+		if session := m.removeSessionLocked(store.ProjectID, taskID); session != nil {
+			closeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			closeErr := session.Close(closeCtx)
+			cancel()
+			if closeErr != nil {
+				m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, Type: "error", Message: "close ACP session: " + closeErr.Error()})
+			}
+		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, TaskChanged: true})
 		snapshot, err := m.snapshotLocked(ctx, store, taskID)
 		return snapshot, false, err
@@ -244,6 +293,9 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if !ok {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: active run is not owned by this server", ErrConflict)
 		}
+		if active.session != nil {
+			_ = active.session.Cancel(context.Background())
+		}
 		active.cancel()
 		snapshot, err := m.snapshotLocked(ctx, store, taskID)
 		return snapshot, false, err
@@ -285,9 +337,25 @@ func (m *Manager) ReadLog(store *storage.Store, taskID, runID string) (string, e
 
 func (m *Manager) Close() {
 	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.closing = true
+	activeRuns := make([]activeRun, 0, len(m.active))
 	for _, active := range m.active {
+		activeRuns = append(activeRuns, active)
+	}
+	sessions := make([]acpSession, 0, len(m.sessions))
+	for key, session := range m.sessions {
+		sessions = append(sessions, session)
+		delete(m.sessions, key)
+	}
+	m.mu.Unlock()
+	for _, active := range activeRuns {
+		if active.session != nil {
+			_ = active.session.Cancel(context.Background())
+		}
 		active.cancel()
+	}
+	for _, session := range sessions {
+		_ = closeSession(session)
 	}
 }
 
@@ -329,10 +397,300 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 	}
 	prompt := buildPrompt(task, *state, runPhase)
 	runCtx, cancel := context.WithCancel(context.Background())
-	m.active[root] = activeRun{cancel: cancel, lock: runLock}
-	go m.execute(runCtx, store, runID, task.ID, root, tempDir, prompt, runPhase, restorePhase, runLock)
+	m.active[root] = activeRun{cancel: cancel, lock: runLock, projectID: store.ProjectID, taskID: task.ID, runID: runID, store: store}
+	if m.sessionFactory == nil {
+		go m.execute(runCtx, store, runID, task.ID, root, tempDir, prompt, runPhase, restorePhase, runLock)
+	} else {
+		go m.executeSession(runCtx, store, runID, task.ID, root, tempDir, runPhase, restorePhase, runLock)
+	}
 	snapshot, err := m.snapshotLocked(ctx, store, task.ID)
 	return snapshot, true, err
+}
+
+func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock) {
+	defer os.RemoveAll(tempDir)
+	defer runLock.Close()
+
+	session, runErr := m.ensureSession(ctx, store, taskID, root)
+	if runErr == nil {
+		m.setActiveSession(root, runID, session)
+		if setter, ok := session.(sessionLogPathSetter); ok {
+			runErr = setter.SetLogPath(store.Agent.LogPath(runID))
+		}
+	}
+	if runErr == nil {
+		runErr = m.persistSession(store, taskID, runID, session.SessionID())
+	}
+	if runErr == nil {
+		runErr = session.SetMode(ctx, modeForPhase(runPhase))
+	}
+
+	var result Result
+	if runErr == nil {
+		state, err := store.Agent.Load()
+		if err != nil {
+			runErr = err
+		} else if task, err := store.Tasks.Get(taskID); err != nil {
+			runErr = err
+		} else {
+			prompt := buildPrompt(task, state, runPhase)
+			raw, err := session.Prompt(ctx, prompt, func(update ACPUpdate) {
+				message := update.Text
+				if message == "" {
+					message = update.Kind
+				}
+				m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "progress", Message: message})
+			})
+			if err != nil {
+				runErr = err
+			} else {
+				result.Output, runErr = decodePhaseResult([]byte(raw))
+				if runErr == nil {
+					runErr = validateResult(runPhase, result.Output)
+				}
+			}
+		}
+	}
+	m.finishSessionRun(ctx, store, runID, taskID, root, runPhase, restorePhase, session, result, runErr)
+}
+
+func (m *Manager) ensureSession(ctx context.Context, store *storage.Store, taskID, root string) (acpSession, error) {
+	key := sessionKey(store.ProjectID, taskID)
+	m.mu.Lock()
+	if session := m.sessions[key]; session != nil {
+		m.mu.Unlock()
+		return session, nil
+	}
+	factory := m.sessionFactory
+	executable := m.executable
+	m.mu.Unlock()
+	if factory == nil {
+		return nil, errors.New("ACP session factory is unavailable")
+	}
+	command, err := configuredACPCommand(executable)
+	if err != nil {
+		return nil, err
+	}
+	// The adapter process outlives a single prompt; prompt cancellation must
+	// not kill the task session that later review gates reuse.
+	session, err := factory(context.Background(), root, command)
+	if err != nil {
+		return nil, err
+	}
+	state, err := store.Agent.Load()
+	if err != nil {
+		_ = closeSession(session)
+		return nil, err
+	}
+	workflow := findWorkflow(&state, store.ProjectID, taskID)
+	if workflow == nil {
+		_ = closeSession(session)
+		return nil, fmt.Errorf("%w: workflow %s", ErrNotFound, taskID)
+	}
+	if workflow.CodexSessionID != "" {
+		err = session.LoadSession(ctx, workflow.CodexSessionID)
+		if err != nil {
+			err = sessionLoadError{err: err}
+		}
+	} else {
+		err = session.NewSession(ctx)
+	}
+	if err != nil {
+		_ = closeSession(session)
+		return nil, err
+	}
+	m.mu.Lock()
+	if existing := m.sessions[key]; existing != nil {
+		m.mu.Unlock()
+		_ = closeSession(session)
+		return existing, nil
+	}
+	m.sessions[key] = session
+	m.mu.Unlock()
+	return session, nil
+}
+
+func (m *Manager) persistSession(store *storage.Store, taskID, runID, sessionID string) error {
+	if sessionID == "" {
+		return errors.New("ACP session returned no session ID")
+	}
+	state, err := store.Agent.Load()
+	if err != nil {
+		return err
+	}
+	run := findRun(&state, store.ProjectID, taskID, runID)
+	workflow := findWorkflow(&state, store.ProjectID, taskID)
+	if run == nil || workflow == nil || run.Status != models.AgentRunStatusRunning || workflow.ActiveRunID != runID {
+		return ErrConflict
+	}
+	run.CodexSessionID = sessionID
+	workflow.CodexSessionID = sessionID
+	return store.Agent.Save(state)
+}
+
+func (m *Manager) setActiveSession(root, runID string, session acpSession) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if active, ok := m.active[root]; ok && active.runID == runID {
+		active.session = session
+		m.active[root] = active
+	}
+}
+
+func (m *Manager) finishSessionRun(ctx context.Context, store *storage.Store, runID, taskID, root string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, session acpSession, result Result, runErr error) {
+	m.mu.Lock()
+	state, err := store.Agent.Load()
+	if err != nil {
+		delete(m.active, root)
+		m.mu.Unlock()
+		return
+	}
+	run := findRun(&state, store.ProjectID, taskID, runID)
+	workflow := findWorkflow(&state, store.ProjectID, taskID)
+	if run == nil || workflow == nil || run.Status != models.AgentRunStatusRunning || workflow.ActiveRunID != runID {
+		delete(m.active, root)
+		m.mu.Unlock()
+		return
+	}
+	now := m.now().UTC()
+	delete(m.active, root)
+	shuttingDown := m.closing
+	if shuttingDown && runErr == nil {
+		runErr = errors.New("ACP manager is shutting down")
+	}
+	if session != nil && session.SessionID() != "" {
+		run.CodexSessionID = session.SessionID()
+		workflow.CodexSessionID = session.SessionID()
+	}
+	exitCode := result.ExitCode
+	run.ExitCode = &exitCode
+	run.FinishedAt = &now
+	if runErr != nil {
+		sessionToClose := acpSession(nil)
+		switch {
+		case shuttingDown || isACPInterruption(runErr):
+			run.Status = models.AgentRunStatusInterrupted
+			run.Error = runErr.Error()
+			workflow.Phase = models.AgentPhaseInterrupted
+			workflow.ResumePhase = runPhase
+			sessionToClose = m.removeSessionLocked(store.ProjectID, taskID)
+		case errors.Is(runErr, context.Canceled) || ctx.Err() != nil:
+			run.Status = models.AgentRunStatusCancelled
+			run.Error = "Codex run cancelled"
+			workflow.Phase = restorePhase
+			workflow.ResumePhase = ""
+		default:
+			run.Status = models.AgentRunStatusFailed
+			run.Error = runErr.Error()
+			workflow.Phase = restorePhase
+			workflow.ResumePhase = ""
+		}
+		workflow.ActiveRunID = ""
+		workflow.UpdatedAt = now
+		saveErr := store.Agent.Save(state)
+		m.mu.Unlock()
+		if sessionToClose != nil {
+			_ = closeSession(sessionToClose)
+		}
+		if saveErr != nil {
+			m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save ACP run state: " + saveErr.Error()})
+			return
+		}
+		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated"})
+		return
+	}
+
+	var previousTask *models.Task
+	if task, taskErr := store.Tasks.Get(taskID); taskErr == nil {
+		copy := *task
+		previousTask = &copy
+	}
+	var updateErr error
+	if runPhase == models.AgentRunPhaseInvestigation {
+		_, updateErr = m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
+			task.ImplementationPlan = result.Output.ImplementationPlan
+			task.ImplementationNotes = result.Output.ImplementationNotes
+			return nil
+		})
+	} else {
+		_, updateErr = m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
+			if task.Status != "in-progress" {
+				return fmt.Errorf("%w: task status changed before ACP completed", ErrConflict)
+			}
+			task.Status = "in-review"
+			return nil
+		})
+	}
+	if updateErr != nil {
+		run.Status = models.AgentRunStatusFailed
+		run.Error = updateErr.Error()
+		workflow.Phase = restorePhase
+		workflow.ResumePhase = ""
+		workflow.ActiveRunID = ""
+		workflow.UpdatedAt = now
+		saveErr := store.Agent.Save(state)
+		m.mu.Unlock()
+		if saveErr != nil {
+			m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save ACP run state: " + saveErr.Error()})
+			return
+		}
+		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated"})
+		return
+	}
+	run.Status = models.AgentRunStatusSucceeded
+	run.Summary = result.Output.Summary
+	run.Tests = append([]string{}, result.Output.Tests...)
+	run.Error = ""
+	workflow.ActiveRunID = ""
+	workflow.ResumePhase = ""
+	workflow.UpdatedAt = now
+	if runPhase == models.AgentRunPhaseInvestigation {
+		workflow.Phase = models.AgentPhasePlanReview
+	} else {
+		workflow.Phase = models.AgentPhaseCodeReview
+	}
+	saveErr := store.Agent.Save(state)
+	m.mu.Unlock()
+	if saveErr != nil {
+		if previousTask != nil {
+			_, _ = m.updateTask(context.Background(), store, taskID, func(task *models.Task) error {
+				if runPhase == models.AgentRunPhaseInvestigation {
+					if task.ImplementationPlan == result.Output.ImplementationPlan {
+						task.ImplementationPlan = previousTask.ImplementationPlan
+					}
+					if task.ImplementationNotes == result.Output.ImplementationNotes {
+						task.ImplementationNotes = previousTask.ImplementationNotes
+					}
+				} else if task.Status == "in-review" {
+					task.Status = previousTask.Status
+				}
+				return nil
+			})
+		}
+		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save ACP run state: " + saveErr.Error()})
+		return
+	}
+	m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated", TaskChanged: true})
+}
+
+func isACPInterruption(err error) bool {
+	var loadErr sessionLoadError
+	if errors.As(err, &loadErr) {
+		return true
+	}
+	message := strings.ToLower(err.Error())
+	for _, marker := range []string{"acp adapter exited", "acp adapter output closed", "acp process closed", "read acp output", "write acp message"} {
+		if strings.Contains(message, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func closeSession(session acpSession) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return session.Close(ctx)
 }
 
 func (m *Manager) execute(ctx context.Context, store *storage.Store, runID, taskID, root, tempDir, prompt string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock) {
@@ -492,6 +850,11 @@ func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, task
 		return models.AgentTaskSnapshot{}, err
 	}
 	snapshot.DirtyFiles = files
+	if m.sessions[sessionKey(store.ProjectID, taskID)] != nil {
+		snapshot.AdapterState = "running"
+	} else if snapshot.Workflow.Phase == models.AgentPhaseInterrupted {
+		snapshot.AdapterState = "interrupted"
+	}
 	return snapshot, nil
 }
 
@@ -577,4 +940,40 @@ func readLog(path string) (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+func sessionKey(projectID, taskID string) string {
+	return projectID + "\x00" + taskID
+}
+
+func (m *Manager) removeSessionLocked(projectID, taskID string) acpSession {
+	key := sessionKey(projectID, taskID)
+	session := m.sessions[key]
+	delete(m.sessions, key)
+	return session
+}
+
+func modeForPhase(phase models.AgentRunPhase) ACPMode {
+	if phase == models.AgentRunPhaseInvestigation {
+		return ACPModeReadOnly
+	}
+	return ACPModeAgent
+}
+
+func runningPhaseForRun(phase models.AgentRunPhase) models.AgentPhase {
+	if phase == models.AgentRunPhaseInvestigation {
+		return models.AgentPhaseInvestigating
+	}
+	return models.AgentPhaseImplementing
+}
+
+func restorePhaseForRun(phase models.AgentRunPhase) models.AgentPhase {
+	switch phase {
+	case models.AgentRunPhaseInvestigation:
+		return models.AgentPhaseIdle
+	case models.AgentRunPhaseFix:
+		return models.AgentPhaseFixReady
+	default:
+		return models.AgentPhasePlanReview
+	}
 }
