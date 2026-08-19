@@ -2,6 +2,7 @@ package codex
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -268,6 +269,77 @@ func TestManagerReadLogRejectsRunFromAnotherTask(t *testing.T) {
 	}
 }
 
+func TestManagerReusesOneACPSessionAcrossReviewGates(t *testing.T) {
+	manager, fake := testSessionManager(t, []PhaseResult{
+		{ImplementationPlan: "plan", ImplementationNotes: "notes", Summary: "investigated", Tests: []string{}},
+		{Summary: "implemented", Tests: []string{"go test ./..."}},
+		{Summary: "fixed", Tests: []string{"go test ./..."}},
+	})
+	store := testAgentStore(t, "in-progress")
+	mustAct(t, manager, store, "task01", ActionStartInvestigation, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhasePlanReview)
+	mustAct(t, manager, store, "task01", ActionApprovePlan, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+	mustAct(t, manager, store, "task01", ActionRequestImplementationChanges, "fix edge case")
+	mustAct(t, manager, store, "task01", ActionStartFix, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+	if fake.factoryCalls != 1 || fake.promptCalls != 3 {
+		t.Fatalf("session calls = factory %d, prompts %d", fake.factoryCalls, fake.promptCalls)
+	}
+}
+
+func TestManagerResumeLoadsPersistedSession(t *testing.T) {
+	store := testAgentStore(t, "in-progress")
+	seedAgentWorkflow(t, store, models.AgentWorkflow{
+		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhaseInterrupted,
+		CodexSessionID: "session-1", ResumePhase: models.AgentRunPhaseImplementation,
+	})
+	manager, fake := testSessionManager(t, []PhaseResult{{Summary: "resumed", Tests: []string{"go test ./..."}}})
+	mustAct(t, manager, store, "task01", ActionResume, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+	if fake.loadCalls != 1 || fake.loadedID != "session-1" {
+		t.Fatalf("load calls = %d id = %q", fake.loadCalls, fake.loadedID)
+	}
+}
+
+func TestManagerTransportDisconnectLeavesTaskResumable(t *testing.T) {
+	store := testAgentStore(t, "in-progress")
+	manager, fake := testSessionManager(t, nil)
+	fake.promptErr = errors.New("ACP adapter exited: EOF")
+	mustAct(t, manager, store, "task01", ActionStartInvestigation, "")
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		snapshot := mustSnapshot(t, manager, store, "task01")
+		if snapshot.Workflow.Phase == models.AgentPhaseInterrupted && snapshot.Workflow.ActiveRunID == "" {
+			if snapshot.Workflow.ResumePhase != models.AgentRunPhaseInvestigation || snapshot.Workflow.CodexSessionID != "session-1" || !snapshot.Interrupted {
+				t.Fatalf("interrupted snapshot = %#v", snapshot)
+			}
+			if task, _ := store.Tasks.Get("task01"); task.Status != "in-progress" {
+				t.Fatalf("task status = %q", task.Status)
+			}
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("workflow did not become interrupted: %#v", mustSnapshot(t, manager, store, "task01"))
+}
+
+func TestManagerClosesSessionOnFinalApproval(t *testing.T) {
+	manager, fake := testSessionManager(t, []PhaseResult{
+		{ImplementationPlan: "plan", ImplementationNotes: "notes", Summary: "investigated", Tests: []string{}},
+		{Summary: "implemented", Tests: []string{"go test ./..."}},
+	})
+	store := testAgentStore(t, "in-progress")
+	mustAct(t, manager, store, "task01", ActionStartInvestigation, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhasePlanReview)
+	mustAct(t, manager, store, "task01", ActionApprovePlan, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+	mustAct(t, manager, store, "task01", ActionApproveImplementation, "")
+	if fake.closeCalls != 1 {
+		t.Fatalf("close calls = %d", fake.closeCalls)
+	}
+}
+
 func testAgentStore(t *testing.T, status string) *storage.Store {
 	return testAgentStoreAt(t, t.TempDir(), status)
 }
@@ -288,6 +360,7 @@ func testAgentStoreAt(t *testing.T, repositoryRoot, status string) *storage.Stor
 func testManager(t *testing.T, results []PhaseResult) *Manager {
 	t.Helper()
 	manager := NewManager("fake-codex", nil)
+	manager.sessionFactory = nil
 	manager.detect = func(context.Context, string) Status { return Status{Installed: true, LoggedIn: true} }
 	manager.dirtyFiles = func(context.Context, string) ([]string, error) { return []string{}, nil }
 	var mu sync.Mutex
@@ -303,6 +376,71 @@ func testManager(t *testing.T, results []PhaseResult) *Manager {
 		return Result{Output: result}, nil
 	}
 	return manager
+}
+
+type recordingSession struct {
+	results      []PhaseResult
+	index        int
+	factoryCalls int
+	promptCalls  int
+	loadCalls    int
+	loadedID     string
+	closeCalls   int
+	promptErr    error
+	sessionID    string
+}
+
+func (s *recordingSession) NewSession(context.Context) error {
+	s.sessionID = "session-1"
+	return nil
+}
+
+func (s *recordingSession) LoadSession(_ context.Context, sessionID string) error {
+	s.loadCalls++
+	s.loadedID = sessionID
+	s.sessionID = sessionID
+	return nil
+}
+
+func (s *recordingSession) SetMode(context.Context, ACPMode) error { return nil }
+
+func (s *recordingSession) Prompt(_ context.Context, _ string, onUpdate func(ACPUpdate)) (string, error) {
+	s.promptCalls++
+	if s.promptErr != nil {
+		return "", s.promptErr
+	}
+	if onUpdate != nil {
+		onUpdate(ACPUpdate{Kind: "agent_message_chunk", Text: "result"})
+	}
+	result := PhaseResult{Summary: "done", Tests: []string{}}
+	if s.index < len(s.results) {
+		result = s.results[s.index]
+	}
+	s.index++
+	data, err := json.Marshal(result)
+	return string(data), err
+}
+
+func (s *recordingSession) Cancel(context.Context) error { return nil }
+
+func (s *recordingSession) Close(context.Context) error {
+	s.closeCalls++
+	return nil
+}
+
+func (s *recordingSession) SessionID() string { return s.sessionID }
+
+func testSessionManager(t *testing.T, results []PhaseResult) (*Manager, *recordingSession) {
+	t.Helper()
+	manager := NewManager("fake-codex", nil)
+	manager.detect = func(context.Context, string) Status { return Status{Installed: true, LoggedIn: true} }
+	manager.dirtyFiles = func(context.Context, string) ([]string, error) { return []string{}, nil }
+	fake := &recordingSession{results: results}
+	manager.sessionFactory = func(context.Context, string, []string) (acpSession, error) {
+		fake.factoryCalls++
+		return fake, nil
+	}
+	return manager, fake
 }
 
 func mustAct(t *testing.T, manager *Manager, store *storage.Store, taskID string, action Action, comment string) {
