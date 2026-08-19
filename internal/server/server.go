@@ -28,6 +28,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/websocket"
 
+	"github.com/hoangtrung1801/known-me/internal/agents/codex"
 	"github.com/hoangtrung1801/known-me/internal/agents/opencode"
 	"github.com/hoangtrung1801/known-me/internal/lsp"
 	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
@@ -69,6 +70,7 @@ type Server struct {
 	projectRoot       string
 	opts              Options
 	opencodeDaemon    *opencode.Daemon // Shared OpenCode daemon (may be nil if not configured)
+	codexManager      *codex.Manager
 	runtimeOpenCode   *opencode.Config
 	opencodeProxy     *httputil.ReverseProxy // Shared proxy singleton — reused across requests
 	opencodeProxyMu   sync.RWMutex
@@ -361,6 +363,16 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 		log.Printf("warn: could not load project registry: %v", err)
 	}
 	s.manager = storage.NewManager(store, reg)
+	s.codexManager = codex.NewManager("", func(event codex.Event) {
+		eventType := "agent:updated"
+		if event.Type == "progress" {
+			eventType = "agent:progress"
+		}
+		s.sse.Broadcast(routes.SSEEvent{Type: eventType, Data: event})
+		if event.TaskChanged {
+			s.sse.Broadcast(routes.SSEEvent{Type: "tasks:refresh", Data: map[string]any{}})
+		}
+	})
 
 	// Create LSP manager if a project store is available.
 	if store != nil && !opts.DisableLSP {
@@ -398,6 +410,11 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 	if store != nil {
 		if err := store.Chats.MarkAllIdle(); err != nil {
 			log.Printf("warn: could not mark chats idle: %v", err)
+		}
+	}
+	if store != nil && store.Agent != nil {
+		if err := store.Agent.MarkRunningInterrupted(time.Now().UTC()); err != nil {
+			log.Printf("warn: could not interrupt stale Codex runs: %v", err)
 		}
 	}
 
@@ -495,6 +512,9 @@ func (s *Server) serve(listener net.Listener) error {
 	}
 	if s.cancelTaskSweep != nil {
 		s.cancelTaskSweep()
+	}
+	if s.codexManager != nil {
+		s.codexManager.Close()
 	}
 	s.cleanupOpenCodeServer()
 
@@ -1073,6 +1093,9 @@ func (s *Server) buildRouter() chi.Router {
 			},
 			s.reinitOpenCode,
 		)
+		if s.codexManager != nil {
+			routes.NewAgentRoutes(s.store, s.manager, s.codexManager).Register(r)
+		}
 	})
 
 	// --- LSP language management routes ---
