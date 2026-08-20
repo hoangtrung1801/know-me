@@ -28,6 +28,15 @@ func (ar *AgentRoutes) getStore() *storage.Store {
 	return ar.store
 }
 
+func (ar *AgentRoutes) taskStore(r *http.Request, id string) (*storage.Store, string, error) {
+	store := ar.getStore()
+	task, err := resolveHTTPTask(store, r, id)
+	if err != nil {
+		return nil, "", err
+	}
+	return taskStoreForHTTP(store, task), task.ID, nil
+}
+
 func (ar *AgentRoutes) Register(r chi.Router) {
 	r.Get("/codex/status", ar.status)
 	r.Get("/tasks/{id}/agent", ar.snapshot)
@@ -45,12 +54,16 @@ func (ar *AgentRoutes) status(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ar *AgentRoutes) snapshot(w http.ResponseWriter, r *http.Request) {
-	store := ar.getStore()
+	store, taskID, err := ar.taskStore(r, chi.URLParam(r, "id"))
+	if err != nil {
+		respondAgentError(w, err)
+		return
+	}
 	if store == nil || ar.agent == nil {
 		respondError(w, http.StatusServiceUnavailable, "Codex agent is unavailable")
 		return
 	}
-	snapshot, err := ar.agent.Snapshot(r.Context(), store, chi.URLParam(r, "id"))
+	snapshot, err := ar.agent.Snapshot(r.Context(), store, taskID)
 	if err != nil {
 		respondAgentError(w, err)
 		return
@@ -59,7 +72,11 @@ func (ar *AgentRoutes) snapshot(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ar *AgentRoutes) action(w http.ResponseWriter, r *http.Request) {
-	store := ar.getStore()
+	store, taskID, err := ar.taskStore(r, chi.URLParam(r, "id"))
+	if err != nil {
+		respondAgentError(w, err)
+		return
+	}
 	if store == nil || ar.agent == nil {
 		respondError(w, http.StatusServiceUnavailable, "Codex agent is unavailable")
 		return
@@ -74,7 +91,7 @@ func (ar *AgentRoutes) action(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	snapshot, started, err := ar.agent.Act(r.Context(), store, chi.URLParam(r, "id"), codex.Action(chi.URLParam(r, "action")), body.Comment)
+	snapshot, started, err := ar.agent.Act(r.Context(), store, taskID, codex.Action(chi.URLParam(r, "action")), body.Comment)
 	if err != nil {
 		respondAgentError(w, err)
 		return
@@ -87,12 +104,16 @@ func (ar *AgentRoutes) action(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ar *AgentRoutes) log(w http.ResponseWriter, r *http.Request) {
-	store := ar.getStore()
+	store, taskID, err := ar.taskStore(r, chi.URLParam(r, "id"))
+	if err != nil {
+		respondAgentError(w, err)
+		return
+	}
 	if store == nil || ar.agent == nil {
 		respondError(w, http.StatusServiceUnavailable, "Codex agent is unavailable")
 		return
 	}
-	content, err := ar.agent.ReadLog(store, chi.URLParam(r, "id"), chi.URLParam(r, "runID"))
+	content, err := ar.agent.ReadLog(store, taskID, chi.URLParam(r, "runID"))
 	if err != nil {
 		respondAgentError(w, err)
 		return

@@ -44,13 +44,14 @@ func roundPercent(v float64) float64 {
 //
 // GET /api/validate/sdd
 func (vr *ValidateRoutes) sdd(w http.ResponseWriter, r *http.Request) {
-	tasks, err := vr.getStore().Tasks.List()
+	projectID := r.URL.Query().Get("projectId")
+	tasks, err := vr.getStore().Tasks.List(projectID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	docs, err := vr.getStore().Docs.List()
+	docs, err := vr.getStore().Docs.List(projectID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return

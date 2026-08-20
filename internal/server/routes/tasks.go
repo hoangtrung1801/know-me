@@ -51,7 +51,11 @@ func (tr *TaskRoutes) loadTaskTimeEntries(t *models.Task) {
 	if t == nil {
 		return
 	}
-	entries, err := tr.getStore().Time.GetEntries(t.ID)
+	taskID := httpTaskID(t)
+	entries, err := tr.getStore().Time.GetEntries(taskID)
+	if err == nil && len(entries) == 0 && taskID != t.ID {
+		entries, err = tr.getStore().Time.GetEntries(t.ID)
+	}
 	if err != nil {
 		return
 	}
@@ -78,6 +82,31 @@ func (tr *TaskRoutes) getStore() *storage.Store {
 		return tr.mgr.GetStore()
 	}
 	return tr.store
+}
+
+func resolveHTTPTask(store *storage.Store, r *http.Request, id string) (*models.Task, error) {
+	return store.Tasks.Get(id, r.URL.Query().Get("projectId"))
+}
+
+func taskStoreForHTTP(store *storage.Store, task *models.Task) *storage.Store {
+	if task.ProjectID == store.ProjectID {
+		return store
+	}
+	if task.ProjectID == "" {
+		return storage.NewStore(store.Root)
+	}
+	return storage.NewProjectStore(store.Root, task.ProjectID, "")
+}
+
+func taskStoreForHTTPQuery(store *storage.Store, r *http.Request) *storage.Store {
+	if projectID := r.URL.Query().Get("projectId"); projectID != "" {
+		return storage.NewProjectStore(store.Root, projectID, "")
+	}
+	return storage.NewStore(store.Root)
+}
+
+func httpTaskID(task *models.Task) string {
+	return storage.ScopedKey(task.ProjectID, task.ID)
 }
 
 // Register wires the task routes onto r.
@@ -177,13 +206,13 @@ func taskLifecycleRank(task *models.Task) int {
 // GET /api/tasks/{id}
 func (tr *TaskRoutes) get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	task, err := tr.getStore().Tasks.Get(id)
+	task, err := resolveHTTPTask(tr.getStore(), r, id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
 	tr.loadTaskTimeEntries(task)
-	task.ActiveTimer = tr.getStore().Time.GetActiveTimer(task.ID)
+	task.ActiveTimer = taskStoreForHTTP(tr.getStore(), task).Time.GetActiveTimer(httpTaskID(task))
 	respondJSON(w, http.StatusOK, newTaskResponse(task))
 }
 
@@ -264,7 +293,12 @@ func (tr *TaskRoutes) update(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
-	updated, err := tr.lifecycleService().UpdateTask(r.Context(), id, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
+	task, err := resolveHTTPTask(tr.getStore(), r, id)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	updated, err := tr.lifecycleService(taskStoreForHTTP(tr.getStore(), task)).UpdateTask(r.Context(), task.ID, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
 		data, err := json.Marshal(task)
 		if err != nil {
 			return err
@@ -383,8 +417,11 @@ func decodeLifecycleRequest(w http.ResponseWriter, r *http.Request) (tasklifecyc
 	return request, true
 }
 
-func (tr *TaskRoutes) lifecycleService() *tasklifecycle.Service {
+func (tr *TaskRoutes) lifecycleService(target ...*storage.Store) *tasklifecycle.Service {
 	store := tr.getStore()
+	if len(target) > 0 && target[0] != nil {
+		store = target[0]
+	}
 	return tasklifecycle.New(store, tasklifecycle.WithHooks(tasklifecycle.Hooks{
 		IndexTask:  func(id string) error { return search.ReconcileTaskIndex(store, id) },
 		RemoveTask: func(id string) error { return search.ReconcileTaskRemoval(store, id) },
@@ -405,9 +442,40 @@ func (tr *TaskRoutes) executeLifecycle(w http.ResponseWriter, r *http.Request, r
 	if request.Actor == "" {
 		request.Actor = "api"
 	}
-	response, err := tr.lifecycleService().ExecutePublic(r.Context(), request, tr.capabilities.HardDelete)
+	target, err := tr.resolveLifecycleStore(r, &request)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	response, err := tr.lifecycleService(target).ExecutePublic(r.Context(), request, tr.capabilities.HardDelete)
 	status := lifecycleResponseStatus(response, err)
 	respondJSON(w, status, response)
+}
+
+func (tr *TaskRoutes) resolveLifecycleStore(r *http.Request, request *tasklifecycle.Request) (*storage.Store, error) {
+	store := tr.getStore()
+	if request.Operation == tasklifecycle.OperationHardDelete {
+		return taskStoreForHTTPQuery(store, r), nil
+	}
+	if request.TaskID != "" {
+		task, err := resolveHTTPTask(store, r, request.TaskID)
+		if err == nil {
+			return taskStoreForHTTP(store, task), nil
+		}
+		return taskStoreForHTTPQuery(store, r), nil
+	}
+
+	target := taskStoreForHTTPQuery(store, r)
+	for index, id := range request.IDs {
+		task, err := resolveHTTPTask(store, r, id)
+		if err != nil {
+			continue
+		}
+		if project, _ := storage.SplitScopedKey(id); project == "" {
+			request.IDs[index] = task.ID
+		}
+	}
+	return target, nil
 }
 
 func lifecycleResponseStatus(response *tasklifecycle.Response, err error) int {
@@ -450,8 +518,12 @@ func (tr *TaskRoutes) reorder(w http.ResponseWriter, r *http.Request) {
 
 	updated := 0
 	for _, item := range req.Orders {
+		task, err := resolveHTTPTask(tr.getStore(), r, item.ID)
+		if err != nil {
+			continue
+		}
 		changed := false
-		_, err := tr.lifecycleService().UpdateTask(r.Context(), item.ID, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
+		_, err = tr.lifecycleService(taskStoreForHTTP(tr.getStore(), task)).UpdateTask(r.Context(), task.ID, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
 			if task.Order != nil && *task.Order == item.Order {
 				return nil
 			}
@@ -485,7 +557,8 @@ func (tr *TaskRoutes) reorder(w http.ResponseWriter, r *http.Request) {
 //
 // POST /api/tasks/sync-spec-acs
 func (tr *TaskRoutes) syncSpecACs(w http.ResponseWriter, r *http.Request) {
-	tasks, err := tr.getStore().Tasks.List()
+	projectID := r.URL.Query().Get("projectId")
+	tasks, err := tr.getStore().Tasks.List(projectID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -497,7 +570,11 @@ func (tr *TaskRoutes) syncSpecACs(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		doc, err := tr.getStore().Docs.Get(t.Spec)
+		spec := t.Spec
+		if specProjectID, _ := storage.SplitScopedKey(spec); specProjectID == "" {
+			spec = storage.ScopedKey(t.ProjectID, spec)
+		}
+		doc, err := tr.getStore().Docs.Get(spec)
 		if err != nil || doc == nil {
 			continue
 		}
@@ -522,7 +599,12 @@ func (tr *TaskRoutes) syncSpecACs(w http.ResponseWriter, r *http.Request) {
 // GET /api/tasks/{id}/history
 func (tr *TaskRoutes) history(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	h, err := tr.getStore().Versions.GetHistory(id)
+	task, err := resolveHTTPTask(tr.getStore(), r, id)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	h, err := taskStoreForHTTP(tr.getStore(), task).Versions.GetHistory(task.ID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
