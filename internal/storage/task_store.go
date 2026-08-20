@@ -123,16 +123,22 @@ func (ts *TaskStore) listDir(dir, projectID string) ([]*models.Task, error) {
 }
 
 // Get finds and parses a single task by ID, checking tasks/ then archive/.
-func (ts *TaskStore) Get(id string) (*models.Task, error) {
-	path, err := ts.findFile(id)
+// An explicit project filter overrides the store's active-project fallback;
+// passing an empty filter searches globally.
+func (ts *TaskStore) Get(id string, projectID ...string) (*models.Task, error) {
+	path, err := ts.findFile(id, projectID...)
 	if err != nil {
 		return nil, err
 	}
 	return ts.parseFile(path)
 }
 
-func (ts *TaskStore) findFile(id string) (string, error) {
+func (ts *TaskStore) findFile(id string, projectFilter ...string) (string, error) {
 	projectID, localID := SplitScopedKey(id)
+	if projectID == "" && len(projectFilter) > 0 {
+		projectID = projectFilter[0]
+		return ts.findFileExact(projectID, localID, projectID != "")
+	}
 	if projectID == "" && ts.projectID != "" {
 		projectID = ts.projectID
 		return ts.findFileExact(projectID, localID, true)

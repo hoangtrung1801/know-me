@@ -144,7 +144,7 @@ func withSemanticIndex(store *storage.Store, fn func(*IndexService) error) error
 		return nil
 	}
 	embedder, vecStore, err := InitSemantic(store)
-	if errors.Is(err, ErrSemanticNotConfigured) {
+	if errors.Is(err, ErrSemanticNotConfigured) || errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
 	if err != nil {
@@ -286,7 +286,7 @@ func runBestEffort(store *storage.Store, action string, fn func(*IndexService) e
 
 	embedder, vecStore, err := InitSemantic(store)
 	if err != nil {
-		if !errors.Is(err, ErrSemanticNotConfigured) {
+		if !errors.Is(err, ErrSemanticNotConfigured) && !errors.Is(err, os.ErrNotExist) {
 			log.Printf("[search] could not %s: %v", action, err)
 		}
 		return

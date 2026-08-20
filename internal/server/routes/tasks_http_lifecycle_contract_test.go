@@ -133,6 +133,166 @@ func TestTaskHTTPListUsesProjectIDOnlyWhenProvided(t *testing.T) {
 	}
 }
 
+func TestTaskHTTPUpdateFindsUniqueTaskAcrossProjectsWithoutProjectID(t *testing.T) {
+	root := t.TempDir()
+	projectOne := storage.NewProjectStore(root, "p1", t.TempDir())
+	projectTwo := storage.NewProjectStore(root, "p2", t.TempDir())
+	if err := projectOne.Init("project one"); err != nil {
+		t.Fatal(err)
+	}
+	if err := projectTwo.Init("project two"); err != nil {
+		t.Fatal(err)
+	}
+	if err := projectTwo.Tasks.Create(&models.Task{ID: "2v6ywe", Title: "Task", Status: "todo", Priority: "medium"}); err != nil {
+		t.Fatal(err)
+	}
+
+	router := taskHTTPContractRouter(projectOne)
+	req := httptest.NewRequest(http.MethodPut, "/api/tasks/2v6ywe", bytes.NewBufferString(`{"status":"in-progress"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("PUT /api/tasks/2v6ywe status=%d body=%s", w.Code, w.Body.String())
+	}
+	var response struct {
+		ID     string `json:"id"`
+		Status string `json:"status"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+	if response.ID != "2v6ywe" || response.Status != "in-progress" {
+		t.Fatalf("updated response = %#v", response)
+	}
+	updated, err := projectTwo.Tasks.Get("p2:2v6ywe")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Status != "in-progress" {
+		t.Fatalf("stored task status = %q, want in-progress", updated.Status)
+	}
+}
+
+func TestTaskHTTPUpdateUsesProjectIDFilter(t *testing.T) {
+	root := t.TempDir()
+	projectOne := storage.NewProjectStore(root, "p1", t.TempDir())
+	projectTwo := storage.NewProjectStore(root, "p2", t.TempDir())
+	for _, project := range []*storage.Store{projectOne, projectTwo} {
+		if err := project.Init(project.ProjectID); err != nil {
+			t.Fatal(err)
+		}
+		if err := project.Tasks.Create(&models.Task{ID: "shared", Title: project.ProjectID, Status: "todo", Priority: "medium"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	router := taskHTTPContractRouter(projectOne)
+	req := httptest.NewRequest(http.MethodPut, "/api/tasks/shared?projectId=p2", bytes.NewBufferString(`{"status":"in-progress"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("filtered PUT status=%d body=%s", w.Code, w.Body.String())
+	}
+
+	first, err := projectOne.Tasks.Get("p1:shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := projectTwo.Tasks.Get("p2:shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.Status != "todo" || second.Status != "in-progress" {
+		t.Fatalf("project statuses = %q and %q", first.Status, second.Status)
+	}
+}
+
+func TestTaskHTTPUpdateDoesNotFailWhenTargetProjectConfigIsMissing(t *testing.T) {
+	root := t.TempDir()
+	projectOne := storage.NewProjectStore(root, "p1", t.TempDir())
+	projectTwo := storage.NewProjectStore(root, "p2", t.TempDir())
+	if err := projectOne.Init("project one"); err != nil {
+		t.Fatal(err)
+	}
+	if err := projectTwo.Tasks.Create(&models.Task{ID: "missing-config", Title: "Task", Status: "todo", Priority: "medium"}); err != nil {
+		t.Fatal(err)
+	}
+
+	router := taskHTTPContractRouter(projectOne)
+	req := httptest.NewRequest(http.MethodPut, "/api/tasks/missing-config", bytes.NewBufferString(`{"status":"in-progress"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("PUT with missing target config status=%d body=%s", w.Code, w.Body.String())
+	}
+	updated, err := projectTwo.Tasks.Get("p2:missing-config")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Status != "in-progress" {
+		t.Fatalf("stored task status = %q, want in-progress", updated.Status)
+	}
+}
+
+func TestTaskHTTPSyncSpecACsUsesProjectIDOnlyWhenProvided(t *testing.T) {
+	root := t.TempDir()
+	projectOne := storage.NewProjectStore(root, "p1", t.TempDir())
+	projectTwo := storage.NewProjectStore(root, "p2", t.TempDir())
+	if err := projectOne.Init("project one"); err != nil {
+		t.Fatal(err)
+	}
+	if err := projectTwo.Init("project two"); err != nil {
+		t.Fatal(err)
+	}
+	for _, project := range []*storage.Store{projectOne, projectTwo} {
+		if err := project.Docs.Create(&models.Doc{Path: "spec", Title: "Spec"}); err != nil {
+			t.Fatal(err)
+		}
+		if err := project.Tasks.Create(&models.Task{
+			ID: "task-" + project.ProjectID, Title: "Task", Status: "done", Priority: "medium",
+			Spec: "spec", Fulfills: []string{"AC-1"},
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := projectTwo.Docs.Create(&models.Doc{Path: "scoped-spec", Title: "Scoped spec"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := projectTwo.Tasks.Create(&models.Task{
+		ID: "task-p2-scoped", Title: "Scoped task", Status: "done", Priority: "medium",
+		Spec: "p2:scoped-spec", Fulfills: []string{"AC-1"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	router := taskHTTPContractRouter(projectOne)
+	readSynced := func(path string) int {
+		t.Helper()
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, httptest.NewRequest(http.MethodPost, path, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("POST %s status=%d body=%s", path, w.Code, w.Body.String())
+		}
+		var response struct {
+			Synced int `json:"synced"`
+		}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatal(err)
+		}
+		return response.Synced
+	}
+
+	if got := readSynced("/api/tasks/sync-spec-acs"); got != 3 {
+		t.Fatalf("global synced count = %d, want 3", got)
+	}
+	if got := readSynced("/api/tasks/sync-spec-acs?projectId=p2"); got != 2 {
+		t.Fatalf("filtered synced count = %d, want 2", got)
+	}
+}
+
 func taskHTTPContractRouter(store *storage.Store) http.Handler {
 	api := chi.NewRouter()
 	(&TaskRoutes{store: store, sse: &fakeBroadcaster{}}).Register(api)

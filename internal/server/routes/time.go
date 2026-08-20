@@ -66,18 +66,19 @@ func (tr *TimeRoutes) start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := tr.getStore().Tasks.Get(req.TaskID)
+	task, err := resolveHTTPTask(tr.getStore(), r, req.TaskID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "task not found: "+err.Error())
 		return
 	}
+	target := taskStoreForHTTP(tr.getStore(), task)
 
-	if err := tr.getStore().Time.Start(req.TaskID, task.Title); err != nil {
+	if err := target.Time.Start(httpTaskID(task), task.Title); err != nil {
 		respondError(w, http.StatusConflict, err.Error())
 		return
 	}
 
-	state, _ := tr.getStore().Time.GetState()
+	state, _ := target.Time.GetState()
 	tr.sse.Broadcast(SSEEvent{Type: "time:updated", Data: state})
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"taskId": req.TaskID,
@@ -109,8 +110,9 @@ func (tr *TimeRoutes) stop(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var stopped []string
+		target := storage.NewStore(tr.getStore().Root)
 		for _, a := range state.Active {
-			entry, err := tasklifecycle.New(tr.getStore()).StopTimer(r.Context(), a.TaskID, "api")
+			entry, err := tasklifecycle.New(target).StopTimer(r.Context(), a.TaskID, "api")
 			if err == nil {
 				stopped = append(stopped, a.TaskID)
 				_ = entry
@@ -129,7 +131,12 @@ func (tr *TimeRoutes) stop(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "taskId is required (or set all:true)")
 		return
 	}
-	entry, err := tasklifecycle.New(tr.getStore()).StopTimer(r.Context(), req.TaskID, "api")
+	task, err := resolveHTTPTask(tr.getStore(), r, req.TaskID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	entry, err := tasklifecycle.New(taskStoreForHTTP(tr.getStore(), task)).StopTimer(r.Context(), httpTaskID(task), "api")
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -170,7 +177,14 @@ func (tr *TimeRoutes) add(w http.ResponseWriter, r *http.Request) {
 	}
 	endedAt := startedAt.Add(time.Duration(req.Duration) * time.Second)
 	entry := models.TimeEntry{ID: fmt.Sprintf("te-%d-%s", startedAt.UnixNano(), req.TaskID), StartedAt: startedAt, EndedAt: &endedAt, Duration: req.Duration, Note: req.Note}
-	recorded, err := tasklifecycle.New(tr.getStore()).AddTimeEntry(r.Context(), req.TaskID, tasklifecycle.TimeMutationOptions{Actor: "api", Entry: entry})
+	task, err := resolveHTTPTask(tr.getStore(), r, req.TaskID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	taskID := httpTaskID(task)
+	entry.ID = fmt.Sprintf("te-%d-%s", startedAt.UnixNano(), taskID)
+	recorded, err := tasklifecycle.New(taskStoreForHTTP(tr.getStore(), task)).AddTimeEntry(r.Context(), taskID, tasklifecycle.TimeMutationOptions{Actor: "api", Entry: entry})
 	if err != nil {
 		respondError(w, http.StatusConflict, err.Error())
 		return
@@ -200,7 +214,12 @@ func (tr *TimeRoutes) pause(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "taskId is required")
 		return
 	}
-	if err := tr.getStore().Time.Pause(req.TaskID); err != nil {
+	task, err := resolveHTTPTask(tr.getStore(), r, req.TaskID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	if err := taskStoreForHTTP(tr.getStore(), task).Time.Pause(httpTaskID(task)); err != nil {
 		respondError(w, http.StatusConflict, err.Error())
 		return
 	}
@@ -226,7 +245,12 @@ func (tr *TimeRoutes) resume(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "taskId is required")
 		return
 	}
-	if err := tr.getStore().Time.Resume(req.TaskID); err != nil {
+	task, err := resolveHTTPTask(tr.getStore(), r, req.TaskID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	if err := taskStoreForHTTP(tr.getStore(), task).Time.Resume(httpTaskID(task)); err != nil {
 		respondError(w, http.StatusConflict, err.Error())
 		return
 	}

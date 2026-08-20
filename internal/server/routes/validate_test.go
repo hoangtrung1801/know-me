@@ -65,3 +65,49 @@ func TestValidateSDDIncludesDecisionContractStats(t *testing.T) {
 		t.Fatalf("warnings = %#v, want unassessed task warning", response.Warnings)
 	}
 }
+
+func TestValidateSDDUsesProjectIDOnlyWhenProvided(t *testing.T) {
+	root := t.TempDir()
+	projectOne := storage.NewProjectStore(root, "p1", t.TempDir())
+	projectTwo := storage.NewProjectStore(root, "p2", t.TempDir())
+	if err := projectOne.Init("project one"); err != nil {
+		t.Fatal(err)
+	}
+	if err := projectTwo.Init("project two"); err != nil {
+		t.Fatal(err)
+	}
+	for _, project := range []*storage.Store{projectOne, projectTwo} {
+		if err := project.Tasks.Create(&models.Task{ID: project.ProjectID + "-task", Title: project.ProjectID, Status: "todo", Priority: "medium"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	router := chi.NewRouter()
+	(&ValidateRoutes{store: projectOne}).Register(router)
+	readTotal := func(path string) int {
+		t.Helper()
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("GET %s status=%d body=%s", path, w.Code, w.Body.String())
+		}
+		var response struct {
+			Stats struct {
+				Tasks struct {
+					Total int `json:"total"`
+				} `json:"tasks"`
+			} `json:"stats"`
+		}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatal(err)
+		}
+		return response.Stats.Tasks.Total
+	}
+
+	if got := readTotal("/validate/sdd"); got != 2 {
+		t.Fatalf("global task total = %d, want 2", got)
+	}
+	if got := readTotal("/validate/sdd?projectId=p2"); got != 1 {
+		t.Fatalf("filtered task total = %d, want 1", got)
+	}
+}

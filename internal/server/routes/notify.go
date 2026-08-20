@@ -37,7 +37,7 @@ func (nr *NotifyRoutes) Register(r chi.Router) {
 // POST /api/notify/task/{id}
 func (nr *NotifyRoutes) notifyTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	task, err := nr.getStore().Tasks.Get(id)
+	task, err := resolveHTTPTask(nr.getStore(), r, id)
 	if err != nil {
 		// Task not found — broadcast a full refresh instead.
 		nr.sse.Broadcast(SSEEvent{Type: "tasks:refresh", Data: map[string]interface{}{}})
