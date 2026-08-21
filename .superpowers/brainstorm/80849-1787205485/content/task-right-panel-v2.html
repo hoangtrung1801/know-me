@@ -1,0 +1,86 @@
+<style>
+  .choice-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 24px;
+  }
+  .choice-card { min-width: 0; }
+  .browser {
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, .35);
+    border-radius: 12px;
+    background: #0f172a;
+    color: #e2e8f0;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .16);
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 11px;
+    border-bottom: 1px solid rgba(148, 163, 184, .22);
+    font-size: 10px;
+    color: #94a3b8;
+  }
+  .task-view { display: flex; min-height: 245px; }
+  .task-copy { flex: 1; min-width: 0; padding: 15px; }
+  .task-copy h4 { margin: 0 0 13px; font-size: 12px; }
+  .line { height: 7px; margin: 9px 0; border-radius: 999px; background: rgba(148, 163, 184, .28); }
+  .line.short { width: 58%; }
+  .line.medium { width: 78%; }
+  .task-card { margin-top: 18px; padding: 11px; border: 1px solid rgba(148, 163, 184, .22); border-radius: 8px; }
+  .task-card .line { margin: 7px 0; }
+  .chat-pane { width: 38%; min-width: 112px; padding: 12px; border-left: 1px solid rgba(148, 163, 184, .25); background: rgba(30, 41, 59, .72); }
+  .chat-pane h5 { margin: 0 0 12px; font-size: 10px; }
+  .msg { width: 86%; margin-bottom: 9px; padding: 7px 8px; border-radius: 8px; background: rgba(51, 65, 85, .9); font-size: 8px; line-height: 1.4; }
+  .msg.user { width: 72%; margin-left: auto; background: #2563eb; }
+  .input { display: flex; height: 22px; align-items: center; margin-top: 14px; padding: 0 7px; border: 1px solid rgba(148, 163, 184, .28); border-radius: 6px; color: #94a3b8; font-size: 8px; }
+  .input b { width: 15px; height: 11px; margin-left: auto; border-radius: 4px; background: #3b82f6; }
+  .resize .chat-pane { width: 45%; }
+  .resize .task-copy { position: relative; }
+  .resize .task-copy:after { content: '↔'; position: absolute; top: 45%; right: -5px; color: #60a5fa; font-size: 15px; }
+  .drawer .chat-pane { width: 52%; box-shadow: -10px 0 20px rgba(2, 6, 23, .24); }
+  .drawer .task-copy { opacity: .68; }
+  @media (max-width: 900px) { .choice-grid { grid-template-columns: 1fr; } }
+</style>
+
+<h2>Right-side Codex panel</h2>
+<p class="subtitle">Task details stay visible while the persistent conversation lives on the right.</p>
+
+<div class="choice-grid">
+  <div class="card choice-card" data-choice="fixed" onclick="toggleSelect(this)">
+    <div class="browser">
+      <div class="browser-bar"><span>Task detail</span><span>Codex · Auto</span></div>
+      <div class="task-view">
+        <div class="task-copy"><h4>Fix parser edge case</h4><div class="line medium"></div><div class="line"></div><div class="line short"></div><div class="task-card"><div class="line medium"></div><div class="line short"></div></div></div>
+        <div class="chat-pane"><h5>Codex chat</h5><div class="msg">I found the parser entry point.</div><div class="msg user">Add the regression test.</div><div class="input">Message Codex…<b></b></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>Fixed right rail</h3><p>About 360–400px wide. Predictable and simplest to maintain.</p></div>
+  </div>
+
+  <div class="card choice-card resize" data-choice="resizable" onclick="toggleSelect(this)">
+    <div class="browser">
+      <div class="browser-bar"><span>Task detail</span><span>Codex · Auto</span></div>
+      <div class="task-view">
+        <div class="task-copy"><h4>Fix parser edge case</h4><div class="line medium"></div><div class="line"></div><div class="line short"></div><div class="task-card"><div class="line medium"></div><div class="line short"></div></div></div>
+        <div class="chat-pane"><h5>Codex chat</h5><div class="msg">I found the parser entry point.</div><div class="msg user">Add the regression test.</div><div class="input">Message Codex…<b></b></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>Resizable rail</h3><p>Drag the divider when messages or task content need more room.</p></div>
+  </div>
+
+  <div class="card choice-card drawer" data-choice="drawer" onclick="toggleSelect(this)">
+    <div class="browser">
+      <div class="browser-bar"><span>Task detail</span><span>Codex · Auto</span></div>
+      <div class="task-view">
+        <div class="task-copy"><h4>Fix parser edge case</h4><div class="line medium"></div><div class="line"></div><div class="line short"></div><div class="task-card"><div class="line medium"></div><div class="line short"></div></div></div>
+        <div class="chat-pane"><h5>Codex chat</h5><div class="msg">I found the parser entry point.</div><div class="msg user">Add the regression test.</div><div class="input">Message Codex…<b></b></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>Overlay drawer</h3><p>Chat opens over task content. Useful on small screens, less ideal side by side.</p></div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top: 22px">Click a sizing behavior, or reply in the terminal with a variation.</p>
