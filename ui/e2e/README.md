@@ -1,6 +1,6 @@
 # UI E2E Tests
 
-Playwright end-to-end tests for the Knowns web UI.
+Playwright end-to-end tests for the Know-Me web UI.
 
 ## Run
 
