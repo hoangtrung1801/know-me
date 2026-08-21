@@ -25,6 +25,8 @@ Work is easy to start and hard to keep together. Projects live in one place, tas
 
 **Know-Me brings them together.** Keep your work organized locally, return to it from any project, and use the CLI or web UI when it suits you.
 
+Know-Me is the product name; the existing `knowns` CLI and package names remain unchanged for compatibility.
+
 > **One calm place for the work in front of you—and the things you do not want to forget.**
 
 ## Table of Contents

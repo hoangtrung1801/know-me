@@ -9,7 +9,7 @@ test.beforeAll(async () => {
 	server.cli('task create "Search Auth Module" -d "Implement JWT authentication with refresh tokens" --priority high -l "auth"');
 	server.cli('task create "Search Login UI" -d "Design and implement the login page with email/password form" --priority medium -l "frontend"');
 	server.cli('task create "Search API Integration" -d "Integrate backend REST API for user management" --priority medium -l "backend"');
-	server.cli('doc create "Search Auth Guide" -d "Authentication guide for developers using Knowns" -t auth -t guide');
+	server.cli('doc create "Search Auth Guide" -d "Authentication guide for developers using Know-Me" -t auth -t guide');
 	server.cli('doc create "Search API Reference" -d "Complete API reference for all endpoints" -t api');
 });
 

@@ -21,16 +21,17 @@ const (
 	HookKindNative = "native-hooks"
 	HookKindPlugin = "plugin"
 
-	managedName      = "knowns-runtime-memory"
-	managedStatus    = "Knowns runtime memory"
-	pluginFileName   = "knowns-runtime-memory.js"
-	kiroHooksFile    = "hooks.json"
-	codexHooksFile   = "hooks.json"
-	claudeSettings   = "settings.json"
-	opencodeConfig   = "opencode.json"
-	codexConfig      = "config.toml"
-	kiroMCPConfig    = "mcp.json"
-	defaultHookEvent = "user-prompt-submit"
+	managedName         = "knowns-runtime-memory"
+	managedStatus       = "Know-Me runtime memory"
+	legacyManagedStatus = "Knowns runtime memory"
+	pluginFileName      = "knowns-runtime-memory.js"
+	kiroHooksFile       = "hooks.json"
+	codexHooksFile      = "hooks.json"
+	claudeSettings      = "settings.json"
+	opencodeConfig      = "opencode.json"
+	codexConfig         = "config.toml"
+	kiroMCPConfig       = "mcp.json"
+	defaultHookEvent    = "user-prompt-submit"
 )
 
 func runtimeHookEvent(runtime string) string {
@@ -851,7 +852,8 @@ func hookGroupHasStatus(group map[string]any, statusMessage string) bool {
 	hooks, _ := group["hooks"].([]any)
 	for _, raw := range hooks {
 		hook, _ := raw.(map[string]any)
-		if strings.TrimSpace(stringValue(hook["statusMessage"])) == statusMessage {
+		got := strings.TrimSpace(stringValue(hook["statusMessage"]))
+		if got == statusMessage || statusMessage == managedStatus && got == legacyManagedStatus {
 			return true
 		}
 	}
