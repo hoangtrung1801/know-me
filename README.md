@@ -15,6 +15,7 @@
 <p align="center">
   <a href="https://knowns.sh">Homepage</a> |
   <a href="./README.vi.md">Tiếng Việt</a> |
+  <a href="./README.zh-CN.md">简体中文</a> |
   <a href="./docs/README.md">Documentation</a>
 </p>
 
