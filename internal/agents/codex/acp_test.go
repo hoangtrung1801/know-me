@@ -154,6 +154,28 @@ func TestACPProcessStreamsAgentMessageChunkAndDecodesPhaseResult(t *testing.T) {
 	}
 }
 
+func TestACPProcessPromptTextDoesNotRequireJSONObject(t *testing.T) {
+	command, _ := fakeACPCommand(t, "text")
+
+	process, err := NewACPProcess(context.Background(), t.TempDir(), command, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process.NewSession(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	text, err := process.PromptText(context.Background(), "respond normally", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if text != "ordinary assistant text" {
+		t.Fatalf("text = %q, want ordinary assistant text", text)
+	}
+	if err := process.Close(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestACPProcessCollectsOnlyFinalAnswerChunks(t *testing.T) {
 	command, _ := fakeACPCommand(t, "phased-message")
 
@@ -434,6 +456,9 @@ func TestACPHelperProcess(t *testing.T) {
 			}
 			writeLog(helperLogEntry{Method: "session/prompt", SessionID: params.SessionID})
 			switch scenario {
+			case "text":
+				emitMessageChunk(t, params.SessionID, "ordinary assistant text", "final_answer")
+				writeResponse(message.ID, map[string]any{"stopReason": "completed"})
 			case "permission", "once", "no-permission":
 				options := []map[string]any{
 					{"id": "once-1", "outcome": "allow_once"},

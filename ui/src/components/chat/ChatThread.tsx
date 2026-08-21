@@ -22,6 +22,8 @@ interface ChatThreadProps {
 	onPreviewTask?: (taskId: string) => void;
 	onPreviewDoc?: (docPath: string) => void;
 	compact?: boolean;
+	bubble?: boolean;
+	showAllMessages?: boolean;
 	focusedMessageId?: string | null;
 }
 
@@ -64,6 +66,7 @@ function StreamingResponse({
 	onPreviewTask,
 	onPreviewDoc,
 	shouldAutoScroll = true,
+	bubble = false,
 }: {
 	session: ChatSession;
 	onSubmitQuestion?: (messageId: string, blockId: string, answers: string[][]) => Promise<void> | void;
@@ -71,6 +74,7 @@ function StreamingResponse({
 	onPreviewTask?: (taskId: string) => void;
 	onPreviewDoc?: (docPath: string) => void;
 	shouldAutoScroll?: boolean;
+	bubble?: boolean;
 }) {
 	const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -103,13 +107,17 @@ function StreamingResponse({
 
 	if (!hasContent) {
 		if (!isComplete) {
-			return <WorkingIndicator />;
+			return (
+				<div data-chat-bubble={bubble ? "assistant" : undefined} className={bubble ? "max-w-[88%] rounded-2xl border border-border/60 bg-background px-3.5 py-2.5" : undefined}>
+					<WorkingIndicator />
+				</div>
+			);
 		}
 		return null;
 	}
 
 	return (
-		<div className="px-2 py-1">
+		<div data-chat-bubble={bubble ? "assistant" : undefined} className={bubble ? "max-w-[88%] rounded-2xl border border-border/60 bg-background px-3.5 py-2.5" : "px-2 py-1"}>
 			<div className="min-w-0 space-y-2">
 				{showWorkingIndicator && <WorkingIndicator compact />}
 				{currentThinking && <ReasoningBlock markdown={currentThinking} isStreaming={!isComplete} />}
@@ -150,6 +158,8 @@ export function ChatThread({
 	onPreviewTask,
 	onPreviewDoc,
 	compact = false,
+	bubble = false,
+	showAllMessages = false,
 	focusedMessageId = null,
 }: ChatThreadProps) {
 	const bottomRef = useRef<HTMLDivElement>(null);
@@ -196,11 +206,11 @@ export function ChatThread({
 			if (index === streamingAssistantIndex) return;
 
 			// Hide empty compaction trigger messages (user message with no content)
-			if (message.role === "user" && !message.content.trim() && !message.toolCalls?.length && !message.attachments?.length) {
+			if (!showAllMessages && message.role === "user" && !message.content.trim() && !message.toolCalls?.length && !message.attachments?.length) {
 				return;
 			}
 
-			if (isExplorationOnlyMessage(message)) {
+			if (!showAllMessages && isExplorationOnlyMessage(message)) {
 				bufferedToolCalls = [...bufferedToolCalls, ...(message.toolCalls || [])];
 				bufferedIds.push(message.id);
 				return;
@@ -211,6 +221,7 @@ export function ChatThread({
 			// Detect compaction summary: assistant message right after an empty user message
 			const prevMsg = index > 0 ? session.messages[index - 1] : null;
 			const isCompactionSummary = message.role === "assistant"
+				&& !showAllMessages
 				&& prevMsg?.role === "user"
 				&& !prevMsg.content.trim()
 				&& !prevMsg.toolCalls?.length
@@ -225,7 +236,7 @@ export function ChatThread({
 
 		flushBufferedToolCalls();
 		return items;
-	}, [session.messages, streamingAssistantIndex]);
+	}, [session.messages, showAllMessages, streamingAssistantIndex]);
 
 	const filteredItems = useMemo(() => {
 		if (!searchQuery.trim()) return renderItems;
@@ -286,7 +297,7 @@ export function ChatThread({
 		if (container) {
 			container.scrollTop = container.scrollHeight;
 		}
-	}, [session.messages.length, session.status]);
+	}, [session.messages, session.status]);
 
 	// Observe whether bottom is visible to show/hide scroll button
 	useEffect(() => {
@@ -380,7 +391,9 @@ export function ChatThread({
 										<MessageBubble
 											message={item.message}
 											parentSessionId={session.id}
+											bubble={bubble}
 											showMetadata={false}
+											showEmpty={showAllMessages}
 											isLastUserMessage={false}
 											onPreviewTask={onPreviewTask}
 											onPreviewDoc={onPreviewDoc}
@@ -395,11 +408,17 @@ export function ChatThread({
 						const isGroupedAssistant = message.role === "assistant" && !isLastAssistantMessageInGroup(session.messages, index);
 						const showMetadata = !isStreamingAssistant && !isGroupedAssistant;
 						return (
-							<div key={message.id} id={`chat-message-${message.id}`} className="space-y-3 scroll-mt-24">
+							<div
+								key={message.id}
+								id={`chat-message-${message.id}`}
+								className={`space-y-3 scroll-mt-24 ${bubble ? message.role === "user" ? "flex justify-end" : "flex justify-start" : ""}`}
+							>
 								<MessageBubble
 									message={message}
 									parentSessionId={session.id}
-									showMetadata={showMetadata}
+									bubble={bubble}
+									showMetadata={bubble ? false : showMetadata}
+									showEmpty={showAllMessages}
 									isLastUserMessage={message.role === "user" && message.id === lastUserMessageId}
 									onSubmitQuestion={onSubmitQuestion}
 									onRejectQuestion={onRejectQuestion}
@@ -419,6 +438,7 @@ export function ChatThread({
 							onRejectQuestion={onRejectQuestion}
 							onPreviewTask={onPreviewTask}
 							onPreviewDoc={onPreviewDoc}
+							bubble={bubble}
 							shouldAutoScroll={shouldAutoScrollRef.current}
 						/>
 					)}

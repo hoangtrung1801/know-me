@@ -124,9 +124,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 			setSessions((prev) =>
 				prev.map((s) => {
 					if (s.id !== chatId) return s;
-					// Avoid duplicate
-					if (s.messages.some((m) => m.id === message.id)) return s;
-					return { ...s, messages: [...s.messages, message] };
+					const index = s.messages.findIndex((m) => m.id === message.id);
+					if (index < 0) return { ...s, messages: [...s.messages, message] };
+					const messages = [...s.messages];
+					messages[index] = message;
+					return { ...s, messages };
 				}),
 			);
 		}, []),

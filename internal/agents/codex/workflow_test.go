@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -15,6 +16,40 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
+
+func TestBuildPromptIncludesStructuredResultSchema(t *testing.T) {
+	prompt := buildPrompt(&models.Task{Title: "Example task", Description: "Inspect the workspace"}, models.AgentState{}, models.AgentRunPhaseInvestigation)
+	if !strings.Contains(prompt, strictResultSchema) {
+		t.Fatalf("prompt does not include the structured result schema:\n%s", prompt)
+	}
+}
+
+func TestRequestPlanChangesStartsFollowupInvestigation(t *testing.T) {
+	store := testAgentStore(t, "in-progress")
+	manager := testManager(t, []PhaseResult{{
+		ImplementationPlan: "1. Revise the plan",
+		ImplementationNotes: "Applied review feedback",
+		Summary: "revised",
+		Tests: []string{},
+	}})
+	seedAgentWorkflow(t, store, models.AgentWorkflow{
+		ProjectID: store.ProjectID,
+		TaskID:    "task01",
+		Phase:     models.AgentPhasePlanReview,
+	})
+
+	if _, started, err := manager.Act(context.Background(), store, "task01", ActionRequestPlanChanges, "handle the edge case"); err != nil {
+		t.Fatal(err)
+	} else if !started {
+		t.Fatal("requesting plan changes did not start a follow-up investigation")
+	}
+
+	waitForPhase(t, manager, store, "task01", models.AgentPhasePlanReview)
+	snapshot := mustSnapshot(t, manager, store, "task01")
+	if len(snapshot.ReviewComments) != 1 || snapshot.ReviewComments[0].Body != "handle the edge case" {
+		t.Fatalf("review comments = %#v", snapshot.ReviewComments)
+	}
+}
 
 func TestManagerRunsInvestigationImplementationAndReviewLoop(t *testing.T) {
 	store := testAgentStore(t, "in-progress")

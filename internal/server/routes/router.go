@@ -41,16 +41,23 @@ func SetupRoutes(r chi.Router, store *storage.Store, sse Broadcaster, projectRoo
 // default SetupRoutes entry point remains deny-by-default for destructive Task
 // lifecycle operations.
 func SetupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadcaster, projectRoot string, manager *storage.Manager, taskCapabilities TaskRouteCapabilities, onWorkspaceSwitch ...func(string)) {
-	setupRoutesWithCapabilities(r, store, sse, projectRoot, manager, taskCapabilities, nil, onWorkspaceSwitch...)
+	setupRoutesWithCapabilities(r, store, sse, projectRoot, manager, taskCapabilities, nil, nil, onWorkspaceSwitch...)
 }
 
 // SetupRoutesWithCapabilitiesAndLSPStatusProvider additionally wires the live
 // LSP status source used by Runtime Services.
 func SetupRoutesWithCapabilitiesAndLSPStatusProvider(r chi.Router, store *storage.Store, sse Broadcaster, projectRoot string, manager *storage.Manager, taskCapabilities TaskRouteCapabilities, lspStatusProvider LSPRuntimeStatusProvider, onWorkspaceSwitch ...func(string)) {
-	setupRoutesWithCapabilities(r, store, sse, projectRoot, manager, taskCapabilities, lspStatusProvider, onWorkspaceSwitch...)
+	setupRoutesWithCapabilities(r, store, sse, projectRoot, manager, taskCapabilities, lspStatusProvider, nil, onWorkspaceSwitch...)
 }
 
-func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadcaster, projectRoot string, manager *storage.Manager, taskCapabilities TaskRouteCapabilities, lspStatusProvider LSPRuntimeStatusProvider, onWorkspaceSwitch ...func(string)) {
+// SetupRoutesWithCapabilitiesAndLSPStatusProviderAndCodex additionally wires
+// task-bound Codex chat dispatch while keeping the older setup entry points
+// source-compatible for callers and tests.
+func SetupRoutesWithCapabilitiesAndLSPStatusProviderAndCodex(r chi.Router, store *storage.Store, sse Broadcaster, projectRoot string, manager *storage.Manager, taskCapabilities TaskRouteCapabilities, lspStatusProvider LSPRuntimeStatusProvider, codexChat CodexChatRunner, onWorkspaceSwitch ...func(string)) {
+	setupRoutesWithCapabilities(r, store, sse, projectRoot, manager, taskCapabilities, lspStatusProvider, codexChat, onWorkspaceSwitch...)
+}
+
+func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadcaster, projectRoot string, manager *storage.Manager, taskCapabilities TaskRouteCapabilities, lspStatusProvider LSPRuntimeStatusProvider, codexChat CodexChatRunner, onWorkspaceSwitch ...func(string)) {
 	// Project-scoped routes: guarded by requireStore so they return 503 in picker mode.
 	r.Group(func(r chi.Router) {
 		r.Use(requireStore(manager))
@@ -105,6 +112,7 @@ func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadca
 			mgr:         manager,
 			sse:         sse,
 			projectRoot: projectRoot,
+			codexChat:   codexChat,
 		}
 		chr.Register(r)
 

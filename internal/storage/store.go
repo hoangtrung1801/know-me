@@ -71,7 +71,7 @@ func newStore(root, projectID, projectRoot string) *Store {
 	s.Templates = &TemplateStore{root: root}
 	s.Versions = &VersionStore{root: root, projectID: projectID, lifecycleLock: lifecycleLock}
 	s.Workspaces = &WorkspaceStore{root: root}
-	s.Chats = &ChatStore{root: root}
+	s.Chats = &ChatStore{root: root, projectID: projectID}
 	s.Memory = &MemoryStore{root: root, globalRoot: globalRoot}
 	s.Decisions = &DecisionStore{root: root, lifecycleLock: decisionLock}
 	s.Agent = &AgentStore{root: root, projectID: projectID}

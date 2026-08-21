@@ -19,6 +19,10 @@ import (
 func TestTaskLifecycleRoutesPreviewExecuteSSEAndHardDeleteCapability(t *testing.T) {
 	store := newTaskLifecycleRouteStore(t)
 	createTaskLifecycleRouteTask(t, store, "route01")
+	chat := &models.ChatSession{ID: "route-chat", AgentType: "codex", ProjectID: store.ProjectID, TaskID: "route01", Status: "idle", Messages: []models.ChatMessage{}}
+	if err := store.Chats.Save(chat); err != nil {
+		t.Fatal(err)
+	}
 	broadcaster := &fakeBroadcaster{}
 	router := chi.NewRouter()
 	(&TaskRoutes{store: store, sse: broadcaster}).Register(router)
@@ -37,6 +41,9 @@ func TestTaskLifecycleRoutesPreviewExecuteSSEAndHardDeleteCapability(t *testing.
 	}
 	if len(broadcaster.events) == 0 || broadcaster.events[len(broadcaster.events)-1].Type != "tasks:lifecycle" {
 		t.Fatalf("SSE events = %+v", broadcaster.events)
+	}
+	if _, err := store.Chats.Get(chat.ID); err != nil {
+		t.Fatalf("archive deleted task chat: %v", err)
 	}
 	event, ok := broadcaster.events[len(broadcaster.events)-1].Data.(tasklifecycle.Event)
 	if !ok || event.ID == "" || event.ID != executed.Items[0].Event.ID {
@@ -97,12 +104,41 @@ func TestTaskLifecycleRoutesPreviewExecuteSSEAndHardDeleteCapability(t *testing.
 	if _, err := store.Tasks.Get("route01"); err == nil {
 		t.Fatal("hard-delete left content")
 	}
+	if _, err := store.Chats.Get(chat.ID); err == nil {
+		t.Fatal("hard-delete left task chat")
+	}
 	if tombstone, err := store.Tasks.GetTombstone("route01"); err != nil || tombstone.Reason != "approved cleanup" {
 		t.Fatalf("tombstone = %+v, %v", tombstone, err)
 	}
 	conflictStatus, conflict := callTaskLifecycleRouteAny(t, allowedRouter, "/tasks/route01/hard-delete", map[string]any{"confirmed": true, "reason": "different cleanup"})
 	if conflictStatus != http.StatusConflict || conflict.Items[0].Reasons[0].Code != tasklifecycle.ReasonTombstoneConflict {
 		t.Fatalf("tombstone conflict status=%d response=%+v", conflictStatus, conflict)
+	}
+}
+
+func TestTaskHardDeleteRemovesChatFromTaskProject(t *testing.T) {
+	root := t.TempDir()
+	active := storage.NewProjectStore(root, "project01", filepath.Join(root, "repo01"))
+	foreign := storage.NewProjectStore(root, "project02", filepath.Join(root, "repo02"))
+	if err := active.Init("project01"); err != nil {
+		t.Fatal(err)
+	}
+	if err := foreign.Init("project02"); err != nil {
+		t.Fatal(err)
+	}
+	createTaskLifecycleRouteTask(t, foreign, "foreign01")
+	chat := &models.ChatSession{ID: "foreign-chat", AgentType: "codex", ProjectID: "project02", TaskID: "foreign01", Status: "idle", Messages: []models.ChatMessage{}}
+	if err := foreign.Chats.Save(chat); err != nil {
+		t.Fatal(err)
+	}
+	router := chi.NewRouter()
+	(&TaskRoutes{store: active, sse: &fakeBroadcaster{}, capabilities: TaskRouteCapabilities{HardDelete: true}}).Register(router)
+	deleted := callTaskLifecycleRoute(t, router, "/tasks/foreign01/hard-delete?projectId=project02", map[string]any{"confirmed": true, "reason": "project cleanup"})
+	if deleted.Changed != 1 {
+		t.Fatalf("delete = %+v", deleted)
+	}
+	if _, err := foreign.Chats.Get(chat.ID); err == nil {
+		t.Fatal("hard-delete left foreign project task chat")
 	}
 }
 

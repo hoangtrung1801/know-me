@@ -1229,7 +1229,7 @@ export const chatApi = {
 		if (!res.ok) throw new Error("Failed to delete session");
 	},
 
-	async sendMessage(id: string, content: string): Promise<{ status: string; message: unknown }> {
+	async sendMessage(id: string, content: string): Promise<{ accepted?: boolean; queued?: boolean; position?: number; queueSize?: number; status?: string; message?: unknown }> {
 		const res = await apiFetch(`${API_BASE}/api/chats/${encodeURIComponent(id)}/send`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
