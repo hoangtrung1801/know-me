@@ -142,6 +142,7 @@ test("runs the investigation and implementation review loop", async ({ page }) =
 	await panel.getByRole("button", { name: "Start investigation" }).click();
 	await expect(panel.getByRole("button", { name: "Approve plan and implement" })).toBeVisible();
 	await expect(panel.getByText(/Latest run/)).toHaveCount(0);
+	await expect(panel.getByPlaceholder("Describe what Codex should change")).toHaveAttribute("rows", "2");
 
 	await panel.getByPlaceholder("Describe what Codex should change").fill("Include the existing parser in the plan");
 	await panel.getByRole("button", { name: "Request changes" }).click();
