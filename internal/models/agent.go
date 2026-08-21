@@ -20,6 +20,7 @@ const (
 	AgentRunPhaseInvestigation  AgentRunPhase = "investigation"
 	AgentRunPhaseImplementation AgentRunPhase = "implementation"
 	AgentRunPhaseFix            AgentRunPhase = "fix"
+	AgentRunPhaseChat           AgentRunPhase = "chat"
 
 	AgentRunStatusRunning     AgentRunStatus = "running"
 	AgentRunStatusSucceeded   AgentRunStatus = "succeeded"
@@ -37,6 +38,7 @@ type AgentWorkflow struct {
 	Phase          AgentPhase    `json:"phase"`
 	ActiveRunID    string        `json:"activeRunId,omitempty"`
 	CodexSessionID string        `json:"codexSessionId,omitempty"`
+	ChatSessionID  string        `json:"chatSessionId,omitempty"`
 	ResumePhase    AgentRunPhase `json:"resumePhase,omitempty"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
 }
@@ -76,6 +78,7 @@ type AgentState struct {
 
 type AgentTaskSnapshot struct {
 	Workflow       AgentWorkflow   `json:"workflow"`
+	ChatSessionID  string          `json:"chatSessionId,omitempty"`
 	Runs           []AgentRun      `json:"runs"`
 	ReviewComments []ReviewComment `json:"reviewComments"`
 	DirtyFiles     []string        `json:"dirtyFiles"`

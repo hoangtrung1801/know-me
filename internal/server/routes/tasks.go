@@ -423,8 +423,16 @@ func (tr *TaskRoutes) lifecycleService(target ...*storage.Store) *tasklifecycle.
 		store = target[0]
 	}
 	return tasklifecycle.New(store, tasklifecycle.WithHooks(tasklifecycle.Hooks{
-		IndexTask:  func(id string) error { return search.ReconcileTaskIndex(store, id) },
-		RemoveTask: func(id string) error { return search.ReconcileTaskRemoval(store, id) },
+		IndexTask: func(id string) error { return search.ReconcileTaskIndex(store, id) },
+		RemoveTask: func(id string) error {
+			if err := search.ReconcileTaskRemoval(store, id); err != nil {
+				return err
+			}
+			if store.Chats != nil {
+				return store.Chats.DeleteTaskSessions(store.ProjectID, id)
+			}
+			return nil
+		},
 		Emit: func(event tasklifecycle.Event) error {
 			if tr.sse != nil {
 				tr.sse.Broadcast(SSEEvent{Type: "tasks:lifecycle", Data: event})
@@ -455,6 +463,11 @@ func (tr *TaskRoutes) executeLifecycle(w http.ResponseWriter, r *http.Request, r
 func (tr *TaskRoutes) resolveLifecycleStore(r *http.Request, request *tasklifecycle.Request) (*storage.Store, error) {
 	store := tr.getStore()
 	if request.Operation == tasklifecycle.OperationHardDelete {
+		if request.TaskID != "" {
+			if task, err := resolveHTTPTask(store, r, request.TaskID); err == nil {
+				return taskStoreForHTTP(store, task), nil
+			}
+		}
 		return taskStoreForHTTPQuery(store, r), nil
 	}
 	if request.TaskID != "" {

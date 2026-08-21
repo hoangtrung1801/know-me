@@ -272,6 +272,17 @@ func (p *ACPProcess) SetMode(ctx context.Context, mode ACPMode) error {
 }
 
 func (p *ACPProcess) Prompt(ctx context.Context, prompt string, onUpdate func(ACPUpdate)) (string, error) {
+	raw, err := p.PromptText(ctx, prompt, onUpdate)
+	if err != nil {
+		return "", err
+	}
+	if err := validateJSONObject([]byte(raw)); err != nil {
+		return "", fmt.Errorf("decode ACP prompt result JSON: %w", err)
+	}
+	return raw, nil
+}
+
+func (p *ACPProcess) PromptText(ctx context.Context, prompt string, onUpdate func(ACPUpdate)) (string, error) {
 	if strings.TrimSpace(prompt) == "" {
 		return "", errors.New("ACP prompt is required")
 	}
@@ -336,9 +347,6 @@ func (p *ACPProcess) Prompt(ctx context.Context, prompt string, onUpdate func(AC
 		raw = legacyResult.String()
 	}
 	resultMu.Unlock()
-	if err := validateJSONObject([]byte(raw)); err != nil {
-		return "", fmt.Errorf("decode ACP prompt result JSON: %w", err)
-	}
 	return raw, nil
 }
 

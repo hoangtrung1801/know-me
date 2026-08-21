@@ -1,15 +1,19 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 
 const STORAGE_KEY = "knowns-ui-preferences";
+const MIN_CODEX_RAIL_WIDTH = 320;
+const MAX_CODEX_RAIL_WIDTH = 560;
 
 export interface UIPreferences {
 	taskDetailLayout: "maximized" | "minimized";
 	taskCreateLayout: "maximized" | "minimized";
+	taskCodexRailWidth: number;
 }
 
 const DEFAULT_PREFERENCES: UIPreferences = {
 	taskDetailLayout: "maximized",
 	taskCreateLayout: "maximized",
+	taskCodexRailWidth: 384,
 };
 
 interface UIPreferencesContextType {
@@ -25,7 +29,15 @@ function loadPreferences(): UIPreferences {
 	try {
 		const saved = localStorage.getItem(STORAGE_KEY);
 		if (saved) {
-			return { ...DEFAULT_PREFERENCES, ...JSON.parse(saved) };
+			const parsed = JSON.parse(saved) as Partial<UIPreferences>;
+			const width = Number(parsed.taskCodexRailWidth);
+			return {
+				...DEFAULT_PREFERENCES,
+				...parsed,
+				taskCodexRailWidth: Number.isFinite(width)
+					? Math.min(MAX_CODEX_RAIL_WIDTH, Math.max(MIN_CODEX_RAIL_WIDTH, Math.round(width)))
+					: DEFAULT_PREFERENCES.taskCodexRailWidth,
+			};
 		}
 	} catch {
 		// Ignore parse errors
@@ -46,7 +58,9 @@ export function UIPreferencesProvider({ children }: { children: ReactNode }) {
 
 	const setPreference = useCallback(<K extends keyof UIPreferences>(key: K, value: UIPreferences[K]) => {
 		setPreferences((prev) => {
-			const next = { ...prev, [key]: value };
+			const next = key === "taskCodexRailWidth"
+				? { ...prev, taskCodexRailWidth: Math.min(MAX_CODEX_RAIL_WIDTH, Math.max(MIN_CODEX_RAIL_WIDTH, Math.round(Number(value)))) }
+				: { ...prev, [key]: value };
 			savePreferences(next);
 			return next;
 		});

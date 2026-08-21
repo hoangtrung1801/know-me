@@ -8,7 +8,7 @@ export type AgentPhase =
 	| "fix-ready"
 	| "completed";
 
-export type AgentRunPhase = "investigation" | "implementation" | "fix";
+export type AgentRunPhase = "investigation" | "implementation" | "fix" | "chat";
 export type AgentRunStatus = "running" | "succeeded" | "failed" | "cancelled" | "interrupted";
 export type ReviewStage = "plan" | "implementation";
 export type AgentAction =
@@ -27,6 +27,7 @@ export interface AgentWorkflow {
 	phase: AgentPhase;
 	activeRunId?: string;
 	codexSessionId?: string;
+	chatSessionId?: string;
 	resumePhase?: AgentRunPhase;
 	updatedAt: string;
 }
@@ -60,6 +61,7 @@ export interface ReviewComment {
 
 export interface AgentTaskSnapshot {
 	workflow: AgentWorkflow;
+	chatSessionId?: string;
 	runs: AgentRun[];
 	reviewComments: ReviewComment[];
 	dirtyFiles: string[];

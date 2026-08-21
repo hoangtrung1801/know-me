@@ -372,6 +372,21 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 		if event.TaskChanged {
 			s.sse.Broadcast(routes.SSEEvent{Type: "tasks:refresh", Data: map[string]any{}})
 		}
+	}, func(event codex.ChatEvent) {
+		switch event.Type {
+		case "created":
+			if event.Session != nil {
+				s.sse.Broadcast(routes.SSEEvent{Type: "chats:created", Data: map[string]any{"session": event.Session}})
+			}
+		case "updated":
+			if event.Session != nil {
+				s.sse.Broadcast(routes.SSEEvent{Type: "chats:updated", Data: map[string]any{"session": event.Session}})
+			}
+		case "message":
+			if event.Message != nil {
+				s.sse.Broadcast(routes.SSEEvent{Type: "chats:message", Data: map[string]any{"chatId": event.ChatID, "message": event.Message}})
+			}
+		}
 	})
 
 	// Create LSP manager if a project store is available.
@@ -1081,7 +1096,7 @@ func (s *Server) buildRouter() chi.Router {
 
 	// --- API routes ---
 	r.Route("/api", func(r chi.Router) {
-		routes.SetupRoutesWithCapabilitiesAndLSPStatusProvider(
+		routes.SetupRoutesWithCapabilitiesAndLSPStatusProviderAndCodex(
 			r,
 			s.store,
 			s.sse,
@@ -1091,6 +1106,7 @@ func (s *Server) buildRouter() chi.Router {
 			func(ctx context.Context, store *storage.Store) []lsp.LanguageRuntimeStatus {
 				return s.lspRuntimeStatuses(ctx, store, true)
 			},
+			s.codexManager,
 			s.reinitOpenCode,
 		)
 		if s.codexManager != nil {

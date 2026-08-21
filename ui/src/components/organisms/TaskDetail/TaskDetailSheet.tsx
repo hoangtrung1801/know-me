@@ -25,6 +25,7 @@ import { TaskDescription } from "./TaskDescription";
 import { TaskAcceptanceCriteria } from "./TaskAcceptanceCriteria";
 import { TaskImplementationSection } from "./TaskImplementationSection";
 import { TaskAgentPanel } from "./TaskAgentPanel";
+import { TaskCodexRail } from "./TaskCodexRail";
 import { TaskSidebar } from "./TaskSidebar";
 import { TimeTrackingLogs } from "../../molecules";
 import TaskHistoryPanel from "../TaskHistoryPanel";
@@ -61,7 +62,7 @@ export function TaskDetailSheet({
 	onNavigateToTask,
 }: TaskDetailSheetProps) {
 	const { currentUser } = useCurrentUser();
-	const { preferences, toggleTaskDetailLayout } = useUIPreferences();
+	const { preferences, setPreference, toggleTaskDetailLayout } = useUIPreferences();
 	const [saving, setSaving] = useState(false);
 	const isMaximized = preferences.taskDetailLayout === "maximized";
 	const isMobile = useIsMobile();
@@ -77,6 +78,11 @@ export function TaskDetailSheet({
 	taskIDRef.current = task?.id;
 	const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
 	const [hardDeleteError, setHardDeleteError] = useState<string | null>(null);
+	const [smallScreenTab, setSmallScreenTab] = useState<"task" | "codex">("task");
+
+	useEffect(() => {
+		setSmallScreenTab("task");
+	}, [task?.id]);
 
 	useEffect(() => {
 		++lifecycleGenerationRef.current;
@@ -334,8 +340,6 @@ export function TaskDetailSheet({
 				type="notes"
 			/>
 
-			<TaskAgentPanel task={task} onTaskUpdated={onUpdate} />
-
 			{/* Time Tracking */}
 			<div className="border-t border-border/40" />
 			<div className="pt-8">
@@ -351,6 +355,28 @@ export function TaskDetailSheet({
 			<div className="pt-8 pb-4">
 				<TaskHistoryPanel taskId={task.id} />
 			</div>
+		</div>
+	);
+
+	const CompactSidebar = (
+		<div className="px-6 py-4">
+			<TaskSidebar
+				task={task}
+				allTasks={allTasks}
+				currentUser={currentUser}
+				onSave={handleSave}
+				onDelete={onDelete}
+				onArchive={() => previewLifecycle("archive")}
+				onUnarchive={() => previewLifecycle("unarchive")}
+				onHardDelete={() => {
+					setHardDeleteError(null);
+					setHardDeleteOpen(true);
+				}}
+				canHardDelete={config.capabilities?.taskHardDelete === true}
+				onNavigateToTask={onNavigateToTask}
+				saving={saving || lifecycleLoading}
+				compact
+			/>
 		</div>
 	);
 
@@ -426,7 +452,7 @@ export function TaskDetailSheet({
 								{Header}
 								<div className="flex-1 flex overflow-hidden">
 									{/* Main Content */}
-									<ScrollArea className="flex-1">
+									<ScrollArea className="min-w-0 flex-1">
 										{MainContent}
 									</ScrollArea>
 									{/* Sidebar on right */}
@@ -435,6 +461,12 @@ export function TaskDetailSheet({
 											<div className="p-5 w-full max-w-full overflow-hidden">{Sidebar}</div>
 										</ScrollArea>
 									</div>
+									<TaskCodexRail
+										task={task}
+										width={preferences.taskCodexRailWidth}
+										onWidthChange={(width) => setPreference("taskCodexRailWidth", width)}
+										onTaskUpdated={onUpdate}
+									/>
 								</div>
 							</motion.div>
 								{LifecycleDialogs}
@@ -464,33 +496,39 @@ export function TaskDetailSheet({
 							exit="exit"
 						>
 							{Header}
-							<div className="flex-1 flex flex-col overflow-hidden">
-								{/* Sidebar on top - compact mode */}
-								<div className="shrink-0 border-b border-border/40">
-									<div className="px-6 py-4">
-										<TaskSidebar
-											task={task}
-											allTasks={allTasks}
-											currentUser={currentUser}
-											onSave={handleSave}
-											onDelete={onDelete}
-											onArchive={() => previewLifecycle("archive")}
-											onUnarchive={() => previewLifecycle("unarchive")}
-											onHardDelete={() => {
-												setHardDeleteError(null);
-												setHardDeleteOpen(true);
-											}}
-											canHardDelete={config.capabilities?.taskHardDelete === true}
-											onNavigateToTask={onNavigateToTask}
-											saving={saving || lifecycleLoading}
-											compact
-										/>
-									</div>
+							<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+								<div role="tablist" aria-label="Task detail sections" className="flex shrink-0 border-b border-border/40 px-4">
+									<button
+										type="button"
+										role="tab"
+										aria-selected={smallScreenTab === "task"}
+										aria-controls="task-detail-task-panel"
+										onClick={() => setSmallScreenTab("task")}
+										className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${smallScreenTab === "task" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+									>
+										Task
+									</button>
+									<button
+										type="button"
+										role="tab"
+										aria-selected={smallScreenTab === "codex"}
+										aria-controls="task-detail-codex-panel"
+										onClick={() => setSmallScreenTab("codex")}
+										className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${smallScreenTab === "codex" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+									>
+										Codex
+									</button>
 								</div>
-								{/* Main Content below */}
-								<ScrollArea className="flex-1">
-									{MainContent}
-								</ScrollArea>
+								{smallScreenTab === "task" ? (
+									<div id="task-detail-task-panel" role="tabpanel" aria-label="Task details" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+										<div className="shrink-0 border-b border-border/40">{CompactSidebar}</div>
+										<ScrollArea className="flex-1">{MainContent}</ScrollArea>
+									</div>
+								) : (
+									<div id="task-detail-codex-panel" role="tabpanel" aria-label="Codex task agent" className="min-h-0 flex-1 overflow-hidden">
+										<TaskAgentPanel task={task} onTaskUpdated={onUpdate} embedded />
+									</div>
+								)}
 							</div>
 						</motion.div>
 					{LifecycleDialogs}

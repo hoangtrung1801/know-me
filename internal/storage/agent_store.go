@@ -151,6 +151,7 @@ func (as *AgentStore) TaskSnapshot(taskID string) (models.AgentTaskSnapshot, err
 			break
 		}
 	}
+	snapshot.ChatSessionID = snapshot.Workflow.ChatSessionID
 	for _, run := range state.Runs {
 		if run.ProjectID == as.projectID && run.TaskID == taskID {
 			snapshot.Runs = append(snapshot.Runs, run)

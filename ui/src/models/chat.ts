@@ -19,6 +19,8 @@ export interface ChatMessage {
 	content: string;
 	model: string;
 	createdAt: string;
+	runId?: string;
+	phase?: "investigation" | "implementation" | "fix" | "chat";
 	error?: string;
 	parentMessageId?: string;
 	cost?: number;
@@ -125,7 +127,7 @@ export interface ChatSession {
 	sessionId: string;
 	title: string;
 	directory?: string;
-	agentType: "claude" | "opencode";
+	agentType: "claude" | "opencode" | "codex";
 	model?: ModelRef | null;
 	variant?: string | null;
 	modelSource?: "session" | "project-default" | "opencode-default" | "auto";
@@ -135,6 +137,7 @@ export interface ChatSession {
 	status: "idle" | "streaming" | "error";
 	error?: string;
 	taskId?: string;
+	projectId?: string;
 	parentSessionId?: string;
 	parentMessageId?: string;
 	permissions?: Array<{
@@ -145,6 +148,7 @@ export interface ChatSession {
 	createdAt: string;
 	updatedAt: string;
 	messages: ChatMessage[];
+	messageQueue?: string[];
 }
 
 export interface SessionAgentBase {

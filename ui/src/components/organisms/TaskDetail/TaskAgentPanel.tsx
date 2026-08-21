@@ -1,293 +1,365 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Check, CircleStop, Loader2, Play, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+    AlertTriangle,
+    Check,
+    CircleStop,
+    Loader2,
+    Play,
+    RefreshCw,
+} from "lucide-react";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 import { api, codexAgentApi } from "../../../api/client";
 import { useSSEEvent } from "../../../contexts/SSEContext";
 import type {
-	AgentAction,
-	AgentEvent,
-	AgentPhase,
-	AgentTaskSnapshot,
-	CodexStatus,
+    AgentAction,
+    AgentEvent,
+    AgentPhase,
+    AgentTaskSnapshot,
+    CodexStatus,
 } from "../../../models/agent";
 import type { Task } from "@/ui/models/task";
+import { TaskCodexChat } from "./TaskCodexChat";
 
 interface TaskAgentPanelProps {
-	task: Task;
-	onTaskUpdated?: (task: Task) => void;
-}
-
-const phaseLabels: Record<AgentPhase, string> = {
-	idle: "Idle",
-	investigating: "Investigating",
-	"plan-review": "Plan review",
-	implementing: "Implementing",
-	interrupted: "Interrupted",
-	"code-review": "Code review",
-	"fix-ready": "Fix ready",
-	completed: "Completed",
-};
-
-function phaseTone(phase: AgentPhase): "default" | "secondary" | "outline" {
-	if (phase === "completed") return "default";
-	if (phase === "plan-review" || phase === "code-review" || phase === "fix-ready") return "secondary";
-	return "outline";
+    task: Task;
+    onTaskUpdated?: (task: Task) => void;
+    embedded?: boolean;
 }
 
 function isReviewPhase(phase: AgentPhase): boolean {
-	return phase === "plan-review" || phase === "code-review";
+    return phase === "plan-review" || phase === "code-review";
 }
 
-export function TaskAgentPanel({ task, onTaskUpdated }: TaskAgentPanelProps) {
-	const [snapshot, setSnapshot] = useState<AgentTaskSnapshot | null>(null);
-	const [codexStatus, setCodexStatus] = useState<CodexStatus | null>(null);
-	const [comment, setComment] = useState("");
-	const [loading, setLoading] = useState(true);
-	const [action, setAction] = useState<AgentAction | null>(null);
-	const [error, setError] = useState<string | null>(null);
-	const [progress, setProgress] = useState<string | null>(null);
-	const [log, setLog] = useState<string | null>(null);
-	const [logOpen, setLogOpen] = useState(false);
-	const logRunIdRef = useRef<string | null>(null);
+export function TaskAgentPanel({
+    task,
+    onTaskUpdated,
+    embedded = false,
+}: TaskAgentPanelProps) {
+    const [snapshot, setSnapshot] = useState<AgentTaskSnapshot | null>(null);
+    const [codexStatus, setCodexStatus] = useState<CodexStatus | null>(null);
+    const [comment, setComment] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [action, setAction] = useState<AgentAction | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [progress, setProgress] = useState<string | null>(null);
 
-	const load = useCallback(async () => {
-		setLoading(true);
-		const [statusResult, snapshotResult] = await Promise.allSettled([
-			codexAgentApi.status(),
-			codexAgentApi.snapshot(task.id),
-		]);
-		if (statusResult.status === "fulfilled") setCodexStatus(statusResult.value);
-		if (snapshotResult.status === "fulfilled") {
-			setSnapshot(snapshotResult.value);
-			setError(null);
-		} else {
-			setError(snapshotResult.reason instanceof Error ? snapshotResult.reason.message : "Unable to load Codex workflow");
-		}
-		setLoading(false);
-	}, [task.id]);
+    const load = useCallback(async () => {
+        setLoading(true);
+        const [statusResult, snapshotResult] = await Promise.allSettled([
+            codexAgentApi.status(),
+            codexAgentApi.snapshot(task.id),
+        ]);
+        if (statusResult.status === "fulfilled")
+            setCodexStatus(statusResult.value);
+        if (snapshotResult.status === "fulfilled") {
+            setSnapshot(snapshotResult.value);
+            setError(null);
+        } else {
+            setError(
+                snapshotResult.reason instanceof Error
+                    ? snapshotResult.reason.message
+                    : "Unable to load Codex workflow",
+            );
+        }
+        setLoading(false);
+    }, [task.id]);
 
-	useEffect(() => {
-		void load();
-	}, [load]);
+    useEffect(() => {
+        void load();
+    }, [load]);
 
-	const refreshTask = useCallback(async () => {
-		if (!onTaskUpdated) return;
-		try {
-			onTaskUpdated(await api.getTask(task.id));
-		} catch {
-			// The agent snapshot remains useful if the task refresh races a close.
-		}
-	}, [onTaskUpdated, task.id]);
+    const refreshTask = useCallback(async () => {
+        if (!onTaskUpdated) return;
+        try {
+            onTaskUpdated(await api.getTask(task.id));
+        } catch {
+            // The agent snapshot remains useful if the task refresh races a close.
+        }
+    }, [onTaskUpdated, task.id]);
 
-	const latestRun = useMemo(
-		() => snapshot?.runs[snapshot.runs.length - 1],
-		[snapshot],
-	);
+    const handleAgentEvent = useCallback(
+        (event: AgentEvent) => {
+            if (event.taskId !== task.id) return;
+            if (event.message === "session_info_update") {
+                setProgress(null);
+            } else if (event.message) {
+                setProgress(event.message);
+            }
+            if (event.type !== "progress") {
+                void load();
+                if (event.taskChanged) void refreshTask();
+            }
+        },
+        [load, refreshTask, task.id],
+    );
 
-	const refreshLog = useCallback(async (runId: string) => {
-		logRunIdRef.current = runId;
-		try {
-			const content = (await codexAgentApi.log(task.id, runId)).content;
-			if (logRunIdRef.current === runId) setLog(content);
-		} catch (reason) {
-			if (logRunIdRef.current === runId) {
-				setError(reason instanceof Error ? reason.message : "Unable to load run log");
-			}
-		}
-	}, [task.id]);
+    useSSEEvent("agent:updated", handleAgentEvent, [handleAgentEvent]);
+    useSSEEvent("agent:progress", handleAgentEvent, [handleAgentEvent]);
 
-	const handleAgentEvent = useCallback((event: AgentEvent) => {
-		if (event.taskId !== task.id) return;
-		if (event.message) setProgress(event.message);
-		const runId = event.runId ?? latestRun?.id;
-		if (logOpen && runId) void refreshLog(runId);
-		if (event.type !== "progress") {
-			void load();
-			if (event.taskChanged) void refreshTask();
-		}
-	}, [latestRun?.id, load, logOpen, refreshLog, refreshTask, task.id]);
+    const runAction = useCallback(
+        async (nextAction: AgentAction) => {
+            setAction(nextAction);
+            setError(null);
+            setProgress(null);
+            try {
+                setSnapshot(
+                    await codexAgentApi.action(task.id, nextAction, comment),
+                );
+                void refreshTask();
+                if (
+                    nextAction === "request-plan-changes" ||
+                    nextAction === "request-implementation-changes"
+                ) {
+                    setComment("");
+                }
+            } catch (reason) {
+                setError(
+                    reason instanceof Error
+                        ? reason.message
+                        : "Codex action failed",
+                );
+            } finally {
+                setAction(null);
+            }
+        },
+        [comment, refreshTask, task.id],
+    );
 
-	useSSEEvent("agent:updated", handleAgentEvent, [handleAgentEvent]);
-	useSSEEvent("agent:progress", handleAgentEvent, [handleAgentEvent]);
+    const phase = snapshot?.workflow.phase || "idle";
+    const codexReady =
+        codexStatus?.installed === true && codexStatus.loggedIn === true;
+    const commentAction =
+        phase === "plan-review"
+            ? "request-plan-changes"
+            : "request-implementation-changes";
+    const busy = action !== null;
 
-	const runAction = useCallback(async (nextAction: AgentAction) => {
-		setAction(nextAction);
-		setError(null);
-		setProgress(null);
-		try {
-			setSnapshot(await codexAgentApi.action(task.id, nextAction, comment));
-			void refreshTask();
-			if (nextAction === "request-plan-changes" || nextAction === "request-implementation-changes") {
-				setComment("");
-			}
-		} catch (reason) {
-			setError(reason instanceof Error ? reason.message : "Codex action failed");
-		} finally {
-			setAction(null);
-		}
-	}, [comment, refreshTask, task.id]);
+    return (
+        <section
+            role="region"
+            aria-label="Coding agent"
+            className={
+                embedded
+                    ? "flex h-full min-h-0 flex-col overflow-y-auto"
+                    : "border-t border-border/40 py-8"
+            }
+            aria-live="polite"
+        >
+            {loading && !snapshot ? (
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="animate-spin" /> Loading Codex workflow…
+                </div>
+            ) : (
+                <>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/40 bg-muted/20 px-4 py-3">
+                        {snapshot?.interrupted && snapshot.resumable && (
+                            <Button
+                                size="sm"
+                                onClick={() => void runAction("resume")}
+                                disabled={
+                                    busy ||
+                                    !codexReady ||
+                                    task.status !== "in-progress"
+                                }
+                            >
+                                <Play /> Resume
+                            </Button>
+                        )}
+                        {phase === "idle" && (
+                            <Button
+                                size="sm"
+                                onClick={() =>
+                                    void runAction("start-investigation")
+                                }
+                                disabled={
+                                    busy ||
+                                    !codexReady ||
+                                    task.status !== "in-progress"
+                                }
+                            >
+                                <Play /> Start investigation
+                            </Button>
+                        )}
+                        {(phase === "investigating" ||
+                            phase === "implementing") && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => void runAction("cancel")}
+                                disabled={busy}
+                            >
+                                <CircleStop /> Cancel run
+                            </Button>
+                        )}
+                        {phase === "plan-review" && (
+                            <Button
+                                size="sm"
+                                onClick={() => void runAction("approve-plan")}
+                                disabled={busy || !codexReady}
+                            >
+                                <Play /> Approve plan and implement
+                            </Button>
+                        )}
+                        {phase === "fix-ready" && (
+                            <Button
+                                size="sm"
+                                onClick={() => void runAction("start-fix")}
+                                disabled={busy || !codexReady}
+                            >
+                                <Play /> Start fix
+                            </Button>
+                        )}
+                        {phase === "code-review" && (
+                            <Button
+                                size="sm"
+                                onClick={() =>
+                                    void runAction("approve-implementation")
+                                }
+                                disabled={busy}
+                            >
+                                <Check /> Approve implementation
+                            </Button>
+                        )}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="ml-auto h-8 w-8"
+                            onClick={() => void load()}
+                            disabled={loading || busy}
+                            aria-label="Refresh"
+                            title="Refresh"
+                        >
+                            <RefreshCw
+                                className={loading ? "animate-spin" : ""}
+                            />
+                        </Button>
+                    </div>
+                    <TaskCodexChat
+                        taskId={task.id}
+                        taskStatus={task.status}
+                        snapshot={snapshot}
+                        codexStatus={codexStatus}
+                        onRefresh={load}
+                    />
 
-	const phase = snapshot?.workflow.phase || "idle";
-	const codexReady = codexStatus?.installed === true && codexStatus.loggedIn === true;
-	const commentAction = phase === "plan-review" ? "request-plan-changes" : "request-implementation-changes";
-	const busy = action !== null;
+                    <div className="space-y-4 px-4 pb-4">
+                    {codexStatus && !codexReady && (
+                        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                            <AlertTriangle className="mt-0.5 shrink-0" />
+                            <span>
+                                {codexStatus.installed
+                                    ? "Sign in to Codex before starting a run."
+                                    : "Install codex-acp before starting a run."}
+                            </span>
+                        </div>
+                    )}
 
-	const latestRunId = latestRun?.id;
-	useEffect(() => {
-		setLog(null);
-		logRunIdRef.current = null;
-		if (logOpen && latestRunId) void refreshLog(latestRunId);
-	}, [latestRunId, logOpen, refreshLog]);
+                    {progress && (
+                        <p className="text-sm text-muted-foreground">
+                            {progress}
+                        </p>
+                    )}
+                    {error && (
+                        <div
+                            className="flex min-w-0 items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm"
+                            role="alert"
+                        >
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                            <div className="min-w-0">
+                                <p className="font-medium text-destructive">
+                                    Codex workflow error
+                                </p>
+                                <p className="mt-1 max-h-24 overflow-y-auto break-words whitespace-pre-wrap text-sm leading-5 text-destructive/80">
+                                    {error}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    {phase === "idle" && task.status !== "in-progress" && (
+                        <p className="text-sm text-muted-foreground">
+                            Move this task to in-progress to start Codex.
+                        </p>
+                    )}
 
-	return (
-		<section
-			role="region"
-			aria-labelledby="codex-agent-title"
-			className="border-t border-border/40 py-8"
-			aria-live="polite"
-		>
-			<div className="flex flex-wrap items-start justify-between gap-3">
-				<div>
-					<h3 id="codex-agent-title" className="text-base font-semibold">Coding agent</h3>
-					<p className="mt-1 text-sm text-muted-foreground">Codex investigates, implements, and waits for your review at each gate.</p>
-				</div>
-				<Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading || busy}>
-					<RefreshCw className={loading ? "animate-spin" : ""} />
-					Refresh
-				</Button>
-			</div>
+                    {phase === "fix-ready" &&
+                        snapshot &&
+                        snapshot.dirtyFiles.length > 0 && (
+                            <div className="rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
+                                <p className="font-medium">
+                                    Workspace changes to review
+                                </p>
+                                <ul className="mt-2 list-disc pl-5 text-muted-foreground">
+                                    {snapshot.dirtyFiles.map((file) => (
+                                        <li key={file}>{file}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
 
-			{loading && !snapshot ? (
-				<div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-					<Loader2 className="animate-spin" /> Loading Codex workflow…
-				</div>
-			) : (
-				<>
-					<div className="mt-4 flex flex-wrap items-center gap-2">
-						<Badge variant={phaseTone(phase)}>{phaseLabels[phase]}</Badge>
-						{snapshot?.workflow.activeRunId && <span className="text-xs text-muted-foreground">Run in progress</span>}
-						{snapshot?.adapterState && <span className="text-xs text-muted-foreground">Adapter {snapshot.adapterState}</span>}
-						{snapshot?.workflow.codexSessionId && <span className="text-xs text-muted-foreground">ACP session {snapshot.workflow.codexSessionId}</span>}
-					</div>
+                    {isReviewPhase(phase) && (
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="codex-review-comment"
+                                className="text-sm font-medium"
+                            >
+                                Review comment
+                            </label>
+                            <Textarea
+                                id="codex-review-comment"
+                                value={comment}
+                                onChange={(event) =>
+                                    setComment(event.target.value)
+                                }
+                                placeholder="Describe what Codex should change"
+                                rows={3}
+                                disabled={busy}
+                            />
+                            <Button
+                                variant="outline"
+                                onClick={() => void runAction(commentAction)}
+                                disabled={busy || !comment.trim()}
+                            >
+                                Request changes
+                            </Button>
+                        </div>
+                    )}
 
-					{codexStatus && !codexReady && (
-						<div className="mt-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-							<AlertTriangle className="mt-0.5 shrink-0" />
-							<span>{codexStatus.installed ? "Sign in to Codex before starting a run." : "Install codex-acp before starting a run."}</span>
-						</div>
-					)}
-
-					{progress && <p className="mt-3 text-sm text-muted-foreground">{progress}</p>}
-					{error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-					{phase === "idle" && task.status !== "in-progress" && (
-						<p className="mt-3 text-sm text-muted-foreground">Move this task to in-progress to start Codex.</p>
-					)}
-
-					{phase === "fix-ready" && snapshot && snapshot.dirtyFiles.length > 0 && (
-						<div className="mt-4 rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
-							<p className="font-medium">Workspace changes to review</p>
-							<ul className="mt-2 list-disc pl-5 text-muted-foreground">
-								{snapshot.dirtyFiles.map((file) => <li key={file}>{file}</li>)}
-							</ul>
-						</div>
-					)}
-
-					<div className="mt-4 flex flex-wrap gap-2">
-						{snapshot?.interrupted && snapshot.resumable && (
-							<Button onClick={() => void runAction("resume")} disabled={busy || !codexReady || task.status !== "in-progress"}>
-								<Play /> Resume
-							</Button>
-						)}
-						{phase === "idle" && (
-							<Button onClick={() => void runAction("start-investigation")} disabled={busy || !codexReady || task.status !== "in-progress"}>
-								<Play /> Start investigation
-							</Button>
-						)}
-						{(phase === "investigating" || phase === "implementing") && (
-							<Button variant="outline" onClick={() => void runAction("cancel")} disabled={busy}>
-								<CircleStop /> Cancel run
-							</Button>
-						)}
-						{phase === "plan-review" && (
-							<Button onClick={() => void runAction("approve-plan")} disabled={busy || !codexReady}>
-								<Play /> Approve plan and implement
-							</Button>
-						)}
-						{phase === "fix-ready" && (
-							<Button onClick={() => void runAction("start-fix")} disabled={busy || !codexReady}>
-								<Play /> Start fix
-							</Button>
-						)}
-						{phase === "code-review" && (
-							<Button onClick={() => void runAction("approve-implementation")} disabled={busy}>
-								<Check /> Approve implementation
-							</Button>
-						)}
-					</div>
-
-					{isReviewPhase(phase) && (
-						<div className="mt-4 space-y-2">
-							<label htmlFor="codex-review-comment" className="text-sm font-medium">Review comment</label>
-							<Textarea
-								id="codex-review-comment"
-								value={comment}
-								onChange={(event) => setComment(event.target.value)}
-								placeholder="Describe what Codex should change"
-								rows={3}
-								disabled={busy}
-							/>
-							<Button variant="outline" onClick={() => void runAction(commentAction)} disabled={busy || !comment.trim()}>
-								Request changes
-							</Button>
-						</div>
-					)}
-
-					{latestRun && (
-						<div className="mt-5 rounded-md border border-border/50 p-3 text-sm">
-							<div className="flex flex-wrap items-center justify-between gap-2">
-								<span className="font-medium">Latest run · {latestRun.phase}</span>
-								<Badge variant={latestRun.status === "succeeded" ? "secondary" : "outline"}>{latestRun.status}</Badge>
-							</div>
-							{latestRun.summary && <p className="mt-2 text-muted-foreground">{latestRun.summary}</p>}
-							{latestRun.tests && latestRun.tests.length > 0 && (
-								<ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-									{latestRun.tests.map((test) => <li key={test}>{test}</li>)}
-								</ul>
-							)}
-							{latestRun.error && <p className="mt-2 text-destructive">{latestRun.error}</p>}
-							<details
-								className="mt-2"
-								onToggle={(event) => {
-									setLogOpen(event.currentTarget.open);
-								}}
-							>
-								<summary className="cursor-pointer text-sm text-primary">View run log</summary>
-								{log !== null && <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">{log}</pre>}
-							</details>
-						</div>
-					)}
-
-					{snapshot && snapshot.reviewComments.length > 0 && (
-						<div className="mt-5">
-							<h4 className="text-sm font-medium">Review history</h4>
-							<ul className="mt-2 space-y-2">
-								{snapshot.reviewComments.map((review) => (
-									<li key={review.id} className="rounded-md border border-border/50 p-3 text-sm">
-										<div className="flex items-center gap-2">
-											<Badge variant="outline">{review.stage === "plan" ? "Plan review" : "Implementation review"}</Badge>
-											<span className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleString()}</span>
-										</div>
-										<p className="mt-2 whitespace-pre-wrap text-muted-foreground">{review.body}</p>
-									</li>
-								))}
-							</ul>
-						</div>
-					)}
-
-				</>
-			)}
-		</section>
-	);
+                    {snapshot && snapshot.reviewComments.length > 0 && (
+                        <div>
+                            <h4 className="text-sm font-medium">
+                                Review history
+                            </h4>
+                            <ul className="mt-2 space-y-2">
+                                {snapshot.reviewComments.map((review) => (
+                                    <li
+                                        key={review.id}
+                                        className="rounded-md border border-border/50 p-3 text-sm"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline">
+                                                {review.stage === "plan"
+                                                    ? "Plan review"
+                                                    : "Implementation review"}
+                                            </Badge>
+                                            <span className="text-xs text-muted-foreground">
+                                                {new Date(
+                                                    review.createdAt,
+                                                ).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <p className="mt-2 whitespace-pre-wrap text-muted-foreground">
+                                            {review.body}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    </div>
+                </>
+            )}
+        </section>
+    );
 }

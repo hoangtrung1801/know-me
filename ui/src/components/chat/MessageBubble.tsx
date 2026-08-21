@@ -16,8 +16,10 @@ import { cn } from "../../lib/utils";
 interface MessageBubbleProps {
 	message: ChatMessage;
 	parentSessionId?: string;
+	bubble?: boolean;
 	showModel?: boolean;
 	showMetadata?: boolean;
+	showEmpty?: boolean;
 	isLastUserMessage?: boolean;
 	onSubmitQuestion?: (messageId: string, blockId: string, answers: string[][]) => Promise<void> | void;
 	onRejectQuestion?: (messageId: string, blockId: string) => Promise<void> | void;
@@ -30,8 +32,10 @@ interface MessageBubbleProps {
 export const MessageBubble = memo(function MessageBubble({
 	message,
 	parentSessionId,
+	bubble = false,
 	showModel = true,
 	showMetadata = true,
+	showEmpty = false,
 	isLastUserMessage = false,
 	onSubmitQuestion,
 	onRejectQuestion,
@@ -67,13 +71,17 @@ export const MessageBubble = memo(function MessageBubble({
 
 	if (isUser) {
 		return (
-			<div className="px-1">
-				<div className="group relative min-w-0">
-					<div className="mb-1.5 text-[11px] font-medium text-muted-foreground">You</div>
-					<UserMessageBody content={message.content} attachments={attachments} />
+			<div className={cn("px-1", bubble && "flex justify-end")}>
+				<div
+					data-chat-bubble={bubble ? "user" : undefined}
+					className={cn("group relative min-w-0", bubble && "max-w-[94%]")}
+				>
+					{!bubble && <div className="mb-1.5 text-[11px] font-medium text-muted-foreground">You</div>}
+					<UserMessageBody content={message.content} attachments={attachments} bubble={bubble} />
 					<MessageActionBar
 						time={time}
 						showOnHover
+						className={bubble ? "justify-end" : undefined}
 						canCopy={Boolean(message.content)}
 						copied={copied}
 						onCopy={handleCopy}
@@ -88,13 +96,19 @@ export const MessageBubble = memo(function MessageBubble({
 		);
 	}
 
-	if (!hasVisibleAssistantContent) {
+	if (!hasVisibleAssistantContent && !showEmpty) {
 		return null;
 	}
 
 	return (
-		<div className="px-1">
-			<div className="min-w-0">
+		<div className={cn("px-1", bubble && "max-w-[88%]")}>
+			<div
+				data-chat-bubble={bubble ? "assistant" : undefined}
+				className={cn(
+					"min-w-0",
+					bubble && "rounded-2xl border border-border/60 bg-background px-3.5 py-2.5",
+				)}
+			>
 				<AssistantReasoningSection reasoning={message.reasoning} />
 				<AssistantToolSection
 					shellToolCalls={shellToolCalls}
@@ -124,12 +138,17 @@ export const MessageBubble = memo(function MessageBubble({
 function UserMessageBody({
 	content,
 	attachments,
+	bubble,
 }: {
 	content: string;
 	attachments: NonNullable<ChatMessage["attachments"]>;
+	bubble: boolean;
 }) {
 	return (
-		<div className="min-w-0 overflow-hidden rounded-lg bg-muted/40 px-4 py-3">
+		<div className={cn(
+			"min-w-0 overflow-hidden px-4 py-3",
+			bubble ? "rounded-2xl border border-border/70 bg-background" : "rounded-lg bg-muted/40",
+		)}>
 			<div className="space-y-3">
 				{content && <p className="min-w-0 whitespace-pre-wrap break-words text-sm [overflow-wrap:anywhere]">{content}</p>}
 				<MessageAttachments attachments={attachments} />

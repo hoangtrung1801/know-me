@@ -50,6 +50,7 @@ type acpSession interface {
 	LoadSession(context.Context, string) error
 	SetMode(context.Context, ACPMode) error
 	Prompt(context.Context, string, func(ACPUpdate)) (string, error)
+	PromptText(context.Context, string, func(ACPUpdate)) (string, error)
 	Cancel(context.Context) error
 	Close(context.Context) error
 	SessionID() string
@@ -74,6 +75,7 @@ type Manager struct {
 	sessions       map[string]acpSession
 	closing        bool
 	emit           func(Event)
+	chatEmit       func(ChatEvent)
 	run            func(context.Context, Request, func(StreamEvent)) (Result, error)
 	sessionFactory sessionFactory
 	detect         func(context.Context, string) Status
@@ -87,18 +89,24 @@ type activeRun struct {
 	projectID string
 	taskID    string
 	runID     string
+	phase     models.AgentRunPhase
 	store     *storage.Store
 	session   acpSession
 	done      chan struct{}
 }
 
-func NewManager(executable string, emit func(Event)) *Manager {
+func NewManager(executable string, emit func(Event), chatEmit ...func(ChatEvent)) *Manager {
 	runner := Runner{Executable: executable}
+	var emitChat func(ChatEvent)
+	if len(chatEmit) > 0 {
+		emitChat = chatEmit[0]
+	}
 	return &Manager{
 		executable: executable,
 		active:     make(map[string]activeRun),
 		sessions:   make(map[string]acpSession),
 		emit:       emit,
+		chatEmit:   emitChat,
 		run:        runner.Run,
 		sessionFactory: func(ctx context.Context, root string, command []string) (acpSession, error) {
 			return NewACPProcess(ctx, root, command, nil)
@@ -151,13 +159,22 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhaseIdle || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: investigation requires an idle in-progress task", ErrConflict)
 		}
-		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseInvestigation, models.AgentPhaseInvestigating, models.AgentPhaseIdle)
+		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseInvestigation, models.AgentPhaseInvestigating, models.AgentPhaseIdle, "Start investigation")
 	case ActionResume:
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhaseInterrupted || workflow.ActiveRunID != "" || workflow.CodexSessionID == "" || workflow.ResumePhase == "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: task has no resumable interrupted ACP session", ErrConflict)
 		}
 		runPhase := workflow.ResumePhase
-		return m.startRunLocked(ctx, store, task, &state, workflow, runPhase, runningPhaseForRun(runPhase), restorePhaseForRun(runPhase))
+		if runPhase == models.AgentRunPhaseChat {
+			workflow.Phase = models.AgentPhaseIdle
+			workflow.ResumePhase = ""
+			if err := m.startChatLocked(ctx, store, task, &state, workflow, "Resume interrupted Codex chat", true); err != nil {
+				return models.AgentTaskSnapshot{}, false, err
+			}
+			snapshot, err := m.snapshotLocked(ctx, store, taskID)
+			return snapshot, true, err
+		}
+		return m.startRunLocked(ctx, store, task, &state, workflow, runPhase, runningPhaseForRun(runPhase), restorePhaseForRun(runPhase), "Resume Codex session")
 	case ActionApprovePlan:
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for approval", ErrConflict)
@@ -169,7 +186,7 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if len(files) > 0 {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation workspace is dirty: %s", ErrConflict, strings.Join(files, ", "))
 		}
-		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseImplementation, models.AgentPhaseImplementing, models.AgentPhasePlanReview)
+		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseImplementation, models.AgentPhaseImplementing, models.AgentPhasePlanReview, "Approve plan and implement")
 	case ActionRequestPlanChanges:
 		if workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for feedback", ErrConflict)
@@ -181,19 +198,22 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if err != nil {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: acquire workspace run lock: %v", ErrConflict, err)
 		}
-		defer agentLock.Close()
 		state.ReviewComments = append(state.ReviewComments, models.ReviewComment{
 			ID: uuid.NewString(), ProjectID: store.ProjectID, TaskID: taskID,
 			Stage: models.ReviewStagePlan, Body: strings.TrimSpace(comment), CreatedAt: now,
 		})
+		if err := m.appendReviewMessageLocked(store, task, workflow, comment, models.AgentRunPhaseInvestigation); err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
 		workflow.Phase = models.AgentPhaseIdle
 		workflow.UpdatedAt = now
 		if err := store.Agent.Save(state); err != nil {
 			return models.AgentTaskSnapshot{}, false, err
 		}
-		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID})
-		snapshot, err := m.snapshotLocked(ctx, store, taskID)
-		return snapshot, false, err
+		if err := agentLock.Close(); err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseInvestigation, models.AgentPhaseInvestigating, models.AgentPhaseIdle, "Revise investigation plan")
 	case ActionApproveImplementation:
 		if task.Status != "in-review" || workflow.Phase != models.AgentPhaseCodeReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation is not ready for approval", ErrConflict)
@@ -264,6 +284,9 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 			ID: uuid.NewString(), ProjectID: store.ProjectID, TaskID: taskID,
 			Stage: models.ReviewStageImplementation, Body: strings.TrimSpace(comment), CreatedAt: now,
 		})
+		if err := m.appendReviewMessageLocked(store, task, workflow, comment, models.AgentRunPhaseImplementation); err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
 		workflow.Phase = models.AgentPhaseFixReady
 		workflow.UpdatedAt = now
 		if err := store.Agent.Save(state); err != nil {
@@ -285,7 +308,7 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhaseFixReady || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: task is not ready for a fix", ErrConflict)
 		}
-		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseFix, models.AgentPhaseImplementing, models.AgentPhaseFixReady)
+		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseFix, models.AgentPhaseImplementing, models.AgentPhaseFixReady, "Start fix")
 	case ActionCancel:
 		if workflow.ActiveRunID == "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: no active run", ErrConflict)
@@ -372,7 +395,7 @@ waitForRuns:
 	}
 }
 
-func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task *models.Task, state *models.AgentState, workflow *models.AgentWorkflow, runPhase models.AgentRunPhase, runningPhase, restorePhase models.AgentPhase) (models.AgentTaskSnapshot, bool, error) {
+func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task *models.Task, state *models.AgentState, workflow *models.AgentWorkflow, runPhase models.AgentRunPhase, runningPhase, restorePhase models.AgentPhase, visibleMessage string) (models.AgentTaskSnapshot, bool, error) {
 	if store.RepositoryRoot() == "" {
 		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: project repository root is unavailable", ErrConflict)
 	}
@@ -399,11 +422,38 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 		ID: runID, ProjectID: store.ProjectID, TaskID: task.ID, Phase: runPhase,
 		Status: models.AgentRunStatusRunning, StartedAt: now, LogPath: store.Agent.LogPath(runID),
 	}
+	var chat, previousChat *models.ChatSession
+	var chatCreated bool
+	if store.Chats != nil {
+		chat, chatCreated, err = ensureTaskChatLocked(store, task, workflow, now)
+		if err != nil {
+			_ = runLock.Close()
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		previousChat = cloneChatSession(chat)
+		chat.Messages = append(chat.Messages,
+			models.ChatMessage{ID: uuid.NewString(), Role: "user", Content: visibleMessage, Model: "codex", CreatedAt: formatChatTime(now), Phase: runPhase},
+			models.ChatMessage{ID: uuid.NewString(), Role: "assistant", Content: "", Model: "codex", CreatedAt: formatChatTime(now), RunID: runID, Phase: runPhase},
+		)
+		chat.Status = "streaming"
+		chat.UpdatedAt = formatChatTime(now)
+		if err := store.Chats.Save(chat); err != nil {
+			_ = runLock.Close()
+			return models.AgentTaskSnapshot{}, false, err
+		}
+	}
 	workflow.Phase = runningPhase
 	workflow.ActiveRunID = runID
 	workflow.UpdatedAt = now
 	state.Runs = append(state.Runs, run)
 	if err := store.Agent.Save(*state); err != nil {
+		if chat != nil {
+			if chatCreated {
+				_ = store.Chats.Delete(chat.ID)
+			} else {
+				_ = store.Chats.Save(previousChat)
+			}
+		}
 		_ = os.RemoveAll(tempDir)
 		_ = runLock.Close()
 		return models.AgentTaskSnapshot{}, false, err
@@ -411,7 +461,11 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 	prompt := buildPrompt(task, *state, runPhase)
 	runCtx, cancel := context.WithCancel(context.Background())
 	activeDone := make(chan struct{})
-	m.active[root] = activeRun{cancel: cancel, lock: runLock, projectID: store.ProjectID, taskID: task.ID, runID: runID, store: store, done: activeDone}
+	m.active[root] = activeRun{cancel: cancel, lock: runLock, projectID: store.ProjectID, taskID: task.ID, runID: runID, phase: runPhase, store: store, done: activeDone}
+	if chat != nil {
+		m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: task.ID, Session: chat})
+		m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: task.ID, Session: chat})
+	}
 	if m.sessionFactory == nil {
 		go m.execute(runCtx, store, runID, task.ID, root, tempDir, prompt, runPhase, restorePhase, runLock, activeDone)
 	} else {
@@ -540,7 +594,21 @@ func (m *Manager) persistSession(store *storage.Store, taskID, runID, sessionID 
 	}
 	run.CodexSessionID = sessionID
 	workflow.CodexSessionID = sessionID
-	return store.Agent.Save(state)
+	if err := store.Agent.Save(state); err != nil {
+		return err
+	}
+	if workflow.ChatSessionID != "" && store.Chats != nil {
+		chat, err := store.Chats.Update(workflow.ChatSessionID, func(chat *models.ChatSession) error {
+			chat.SessionID = sessionID
+			chat.UpdatedAt = formatChatTime(m.now().UTC())
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, Session: chat})
+	}
+	return nil
 }
 
 func (m *Manager) setActiveSession(root, runID string, session acpSession) {
@@ -602,6 +670,11 @@ func (m *Manager) finishSessionRun(ctx context.Context, store *storage.Store, ru
 		}
 		workflow.ActiveRunID = ""
 		workflow.UpdatedAt = now
+		chatStatus := "error"
+		if errors.Is(runErr, context.Canceled) || ctx.Err() != nil {
+			chatStatus = "idle"
+		}
+		chatSession, chatMessage := m.finalizeGatedChat(store, taskID, runID, runPhase, result, runErr, chatStatus)
 		saveErr := store.Agent.Save(state)
 		m.mu.Unlock()
 		if sessionToClose != nil {
@@ -610,6 +683,12 @@ func (m *Manager) finishSessionRun(ctx context.Context, store *storage.Store, ru
 		if saveErr != nil {
 			m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save ACP run state: " + saveErr.Error()})
 			return
+		}
+		if chatSession != nil {
+			m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, Session: chatSession})
+		}
+		if chatMessage != nil {
+			m.emitChatSession(ChatEvent{Type: "message", ProjectID: store.ProjectID, TaskID: taskID, ChatID: chatSession.ID, Message: chatMessage})
 		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated"})
 		return
@@ -643,11 +722,18 @@ func (m *Manager) finishSessionRun(ctx context.Context, store *storage.Store, ru
 		workflow.ResumePhase = ""
 		workflow.ActiveRunID = ""
 		workflow.UpdatedAt = now
+		chatSession, chatMessage := m.finalizeGatedChat(store, taskID, runID, runPhase, result, updateErr, "error")
 		saveErr := store.Agent.Save(state)
 		m.mu.Unlock()
 		if saveErr != nil {
 			m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save ACP run state: " + saveErr.Error()})
 			return
+		}
+		if chatSession != nil {
+			m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, Session: chatSession})
+		}
+		if chatMessage != nil {
+			m.emitChatSession(ChatEvent{Type: "message", ProjectID: store.ProjectID, TaskID: taskID, ChatID: chatSession.ID, Message: chatMessage})
 		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated"})
 		return
@@ -664,6 +750,7 @@ func (m *Manager) finishSessionRun(ctx context.Context, store *storage.Store, ru
 	} else {
 		workflow.Phase = models.AgentPhaseCodeReview
 	}
+	chatSession, chatMessage := m.finalizeGatedChat(store, taskID, runID, runPhase, result, nil, "idle")
 	saveErr := store.Agent.Save(state)
 	m.mu.Unlock()
 	if saveErr != nil {
@@ -684,6 +771,12 @@ func (m *Manager) finishSessionRun(ctx context.Context, store *storage.Store, ru
 		}
 		m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "error", Message: "save ACP run state: " + saveErr.Error()})
 		return
+	}
+	if chatSession != nil {
+		m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, Session: chatSession})
+	}
+	if chatMessage != nil {
+		m.emitChatSession(ChatEvent{Type: "message", ProjectID: store.ProjectID, TaskID: taskID, ChatID: chatSession.ID, Message: chatMessage})
 	}
 	m.emitUpdated(Event{ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Type: "updated", TaskChanged: true})
 }
@@ -865,6 +958,9 @@ func (m *Manager) updateThreadID(store *storage.Store, runID, threadID string) {
 }
 
 func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, taskID string) (models.AgentTaskSnapshot, error) {
+	if err := m.ensureSnapshotChatLocked(store, taskID); err != nil {
+		return models.AgentTaskSnapshot{}, err
+	}
 	snapshot, err := store.Agent.TaskSnapshot(taskID)
 	if err != nil {
 		return models.AgentTaskSnapshot{}, err
@@ -879,6 +975,38 @@ func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, task
 		snapshot.AdapterState = "running"
 	}
 	return snapshot, nil
+}
+
+func (m *Manager) ensureSnapshotChatLocked(store *storage.Store, taskID string) error {
+	if store.Chats == nil {
+		return nil
+	}
+	state, err := store.Agent.Load()
+	if err != nil {
+		return err
+	}
+	task, err := store.Tasks.Get(taskID)
+	if err != nil {
+		return err
+	}
+	workflow := ensureWorkflow(&state, store.ProjectID, taskID, m.now().UTC())
+	previousID := workflow.ChatSessionID
+	session, created, err := ensureTaskChatLocked(store, task, workflow, m.now().UTC())
+	if err != nil {
+		return err
+	}
+	if created {
+		if err := store.Chats.Save(session); err != nil {
+			return err
+		}
+		m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: taskID, Session: session})
+	}
+	if previousID != workflow.ChatSessionID {
+		if err := store.Agent.Save(state); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *Manager) updateTask(ctx context.Context, store *storage.Store, taskID string, mutate func(*models.Task) error) (*models.Task, error) {
@@ -927,7 +1055,8 @@ func buildPrompt(task *models.Task, state models.AgentState, phase models.AgentR
 	}
 	b.WriteString("Do not edit Know-Me task or document metadata directly.\n")
 	b.WriteString("Do not change files outside the current project workspace.\n")
-	b.WriteString("Return only the structured result required by the provided JSON schema.")
+	b.WriteString("Return exactly one JSON object matching this schema (no markdown fences or extra text):\n")
+	b.WriteString(strictResultSchema)
 	return b.String()
 }
 
