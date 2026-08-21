@@ -4,7 +4,6 @@ import { chatApi } from "../../../api/client";
 import { useSSEEvent } from "../../../contexts/SSEContext";
 import type { ChatMessage, ChatSession } from "../../../models/chat";
 import type {
-    AgentPhase,
     AgentTaskSnapshot,
     CodexStatus,
 } from "../../../models/agent";
@@ -21,8 +20,6 @@ interface TaskCodexChatProps {
     codexStatus: CodexStatus | null;
     onRefresh: () => Promise<void>;
 }
-
-const autoPhases: AgentPhase[] = ["idle", "fix-ready"];
 
 function isCodexSession(session: ChatSession | null, taskId: string): boolean {
     return session?.agentType === "codex" && session.taskId === taskId;
@@ -173,27 +170,21 @@ export function TaskCodexChat({
     const codexReady =
         codexStatus?.installed === true && codexStatus.loggedIn === true;
     const gatedRunActive = activeRun !== null && activeRun.phase !== "chat";
-    const interrupted =
-        snapshot?.interrupted === true || phase === "interrupted";
+    const gatedPhase = phase === "investigating" || phase === "implementing";
     const autoEligible =
         taskStatus === "in-progress" &&
-        autoPhases.includes(phase) &&
         codexReady &&
         !gatedRunActive &&
-        !interrupted;
+        !gatedPhase;
     const disabledReason = !codexReady
         ? codexStatus?.installed === false
             ? "Install codex-acp to chat with Codex."
             : "Sign in to Codex to chat."
         : taskStatus !== "in-progress"
           ? "Move this task to in-progress to use Auto chat."
-          : interrupted
-            ? "Resume the Codex session before sending a new message."
-            : gatedRunActive
-              ? "Auto chat is paused while a gated run is active."
-              : !autoPhases.includes(phase)
-                ? "Auto chat is available when the workflow is idle or fix-ready."
-                : null;
+          : gatedRunActive || gatedPhase
+            ? "Auto chat is paused while Codex is investigating or implementing."
+            : null;
 
     const handleSend = useCallback(async () => {
         const message = content.trim();
@@ -313,13 +304,8 @@ export function TaskCodexChat({
                         {error}
                     </p>
                 )}
-                {disabledReason && !interrupted && (
+                {disabledReason && (
                     <p className="mb-2 text-xs text-muted-foreground">
-                        {disabledReason}
-                    </p>
-                )}
-                {interrupted && (
-                    <p className="mb-2 text-xs text-amber-700 dark:text-amber-300">
                         {disabledReason}
                     </p>
                 )}
@@ -336,7 +322,7 @@ export function TaskCodexChat({
                         placeholder={
                             autoEligible
                                 ? "Message Codex about this task…"
-                                : "Auto chat unavailable in this phase"
+                                : "Auto chat unavailable while Codex is working"
                         }
                         rows={3}
                         disabled={!autoEligible || sending || !session}

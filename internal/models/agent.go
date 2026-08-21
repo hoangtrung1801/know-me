@@ -39,6 +39,8 @@ type AgentWorkflow struct {
 	ActiveRunID    string        `json:"activeRunId,omitempty"`
 	CodexSessionID string        `json:"codexSessionId,omitempty"`
 	ChatSessionID  string        `json:"chatSessionId,omitempty"`
+	WorktreePath   string        `json:"worktreePath,omitempty"`
+	WorktreeBranch string        `json:"worktreeBranch,omitempty"`
 	ResumePhase    AgentRunPhase `json:"resumePhase,omitempty"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
 }

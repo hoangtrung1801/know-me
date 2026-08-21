@@ -26,6 +26,7 @@ const (
 	ActionApproveImplementation        Action = "approve-implementation"
 	ActionRequestImplementationChanges Action = "request-implementation-changes"
 	ActionStartFix                     Action = "start-fix"
+	ActionCreateWorktree               Action = "create-worktree"
 	ActionResume                       Action = "resume"
 	ActionCancel                       Action = "cancel"
 )
@@ -179,7 +180,11 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for approval", ErrConflict)
 		}
-		files, err := m.dirtyFiles(ctx, store.RepositoryRoot())
+		root, err := executionRoot(store, workflow)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: inspect implementation workspace: %v", ErrConflict, err)
+		}
+		files, err := m.dirtyFiles(ctx, root)
 		if err != nil {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: inspect implementation workspace: %v", ErrConflict, err)
 		}
@@ -187,6 +192,27 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation workspace is dirty: %s", ErrConflict, strings.Join(files, ", "))
 		}
 		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseImplementation, models.AgentPhaseImplementing, models.AgentPhasePlanReview, "Approve plan and implement")
+	case ActionCreateWorktree:
+		if task.Status != "in-progress" || workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for an isolated implementation", ErrConflict)
+		}
+		if workflow.WorktreePath != "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: task already has an isolated worktree", ErrConflict)
+		}
+		path, branch, err := createTaskWorktree(ctx, store.RepositoryRoot(), store.ProjectID, taskID)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: %v", ErrConflict, err)
+		}
+		workflow.WorktreePath = path
+		workflow.WorktreeBranch = branch
+		workflow.UpdatedAt = now
+		if err := store.Agent.Save(state); err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		if session := m.removeSessionLocked(store.ProjectID, taskID); session != nil {
+			_ = closeSession(session)
+		}
+		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseImplementation, models.AgentPhaseImplementing, models.AgentPhasePlanReview, "Create isolated worktree and implement")
 	case ActionRequestPlanChanges:
 		if workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for feedback", ErrConflict)
@@ -313,7 +339,11 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if workflow.ActiveRunID == "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: no active run", ErrConflict)
 		}
-		active, ok := m.active[store.RepositoryRoot()]
+		root, err := executionRoot(store, workflow)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: %v", ErrConflict, err)
+		}
+		active, ok := m.active[root]
 		if !ok {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: active run is not owned by this server", ErrConflict)
 		}
@@ -396,14 +426,14 @@ waitForRuns:
 }
 
 func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task *models.Task, state *models.AgentState, workflow *models.AgentWorkflow, runPhase models.AgentRunPhase, runningPhase, restorePhase models.AgentPhase, visibleMessage string) (models.AgentTaskSnapshot, bool, error) {
-	if store.RepositoryRoot() == "" {
-		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: project repository root is unavailable", ErrConflict)
+	root, err := executionRoot(store, workflow)
+	if err != nil {
+		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: %v", ErrConflict, err)
 	}
 	status := m.detect(ctx, m.executable)
 	if !status.Installed || !status.LoggedIn {
 		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: Codex is not installed or logged in", ErrConflict)
 	}
-	root := store.RepositoryRoot()
 	if _, exists := m.active[root]; exists {
 		return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: another Codex run is active for this project", ErrConflict)
 	}
@@ -965,7 +995,11 @@ func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, task
 	if err != nil {
 		return models.AgentTaskSnapshot{}, err
 	}
-	files, err := m.dirtyFiles(ctx, store.RepositoryRoot())
+	root, err := executionRoot(store, &snapshot.Workflow)
+	if err != nil {
+		return models.AgentTaskSnapshot{}, err
+	}
+	files, err := m.dirtyFiles(ctx, root)
 	if err != nil {
 		return models.AgentTaskSnapshot{}, err
 	}
