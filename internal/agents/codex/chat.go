@@ -45,9 +45,12 @@ func (m *Manager) StartChat(ctx context.Context, store *storage.Store, taskID, c
 		return err
 	}
 	workflow := ensureWorkflow(&state, store.ProjectID, taskID, m.now().UTC())
-	root := store.RepositoryRoot()
-	if task.Status != "in-progress" || (workflow.Phase != models.AgentPhaseIdle && workflow.Phase != models.AgentPhaseFixReady) {
-		return fmt.Errorf("%w: Auto chat requires an idle or fix-ready in-progress task", ErrConflict)
+	root, err := executionRoot(store, workflow)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrConflict, err)
+	}
+	if task.Status != "in-progress" || !chatPhaseAllowed(workflow.Phase) {
+		return fmt.Errorf("%w: Auto chat requires an in-progress task outside an active investigation or implementation", ErrConflict)
 	}
 	if workflow.ActiveRunID != "" {
 		active, ok := m.active[root]
@@ -71,7 +74,15 @@ func (m *Manager) StopChat(_ context.Context, store *storage.Store, taskID strin
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	root := store.RepositoryRoot()
+	state, err := store.Agent.Load()
+	if err != nil {
+		return err
+	}
+	workflow := findWorkflow(&state, store.ProjectID, taskID)
+	root, err := executionRoot(store, workflow)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrConflict, err)
+	}
 	active, ok := m.active[root]
 	if !ok || active.taskID != taskID || active.phase != models.AgentRunPhaseChat {
 		return fmt.Errorf("%w: no active Auto chat", ErrConflict)
@@ -84,9 +95,9 @@ func (m *Manager) StopChat(_ context.Context, store *storage.Store, taskID strin
 }
 
 func (m *Manager) startChatLocked(ctx context.Context, store *storage.Store, task *models.Task, state *models.AgentState, workflow *models.AgentWorkflow, content string, appendUser bool) error {
-	root := store.RepositoryRoot()
-	if root == "" {
-		return fmt.Errorf("%w: project repository root is unavailable", ErrConflict)
+	root, err := executionRoot(store, workflow)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrConflict, err)
 	}
 	status := m.detect(ctx, m.executable)
 	if !status.Installed || !status.LoggedIn {
@@ -333,7 +344,7 @@ func (m *Manager) startNextQueuedChat(store *storage.Store, taskID string) {
 		return
 	}
 	task, err := store.Tasks.Get(taskID)
-	if err != nil || task.Status != "in-progress" || (workflow.Phase != models.AgentPhaseIdle && workflow.Phase != models.AgentPhaseFixReady) {
+	if err != nil || task.Status != "in-progress" || !chatPhaseAllowed(workflow.Phase) {
 		return
 	}
 	var content string
@@ -353,6 +364,10 @@ func (m *Manager) startNextQueuedChat(store *storage.Store, taskID string) {
 			return nil
 		})
 	}
+}
+
+func chatPhaseAllowed(phase models.AgentPhase) bool {
+	return phase != models.AgentPhaseInvestigating && phase != models.AgentPhaseImplementing
 }
 
 func ensureTaskChatLocked(store *storage.Store, task *models.Task, workflow *models.AgentWorkflow, now time.Time) (*models.ChatSession, bool, error) {

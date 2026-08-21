@@ -18,6 +18,7 @@ export type AgentAction =
 	| "approve-implementation"
 	| "request-implementation-changes"
 	| "start-fix"
+	| "create-worktree"
 	| "resume"
 	| "cancel";
 
@@ -28,6 +29,8 @@ export interface AgentWorkflow {
 	activeRunId?: string;
 	codexSessionId?: string;
 	chatSessionId?: string;
+	worktreePath?: string;
+	worktreeBranch?: string;
 	resumePhase?: AgentRunPhase;
 	updatedAt: string;
 }

@@ -27,10 +27,10 @@ func TestBuildPromptIncludesStructuredResultSchema(t *testing.T) {
 func TestRequestPlanChangesStartsFollowupInvestigation(t *testing.T) {
 	store := testAgentStore(t, "in-progress")
 	manager := testManager(t, []PhaseResult{{
-		ImplementationPlan: "1. Revise the plan",
+		ImplementationPlan:  "1. Revise the plan",
 		ImplementationNotes: "Applied review feedback",
-		Summary: "revised",
-		Tests: []string{},
+		Summary:             "revised",
+		Tests:               []string{},
 	}})
 	seedAgentWorkflow(t, store, models.AgentWorkflow{
 		ProjectID: store.ProjectID,
@@ -104,6 +104,103 @@ func TestManagerRequiresCleanInitialImplementationButAllowsDirtyFix(t *testing.T
 		t.Fatalf("dirty files = %#v", files)
 	}
 	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+}
+
+func TestManagerCreatesTaskWorktreeAndRetriesImplementation(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	store := testGitAgentStore(t, "in-progress")
+	manager := testManager(t, nil)
+	repositoryRoot := store.RepositoryRoot()
+	var runRoot string
+	var dirtyRoot string
+	manager.dirtyFiles = func(_ context.Context, root string) ([]string, error) {
+		dirtyRoot = root
+		if root == repositoryRoot {
+			return []string{"README.md"}, nil
+		}
+		return []string{}, nil
+	}
+	manager.run = func(_ context.Context, request Request, _ func(StreamEvent)) (Result, error) {
+		runRoot = request.Root
+		return Result{Output: PhaseResult{Summary: "implemented", Tests: []string{}}}, nil
+	}
+	seedAgentWorkflow(t, store, models.AgentWorkflow{
+		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhasePlanReview,
+	})
+
+	snapshot, started, err := manager.Act(context.Background(), store, "task01", ActionCreateWorktree, "")
+	if err != nil || !started {
+		t.Fatalf("snapshot=%#v started=%v err=%v", snapshot, started, err)
+	}
+	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+
+	state, err := store.Agent.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	workflow := findWorkflow(&state, store.ProjectID, "task01")
+	if workflow == nil || workflow.WorktreePath == "" || workflow.WorktreeBranch == "" {
+		t.Fatalf("workflow = %#v", workflow)
+	}
+	if runRoot != workflow.WorktreePath {
+		t.Fatalf("run root = %q, worktree = %q", runRoot, workflow.WorktreePath)
+	}
+	if dirtyRoot != workflow.WorktreePath {
+		t.Fatalf("dirty-file root = %q, worktree = %q", dirtyRoot, workflow.WorktreePath)
+	}
+	if repositoryRoot == workflow.WorktreePath {
+		t.Fatal("implementation ran in the current repository")
+	}
+
+	seedAgentWorkflow(t, store, models.AgentWorkflow{
+		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhasePlanReview,
+		WorktreePath: workflow.WorktreePath, WorktreeBranch: workflow.WorktreeBranch,
+	})
+	if _, _, err := manager.Act(context.Background(), store, "task01", ActionCreateWorktree, ""); !errors.Is(err, ErrConflict) {
+		t.Fatalf("second worktree action error = %v", err)
+	}
+}
+
+func TestManagerReloadsSessionInTaskWorktree(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	store := testGitAgentStore(t, "in-progress")
+	manager, fake := testSessionManager(t, []PhaseResult{
+		{ImplementationPlan: "plan", ImplementationNotes: "notes", Summary: "investigated", Tests: []string{}},
+		{Summary: "implemented", Tests: []string{}},
+	})
+	repositoryRoot := store.RepositoryRoot()
+	manager.dirtyFiles = func(_ context.Context, root string) ([]string, error) {
+		if root == repositoryRoot {
+			return []string{"README.md"}, nil
+		}
+		return []string{}, nil
+	}
+
+	seedAgentWorkflow(t, store, models.AgentWorkflow{
+		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhaseIdle,
+	})
+	mustAct(t, manager, store, "task01", ActionStartInvestigation, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhasePlanReview)
+	mustAct(t, manager, store, "task01", ActionCreateWorktree, "")
+	waitForPhase(t, manager, store, "task01", models.AgentPhaseCodeReview)
+
+	if fake.factoryCalls != 2 || fake.loadCalls != 1 || fake.loadedID != "session-1" {
+		t.Fatalf("session calls = factory %d load %d id %q", fake.factoryCalls, fake.loadCalls, fake.loadedID)
+	}
+	state, err := store.Agent.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	workflow := findWorkflow(&state, store.ProjectID, "task01")
+	if workflow == nil || workflow.WorktreePath == "" {
+		t.Fatalf("workflow = %#v", workflow)
+	}
+	if _, err := os.Stat(workflow.WorktreePath); err != nil {
+		t.Fatalf("worktree = %q: %v", workflow.WorktreePath, err)
+	}
+	if repositoryRoot == workflow.WorktreePath {
+		t.Fatal("session stayed in the current repository")
+	}
 }
 
 func TestManagerRejectsInvalidReviewActionsWithoutMutation(t *testing.T) {
@@ -392,6 +489,12 @@ func TestManagerClosePersistsInterruptedRun(t *testing.T) {
 
 func testAgentStore(t *testing.T, status string) *storage.Store {
 	return testAgentStoreAt(t, t.TempDir(), status)
+}
+
+func testGitAgentStore(t *testing.T, status string) *storage.Store {
+	t.Helper()
+	store := testAgentStoreAt(t, initTestGitRepository(t), status)
+	return store
 }
 
 func testAgentStoreAt(t *testing.T, repositoryRoot, status string) *storage.Store {

@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Check,
   CircleStop,
+  GitBranch,
   Loader2,
   Play,
   RefreshCw,
@@ -129,6 +130,10 @@ export function TaskAgentPanel({
     phase === "plan-review"
       ? "request-plan-changes"
       : "request-implementation-changes";
+  const canCreateWorktree =
+    phase === "plan-review" &&
+    Boolean(snapshot?.dirtyFiles.length) &&
+    !snapshot?.workflow.worktreePath;
   const busy = action !== null;
 
   return (
@@ -261,7 +266,7 @@ export function TaskAgentPanel({
               </p>
             )}
 
-            {phase === "fix-ready" &&
+            {(phase === "fix-ready" || canCreateWorktree) &&
               snapshot &&
               snapshot.dirtyFiles.length > 0 && (
                 <div className="rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
@@ -271,6 +276,16 @@ export function TaskAgentPanel({
                       <li key={file}>{file}</li>
                     ))}
                   </ul>
+                  {canCreateWorktree && (
+                    <Button
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => void runAction("create-worktree")}
+                      disabled={busy || !codexReady}
+                    >
+                      <GitBranch /> Create isolated worktree & retry
+                    </Button>
+                  )}
                 </div>
               )}
 

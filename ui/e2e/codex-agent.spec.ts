@@ -41,6 +41,7 @@ test("runs the investigation and implementation review loop", async ({ page }) =
 	const reviewComments: Array<Record<string, unknown>> = [];
 	const chatId = "chat-1";
 	const chatMessages: Array<Record<string, unknown>> = [];
+	const sentMessages: string[] = [];
 
 	const snapshot = () => ({
 		workflow: {
@@ -92,6 +93,7 @@ test("runs the investigation and implementation review loop", async ({ page }) =
 	});
 	await page.route(`**/api/chats/${chatId}/send`, async (route) => {
 		const body = route.request().postDataJSON() as { content: string };
+		sentMessages.push(body.content);
 		chatMessages.push({ id: `user-${chatMessages.length + 1}`, role: "user", content: body.content, model: "codex", createdAt: new Date().toISOString(), phase: "chat" });
 		await route.fulfill({ status: 202, contentType: "application/json", body: JSON.stringify({ accepted: true }) });
 	});
@@ -142,6 +144,9 @@ test("runs the investigation and implementation review loop", async ({ page }) =
 	await panel.getByRole("button", { name: "Start investigation" }).click();
 	await expect(panel.getByRole("button", { name: "Approve plan and implement" })).toBeVisible();
 	await expect(panel.getByText(/Latest run/)).toHaveCount(0);
+	await panel.getByLabel("Message Codex about this task").fill("Ask about the plan");
+	await panel.getByRole("button", { name: "Send message" }).click();
+	await expect.poll(() => sentMessages).toContain("Ask about the plan");
 	await expect(panel.getByPlaceholder("Describe what Codex should change")).toHaveAttribute("rows", "2");
 
 	await panel.getByPlaceholder("Describe what Codex should change").fill("Include the existing parser in the plan");
@@ -169,6 +174,76 @@ test("runs the investigation and implementation review loop", async ({ page }) =
 
 	await resumedPanel.getByRole("button", { name: "Approve implementation" }).click();
 	await expect(resumedPanel.getByRole("button", { name: "Approve implementation" })).toHaveCount(0);
+	await resumedPanel.getByLabel("Message Codex about this task").fill("Ask after completion");
+	await resumedPanel.getByRole("button", { name: "Send message" }).click();
+	await expect.poll(() => sentMessages).toContain("Ask after completion");
+});
+
+test("offers an isolated worktree recovery for a dirty implementation", async ({ page }) => {
+	const output = server.cli('task create "Dirty Worktree Task" -d "Exercise worktree recovery" --status in-progress');
+	const taskId = output.match(/Created task\s+([a-z0-9]+)/i)?.[1] || "";
+	expect(taskId).toBeTruthy();
+
+	let phase: "plan-review" | "implementing" = "plan-review";
+	let worktreePath: string | undefined;
+	let receivedAction = "";
+	const chatId = "chat-worktree";
+	const snapshot = () => ({
+		workflow: {
+			projectId: "test-project",
+			taskId,
+			phase,
+			chatSessionId: chatId,
+			...(worktreePath ? { worktreePath, worktreeBranch: "knowns/test-project/task" } : {}),
+			updatedAt: new Date().toISOString(),
+		},
+		runs: [],
+		reviewComments: [],
+		dirtyFiles: worktreePath ? [] : ["README.md"],
+		adapterState: "stopped",
+		resumable: false,
+		interrupted: false,
+	});
+
+	await page.route("**/api/codex/status", (route) => route.fulfill({
+		json: { installed: true, loggedIn: true, version: "codex-acp 0.1.0", loginCommand: "codex login", docsUrl: "https://github.com/agentclientprotocol/codex-acp" },
+	}));
+	await page.route(`**/api/tasks/${taskId}/agent`, (route) => route.fulfill({ json: snapshot() }));
+	await page.route(`**/api/chats/${chatId}`, (route) => route.fulfill({
+		json: {
+			id: chatId,
+			sessionId: "session-worktree",
+			title: "Dirty Worktree Task",
+			agentType: "codex",
+			status: "idle",
+			taskId,
+			projectId: "test-project",
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			messages: [],
+		},
+	}));
+	await page.route("**/api/events", (route) => route.fulfill({
+		status: 200,
+		contentType: "text/event-stream",
+		body: `event: connected\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`,
+	}));
+	await page.route(`**/api/tasks/${taskId}/agent/*`, async (route) => {
+		receivedAction = route.request().url().split("/").pop() || "";
+		if (receivedAction === "create-worktree") {
+			phase = "implementing";
+			worktreePath = "/tmp/knowns-worktrees/test-task";
+		}
+		await route.fulfill({ json: snapshot() });
+	});
+	await page.goto(`${server.baseURL}/kanban/${taskId}`);
+	const panel = page.getByRole("region", { name: "Coding agent" });
+	await expect(panel.getByText("Workspace changes to review", { exact: true })).toBeVisible();
+	await expect(panel.getByText("README.md", { exact: true })).toBeVisible();
+	await panel.getByRole("button", { name: "Create isolated worktree & retry" }).click();
+	await expect.poll(() => receivedAction).toBe("create-worktree");
+	await expect(panel.getByRole("button", { name: "Cancel run" })).toBeVisible();
+	await expect(panel.getByRole("button", { name: "Create isolated worktree & retry" })).toHaveCount(0);
 });
 
 test("keeps task chat in the resizable rail and uses tabs in a smaller sheet", async ({ page }) => {

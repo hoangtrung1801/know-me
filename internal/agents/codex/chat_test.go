@@ -42,21 +42,70 @@ func TestStartChatCreatesLinkedSessionAndLeavesWorkflowUnchanged(t *testing.T) {
 	}
 }
 
-func TestStartChatRejectsFormalWorkflowPhases(t *testing.T) {
-	store := testAgentStore(t, "in-progress")
-	seedAgentWorkflow(t, store, models.AgentWorkflow{
-		ProjectID: store.ProjectID,
-		TaskID:    "task01",
-		Phase:     models.AgentPhasePlanReview,
-	})
-	manager, _ := testSessionManager(t, nil)
-
-	err := manager.StartChat(context.Background(), store, "task01", "send anyway")
-	if !errors.Is(err, ErrConflict) {
-		t.Fatalf("StartChat() error = %v, want conflict", err)
+func TestStartChatUsesTaskWorktree(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	store := testGitAgentStore(t, "in-progress")
+	worktreePath, worktreeBranch, err := createTaskWorktree(context.Background(), store.RepositoryRoot(), store.ProjectID, "task01")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if _, err := store.Chats.FindTaskSession(store.ProjectID, "task01", "codex"); err == nil {
-		t.Fatal("formal workflow rejection created a chat session")
+	seedAgentWorkflow(t, store, models.AgentWorkflow{
+		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhaseIdle,
+		WorktreePath: worktreePath, WorktreeBranch: worktreeBranch,
+	})
+	manager, fake := testSessionManager(t, nil)
+	var sessionRoot string
+	manager.sessionFactory = func(_ context.Context, root string, _ []string) (acpSession, error) {
+		sessionRoot = root
+		return fake, nil
+	}
+
+	if err := manager.StartChat(context.Background(), store, "task01", "Please inspect the task"); err != nil {
+		t.Fatal(err)
+	}
+	waitForChatStatus(t, store, "task01", "idle")
+	if sessionRoot != worktreePath {
+		t.Fatalf("chat root = %q, worktree = %q", sessionRoot, worktreePath)
+	}
+}
+
+func TestStartChatAllowsReviewPhases(t *testing.T) {
+	for _, phase := range []models.AgentPhase{models.AgentPhasePlanReview, models.AgentPhaseCodeReview, models.AgentPhaseCompleted} {
+		t.Run(string(phase), func(t *testing.T) {
+			store := testAgentStore(t, "in-progress")
+			seedAgentWorkflow(t, store, models.AgentWorkflow{
+				ProjectID: store.ProjectID,
+				TaskID:    "task01",
+				Phase:     phase,
+			})
+			manager, _ := testSessionManager(t, nil)
+
+			if err := manager.StartChat(context.Background(), store, "task01", "send anyway"); err != nil {
+				t.Fatalf("StartChat() error = %v", err)
+			}
+			waitForChatStatus(t, store, "task01", "idle")
+		})
+	}
+}
+
+func TestStartChatRejectsActiveGatedPhases(t *testing.T) {
+	for _, phase := range []models.AgentPhase{models.AgentPhaseInvestigating, models.AgentPhaseImplementing} {
+		t.Run(string(phase), func(t *testing.T) {
+			store := testAgentStore(t, "in-progress")
+			seedAgentWorkflow(t, store, models.AgentWorkflow{
+				ProjectID: store.ProjectID,
+				TaskID:    "task01",
+				Phase:     phase,
+			})
+			manager, _ := testSessionManager(t, nil)
+
+			if err := manager.StartChat(context.Background(), store, "task01", "send anyway"); !errors.Is(err, ErrConflict) {
+				t.Fatalf("StartChat() error = %v, want conflict", err)
+			}
+			if _, err := store.Chats.FindTaskSession(store.ProjectID, "task01", "codex"); err == nil {
+				t.Fatal("gated workflow rejection created a chat session")
+			}
+		})
 	}
 }
 
@@ -169,10 +218,10 @@ func TestReviewCommentStartsFollowupInTaskChat(t *testing.T) {
 		Phase:     models.AgentPhasePlanReview,
 	})
 	manager, _ := testSessionManager(t, []PhaseResult{{
-		ImplementationPlan: "1. Revise the plan",
+		ImplementationPlan:  "1. Revise the plan",
 		ImplementationNotes: "Applied review feedback",
-		Summary: "revised",
-		Tests: []string{},
+		Summary:             "revised",
+		Tests:               []string{},
 	}})
 
 	if _, _, err := manager.Act(context.Background(), store, "task01", ActionRequestPlanChanges, "handle the edge case"); err != nil {
