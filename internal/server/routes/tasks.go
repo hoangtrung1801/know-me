@@ -88,7 +88,12 @@ func resolveHTTPTask(store *storage.Store, r *http.Request, id string) (*models.
 	return store.Tasks.Get(id, r.URL.Query().Get("projectId"))
 }
 
-func taskStoreForHTTP(store *storage.Store, task *models.Task) *storage.Store {
+func taskStoreForHTTP(store *storage.Store, task *models.Task, managers ...*storage.Manager) *storage.Store {
+	if task.ProjectID != "" && len(managers) > 0 && managers[0] != nil {
+		if target, err := managers[0].ProjectStore(task.ProjectID); err == nil {
+			return target
+		}
+	}
 	if task.ProjectID == store.ProjectID {
 		return store
 	}
@@ -98,8 +103,13 @@ func taskStoreForHTTP(store *storage.Store, task *models.Task) *storage.Store {
 	return storage.NewProjectStore(store.Root, task.ProjectID, "")
 }
 
-func taskStoreForHTTPQuery(store *storage.Store, r *http.Request) *storage.Store {
+func taskStoreForHTTPQuery(store *storage.Store, r *http.Request, managers ...*storage.Manager) *storage.Store {
 	if projectID := r.URL.Query().Get("projectId"); projectID != "" {
+		if len(managers) > 0 && managers[0] != nil {
+			if target, err := managers[0].ProjectStore(projectID); err == nil {
+				return target
+			}
+		}
 		return storage.NewProjectStore(store.Root, projectID, "")
 	}
 	return storage.NewStore(store.Root)
@@ -212,7 +222,7 @@ func (tr *TaskRoutes) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tr.loadTaskTimeEntries(task)
-	task.ActiveTimer = taskStoreForHTTP(tr.getStore(), task).Time.GetActiveTimer(httpTaskID(task))
+	task.ActiveTimer = taskStoreForHTTP(tr.getStore(), task, tr.mgr).Time.GetActiveTimer(httpTaskID(task))
 	respondJSON(w, http.StatusOK, newTaskResponse(task))
 }
 
@@ -298,7 +308,7 @@ func (tr *TaskRoutes) update(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	updated, err := tr.lifecycleService(taskStoreForHTTP(tr.getStore(), task)).UpdateTask(r.Context(), task.ID, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
+	updated, err := tr.lifecycleService(taskStoreForHTTP(tr.getStore(), task, tr.mgr)).UpdateTask(r.Context(), task.ID, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
 		data, err := json.Marshal(task)
 		if err != nil {
 			return err
@@ -465,20 +475,20 @@ func (tr *TaskRoutes) resolveLifecycleStore(r *http.Request, request *tasklifecy
 	if request.Operation == tasklifecycle.OperationHardDelete {
 		if request.TaskID != "" {
 			if task, err := resolveHTTPTask(store, r, request.TaskID); err == nil {
-				return taskStoreForHTTP(store, task), nil
+				return taskStoreForHTTP(store, task, tr.mgr), nil
 			}
 		}
-		return taskStoreForHTTPQuery(store, r), nil
+		return taskStoreForHTTPQuery(store, r, tr.mgr), nil
 	}
 	if request.TaskID != "" {
 		task, err := resolveHTTPTask(store, r, request.TaskID)
 		if err == nil {
-			return taskStoreForHTTP(store, task), nil
+			return taskStoreForHTTP(store, task, tr.mgr), nil
 		}
-		return taskStoreForHTTPQuery(store, r), nil
+		return taskStoreForHTTPQuery(store, r, tr.mgr), nil
 	}
 
-	target := taskStoreForHTTPQuery(store, r)
+	target := taskStoreForHTTPQuery(store, r, tr.mgr)
 	for index, id := range request.IDs {
 		task, err := resolveHTTPTask(store, r, id)
 		if err != nil {
@@ -536,7 +546,7 @@ func (tr *TaskRoutes) reorder(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		changed := false
-		_, err = tr.lifecycleService(taskStoreForHTTP(tr.getStore(), task)).UpdateTask(r.Context(), task.ID, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
+		_, err = tr.lifecycleService(taskStoreForHTTP(tr.getStore(), task, tr.mgr)).UpdateTask(r.Context(), task.ID, tasklifecycle.TaskUpdateOptions{Actor: "api", Mutate: func(task *models.Task) error {
 			if task.Order != nil && *task.Order == item.Order {
 				return nil
 			}
@@ -617,7 +627,7 @@ func (tr *TaskRoutes) history(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	h, err := taskStoreForHTTP(tr.getStore(), task).Versions.GetHistory(task.ID)
+	h, err := taskStoreForHTTP(tr.getStore(), task, tr.mgr).Versions.GetHistory(task.ID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return

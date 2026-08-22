@@ -83,7 +83,7 @@ func handleProjectDetect(_ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	if err := reg.Load(); err != nil {
 		return errResult(err.Error())
 	}
-	out, _ := json.MarshalIndent(reg.Projects, "", "  ")
+	out, _ := json.MarshalIndent(reg.List(), "", "  ")
 	return mcp.NewToolResultText(string(out)), nil
 }
 

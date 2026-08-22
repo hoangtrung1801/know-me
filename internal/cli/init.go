@@ -244,7 +244,11 @@ func runInit(_ *cobra.Command, args []string) error {
 	if err := reg.SetActive(project.ID); err != nil {
 		return fmt.Errorf("select project: %w", err)
 	}
-	projectStore := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, cwd)
+	if err := reg.SetPath(project.ID, cwd); err != nil {
+		return fmt.Errorf("save project path: %w", err)
+	}
+	project, _ = reg.Get(project.ID)
+	projectStore := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path)
 	if err := projectStore.Init(name); err != nil {
 		return err
 	}
