@@ -14,9 +14,11 @@ export default function LinksPage() {
 	const [editing, setEditing] = useState<SavedLink | null>(null);
 	const [adding, setAdding] = useState(false);
 	const [url, setURL] = useState("");
+	const [addNote, setAddNote] = useState("");
 	const [addImage, setAddImage] = useState<File | undefined>();
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
+	const [note, setNote] = useState("");
 	const [image, setImage] = useState<File | undefined>();
 	const [busy, setBusy] = useState(false);
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -30,14 +32,14 @@ export default function LinksPage() {
 	useEffect(() => { void load(); }, [load]);
 
 	const openEditor = (link: SavedLink) => {
-		setEditing(link); setTitle(link.title); setDescription(link.description); setImage(undefined);
+		setEditing(link); setTitle(link.title); setDescription(link.description); setNote(link.note ?? ""); setImage(undefined);
 	};
 	const save = async (event: React.FormEvent) => {
 		event.preventDefault();
 		if (!editing) return;
 		setBusy(true); setError(null);
 		try {
-			const updated = await linkApi.update(editing.id, { title, description, image });
+			const updated = await linkApi.update(editing.id, { title, description, note, image });
 			setLinks((items) => items.map((item) => item.id === updated.id ? updated : item));
 			setEditing(null);
 		} catch (err) { setError(err instanceof Error ? err.message : "Link could not be updated."); } finally { setBusy(false); }
@@ -46,15 +48,15 @@ export default function LinksPage() {
 		event.preventDefault();
 		setBusy(true); setError(null);
 		try {
-			const created = await linkApi.add(url, addImage);
+			const created = await linkApi.add(url, addImage, addNote);
 			setLinks((items) => [created, ...items]);
-			setAdding(false); setURL(""); setAddImage(undefined);
+			setAdding(false); setURL(""); setAddNote(""); setAddImage(undefined);
 		} catch (err) { setError(err instanceof Error ? err.message : "Link could not be saved."); } finally { setBusy(false); }
 	};
 	const imageSrc = (link: SavedLink) => !link.image ? undefined : /^https?:\/\//i.test(link.image) ? link.image : `/api/links/${encodeURIComponent(link.id)}/image?v=${encodeURIComponent(link.updatedAt)}`;
 
 	return <PageShell>
-		<PageHeader size="full" title="Saved links" description="Your global link library, available across every project." context="Library" status={`${links.length} ${links.length === 1 ? "link" : "links"}`} actions={<><Button onClick={() => { setURL(""); setAddImage(undefined); setAdding(true); }}><Plus className="mr-2 h-4 w-4" />Add Link</Button><Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button></>} />
+		<PageHeader size="full" title="Saved links" description="Your global link library, available across every project." context="Library" status={`${links.length} ${links.length === 1 ? "link" : "links"}`} actions={<><Button onClick={() => { setURL(""); setAddNote(""); setAddImage(undefined); setAdding(true); }}><Plus className="mr-2 h-4 w-4" />Add Link</Button><Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button></>} />
 		{availableTags.length > 0 && <div className="mx-auto flex w-full max-w-screen-2xl flex-wrap gap-2 px-6 pt-4" aria-label="Filter links by tag">
 			<Button size="sm" variant={selectedTags.length === 0 ? "default" : "outline"} onClick={() => setSelectedTags([])}>All tags</Button>
 			{availableTags.map((tag) => <Button key={tag} size="sm" variant={selectedTags.includes(tag) ? "default" : "outline"} aria-pressed={selectedTags.includes(tag)} onClick={() => setSelectedTags((current) => current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])}>{tag}</Button>)}
@@ -65,13 +67,14 @@ export default function LinksPage() {
 					{src ? <img src={src} alt="" className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-muted/40"><Link2 className="h-8 w-8 text-muted-foreground/50" /></div>}
 					<div className="p-4"><div className="flex items-start justify-between gap-3"><h2 className="line-clamp-2 font-semibold leading-tight">{link.title || link.url}</h2><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Edit ${link.title || link.url}`} onClick={() => openEditor(link)}><Pencil className="h-4 w-4" /></Button></div>
 						{link.description && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{link.description}</p>}
+						{link.note && <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm text-foreground/80"><span className="font-medium">Note:</span> {link.note}</p>}
 						{link.tags?.length ? <div className="mt-3 flex flex-wrap gap-1">{link.tags.map((tag) => <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-xs">{tag}</span>)}</div> : null}
 						<a href={link.url} target="_blank" rel="noreferrer" className="mt-4 flex items-center gap-1 truncate text-xs text-primary hover:underline" title={link.url}>{link.url}<ExternalLink className="h-3 w-3 shrink-0" /></a>
 					</div></article>; })}
 			</div>}
 			{error && links.length > 0 && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
 		</PageContent>
-		<Dialog open={adding} onOpenChange={(open) => !busy && setAdding(open)}><DialogContent><DialogHeader><DialogTitle>Add Link</DialogTitle><DialogDescription>Save a URL now. Its title, description, and image are fetched automatically.</DialogDescription></DialogHeader><form onSubmit={add} className="space-y-4"><Input aria-label="URL" type="url" required autoFocus value={url} onChange={(event) => setURL(event.target.value)} placeholder="https://example.com/article" /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setAddImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => setAdding(false)}>Cancel</Button><Button type="submit" disabled={busy || !url.trim()}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save link</Button></DialogFooter></form></DialogContent></Dialog>
-		<Dialog open={Boolean(editing)} onOpenChange={(open) => !busy && !open && setEditing(null)}><DialogContent><DialogHeader><DialogTitle>Edit saved link</DialogTitle><DialogDescription>Update the title, description, or local image. The URL stays unchanged.</DialogDescription></DialogHeader><form onSubmit={save} className="space-y-4"><Input aria-label="Title" value={title} onChange={(event) => setTitle(event.target.value)} /><Textarea aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={5} /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => setEditing(null)}>Cancel</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes</Button></DialogFooter></form></DialogContent></Dialog>
+		<Dialog open={adding} onOpenChange={(open) => !busy && setAdding(open)}><DialogContent><DialogHeader><DialogTitle>Add Link</DialogTitle><DialogDescription>Save a URL now. Its title, description, and image are fetched automatically.</DialogDescription></DialogHeader><form onSubmit={add} className="space-y-4"><Input aria-label="URL" type="url" required autoFocus value={url} onChange={(event) => setURL(event.target.value)} placeholder="https://example.com/article" /><Textarea aria-label="Note" value={addNote} onChange={(event) => setAddNote(event.target.value)} rows={3} placeholder="Why is this link useful?" /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setAddImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => setAdding(false)}>Cancel</Button><Button type="submit" disabled={busy || !url.trim()}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save link</Button></DialogFooter></form></DialogContent></Dialog>
+		<Dialog open={Boolean(editing)} onOpenChange={(open) => !busy && !open && setEditing(null)}><DialogContent><DialogHeader><DialogTitle>Edit saved link</DialogTitle><DialogDescription>Update the title, description, note, or local image. The URL stays unchanged.</DialogDescription></DialogHeader><form onSubmit={save} className="space-y-4"><Input aria-label="Title" value={title} onChange={(event) => setTitle(event.target.value)} /><Textarea aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={5} /><Textarea aria-label="Note" value={note} onChange={(event) => setNote(event.target.value)} rows={3} placeholder="Why is this link useful?" /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => setEditing(null)}>Cancel</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes</Button></DialogFooter></form></DialogContent></Dialog>
 	</PageShell>;
 }

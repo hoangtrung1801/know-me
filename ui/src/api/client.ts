@@ -2732,6 +2732,7 @@ export interface SavedLink {
 	url: string;
 	title: string;
 	description: string;
+	note?: string;
 	image?: string;
 	tags?: string[];
 	createdAt: string;
@@ -2775,9 +2776,10 @@ export const linkApi = {
 		if (!res.ok) throw new Error("Failed to fetch links");
 		return res.json();
 	},
-	async add(url: string, image?: File): Promise<SavedLink> {
+	async add(url: string, image?: File, note?: string): Promise<SavedLink> {
 		const form = new FormData();
 		form.set("url", url);
+		if (note) form.set("note", note);
 		if (image) form.set("image", image);
 		const res = await apiFetch(`${API_BASE}/api/links`, { method: "POST", body: form });
 		if (!res.ok) {
@@ -2786,10 +2788,11 @@ export const linkApi = {
 		}
 		return res.json();
 	},
-	async update(id: string, data: { title: string; description: string; image?: File }): Promise<SavedLink> {
+	async update(id: string, data: { title: string; description: string; note: string; image?: File }): Promise<SavedLink> {
 		const form = new FormData();
 		form.set("title", data.title);
 		form.set("description", data.description);
+		form.set("note", data.note);
 		if (data.image) form.set("image", data.image);
 		const res = await apiFetch(`${API_BASE}/api/links/${encodeURIComponent(id)}`, { method: "PATCH", body: form });
 		if (!res.ok) {

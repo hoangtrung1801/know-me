@@ -20,6 +20,7 @@ func RegisterLinkTool(s toolRegistrar, service *links.Service) {
 		mcp.WithString("id", mcp.Description("Link ID (update)")),
 		mcp.WithString("title", mcp.Description("Edited title (update)")),
 		mcp.WithString("description", mcp.Description("Edited description (update)")),
+		mcp.WithString("note", mcp.Description("User-authored note (add/update)")),
 		mcp.WithString("imagePath", mcp.Description("Local image path to import (add/update)")),
 	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		action, err := req.RequireString("action")
@@ -37,9 +38,9 @@ func RegisterLinkTool(s toolRegistrar, service *links.Service) {
 			return errResultf("unknown link action: %s", action)
 		}
 	})
-	s.RegisterHelp("link.add", HelpEntry{When: "Save a URL as a global link with fetched SEO metadata.", Params: map[string]string{"url": "required URL", "imagePath": "optional local image"}})
+	s.RegisterHelp("link.add", HelpEntry{When: "Save a URL as a global link with fetched SEO metadata.", Params: map[string]string{"url": "required URL", "note": "optional user-authored note", "imagePath": "optional local image"}})
 	s.RegisterHelp("link.list", HelpEntry{When: "List globally saved links."})
-	s.RegisterHelp("link.update", HelpEntry{When: "Edit a saved link title, description, or local image.", Params: map[string]string{"id": "required link ID", "title": "optional title", "description": "optional description", "imagePath": "optional local image"}})
+	s.RegisterHelp("link.update", HelpEntry{When: "Edit a saved link title, description, note, or local image.", Params: map[string]string{"id": "required link ID", "title": "optional title", "description": "optional description", "note": "optional user-authored note", "imagePath": "optional local image"}})
 }
 
 func handleLinkAdd(ctx context.Context, service *links.Service, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -47,6 +48,7 @@ func handleLinkAdd(ctx context.Context, service *links.Service, req mcp.CallTool
 	if err != nil {
 		return errResult("url is required")
 	}
+	note, _ := textArg(req.GetArguments(), "note")
 	image, closeImage, err := openLinkImage(req)
 	if err != nil {
 		return errResult(err.Error())
@@ -54,7 +56,7 @@ func handleLinkAdd(ctx context.Context, service *links.Service, req mcp.CallTool
 	if closeImage != nil {
 		defer closeImage()
 	}
-	link, err := service.Add(ctx, urlValue, image)
+	link, err := service.AddWithNote(ctx, urlValue, note, image)
 	if err != nil {
 		return nil, fmt.Errorf("add link: %w", err)
 	}
@@ -75,12 +77,15 @@ func handleLinkUpdate(ctx context.Context, service *links.Service, req mcp.CallT
 		return errResult("id is required")
 	}
 	args := req.GetArguments()
-	var title, description *string
+	var title, description, note *string
 	if value, ok := stringArg(args, "title"); ok {
 		title = &value
 	}
 	if value, ok := stringArg(args, "description"); ok {
 		description = &value
+	}
+	if value, ok := textArg(args, "note"); ok {
+		note = &value
 	}
 	image, closeImage, err := openLinkImage(req)
 	if err != nil {
@@ -89,7 +94,7 @@ func handleLinkUpdate(ctx context.Context, service *links.Service, req mcp.CallT
 	if closeImage != nil {
 		defer closeImage()
 	}
-	link, err := service.Update(ctx, id, title, description, image)
+	link, err := service.UpdateWithNote(ctx, id, title, description, note, image)
 	if err != nil {
 		return nil, fmt.Errorf("update link: %w", err)
 	}

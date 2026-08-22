@@ -57,6 +57,37 @@ func TestServiceImportedImageOverridesSEOAndUpdateKeepsMetadata(t *testing.T) {
 	}
 }
 
+func TestServiceAddAndUpdateOptionalNote(t *testing.T) {
+	service := NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (Metadata, error) {
+		return Metadata{Title: "Fetched"}, nil
+	})
+
+	link, err := service.AddWithNote(context.Background(), "https://example.com", "  Notable context  ", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if link.Note != "Notable context" {
+		t.Fatalf("note = %q", link.Note)
+	}
+
+	note := "  Updated context  "
+	updated, err := service.UpdateWithNote(context.Background(), link.ID, nil, nil, &note, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Note != "Updated context" {
+		t.Fatalf("updated note = %q", updated.Note)
+	}
+
+	persisted, err := service.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(persisted) != 1 || persisted[0].Note != "Updated context" {
+		t.Fatalf("persisted links = %#v", persisted)
+	}
+}
+
 func TestServiceRejectsUnsafeURLWithoutSaving(t *testing.T) {
 	fetch := func(context.Context, string) (Metadata, error) {
 		return Metadata{}, fmt.Errorf("%w: loopback", ErrUnsafeURL)

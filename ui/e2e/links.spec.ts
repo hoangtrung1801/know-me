@@ -13,7 +13,9 @@ test("links can be added from the web app", async ({ page }) => {
 	await page.goto(`${server.baseURL}/links`);
 	await page.getByRole("button", { name: "Add Link" }).click();
 	await page.getByLabel("URL").fill("https://example.com/new-link");
+	await page.getByLabel("Note").fill("Keep this for the launch checklist");
 	await page.getByRole("button", { name: "Save link" }).click();
+	await expect(page.getByText("Keep this for the launch checklist")).toBeVisible();
 	await expect(page.getByRole("link", { name: /example\.com\/new-link/ })).toBeVisible();
 });
 
@@ -29,9 +31,11 @@ test("saved link cards can be edited with an imported image", async ({ page }) =
 		await page.getByRole("article").filter({ hasText: "https://example.com/article" }).getByRole("button", { name: /Edit/ }).click();
 		await page.getByLabel("Title").fill("Edited link");
 		await page.getByLabel("Description").fill("Edited description");
+		await page.getByLabel("Note").fill("Remember this reference");
 		await page.getByLabel("Image").setInputFiles(imagePath);
 		await page.getByRole("button", { name: "Save changes" }).click();
 		await expect(page.getByText("Edited link")).toBeVisible();
+		await expect(page.getByText("Remember this reference")).toBeVisible();
 	} finally {
 		rmSync(imageDir, { recursive: true, force: true });
 	}
@@ -43,8 +47,8 @@ test("saved link cards show automatic tags", async ({ page }) => {
 		tags: ["golang", "release"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z",
 	}] }));
 	await page.goto(`${server.baseURL}/links`);
-	await expect(page.getByText("golang", { exact: true })).toBeVisible();
-	await expect(page.getByText("release", { exact: true })).toBeVisible();
+	await expect(page.getByRole("article").getByText("golang", { exact: true })).toBeVisible();
+	await expect(page.getByRole("article").getByText("release", { exact: true })).toBeVisible();
 });
 
 test("saved links can be filtered by tag", async ({ page }) => {

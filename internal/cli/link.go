@@ -31,13 +31,15 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 			defer imageFile.Close()
 			image = imageFile
 		}
-		link, err := service.Add(cmd.Context(), args[0], image)
+		note, _ := cmd.Flags().GetString("note")
+		link, err := service.AddWithNote(cmd.Context(), args[0], note, image)
 		if err != nil {
 			return fmt.Errorf("add link: %w", err)
 		}
 		return writeLinkOutput(cmd, link)
 	}}
 	add.Flags().String("image", "", "Import a local image")
+	add.Flags().String("note", "", "Add a note")
 
 	list := &cobra.Command{Use: "list", Short: "List saved links", RunE: func(cmd *cobra.Command, _ []string) error {
 		items, err := service.List()
@@ -54,7 +56,7 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 	}}
 
 	update := &cobra.Command{Use: "update <id>", Short: "Edit a saved link", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		var title, description *string
+		var title, description, note *string
 		if cmd.Flags().Changed("title") {
 			value, _ := cmd.Flags().GetString("title")
 			title = &value
@@ -62,6 +64,10 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 		if cmd.Flags().Changed("description") {
 			value, _ := cmd.Flags().GetString("description")
 			description = &value
+		}
+		if cmd.Flags().Changed("note") {
+			value, _ := cmd.Flags().GetString("note")
+			note = &value
 		}
 		var image io.Reader
 		var imageFile *os.File
@@ -75,7 +81,7 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 			defer imageFile.Close()
 			image = imageFile
 		}
-		link, err := service.Update(cmd.Context(), args[0], title, description, image)
+		link, err := service.UpdateWithNote(cmd.Context(), args[0], title, description, note, image)
 		if err != nil {
 			return fmt.Errorf("update link: %w", err)
 		}
@@ -83,6 +89,7 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 	}}
 	update.Flags().String("title", "", "New title")
 	update.Flags().String("description", "", "New description")
+	update.Flags().String("note", "", "New note")
 	update.Flags().String("image", "", "Replace with a local image")
 
 	cmd.AddCommand(add, list, update)

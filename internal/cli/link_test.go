@@ -18,7 +18,7 @@ func TestLinkCommandAddAndUpdate(t *testing.T) {
 	cmd.PersistentFlags().Bool("json", false, "JSON output")
 	var output bytes.Buffer
 	cmd.SetOut(&output)
-	cmd.SetArgs([]string{"add", "https://example.com", "--json"})
+	cmd.SetArgs([]string{"add", "https://example.com", "--note", "Important article", "--json"})
 	if err := cmd.Execute(); err != nil {
 		t.Fatal(err)
 	}
@@ -29,9 +29,12 @@ func TestLinkCommandAddAndUpdate(t *testing.T) {
 	if link.Title != "SEO title" {
 		t.Fatalf("title = %q", link.Title)
 	}
+	if link.Note != "Important article" {
+		t.Fatalf("note = %q", link.Note)
+	}
 
 	output.Reset()
-	cmd.SetArgs([]string{"update", link.ID, "--title", "Edited", "--json"})
+	cmd.SetArgs([]string{"update", link.ID, "--title", "Edited", "--note", "Updated note", "--json"})
 	if err := cmd.Execute(); err != nil {
 		t.Fatal(err)
 	}
@@ -41,5 +44,8 @@ func TestLinkCommandAddAndUpdate(t *testing.T) {
 	}
 	if updated.Title != "Edited" {
 		t.Fatalf("updated title = %q", updated.Title)
+	}
+	if updated.Note != "Updated note" {
+		t.Fatalf("updated note = %q", updated.Note)
 	}
 }

@@ -33,7 +33,7 @@ func (lr *LinkRoutes) list(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
-	var urlValue string
+	var urlValue, note string
 	var image io.Reader
 	mediaType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if mediaType == "multipart/form-data" {
@@ -43,6 +43,7 @@ func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		urlValue = r.FormValue("url")
+		note = r.FormValue("note")
 		file, _, err := r.FormFile("image")
 		if err == nil {
 			defer file.Close()
@@ -50,15 +51,17 @@ func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var input struct {
-			URL string `json:"url"`
+			URL  string `json:"url"`
+			Note string `json:"note"`
 		}
 		if err := decodeJSON(r, &input); err != nil {
 			respondError(w, http.StatusBadRequest, "invalid JSON body")
 			return
 		}
 		urlValue = input.URL
+		note = input.Note
 	}
-	link, err := lr.service.Add(r.Context(), urlValue, image)
+	link, err := lr.service.AddWithNote(r.Context(), urlValue, note, image)
 	if err != nil {
 		linkError(w, err)
 		return
@@ -67,7 +70,7 @@ func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (lr *LinkRoutes) update(w http.ResponseWriter, r *http.Request) {
-	var title, description *string
+	var title, description, note *string
 	var image io.Reader
 	mediaType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if mediaType == "multipart/form-data" {
@@ -84,6 +87,10 @@ func (lr *LinkRoutes) update(w http.ResponseWriter, r *http.Request) {
 			value := r.FormValue("description")
 			description = &value
 		}
+		if r.Form.Has("note") {
+			value := r.FormValue("note")
+			note = &value
+		}
 		file, _, err := r.FormFile("image")
 		if err == nil {
 			defer file.Close()
@@ -93,14 +100,15 @@ func (lr *LinkRoutes) update(w http.ResponseWriter, r *http.Request) {
 		var input struct {
 			Title       *string `json:"title"`
 			Description *string `json:"description"`
+			Note        *string `json:"note"`
 		}
 		if err := decodeJSON(r, &input); err != nil {
 			respondError(w, http.StatusBadRequest, "invalid JSON body")
 			return
 		}
-		title, description = input.Title, input.Description
+		title, description, note = input.Title, input.Description, input.Note
 	}
-	link, err := lr.service.Update(r.Context(), chi.URLParam(r, "id"), title, description, image)
+	link, err := lr.service.UpdateWithNote(r.Context(), chi.URLParam(r, "id"), title, description, note, image)
 	if err != nil {
 		linkError(w, err)
 		return

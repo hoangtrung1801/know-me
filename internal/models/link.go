@@ -16,6 +16,7 @@ type Link struct {
 	URL         string    `json:"url"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
+	Note        string    `json:"note,omitempty"`
 	Image       string    `json:"image,omitempty"`
 	Tags        []string  `json:"tags,omitempty"`
 	CreatedAt   time.Time `json:"createdAt"`
