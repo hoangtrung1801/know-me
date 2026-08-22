@@ -22,7 +22,7 @@ func TestLinkRoutesCreateUpdateAndImage(t *testing.T) {
 	r := chi.NewRouter()
 	(&LinkRoutes{service: service}).Register(r)
 
-	body, _ := json.Marshal(map[string]string{"url": "https://example.com/article"})
+	body, _ := json.Marshal(map[string]string{"url": "https://example.com/article", "note": "Important article"})
 	create := httptest.NewRequest(http.MethodPost, "/links", bytes.NewReader(body))
 	create.Header.Set("Content-Type", "application/json")
 	created := httptest.NewRecorder()
@@ -34,10 +34,14 @@ func TestLinkRoutesCreateUpdateAndImage(t *testing.T) {
 	if err := json.NewDecoder(created.Body).Decode(&link); err != nil {
 		t.Fatal(err)
 	}
+	if link.Note != "Important article" {
+		t.Fatalf("created note = %q", link.Note)
+	}
 
 	var multipartBody bytes.Buffer
 	w := multipart.NewWriter(&multipartBody)
 	_ = w.WriteField("title", "Edited")
+	_ = w.WriteField("note", "Edited note")
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", `form-data; name="image"; filename="pixel.png"`)
 	h.Set("Content-Type", "image/png")
@@ -53,7 +57,7 @@ func TestLinkRoutesCreateUpdateAndImage(t *testing.T) {
 	}
 	var edited models.Link
 	_ = json.NewDecoder(updated.Body).Decode(&edited)
-	if edited.Title != "Edited" || edited.Image == "" {
+	if edited.Title != "Edited" || edited.Note != "Edited note" || edited.Image == "" {
 		t.Fatalf("updated link = %+v", edited)
 	}
 

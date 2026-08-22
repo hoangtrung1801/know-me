@@ -14,7 +14,7 @@ func TestLinkHandlersLifecycle(t *testing.T) {
 	service := links.NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (links.Metadata, error) {
 		return links.Metadata{Title: "MCP title", Description: "MCP description"}, nil
 	})
-	result, err := handleLinkAdd(context.Background(), service, mcp.CallToolRequest{Params: mcp.CallToolParams{Arguments: map[string]any{"url": "https://example.com"}}})
+	result, err := handleLinkAdd(context.Background(), service, mcp.CallToolRequest{Params: mcp.CallToolParams{Arguments: map[string]any{"url": "https://example.com", "note": "Important article"}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,12 +25,18 @@ func TestLinkHandlersLifecycle(t *testing.T) {
 	if link.Title != "MCP title" {
 		t.Fatalf("title = %q", link.Title)
 	}
-	title := "Edited"
-	updated, err := service.Update(context.Background(), link.ID, &title, nil, nil)
+	if link.Note != "Important article" {
+		t.Fatalf("note = %q", link.Note)
+	}
+	updatedResult, err := handleLinkUpdate(context.Background(), service, mcp.CallToolRequest{Params: mcp.CallToolParams{Arguments: map[string]any{"id": link.ID, "note": "Updated note"}}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updated.Title != "Edited" {
-		t.Fatalf("updated title = %q", updated.Title)
+	var updated models.Link
+	if err := json.Unmarshal([]byte(updatedResult.Content[0].(mcp.TextContent).Text), &updated); err != nil {
+		t.Fatal(err)
+	}
+	if updated.Note != "Updated note" {
+		t.Fatalf("updated note = %q", updated.Note)
 	}
 }

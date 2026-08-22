@@ -57,6 +57,10 @@ func NewServiceWithFetcherAndClassifier(root string, fetch FetchFunc, classify C
 }
 
 func (s *Service) Add(ctx context.Context, rawURL string, image io.Reader) (*models.Link, error) {
+	return s.AddWithNote(ctx, rawURL, "", image)
+}
+
+func (s *Service) AddWithNote(ctx context.Context, rawURL, note string, image io.Reader) (*models.Link, error) {
 	target, err := validateLinkURL(rawURL)
 	if err != nil {
 		return nil, err
@@ -72,6 +76,7 @@ func (s *Service) Add(ctx context.Context, rawURL string, image io.Reader) (*mod
 		URL:         strings.TrimSpace(rawURL),
 		Title:       target.Hostname(),
 		Description: "",
+		Note:        strings.TrimSpace(note),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -108,6 +113,10 @@ func (s *Service) List() ([]*models.Link, error) {
 }
 
 func (s *Service) Update(ctx context.Context, id string, title, description *string, image io.Reader) (*models.Link, error) {
+	return s.UpdateWithNote(ctx, id, title, description, nil, image)
+}
+
+func (s *Service) UpdateWithNote(ctx context.Context, id string, title, description, note *string, image io.Reader) (*models.Link, error) {
 	_ = ctx
 	link, err := s.store.Get(id)
 	if err != nil {
@@ -118,6 +127,9 @@ func (s *Service) Update(ctx context.Context, id string, title, description *str
 	}
 	if description != nil {
 		link.Description = strings.TrimSpace(*description)
+	}
+	if note != nil {
+		link.Note = strings.TrimSpace(*note)
 	}
 	oldImage := link.Image
 	newImage := ""
