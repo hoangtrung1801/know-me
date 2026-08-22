@@ -89,4 +89,43 @@ test.describe("Kanban Board", () => {
 			});
 		}
 	});
+
+	test("does not hit React maximum update depth while dragging a card", async ({ page }) => {
+		server.cli('task create "Drag Loop Task" -d "Exercise the drag overlay" --status todo');
+		const runtimeErrors: string[] = [];
+		page.on("pageerror", (error) => runtimeErrors.push(error.message));
+		page.on("console", (message) => {
+			if (message.type() === "error") runtimeErrors.push(message.text());
+		});
+
+		await page.goto(`${server.baseURL}/kanban`);
+		const card = page.getByText("Drag Loop Task", { exact: true });
+		const target = page.locator('[id="in-progress"]').first();
+		await expect(card).toBeVisible();
+		await expect(target).toBeVisible();
+		const sourceBox = await card.locator("xpath=../../..").boundingBox();
+		const targetBox = await target.boundingBox();
+		expect(sourceBox).not.toBeNull();
+		expect(targetBox).not.toBeNull();
+		if (!sourceBox || !targetBox) return;
+		const sourcePoint = { x: sourceBox.x + sourceBox.width / 2, y: sourceBox.y + sourceBox.height / 2 };
+		const targetPoint = { x: targetBox.x + targetBox.width / 2, y: targetBox.y + Math.min(60, targetBox.height / 2) };
+		await page.mouse.move(sourcePoint.x, sourcePoint.y);
+		await page.mouse.down();
+		await page.mouse.move(sourcePoint.x + 20, sourcePoint.y + 20, { steps: 5 });
+		for (let step = 1; step <= 12; step += 1) {
+			const progress = step / 12;
+			await page.mouse.move(
+				sourcePoint.x + (targetPoint.x - sourcePoint.x) * progress,
+				sourcePoint.y + (targetPoint.y - sourcePoint.y) * progress,
+				{ steps: 3 },
+			);
+		}
+		await page.waitForTimeout(100);
+		await page.mouse.up();
+		await page.waitForTimeout(500);
+
+		await expect(target.getByText("Drag Loop Task", { exact: true })).toBeVisible();
+		expect(runtimeErrors.filter((message) => message.includes("#185") || message.includes("Maximum update depth"))).toEqual([]);
+	});
 });

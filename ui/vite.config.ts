@@ -107,7 +107,6 @@ export default defineConfig({
             id.includes("node_modules/lucide-react/") ||
             id.includes("node_modules/cmdk/") ||
             id.includes("node_modules/sonner/") ||
-            id.includes("node_modules/tunnel-rat/") ||
             id.includes("node_modules/class-variance-authority/") ||
             id.includes("node_modules/clsx/") ||
             id.includes("node_modules/tailwind-merge/")
