@@ -131,7 +131,8 @@ func TestRunInitRegistersNamedProject(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
-	t.Chdir(t.TempDir())
+	projectRoot := t.TempDir()
+	t.Chdir(projectRoot)
 
 	if err := runInit(initCmd, []string{"Launch"}); err != nil {
 		t.Fatalf("runInit returned error: %v", err)
@@ -147,6 +148,13 @@ func TestRunInitRegistersNamedProject(t *testing.T) {
 	project := reg.Projects[0]
 	if project.Name != "Launch" || len(project.ID) != 6 {
 		t.Fatalf("project = %#v, want generated ID and name Launch", project)
+	}
+	wantRoot, err := filepath.EvalSymlinks(projectRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if project.Path != wantRoot {
+		t.Fatalf("project path = %q, want %q", project.Path, wantRoot)
 	}
 	if active := reg.GetActive(); active == nil || active.ID != project.ID {
 		t.Fatalf("active = %#v, want %q", active, project.ID)

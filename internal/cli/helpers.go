@@ -64,23 +64,30 @@ func resolveProjectStore(start string) (*storage.Store, error) {
 		return nil, fmt.Errorf("load project registry: %w", err)
 	}
 
+	var project *registry.Project
 	if projectID == "" {
-		active := reg.GetActive()
-		if active == nil {
+		project = reg.GetActive()
+		if project == nil {
 			return nil, fmt.Errorf("no active project; run 'knowns init'")
 		}
-		projectID = active.ID
+		projectID = project.ID
 	} else {
-		known := false
-		for _, project := range reg.Projects {
-			if project.ID == projectID {
-				known = true
-				break
-			}
-		}
+		var known bool
+		project, known = reg.Get(projectID)
 		if !known {
 			return nil, fmt.Errorf("workspace link references unknown project %q", projectID)
 		}
+	}
+	if projectRoot != "" {
+		if err := reg.SetPath(projectID, projectRoot); err != nil {
+			return nil, fmt.Errorf("save project path: %w", err)
+		}
+		project, _ = reg.Get(projectID)
+		if project != nil {
+			projectRoot = project.Path
+		}
+	} else if project != nil {
+		projectRoot = project.Path
 	}
 
 	return storage.NewProjectStore(storage.GlobalRootPath(), projectID, projectRoot), nil

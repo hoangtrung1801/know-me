@@ -39,7 +39,11 @@ func TestResolveProjectUsesWorkspaceLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if store == nil || store.Root != storage.GlobalRootPath() || store.ProjectID != project.ID || root != repo {
+	wantRoot, err := filepath.EvalSymlinks(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if store == nil || store.Root != storage.GlobalRootPath() || store.ProjectID != project.ID || root != wantRoot {
 		t.Fatalf("store = %#v, root = %q", store, root)
 	}
 }

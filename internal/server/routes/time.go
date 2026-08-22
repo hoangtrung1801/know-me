@@ -71,7 +71,7 @@ func (tr *TimeRoutes) start(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, "task not found: "+err.Error())
 		return
 	}
-	target := taskStoreForHTTP(tr.getStore(), task)
+	target := taskStoreForHTTP(tr.getStore(), task, tr.mgr)
 
 	if err := target.Time.Start(httpTaskID(task), task.Title); err != nil {
 		respondError(w, http.StatusConflict, err.Error())
@@ -136,7 +136,7 @@ func (tr *TimeRoutes) stop(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	entry, err := tasklifecycle.New(taskStoreForHTTP(tr.getStore(), task)).StopTimer(r.Context(), httpTaskID(task), "api")
+	entry, err := tasklifecycle.New(taskStoreForHTTP(tr.getStore(), task, tr.mgr)).StopTimer(r.Context(), httpTaskID(task), "api")
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -184,7 +184,7 @@ func (tr *TimeRoutes) add(w http.ResponseWriter, r *http.Request) {
 	}
 	taskID := httpTaskID(task)
 	entry.ID = fmt.Sprintf("te-%d-%s", startedAt.UnixNano(), taskID)
-	recorded, err := tasklifecycle.New(taskStoreForHTTP(tr.getStore(), task)).AddTimeEntry(r.Context(), taskID, tasklifecycle.TimeMutationOptions{Actor: "api", Entry: entry})
+	recorded, err := tasklifecycle.New(taskStoreForHTTP(tr.getStore(), task, tr.mgr)).AddTimeEntry(r.Context(), taskID, tasklifecycle.TimeMutationOptions{Actor: "api", Entry: entry})
 	if err != nil {
 		respondError(w, http.StatusConflict, err.Error())
 		return
@@ -219,7 +219,7 @@ func (tr *TimeRoutes) pause(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	if err := taskStoreForHTTP(tr.getStore(), task).Time.Pause(httpTaskID(task)); err != nil {
+	if err := taskStoreForHTTP(tr.getStore(), task, tr.mgr).Time.Pause(httpTaskID(task)); err != nil {
 		respondError(w, http.StatusConflict, err.Error())
 		return
 	}
@@ -250,7 +250,7 @@ func (tr *TimeRoutes) resume(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	if err := taskStoreForHTTP(tr.getStore(), task).Time.Resume(httpTaskID(task)); err != nil {
+	if err := taskStoreForHTTP(tr.getStore(), task, tr.mgr).Time.Resume(httpTaskID(task)); err != nil {
 		respondError(w, http.StatusConflict, err.Error())
 		return
 	}

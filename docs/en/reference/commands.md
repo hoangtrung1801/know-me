@@ -12,11 +12,12 @@ Use `knowns <command> --help` for the exact syntax accepted by the current binar
 
 ### `knowns init`
 
-Registers a pathless logical project, selects it, initializes the shared
-Know-Me store, and writes `.known-me.json` in the current directory. The link
-contains the generated project ID, so commands from this directory or its
-subdirectories use that project. When no name is provided, the current
-directory name is used.
+Registers the current workspace as a project, saves its canonical local path,
+selects it, initializes the shared Know-Me store, and writes `.known-me.json`
+in the current directory. The link contains the generated project ID, so
+commands from this directory or its subdirectories use that project. When no
+name is provided, the current directory name is used. Projects created through
+the project-management API may remain pathless until a workspace is linked.
 
 ```bash
 knowns init

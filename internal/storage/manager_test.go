@@ -38,3 +38,59 @@ func TestManagerActiveProjectRoot(t *testing.T) {
 		t.Fatalf("root = %q, want %q", got, root)
 	}
 }
+
+func TestManagerProjectStoreUsesRegisteredRepositoryPath(t *testing.T) {
+	home := t.TempDir()
+	globalRoot := filepath.Join(home, ".knowns")
+	repositoryRoot := t.TempDir()
+	r := registry.NewRegistryWithPath(filepath.Join(globalRoot, "registry.json"))
+	if err := r.Load(); err != nil {
+		t.Fatal(err)
+	}
+	project, err := r.Create("Launch")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.SetPath(project.ID, repositoryRoot); err != nil {
+		t.Fatal(err)
+	}
+	m := NewManager(NewProjectStore(globalRoot, project.ID, ""), r)
+
+	store, err := m.ProjectStore(project.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantRoot, err := filepath.EvalSymlinks(repositoryRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := store.RepositoryRoot(); got != wantRoot {
+		t.Fatalf("repository root = %q, want %q", got, wantRoot)
+	}
+}
+
+func TestManagerProjectStorePrefersRegisteredPathOverStaleActiveStore(t *testing.T) {
+	home := t.TempDir()
+	globalRoot := filepath.Join(home, ".knowns")
+	registeredRoot, staleRoot := t.TempDir(), t.TempDir()
+	r := registry.NewRegistryWithPath(filepath.Join(globalRoot, "registry.json"))
+	if err := r.Load(); err != nil {
+		t.Fatal(err)
+	}
+	project, err := r.Create("Launch")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.SetPath(project.ID, registeredRoot); err != nil {
+		t.Fatal(err)
+	}
+	m := NewManager(NewProjectStore(globalRoot, project.ID, staleRoot), r)
+	store, err := m.ProjectStore(project.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantRoot, _ := filepath.EvalSymlinks(registeredRoot)
+	if got := store.RepositoryRoot(); got != wantRoot {
+		t.Fatalf("repository root = %q, want registered root %q", got, wantRoot)
+	}
+}

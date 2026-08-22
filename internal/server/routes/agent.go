@@ -34,7 +34,7 @@ func (ar *AgentRoutes) taskStore(r *http.Request, id string) (*storage.Store, st
 	if err != nil {
 		return nil, "", err
 	}
-	return taskStoreForHTTP(store, task), task.ID, nil
+	return taskStoreForHTTP(store, task, ar.mgr), task.ID, nil
 }
 
 func (ar *AgentRoutes) Register(r chi.Router) {

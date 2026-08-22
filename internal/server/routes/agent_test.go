@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/hoangtrung1801/known-me/internal/agents/codex"
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
@@ -39,6 +40,43 @@ func TestAgentRoutesReturnSnapshotAndLog(t *testing.T) {
 		if w.Code != http.StatusOK {
 			t.Fatalf("%s status = %d body = %s", path, w.Code, w.Body.String())
 		}
+	}
+}
+
+func TestAgentRoutesUseRegisteredRepositoryPath(t *testing.T) {
+	home, repositoryRoot := t.TempDir(), t.TempDir()
+	globalRoot := filepath.Join(home, ".knowns")
+	registryStore := registry.NewRegistryWithPath(filepath.Join(globalRoot, "registry.json"))
+	if err := registryStore.Load(); err != nil {
+		t.Fatal(err)
+	}
+	project, err := registryStore.Create("Launch")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := registryStore.SetPath(project.ID, repositoryRoot); err != nil {
+		t.Fatal(err)
+	}
+	store := storage.NewProjectStore(globalRoot, project.ID, "")
+	if err := store.Init(project.Name); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().UTC()
+	if err := store.Tasks.Create(&models.Task{ID: "task01", ProjectID: project.ID, Title: "Example", Status: "in-progress", Priority: "medium", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	manager := storage.NewManager(store, registryStore)
+	routes := NewAgentRoutes(store, manager, nil)
+	resolved, _, err := routes.taskStore(httptest.NewRequest(http.MethodGet, "/tasks/task01/agent", nil), "task01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantRoot, err := filepath.EvalSymlinks(repositoryRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := resolved.RepositoryRoot(); got != wantRoot {
+		t.Fatalf("repository root = %q, want %q", got, wantRoot)
 	}
 }
 

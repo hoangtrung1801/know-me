@@ -37,8 +37,19 @@ func TestResolveProjectStoreUsesWorkspaceLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if store.ProjectID != project.ID || store.RepositoryRoot() != repo {
-		t.Fatalf("store = %#v, want project %q and root %q", store, project.ID, repo)
+	wantRoot, err := filepath.EvalSymlinks(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if store.ProjectID != project.ID || store.RepositoryRoot() != wantRoot {
+		t.Fatalf("store = %#v, want project %q and root %q", store, project.ID, wantRoot)
+	}
+	reloaded := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reloaded.Load(); err != nil {
+		t.Fatal(err)
+	}
+	if got := reloaded.Projects[0].Path; got != wantRoot {
+		t.Fatalf("stored project path = %q, want %q", got, wantRoot)
 	}
 }
 
@@ -60,6 +71,34 @@ func TestResolveProjectStoreFallsBackToActiveProject(t *testing.T) {
 	}
 	if store.ProjectID != project.ID || store.RepositoryRoot() != "" {
 		t.Fatalf("store = %#v, want active project %q and no repository root", store, project.ID)
+	}
+}
+
+func TestResolveProjectStoreUsesRegisteredProjectPathWithoutWorkspaceLink(t *testing.T) {
+	home, repositoryRoot, start := t.TempDir(), t.TempDir(), t.TempDir()
+	t.Setenv("HOME", home)
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	if err := reg.Load(); err != nil {
+		t.Fatal(err)
+	}
+	project, err := reg.Create("active")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := reg.SetPath(project.ID, repositoryRoot); err != nil {
+		t.Fatal(err)
+	}
+
+	store, err := resolveProjectStore(start)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantRoot, err := filepath.EvalSymlinks(repositoryRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if store.ProjectID != project.ID || store.RepositoryRoot() != wantRoot {
+		t.Fatalf("store = %#v, want project %q and root %q", store, project.ID, wantRoot)
 	}
 }
 

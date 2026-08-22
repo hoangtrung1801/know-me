@@ -39,7 +39,7 @@ func (wr *WorkspaceRoutes) list(w http.ResponseWriter, _ *http.Request) {
 		respondJSON(w, http.StatusOK, []struct{}{})
 		return
 	}
-	projects := wr.manager.GetRegistry().Projects
+	projects := wr.manager.GetRegistry().List()
 	if projects == nil {
 		projects = []registry.Project{}
 	}
