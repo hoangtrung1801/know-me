@@ -1,7 +1,7 @@
 {
   "name": "knowns-ui",
   "private": true,
-  "version": "1.2.2",
+  "version": "1.4.1",
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
@@ -52,7 +52,6 @@
     "sonner": "^2.0.7",
     "strip-ansi": "^7.1.0",
     "tailwind-merge": "^3.4.0",
-    "tunnel-rat": "^0.1.2",
     "turndown": "^7.2.2"
   },
   "devDependencies": {

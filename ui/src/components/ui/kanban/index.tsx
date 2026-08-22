@@ -30,35 +30,13 @@ import {
   type HTMLAttributes,
   type ReactNode,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
-import tunnel from 'tunnel-rat';
 import { Card } from '@/ui/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/ui/components/ui/ScrollArea';
 import { cn } from '@/ui/lib/utils';
 import { useIsMobile } from '@/ui/hooks/useMobile';
-
-const t = tunnel();
-
-function DragOverlayPortal() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  return createPortal(
-    <DragOverlay>
-      <t.Out />
-    </DragOverlay>,
-    document.body
-  );
-}
 
 export type { DragEndEvent } from '@dnd-kit/core';
 
@@ -155,7 +133,7 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
         </Card>
       </div>
       {activeCardId === id && (
-        <t.In>
+        <DragOverlay>
           <Card
             className={cn(
               'cursor-grab gap-4 rounded-md p-3 shadow-sm ring-2 ring-primary',
@@ -165,7 +143,7 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
           >
             {children ?? <p className="m-0 font-medium text-sm">{name}</p>}
           </Card>
-        </t.In>
+        </DragOverlay>
       )}
     </>
   );
@@ -499,7 +477,6 @@ export const KanbanProvider = <
         >
           {columns.map((column) => children(column))}
         </div>
-        <DragOverlayPortal />
       </DndContext>
     </KanbanContext.Provider>
   );
