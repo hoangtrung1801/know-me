@@ -79,9 +79,11 @@ export function TaskDetailSheet({
 	const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
 	const [hardDeleteError, setHardDeleteError] = useState<string | null>(null);
 	const [smallScreenTab, setSmallScreenTab] = useState<"task" | "codex">("task");
+	const [codexRailCollapsed, setCodexRailCollapsed] = useState(true);
 
 	useEffect(() => {
 		setSmallScreenTab("task");
+		setCodexRailCollapsed(true);
 	}, [task?.id]);
 
 	useEffect(() => {
@@ -464,7 +466,9 @@ export function TaskDetailSheet({
 									<TaskCodexRail
 										task={task}
 										width={preferences.taskCodexRailWidth}
+										collapsed={codexRailCollapsed}
 										onWidthChange={(width) => setPreference("taskCodexRailWidth", width)}
+										onToggleCollapse={() => setCodexRailCollapsed((collapsed) => !collapsed)}
 										onTaskUpdated={onUpdate}
 									/>
 								</div>
