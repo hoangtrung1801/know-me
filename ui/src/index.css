@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 /* Highlight.js themes */
@@ -8,8 +8,8 @@
 
 :root {
 	--radius: 0.5rem;
-	--font-body: "Roboto", Arial, sans-serif;
-	--font-display: "Newsreader", Georgia, serif;
+	--font-body: "Inter", Arial, sans-serif;
+	--font-display: "Space Grotesk", Arial, sans-serif;
 	font-family: var(--font-body);
 	line-height: 1.5;
 	font-weight: 400;
