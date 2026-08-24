@@ -63,6 +63,11 @@ func (wr *WorkspaceRoutes) create(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	projectStore := storage.NewProjectStore(storage.GlobalRootPath(), project.ID, project.Path)
+	if err := projectStore.Init(project.Name); err != nil {
+		respondError(w, http.StatusInternalServerError, "initialize project: "+err.Error())
+		return
+	}
 	respondJSON(w, http.StatusCreated, project)
 }
 
