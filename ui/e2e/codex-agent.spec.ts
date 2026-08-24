@@ -138,6 +138,7 @@ test("runs the investigation and implementation review loop", async ({ page }) =
 		await route.fulfill({ contentType: "application/json", body: JSON.stringify(snapshot()) });
 	});
 	await page.goto(`${server.baseURL}/kanban/${taskId}`);
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
 	const panel = page.getByRole("region", { name: "Coding agent" });
 	await expect(panel).toBeVisible();
 
@@ -167,6 +168,7 @@ test("runs the investigation and implementation review loop", async ({ page }) =
 	codexSessionId = "session-1";
 	phase = "interrupted";
 	await page.reload();
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
 	const resumedPanel = page.getByRole("region", { name: "Coding agent" });
 	await expect(resumedPanel.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
 	await resumedPanel.getByRole("button", { name: "Resume", exact: true }).click();
@@ -237,6 +239,7 @@ test("offers an isolated worktree recovery for a dirty implementation", async ({
 		await route.fulfill({ json: snapshot() });
 	});
 	await page.goto(`${server.baseURL}/kanban/${taskId}`);
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
 	const panel = page.getByRole("region", { name: "Coding agent" });
 	await expect(panel.getByText("Workspace changes to review", { exact: true })).toBeVisible();
 	await expect(panel.getByText("README.md", { exact: true })).toBeVisible();
@@ -310,6 +313,9 @@ test("keeps task chat in the resizable rail and uses tabs in a smaller sheet", a
 	await page.goto(`${server.baseURL}/kanban/${taskId}`);
 	const rail = page.getByTestId("task-codex-rail");
 	await expect(rail).toBeVisible();
+	await expect(rail).toHaveAttribute("data-collapsed", "true");
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
+	await expect(rail).toHaveAttribute("data-collapsed", "false");
 	await expect(page.getByText("The persistent task conversation is available.", { exact: true })).toBeVisible();
 	await expect(page.locator("#chat-message-message-empty")).toBeVisible();
 	await expect(page.locator("#chat-message-message-empty-assistant")).toBeVisible();
@@ -320,6 +326,19 @@ test("keeps task chat in the resizable rail and uses tabs in a smaller sheet", a
 	await expect(resizeHandle).toHaveAttribute("aria-valuenow", "384");
 	await resizeHandle.press("ArrowLeft");
 	await expect(resizeHandle).toHaveAttribute("aria-valuenow", "400");
+
+	const collapseButton = page.getByRole("button", { name: "Collapse Codex panel" });
+	await expect(collapseButton).toBeVisible();
+	await collapseButton.click();
+	await expect(rail).toHaveAttribute("data-collapsed", "true");
+	await expect(page.getByRole("button", { name: "Expand Codex panel" })).toBeVisible();
+	await expect(collapseButton).toHaveCount(0);
+
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
+	await expect(rail).toHaveAttribute("data-collapsed", "false");
+	await expect(page.getByRole("button", { name: "Collapse Codex panel" })).toBeVisible();
+	await expect(resizeHandle).toHaveAttribute("aria-valuenow", "400");
+	await expect(page.getByText("The persistent task conversation is available.", { exact: true })).toBeVisible();
 
 	await page.setViewportSize({ width: 700, height: 900 });
 	await expect(page.getByRole("tab", { name: "Codex" })).toBeVisible();
@@ -412,6 +431,7 @@ test("shows the user turn and streamed ACP reply in task chat", async ({ page })
 	});
 
 	await page.goto(`${server.baseURL}/kanban/${taskId}`);
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
 	const panel = page.getByRole("region", { name: "Coding agent" });
 	await expect(panel).toBeVisible();
 	await panel.getByLabel("Message Codex about this task").fill("Please inspect the task");
@@ -422,6 +442,7 @@ test("shows the user turn and streamed ACP reply in task chat", async ({ page })
 	await expect(panel.locator('[data-chat-bubble="user"]')).toHaveCount(1);
 	await expect(panel.locator('[data-chat-bubble="assistant"]')).toHaveCount(1);
 	await page.reload();
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
 	const reloadedPanel = page.getByRole("region", { name: "Coding agent" });
 	await expect(reloadedPanel.locator("#chat-message-user-1").getByText("Please inspect the task", { exact: true })).toBeVisible();
 	await expect(reloadedPanel.getByText("ACP assistant response", { exact: true })).toBeVisible();
@@ -491,6 +512,7 @@ test("keeps ACP events that race the initial chat load", async ({ page }) => {
 	});
 
 	await page.goto(`${server.baseURL}/kanban/${taskId}`);
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
 	const panel = page.getByRole("region", { name: "Coding agent" });
 	await expect(panel).toBeVisible();
 	await expect.poll(() => sessionRequested).toBe(true);
@@ -554,6 +576,7 @@ test("merges a chat message received before the task chat id", async ({ page }) 
 	});
 
 	await page.goto(`${server.baseURL}/kanban/${taskId}`);
+	await page.getByRole("button", { name: "Expand Codex panel" }).click();
 	const panel = page.getByRole("region", { name: "Coding agent" });
 	await expect(panel).toBeVisible();
 	await page.waitForTimeout(250);

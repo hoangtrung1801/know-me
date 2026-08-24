@@ -5,6 +5,7 @@ import {
   CircleStop,
   GitBranch,
   Loader2,
+  PanelRightClose,
   Play,
   RefreshCw,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import { TaskCodexChat } from "./TaskCodexChat";
 interface TaskAgentPanelProps {
   task: Task;
   onTaskUpdated?: (task: Task) => void;
+  onCollapse?: () => void;
   embedded?: boolean;
 }
 
@@ -36,6 +38,7 @@ function isReviewPhase(phase: AgentPhase): boolean {
 export function TaskAgentPanel({
   task,
   onTaskUpdated,
+  onCollapse,
   embedded = false,
 }: TaskAgentPanelProps) {
   const [snapshot, setSnapshot] = useState<AgentTaskSnapshot | null>(null);
@@ -209,10 +212,22 @@ export function TaskAgentPanel({
                 <Check /> Approve implementation
               </Button>
             )}
+            {onCollapse && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-auto h-8 w-8"
+                onClick={onCollapse}
+                aria-label="Collapse Codex panel"
+                title="Collapse Codex panel"
+              >
+                <PanelRightClose />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
-              className="ml-auto h-8 w-8"
+              className={onCollapse ? "h-8 w-8" : "ml-auto h-8 w-8"}
               onClick={() => void load()}
               disabled={loading || busy}
               aria-label="Refresh"
