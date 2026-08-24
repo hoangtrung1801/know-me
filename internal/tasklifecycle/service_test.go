@@ -54,6 +54,26 @@ func TestEvaluateUsesCompletedAtActiveTimerAndAllDescendants(t *testing.T) {
 	}
 }
 
+func TestArchiveUsesDefaultSettingsWhenProjectConfigIsMissing(t *testing.T) {
+	root := t.TempDir()
+	store := storage.NewProjectStore(root, "missing-config", t.TempDir())
+	task := lifecycleTask("missing-config-task", "done", "")
+	task.CompletedAt = timePointer(fixedNow.Add(-31 * 24 * time.Hour))
+	createLifecycleTask(t, store, task)
+
+	result, err := New(store, WithClock(func() time.Time { return fixedNow })).Archive(context.Background(), task.ID, ArchiveOptions{})
+	if err != nil {
+		t.Fatalf("Archive: %v", err)
+	}
+	if !result.Changed || result.After != models.TaskLifecycleArchived {
+		t.Fatalf("Archive result = %#v, want changed archived result", result)
+	}
+	assertArchived(t, store, task.ID, true)
+	if _, err := os.Stat(filepath.Join(root, "projects", store.ProjectID, "config.json")); !os.IsNotExist(err) {
+		t.Fatalf("Archive created a missing project config: %v", err)
+	}
+}
+
 func TestAutoArchiveUsesCompletedAtAndDistinguishesZeroFromDisabled(t *testing.T) {
 	t.Run("completedAt not updatedAt", func(t *testing.T) {
 		store := newLifecycleStore(t)

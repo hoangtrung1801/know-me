@@ -51,6 +51,32 @@ test("saved link cards show automatic tags", async ({ page }) => {
 	await expect(page.getByRole("article").getByText("release", { exact: true })).toBeVisible();
 });
 
+test("saved link cards open a detail dialog", async ({ page }) => {
+	await page.route("**/api/links", (route) => route.fulfill({ json: [{
+		id: "link1",
+		url: "https://example.com/reference",
+		title: "Reference article",
+		description: "A useful reference for the launch plan.",
+		note: "Review before launch",
+		image: "",
+		tags: ["planning"],
+		createdAt: "2026-08-03T00:00:00Z",
+		updatedAt: "2026-08-03T00:00:00Z",
+	}] }));
+	await page.goto(`${server.baseURL}/links`);
+
+	const card = page.getByRole("article").filter({ hasText: "Reference article" });
+	await card.getByRole("heading", { name: "Reference article" }).click();
+
+	const dialog = page.getByRole("dialog");
+	await expect(dialog).toBeVisible();
+	await expect(dialog.getByRole("heading", { name: "Reference article" })).toBeVisible();
+	await expect(dialog.getByText("A useful reference for the launch plan.")).toBeVisible();
+	await expect(dialog.getByText("Review before launch")).toBeVisible();
+	await expect(dialog.getByText("planning", { exact: true })).toBeVisible();
+	await expect(dialog.getByRole("link", { name: /Open link/ })).toHaveAttribute("href", "https://example.com/reference");
+});
+
 test("saved links can be filtered by tag", async ({ page }) => {
 	await page.route("**/api/links", (route) => route.fulfill({ json: [
 		{ id: "link1", url: "https://example.com/go", title: "Go release", description: "", tags: ["golang", "release"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },

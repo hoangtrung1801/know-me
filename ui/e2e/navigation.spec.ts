@@ -15,6 +15,10 @@ test.describe("Navigation & Global Features", () => {
 	test("desktop navigation uses the bottom dock", async ({ page }) => {
 		await page.goto(server.baseURL);
 		await expect(page.locator("[data-navigation-dock]")).toBeVisible();
+		const dashboardLink = page.getByRole("link", { name: "Dashboard" });
+		const dashboardBox = await dashboardLink.boundingBox();
+		expect(dashboardBox?.width).toBeGreaterThanOrEqual(44);
+		expect(dashboardBox?.height).toBeGreaterThanOrEqual(44);
 		const tasksLink = page.getByRole("link", { name: "Tasks" });
 		await tasksLink.hover();
 		await expect(page.getByRole("tooltip", { name: "Tasks", exact: true })).toBeVisible();

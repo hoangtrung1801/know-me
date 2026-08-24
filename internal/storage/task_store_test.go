@@ -105,6 +105,23 @@ func TestProjectScopedTaskArchiveUsesScopedFilename(t *testing.T) {
 	}
 }
 
+func TestGlobalTaskArchiveFindsScopedFilenameByTaskID(t *testing.T) {
+	root := t.TempDir()
+	store := NewStore(root)
+	task := &models.Task{ID: "0ar625", ProjectID: "jcepaz", Title: "test", Status: "done", Priority: "medium"}
+	if err := store.Tasks.CreateGlobal(task); err != nil {
+		t.Fatalf("CreateGlobal: %v", err)
+	}
+
+	if err := store.Tasks.Archive(task.ID); err != nil {
+		t.Fatalf("Archive: %v", err)
+	}
+	archived, err := store.Tasks.Get(task.ID)
+	if err != nil || !archived.Archived || archived.ProjectID != task.ProjectID {
+		t.Fatalf("archived task = %#v, err = %v", archived, err)
+	}
+}
+
 func TestTaskStoreMoveProjectMovesScopedTaskWithoutDuplicate(t *testing.T) {
 	store := NewStore(t.TempDir())
 	task := &models.Task{ID: "scope01", ProjectID: "alpha", Title: "Move scope", Status: "todo", Priority: "medium"}

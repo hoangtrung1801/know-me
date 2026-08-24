@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -1091,6 +1092,9 @@ func (service *Service) settings() (models.TaskLifecycleSettings, error) {
 	}
 	project, err := service.store.Config.Load()
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return models.DefaultTaskLifecycleSettings(), nil
+		}
 		return models.TaskLifecycleSettings{}, err
 	}
 	return project.Settings.EffectiveTaskLifecycle(), nil
