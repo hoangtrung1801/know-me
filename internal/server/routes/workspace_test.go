@@ -56,6 +56,27 @@ func TestWorkspaceCreateLogicalProject(t *testing.T) {
 	}
 }
 
+func TestWorkspaceCreateInitializesProjectConfig(t *testing.T) {
+	r, m := setupWorkspaceTest(t)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/workspaces", bytes.NewBufferString(`{"name":"Launch"}`)))
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body.String())
+	}
+
+	var project registry.Project
+	if err := json.Unmarshal(w.Body.Bytes(), &project); err != nil {
+		t.Fatalf("decode project: %v", err)
+	}
+	store, err := m.ProjectStore(project.ID)
+	if err != nil {
+		t.Fatalf("project store: %v", err)
+	}
+	if _, err := store.Config.Load(); err != nil {
+		t.Fatalf("load project config: %v", err)
+	}
+}
+
 func TestWorkspaceCreateRejectsBlankName(t *testing.T) {
 	r, _ := setupWorkspaceTest(t)
 	w := httptest.NewRecorder()
