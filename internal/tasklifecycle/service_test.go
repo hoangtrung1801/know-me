@@ -538,7 +538,7 @@ func TestReopenArchivedTaskIsIdempotentAndPreservesHistory(t *testing.T) {
 	}
 }
 
-func TestBatchArchivePreviewsByDefaultAndExecutesExplicitly(t *testing.T) {
+func TestBatchArchiveDefaultsToCompletedTasksAndExecutesExplicitly(t *testing.T) {
 	store := newLifecycleStore(t)
 	eligible := lifecycleTask("batch1", "done", "")
 	eligible.CompletedAt = timePointer(fixedNow.Add(-time.Hour))
@@ -551,7 +551,7 @@ func TestBatchArchivePreviewsByDefaultAndExecutesExplicitly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("preview: %v", err)
 	}
-	if preview.Execute || preview.Changed != 0 || len(preview.Items) != 2 {
+	if preview.Execute || preview.Changed != 0 || len(preview.Items) != 1 || preview.Items[0].TaskID != eligible.ID {
 		t.Fatalf("preview = %#v", preview)
 	}
 	assertArchived(t, store, eligible.ID, false)
@@ -560,7 +560,7 @@ func TestBatchArchivePreviewsByDefaultAndExecutesExplicitly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	if !executed.Execute || executed.Changed != 1 {
+	if !executed.Execute || executed.Changed != 1 || len(executed.Items) != 1 || executed.Items[0].TaskID != eligible.ID {
 		t.Fatalf("executed = %#v", executed)
 	}
 	assertArchived(t, store, eligible.ID, true)

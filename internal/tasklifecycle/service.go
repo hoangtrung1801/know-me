@@ -679,7 +679,9 @@ func (service *Service) resolveBatchIDs(ctx context.Context, requested []string)
 			return err
 		}
 		for _, task := range tasks {
-			ids = append(ids, task.ID)
+			if task.Status == "done" {
+				ids = append(ids, task.ID)
+			}
 		}
 		pending, err := tx.ListTaskLifecyclePending(string(OperationArchive))
 		if err != nil {

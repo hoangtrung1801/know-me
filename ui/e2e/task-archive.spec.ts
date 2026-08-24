@@ -32,6 +32,24 @@ test.describe("Task Archive", () => {
 		});
 	});
 
+	test("archive preview only includes completed tasks", async ({ page }) => {
+		await test.step("Create completed and active tasks", async () => {
+			server.cli('task create "Archive Candidate" -d "Ready to archive" --status done');
+			server.cli('task create "Still Active" -d "Must stay active" --status in-progress');
+		});
+
+		await test.step("Open the archive preview", async () => {
+			await page.goto(`${server.baseURL}/kanban`);
+			await page.getByRole("button", { name: "Archive completed Tasks" }).click();
+			await page.getByRole("menuitem", { name: "Done before now" }).click();
+		});
+
+		const dialog = page.getByTestId("task-lifecycle-dialog");
+		await expect(dialog).toBeVisible();
+		await expect(dialog.getByText("Done → Done", { exact: true })).toBeVisible();
+		await expect(dialog.getByText("Active → Active", { exact: true })).toHaveCount(0);
+	});
+
 	test("archiving task removes it from kanban board", async ({ page }) => {
 		let taskId = "";
 
