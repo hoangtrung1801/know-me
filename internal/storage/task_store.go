@@ -186,18 +186,39 @@ func (ts *TaskStore) scanForID(dir, id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for _, key := range ts.taskFilenameKeys(id) {
-		prefix := "task-" + key + " - "
-		exact := "task-" + key + ".md"
-		for _, e := range entries {
-			if e.IsDir() {
+	projectID, localID := SplitScopedKey(id)
+	if localID == "" {
+		localID = id
+	}
+	if projectID == "" && ts.projectID != "" {
+		projectID = ts.projectID
+	}
+	scoped := projectID != ""
+	keys := ts.taskFilenameKeys(id)
+	var matches []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		path := filepath.Join(dir, e.Name())
+		filenameMatch := taskFilenameMatches(e.Name(), keys)
+		task, parseErr := ts.parseFile(path)
+		if parseErr == nil {
+			if task.ID != localID || (scoped && task.ProjectID != "" && task.ProjectID != projectID) {
 				continue
 			}
-			n := e.Name()
-			if n == exact || strings.HasPrefix(n, prefix) {
-				return filepath.Join(dir, n), nil
-			}
+			matches = append(matches, path)
+			continue
 		}
+		if filenameMatch {
+			matches = append(matches, path)
+		}
+	}
+	if len(matches) == 1 {
+		return matches[0], nil
+	}
+	if len(matches) > 1 {
+		return "", fmt.Errorf("task %q is ambiguous; use a project-prefixed ID", id)
 	}
 	return "", fmt.Errorf("task %q not found in %s", id, dir)
 }
