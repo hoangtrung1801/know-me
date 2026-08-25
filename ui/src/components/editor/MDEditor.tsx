@@ -12,6 +12,7 @@ interface MDEditorComponentProps {
 	readOnly?: boolean;
 	className?: string;
 	height?: number | string;
+	ariaLabel?: string;
 	/** Kept for compatibility; Milkdown always renders one WYSIWYG surface. */
 	preview?: "edit" | "live" | "preview";
 }
@@ -30,6 +31,7 @@ const MDEditorComponent = forwardRef<MDEditorRef, MDEditorComponentProps>(
 			readOnly = false,
 			className = "",
 			height = 400,
+			ariaLabel = "Live Markdown editor",
 			preview,
 		},
 		ref,
@@ -125,7 +127,7 @@ const MDEditorComponent = forwardRef<MDEditorRef, MDEditorComponentProps>(
 				data-color-mode={isDark ? "dark" : "light"}
 				data-editor-readonly={readOnly || preview === "preview" ? "true" : "false"}
 				role="region"
-				aria-label={readOnly || preview === "preview" ? "Document preview" : "Live Markdown editor"}
+				aria-label={readOnly || preview === "preview" ? "Document preview" : ariaLabel}
 				style={editorStyle}
 			/>
 		);

@@ -12,6 +12,33 @@ test.afterAll(() => {
 });
 
 test.describe("Task Creation via UI", () => {
+	test("opens a clear and accessible task form", async ({ page }) => {
+		await page.goto(`${server.baseURL}/kanban`);
+		await page.getByRole("button", { name: /new task/i }).click();
+
+		await expect(page.getByLabel("Task title")).toBeVisible();
+		await expect(page.getByText("Task settings", { exact: true })).toBeVisible();
+		await expect(page.getByRole("button", { name: "Close create task" })).toBeVisible();
+		await expect(page.getByRole("button", { name: /(Maximize|Minimize) task form/ })).toBeVisible();
+
+		const descriptionEditor = page.getByLabel("Task description");
+		await expect(descriptionEditor).toBeVisible();
+		await expect(page.getByLabel("Implementation plan")).toBeVisible();
+		await expect(page.getByLabel("Implementation notes")).toBeVisible();
+		await expect(descriptionEditor).toHaveAttribute("style", /height: 280px/);
+	});
+
+	test("keeps the task form usable on mobile", async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto(`${server.baseURL}/kanban`);
+		await page.getByRole("button", { name: /new task/i }).click();
+
+		await expect(page.getByLabel("Task title")).toBeVisible();
+		await expect(page.getByText("Task settings", { exact: true })).toBeVisible();
+		await expect(page.getByRole("button", { name: "Create Task", exact: true })).toBeVisible();
+		await expect(page.getByRole("button", { name: "Close create task" })).toBeVisible();
+	});
+
 	test("creates task from kanban '+ New Task' button", async ({ page }) => {
 		await test.step("Navigate to kanban page", async () => {
 			await page.goto(`${server.baseURL}/kanban`);
@@ -26,7 +53,7 @@ test.describe("Task Creation via UI", () => {
 		});
 
 		await test.step("Click 'Create Task' to submit", async () => {
-			await page.getByRole("button", { name: "Create Task" }).click();
+			await page.getByRole("button", { name: "Create Task", exact: true }).click();
 		});
 
 		await test.step("Task appears on the kanban board", async () => {
@@ -57,7 +84,7 @@ test.describe("Task Creation via UI", () => {
 		});
 
 		await test.step("Submit the task", async () => {
-			await page.getByRole("button", { name: "Create Task" }).click();
+			await page.getByRole("button", { name: "Create Task", exact: true }).click();
 		});
 
 		await test.step("Task appears in the table", async () => {
