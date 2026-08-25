@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Plus, Archive, ChevronDown, FolderKanban, ListTodo, X } from "lucide-react";
+import { Plus, Archive, ChevronDown, FolderKanban, ListTodo, RefreshCw, X } from "lucide-react";
 import type { Task } from "@/ui/models/task";
 import { Board } from "../components/organisms";
 import { Button } from "../components/ui/button";
@@ -13,6 +13,7 @@ import {
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuLabel,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "../components/ui/DropdownMenu";
@@ -54,7 +55,10 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 	const isMobile = useIsMobile();
 	const projects = useWorkspaceProjects();
 	const [projectScope, setProjectScope] = useState("all");
-	const visibleTasks = projectScope === "all" ? tasks : tasks.filter((task) => projectScope === "global" ? !task.projectId : task.projectId === projectScope);
+	const isProjectFiltered = projectScope !== "all";
+	const visibleTasks = projectScope === "all"
+		? tasks
+		: tasks.filter((task) => projectScope === "global" ? !task.projectId : task.projectId === projectScope);
 	const [mobileWarningDismissed, setMobileWarningDismissed] = useState(() => {
 		return sessionStorage.getItem("kanban-mobile-warning-dismissed") === "true";
 	});
@@ -62,6 +66,7 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 	const [archiveResponse, setArchiveResponse] = useState<TaskLifecycleResponse | null>(null);
 	const [archiveError, setArchiveError] = useState<string | null>(null);
 	const [archiveLoading, setArchiveLoading] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 	const [archiveRequest, setArchiveRequest] = useState<{ generation: number; minimumAgeMs: number; label: string; ids?: readonly string[] } | null>(null);
 	const archiveGenerationRef = useRef(0);
 	const archiveInFlightRef = useRef(false);
@@ -69,6 +74,18 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 	const reconcileTasks = async () => {
 		const current = await api.getTasks();
 		onTasksUpdate(current);
+	};
+
+	const handleRefresh = async () => {
+		if (refreshing) return;
+		setRefreshing(true);
+		try {
+			await reconcileTasks();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to refresh tasks");
+		} finally {
+			setRefreshing(false);
+		}
 	};
 
 	const handleBatchArchivePreview = async (minimumAgeMs: number, label: string) => {
@@ -143,44 +160,83 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 				title="Kanban Board"
 				description="Move active work through your configured delivery stages."
 				context="Project work"
-				status={<span className="tabular-nums">{visibleTasks.length} {visibleTasks.length === 1 ? "task" : "tasks"}</span>}
+				status={
+					<span className="tabular-nums">
+						{isProjectFiltered
+							? `Showing ${visibleTasks.length} of ${tasks.length} tasks`
+							: `${visibleTasks.length} ${visibleTasks.length === 1 ? "task" : "tasks"}`}
+					</span>
+				}
 				actions={
-					<div className="flex items-center gap-2 shrink-0">
-						<div className="relative">
-							<FolderKanban className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-							<Select value={projectScope} onValueChange={setProjectScope}>
-								<SelectTrigger aria-label="Filter Kanban by project" className="h-11 min-w-40 border-border/70 bg-muted/30 pl-8 pr-2 text-xs font-medium shadow-none transition-colors hover:bg-muted/55 focus:ring-1 sm:h-8">
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent align="start">
-									<SelectItem value="all">All projects</SelectItem>
-									<SelectItem value="global">Global</SelectItem>
-									{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
-								</SelectContent>
-							</Select>
+					<div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+						<div className="flex min-w-0 basis-full items-center gap-2 sm:basis-auto">
+							<span className="shrink-0 text-xs font-medium text-muted-foreground">Project</span>
+							<div className="relative min-w-0 flex-1 sm:flex-none">
+								<FolderKanban className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+								<Select value={projectScope} onValueChange={setProjectScope}>
+									<SelectTrigger aria-label="Filter Kanban by project" className="h-11 w-full min-w-0 border-border/70 bg-muted/30 pl-8 pr-2 text-xs font-medium shadow-none transition-colors hover:bg-muted/55 focus:ring-1 sm:h-8 sm:min-w-44">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent align="start">
+										<SelectItem value="all">All projects</SelectItem>
+										<SelectItem value="global">Global</SelectItem>
+										{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
+									</SelectContent>
+								</Select>
+							</div>
+							{isProjectFiltered && (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									onClick={() => setProjectScope("all")}
+									aria-label="Clear project filter"
+									className="h-11 shrink-0 gap-1 px-2 text-muted-foreground hover:text-foreground sm:h-8"
+								>
+									<X className="h-3.5 w-3.5" />
+									<span className="hidden sm:inline">Clear</span>
+								</Button>
+							)}
 						</div>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={handleRefresh}
+							disabled={refreshing}
+							aria-label="Refresh tasks"
+							aria-busy={refreshing}
+							title="Refresh tasks"
+							className="h-11 w-11 shrink-0 gap-1.5 px-2 text-muted-foreground hover:text-foreground sm:h-8 sm:w-auto sm:px-3"
+						>
+							<RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+							<span className="hidden text-sm sm:inline">Refresh</span>
+						</Button>
 						{/* Batch Archive Dropdown */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
-									variant="ghost"
+									variant="outline"
 									size="sm"
 									aria-label="Archive completed Tasks"
-									className="h-11 gap-1.5 text-muted-foreground hover:text-foreground sm:h-8"
+									className="h-11 min-w-0 flex-1 gap-1.5 px-3 text-muted-foreground hover:text-foreground sm:h-8 sm:flex-none"
 								>
 									<Archive className="w-4 h-4" />
-									<span className="hidden sm:inline text-sm">Archive</span>
+									<span className="text-sm">Archive completed</span>
 									<ChevronDown className="w-3 h-3" />
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
+								<DropdownMenuLabel className="px-2 text-xs font-normal text-muted-foreground">
+									Archive completed before
+								</DropdownMenuLabel>
 								{BATCH_ARCHIVE_OPTIONS.map((option) => (
-										<DropdownMenuItem
-											key={option.value}
-											onClick={() => handleBatchArchivePreview(option.value, option.label)}
-										>
-											<span className="flex-1">Done before {option.label}</span>
-										</DropdownMenuItem>
+									<DropdownMenuItem
+										key={option.value}
+										onClick={() => handleBatchArchivePreview(option.value, option.label)}
+									>
+										<span className="flex-1">Completed before {option.label}</span>
+									</DropdownMenuItem>
 								))}
 							</DropdownMenuContent>
 						</DropdownMenu>
@@ -189,10 +245,10 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 							onClick={onNewTask}
 							size="sm"
 							aria-label="New Task"
-							className="h-11 gap-1.5 sm:h-8"
+							className="h-11 min-w-0 flex-1 gap-1.5 px-3 sm:h-8 sm:flex-none"
 						>
 							<Plus className="w-4 h-4" />
-							<span className="hidden sm:inline text-sm">New Task</span>
+							<span className="text-sm">New task</span>
 						</Button>
 					</div>
 				}
@@ -200,17 +256,17 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 
 			<PageContent size="full" className="flex min-h-0 flex-1 flex-col overflow-hidden py-5">
 				{isMobile && !mobileWarningDismissed && (
-					<div className="mb-4 flex shrink-0 items-center gap-3 rounded-md bg-yellow-50/70 px-3 py-2 text-sm text-yellow-800 dark:bg-yellow-900/15 dark:text-yellow-200">
+					<div role="note" className="mb-4 flex shrink-0 items-center gap-3 rounded-lg border border-amber-200/80 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
 						<ListTodo className="h-4 w-4 shrink-0" />
 						<span className="flex-1">
-							Drag and drop can be unreliable on mobile.{" "}
-							<a href="/tasks" className="font-medium underline underline-offset-2">Use Tasks instead</a>.
+							For smoother drag-and-drop on mobile, open the Tasks list.{" "}
+							<a href="/tasks" className="font-medium underline underline-offset-2">Open Tasks</a>.
 						</span>
 						<button
 							type="button"
 							onClick={dismissMobileWarning}
 							aria-label="Dismiss mobile Kanban notice"
-							className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-yellow-700 transition-colors hover:bg-yellow-100 hover:text-yellow-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:text-yellow-300 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-100"
+							className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-amber-800 transition-colors hover:bg-amber-100 hover:text-amber-950 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:text-amber-200 dark:hover:bg-amber-900/40 dark:hover:text-amber-50"
 						>
 							<X className="h-3.5 w-3.5" />
 						</button>

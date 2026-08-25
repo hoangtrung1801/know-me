@@ -41,7 +41,7 @@ test.describe("Task Archive", () => {
 		await test.step("Open the archive preview", async () => {
 			await page.goto(`${server.baseURL}/kanban`);
 			await page.getByRole("button", { name: "Archive completed Tasks" }).click();
-			await page.getByRole("menuitem", { name: "Done before now" }).click();
+			await page.getByRole("menuitem", { name: "Completed before now" }).click();
 		});
 
 		const dialog = page.getByTestId("task-lifecycle-dialog");

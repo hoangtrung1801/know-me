@@ -33,6 +33,18 @@ test.describe("Kanban Board", () => {
 		});
 	});
 
+	test("refreshes tasks on demand", async ({ page }) => {
+		await page.goto(`${server.baseURL}/kanban`);
+
+		const refreshButton = page.getByRole("button", { name: "Refresh tasks" });
+		await expect(refreshButton).toBeVisible();
+
+		server.cli('task create "Task loaded by refresh" -d "Appears after a manual refresh"');
+		await refreshButton.click();
+
+		await expect(page.getByText("Task loaded by refresh", { exact: true })).toBeVisible();
+	});
+
 	test("displays tasks created via CLI", async ({ page }) => {
 		await test.step("Create task via CLI", async () => {
 			server.cli('task create "Kanban Visible Task" -d "Should appear on board"');
@@ -63,6 +75,21 @@ test.describe("Kanban Board", () => {
 		await test.step("Task detail sheet opens with description", async () => {
 			await expect(page.getByRole("heading", { name: "Description" })).toBeVisible();
 		});
+	});
+
+	test("explains the active project filter and lets users clear it", async ({ page }) => {
+		await page.goto(`${server.baseURL}/kanban`);
+
+		const projectFilter = page.getByRole("combobox", { name: "Filter Kanban by project" });
+		await projectFilter.click();
+		await page.getByRole("option", { name: "Global" }).click();
+
+		const pageStatus = page.locator('[data-page-header] [role="status"]');
+		await expect(pageStatus).toContainText(/Showing \d+ of \d+ tasks/);
+		await expect(page.getByRole("button", { name: "Clear project filter" })).toBeVisible();
+
+		await page.getByRole("button", { name: "Clear project filter" }).click();
+		await expect(pageStatus).not.toContainText("Showing");
 	});
 
 	test("can create task from board UI", async ({ page }) => {

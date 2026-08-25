@@ -258,28 +258,32 @@ export default function TaskCreateForm({
 
 	// Header component (shared)
 	const Header = (
-		<div className="flex items-center justify-between gap-2 p-3 sm:p-4 border-b bg-green-700">
-			<div className="flex-1 min-w-0">
-				<span className="text-green-100 text-xs font-medium uppercase tracking-wide">New Task</span>
+		<div className="flex items-start justify-between gap-4 border-b bg-background px-4 py-3 text-foreground sm:px-6">
+			<div className="min-w-0 flex-1">
+				<label htmlFor="task-create-title" className="text-sm font-semibold">New task</label>
 				<input
 					ref={titleInputRef}
+					id="task-create-title"
 					type="text"
 					value={title}
 					onChange={(e) => setTitle(e.target.value)}
 					placeholder="Enter task title..."
-					className="w-full text-lg font-semibold bg-white/20 text-white placeholder-white/60 border-0 rounded px-2 py-1 mt-1 focus:outline-none focus:ring-2 focus:ring-white/50"
+					aria-label="Task title"
+					className="mt-2 h-11 w-full rounded-md border border-input bg-muted/30 px-3 text-base font-medium text-foreground shadow-none outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
 					disabled={saving}
 				/>
 			</div>
-			<div className="flex items-center gap-1 shrink-0">
+			<div className="flex shrink-0 items-center gap-1">
 				{/* Hide maximize button on mobile - only sheet mode available */}
 				{!isMobile && (
 					<Button
+						type="button"
 						variant="ghost"
 						size="icon"
 						onClick={toggleTaskCreateLayout}
-						className="h-8 w-8 text-foreground hover:text-foreground"
-						title={isMaximized ? "Minimize" : "Maximize"}
+						className="h-10 w-10 text-muted-foreground hover:bg-accent hover:text-foreground"
+						aria-label={isMaximized ? "Minimize task form" : "Maximize task form"}
+						title={isMaximized ? "Minimize task form" : "Maximize task form"}
 					>
 						{isMaximized ? (
 							<Minimize2 className="w-4 h-4" />
@@ -289,11 +293,13 @@ export default function TaskCreateForm({
 					</Button>
 				)}
 				<Button
+					type="button"
 					variant="ghost"
 					size="icon"
 					onClick={onClose}
-					className="h-8 w-8 text-foreground hover:text-foreground"
-					title="Close"
+					className="h-10 w-10 text-muted-foreground hover:bg-accent hover:text-foreground"
+					aria-label="Close create task"
+					title="Close create task"
 				>
 					<X className="w-4 h-4" />
 				</Button>
@@ -319,27 +325,29 @@ export default function TaskCreateForm({
 
 	// Main content section (shared)
 	const MainContent = (
-		<div className="p-3 sm:p-6 space-y-3 sm:space-y-6">
+		<div className="space-y-5 p-4 sm:space-y-6 sm:p-6">
 			{/* Description */}
 			<section>
-				<div className="flex items-center gap-2 mb-3">
+				<div className="mb-3 flex items-center gap-2">
 					<AlignLeft className="w-5 h-5 text-muted-foreground" />
-					<h3 className="font-semibold text-sm text-muted-foreground">Description</h3>
+					<h3 className="text-sm font-semibold text-foreground">Description</h3>
 				</div>
 				<MDEditor
 					markdown={description}
 					onChange={setDescription}
 					placeholder="Add a more detailed description..."
+					ariaLabel="Task description"
+					height={280}
 					readOnly={saving}
 				/>
 			</section>
 
 			{/* Acceptance Criteria */}
 			<section>
-				<div className="flex items-center justify-between mb-3">
+				<div className="mb-3 flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<ClipboardCheck className="w-5 h-5 text-muted-foreground" />
-						<h3 className="font-semibold text-sm text-muted-foreground">Acceptance Criteria</h3>
+						<h3 className="text-sm font-semibold text-foreground">Acceptance Criteria</h3>
 						{acceptanceCriteria.length > 0 && (
 							<span className="text-xs text-muted-foreground">
 								({acceptanceCriteria.length})
@@ -365,8 +373,9 @@ export default function TaskCreateForm({
 							<button
 								type="button"
 								onClick={() => handleACDelete(ac.id)}
-								className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-1 transition-all"
-								title="Delete"
+								aria-label={`Remove acceptance criterion: ${ac.text}`}
+								className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+								title="Remove acceptance criterion"
 							>
 								<Trash2 className="w-4 h-4" />
 							</button>
@@ -423,7 +432,7 @@ export default function TaskCreateForm({
 					<button
 						type="button"
 						onClick={() => setAddingAC(true)}
-						className="mt-2 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-2 rounded-lg transition-colors w-full"
+						className="mt-2 flex min-h-10 w-full items-center gap-1 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 						disabled={saving}
 					>
 						<Plus className="w-4 h-4" />
@@ -434,30 +443,34 @@ export default function TaskCreateForm({
 
 			{/* Implementation Plan */}
 			<section>
-				<div className="flex items-center gap-2 mb-3">
+				<div className="mb-3 flex items-center gap-2">
 					<FileText className="w-5 h-5 text-muted-foreground" />
-					<h3 className="font-semibold text-sm text-muted-foreground">Implementation Plan</h3>
+					<h3 className="text-sm font-semibold text-foreground">Implementation Plan</h3>
 					<span className="text-xs text-muted-foreground">(optional)</span>
 				</div>
 				<MDEditor
 					markdown={implementationPlan}
 					onChange={setImplementationPlan}
 					placeholder="Describe how you plan to implement this task..."
+					ariaLabel="Implementation plan"
+					height={220}
 					readOnly={saving}
 				/>
 			</section>
 
 			{/* Implementation Notes */}
 			<section>
-				<div className="flex items-center gap-2 mb-3">
+				<div className="mb-3 flex items-center gap-2">
 					<StickyNote className="w-5 h-5 text-muted-foreground" />
-					<h3 className="font-semibold text-sm text-muted-foreground">Implementation Notes</h3>
+					<h3 className="text-sm font-semibold text-foreground">Implementation Notes</h3>
 					<span className="text-xs text-muted-foreground">(optional)</span>
 				</div>
 				<MDEditor
 					markdown={implementationNotes}
 					onChange={setImplementationNotes}
 					placeholder="Add notes, observations, or any other relevant information..."
+					ariaLabel="Implementation notes"
+					height={220}
 					readOnly={saving}
 				/>
 			</section>
@@ -466,11 +479,16 @@ export default function TaskCreateForm({
 
 	// Sidebar component (shared)
 	const SidebarContent = (
-		<div className="p-4 space-y-6">
-			<div className="space-y-2">
-				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Project</Label>
+		<div className="p-4 sm:p-5">
+			<div className="mb-5 border-b border-border/70 pb-4">
+				<h2 className="text-sm font-semibold text-foreground">Task settings</h2>
+				<p className="mt-1 text-xs leading-5 text-muted-foreground">Set the task’s home, ownership, and workflow state.</p>
+			</div>
+			<div className="space-y-4">
+			<div className="space-y-1.5">
+				<Label className="text-xs font-medium text-foreground">Project</Label>
 				<Select value={projectScope} onValueChange={setProjectScope} disabled={saving}>
-					<SelectTrigger className="w-full"><SelectValue placeholder="Select project" /></SelectTrigger>
+					<SelectTrigger className="h-10 w-full"><SelectValue placeholder="Select project" /></SelectTrigger>
 					<SelectContent>
 						<SelectItem value="global">Global</SelectItem>
 						{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
@@ -478,9 +496,10 @@ export default function TaskCreateForm({
 				</Select>
 			</div>
 
+			<div className="grid grid-cols-2 gap-3">
 			{/* Status */}
-			<div className="space-y-2">
-				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+			<div className="space-y-1.5">
+				<Label className="text-xs font-medium text-foreground">
 					Status
 				</Label>
 				<Select
@@ -488,7 +507,7 @@ export default function TaskCreateForm({
 					onValueChange={(value) => setStatus(value as TaskStatus)}
 					disabled={saving}
 				>
-					<SelectTrigger className={cn("w-full", getStatusBadgeClasses(status, configStatusColors))}>
+					<SelectTrigger className={cn("h-10 w-full", getStatusBadgeClasses(status, configStatusColors))}>
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -502,8 +521,8 @@ export default function TaskCreateForm({
 			</div>
 
 			{/* Priority */}
-			<div className="space-y-2">
-				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+			<div className="space-y-1.5">
+				<Label className="text-xs font-medium text-foreground">
 					Priority
 				</Label>
 				<Select
@@ -511,7 +530,7 @@ export default function TaskCreateForm({
 					onValueChange={(value) => setPriority(value as TaskPriority)}
 					disabled={saving}
 				>
-					<SelectTrigger className={cn("w-full", priorityColors[priority])}>
+					<SelectTrigger className={cn("h-10 w-full", priorityColors[priority])}>
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -523,10 +542,11 @@ export default function TaskCreateForm({
 					</SelectContent>
 				</Select>
 			</div>
+			</div>
 
 			{/* Assignee */}
-			<div className="space-y-2">
-				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+			<div className="space-y-1.5">
+				<Label className="text-xs font-medium text-foreground">
 					Assignee
 				</Label>
 				<AssigneeDropdown
@@ -539,8 +559,8 @@ export default function TaskCreateForm({
 			</div>
 
 			{/* Labels */}
-			<div className="space-y-2">
-				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+			<div className="space-y-1.5">
+				<Label className="text-xs font-medium text-foreground">
 					Labels
 				</Label>
 				<div className="flex flex-wrap gap-1">
@@ -594,9 +614,9 @@ export default function TaskCreateForm({
 					</div>
 				) : (
 					<Button
-						variant="ghost"
+						variant="outline"
 						size="sm"
-						className="w-full justify-start text-muted-foreground"
+						className="h-9 w-full justify-start text-muted-foreground"
 						onClick={() => setAddingLabel(true)}
 						disabled={saving}
 					>
@@ -607,8 +627,8 @@ export default function TaskCreateForm({
 			</div>
 
 			{/* Parent Task */}
-			<div className="space-y-2">
-				<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+			<div className="space-y-1.5">
+				<Label className="text-xs font-medium text-foreground">
 					Parent Task
 				</Label>
 				<Popover open={parentComboOpen} onOpenChange={setParentComboOpen}>
@@ -617,7 +637,7 @@ export default function TaskCreateForm({
 							variant="outline"
 							role="combobox"
 							aria-expanded={parentComboOpen}
-							className="w-full justify-between h-auto min-h-10 py-2"
+							className="min-h-10 w-full justify-between py-2"
 							disabled={saving}
 							title={parentTask ? `#${parentTask.id} - ${parentTask.title}` : undefined}
 						>
@@ -684,28 +704,33 @@ export default function TaskCreateForm({
 					</PopoverContent>
 				</Popover>
 			</div>
+			</div>
 		</div>
 	);
 
 	// Footer component (shared)
 	const Footer = (
-		<div className="border-t px-3 sm:px-6 py-3 sm:py-4 bg-muted/30 flex justify-end gap-2 sm:gap-3">
-			<Button
-				type="button"
-				variant="ghost"
-				onClick={onClose}
-				disabled={saving}
-			>
-				Cancel
-			</Button>
-			<Button
-				type="button"
-				onClick={handleSubmit}
-				className="bg-green-700 hover:bg-green-800 text-white"
-				disabled={saving || success || !title.trim()}
-			>
-				{saving ? "Creating..." : "Create Task"}
-			</Button>
+		<div className="flex items-center justify-between gap-4 border-t bg-background px-4 py-3 sm:px-6 sm:py-4">
+			<p className="hidden text-xs text-muted-foreground sm:block">You can add optional details later.</p>
+			<div className="ml-auto flex items-center gap-2 sm:gap-3">
+				<Button
+					type="button"
+					variant="ghost"
+					onClick={onClose}
+					disabled={saving}
+					className="h-10"
+				>
+					Cancel
+				</Button>
+				<Button
+					type="button"
+					onClick={handleSubmit}
+					className="h-10 min-w-32 bg-primary text-primary-foreground hover:bg-primary/90"
+					disabled={saving || success || !title.trim()}
+				>
+					{saving ? "Creating..." : "Create Task"}
+				</Button>
+			</div>
 		</div>
 	);
 
@@ -775,19 +800,24 @@ export default function TaskCreateForm({
 							<div className="flex-1 flex flex-col overflow-hidden">
 								{/* Sidebar on top - compact layout */}
 								<div className="shrink-0 border-b bg-muted/20">
-									<div className="p-3 sm:p-4 space-y-3">
+									<div className="p-3 sm:p-4">
+										<div className="mb-3">
+											<h2 className="text-sm font-semibold text-foreground">Task settings</h2>
+											<p className="mt-1 text-xs text-muted-foreground">Set the task’s home, ownership, and workflow state.</p>
+										</div>
+										<div className="space-y-3">
 										{/* Row 1: Status, Priority, Assignee */}
 										<div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-											<div className="space-y-1">
-												<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-													Status
-												</Label>
+												<div className="space-y-1.5">
+													<Label className="text-xs font-medium text-foreground">
+														Status
+													</Label>
 												<Select
 													value={status}
 													onValueChange={(value) => setStatus(value as TaskStatus)}
 													disabled={saving}
 												>
-													<SelectTrigger className={cn("w-full h-9", getStatusBadgeClasses(status, configStatusColors))}>
+													<SelectTrigger className={cn("w-full h-10", getStatusBadgeClasses(status, configStatusColors))}>
 														<SelectValue />
 													</SelectTrigger>
 													<SelectContent>
@@ -799,16 +829,16 @@ export default function TaskCreateForm({
 													</SelectContent>
 												</Select>
 											</div>
-											<div className="space-y-1">
-												<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-													Priority
-												</Label>
+												<div className="space-y-1.5">
+													<Label className="text-xs font-medium text-foreground">
+														Priority
+													</Label>
 												<Select
 													value={priority}
 													onValueChange={(value) => setPriority(value as TaskPriority)}
 													disabled={saving}
 												>
-													<SelectTrigger className={cn("w-full h-9", priorityColors[priority])}>
+													<SelectTrigger className={cn("w-full h-10", priorityColors[priority])}>
 														<SelectValue />
 													</SelectTrigger>
 													<SelectContent>
@@ -820,9 +850,9 @@ export default function TaskCreateForm({
 													</SelectContent>
 												</Select>
 											</div>
-											<div className="space-y-1">
-												<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-													Assignee
+												<div className="space-y-1.5">
+													<Label className="text-xs font-medium text-foreground">
+														Assignee
 												</Label>
 												<AssigneeDropdown
 													value={assignee}
@@ -838,8 +868,8 @@ export default function TaskCreateForm({
 										<div className="flex items-start gap-4 flex-wrap">
 											{/* Labels */}
 											<div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-												<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
-													Labels:
+														<Label className="text-xs font-medium text-foreground shrink-0">
+															Labels
 												</Label>
 												<div className="flex flex-wrap gap-1 flex-1">
 													{labels.map((label) => (
@@ -858,7 +888,7 @@ export default function TaskCreateForm({
 														<Button
 															variant="ghost"
 															size="sm"
-															className="h-6 px-2 text-xs text-muted-foreground"
+																	className="h-8 px-2 text-xs text-muted-foreground"
 															onClick={() => setAddingLabel(true)}
 														>
 															<Plus className="w-3 h-3 mr-1" />
@@ -902,8 +932,8 @@ export default function TaskCreateForm({
 
 											{/* Parent Task - compact */}
 											<div className="flex items-center gap-2 shrink-0">
-												<Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
-													Parent:
+															<Label className="text-xs font-medium text-foreground shrink-0">
+															Parent task
 												</Label>
 												<Popover open={parentComboOpen} onOpenChange={setParentComboOpen}>
 													<PopoverTrigger asChild>
@@ -911,7 +941,7 @@ export default function TaskCreateForm({
 															variant="outline"
 															role="combobox"
 															size="sm"
-															className="h-7 justify-between min-w-[120px] max-w-[250px]"
+																className="h-9 justify-between min-w-[120px] max-w-[250px]"
 															disabled={saving}
 															title={parentTask ? `#${parentTask.id} - ${parentTask.title}` : undefined}
 														>
@@ -977,7 +1007,8 @@ export default function TaskCreateForm({
 										</div>
 									</div>
 								</div>
-								{/* Main Content below */}
+							</div>
+							{/* Main Content below */}
 								<ScrollArea className="flex-1">
 									{MainContent}
 								</ScrollArea>
