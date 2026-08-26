@@ -1,5 +1,5 @@
 .git
-.knowns
+.known-me
 .codex
 .claude
 .DS_Store
@@ -11,8 +11,10 @@ releases/
 release/
 tmp/
 
+knownme
 knowns
 knowns-embed
+knownme.exe
 knowns.exe
 runtimequeue.test.exe
 
@@ -25,7 +27,7 @@ ui/test-results/
 playwright-report/
 test-results/
 
-npm/knowns-*/knowns
-npm/knowns-*/knowns.exe
+npm/knowns-*/knownme
+npm/knowns-*/knownme.exe
 npm/knowns-*/knowns-embed
 npm/knowns-*/knowns-embed.exe

@@ -65,7 +65,7 @@ func TestYAMLAdapterRouting(t *testing.T) {
 		})
 	}
 
-	for _, path := range []string{".knowns/config.yaml", `C:\repo\.knowns\config.yml`} {
+	for _, path := range []string{".known-me/config.yaml", `C:\repo\.known-me\config.yml`} {
 		t.Run(path+" hard excluded", func(t *testing.T) {
 			if lang, ok := registry.ForPath(path); ok {
 				t.Fatalf("ForPath(%q) = %q, want no route", path, lang.ID)
@@ -126,7 +126,7 @@ func TestYAMLAdapterRuntimeMetadata(t *testing.T) {
 	}
 
 	guide := adapter.InstallGuide()
-	if guide.KnownsCmd != "knowns lsp install yaml" || guide.Command != "npm install -g yaml-language-server@"+yamlLanguageServerVersion || guide.URL == "" {
+	if guide.KnownsCmd != "knownme lsp install yaml" || guide.Command != "npm install -g yaml-language-server@"+yamlLanguageServerVersion || guide.URL == "" {
 		t.Fatalf("InstallGuide() = %#v", guide)
 	}
 }

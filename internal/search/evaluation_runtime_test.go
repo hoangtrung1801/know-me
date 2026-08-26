@@ -9,7 +9,7 @@ import (
 )
 
 func TestSemanticEvaluationRuntimeIdentityIsStableAndNonSecret(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("evaluation-runtime"); err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +39,7 @@ func TestSemanticEvaluationRuntimeIdentityIsStableAndNonSecret(t *testing.T) {
 }
 
 func TestRequirePinnedSemanticEvaluationRuntimeRejectsMismatchBeforeFallback(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("evaluation-runtime"); err != nil {
 		t.Fatal(err)
 	}

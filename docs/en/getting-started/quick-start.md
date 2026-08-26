@@ -7,9 +7,9 @@ Run these commands from the repository you want Know-Me to manage.
 ## 1. Initialize the project
 
 ```bash
-knowns init
+knownme init
 # or, without a global install:
-npx knowns init
+npx knownme init
 ```
 
 The init flow configures:
@@ -20,12 +20,12 @@ The init flow configures:
 - semantic search
 - embedding model
 
-`knowns init` creates the local Know-Me project store and lightweight compatibility shims. Runtime-critical AI guidance comes from MCP `initial` and on-demand `help`, so those files should stay small. AI platform integrations such as MCP configs, skills, and runtime hooks are configured separately with `knowns setup <target> --global` for user-level setup, or `knowns setup <target>` when you intentionally want repo-local integration files.
+`knownme init` creates the local Know-Me project store and lightweight compatibility shims. Runtime-critical AI guidance comes from MCP `initial` and on-demand `help`, so those files should stay small. AI platform integrations such as MCP configs, skills, and runtime hooks are configured separately with `knownme setup <target> --global` for user-level setup, or `knownme setup <target>` when you intentionally want repo-local integration files.
 
 ## 2. Create a task
 
 ```bash
-knowns task create "Setup project" -d "Initialize project with Know-Me"
+knownme task create "Setup project" -d "Initialize project with Know-Me"
 ```
 
 Tasks are the main unit of planned work. They give both people and AI assistants a concrete target.
@@ -33,7 +33,7 @@ Tasks are the main unit of planned work. They give both people and AI assistants
 ## 3. Create a document
 
 ```bash
-knowns doc create "Architecture" -d "System overview" -f architecture
+knownme doc create "Architecture" -d "System overview" -f architecture
 ```
 
 Docs hold durable project knowledge. They are better than repeating the same context in every AI chat.
@@ -41,8 +41,8 @@ Docs hold durable project knowledge. They are better than repeating the same con
 ## 4. Check the project
 
 ```bash
-knowns search "architecture" --plain
-knowns validate --plain
+knownme search "architecture" --plain
+knownme validate --plain
 ```
 
 Search confirms retrieval can find project context. Validate checks the Know-Me project structure before you build more workflow on top of it.
@@ -50,7 +50,7 @@ Search confirms retrieval can find project context. Validate checks the Know-Me 
 ## 5. Open the Web UI
 
 ```bash
-knowns browser --open
+knownme browser --open
 ```
 
 The Web UI shows the same project state as the CLI, including tasks, docs, graph views, config, and chat workflows.
@@ -60,12 +60,12 @@ The Web UI shows the same project state as the CLI, including tasks, docs, graph
 Use setup for the platform you actually use:
 
 ```bash
-knowns setup codex --global
-knowns setup claude --global
-knowns setup agents
+knownme setup codex --global
+knownme setup claude --global
+knownme setup agents
 ```
 
-Use `--global` for your normal personal assistant setup so Know-Me updates user-level MCP config, skills, and runtime hooks across repositories. Use `knowns setup agents` when you only need repo-local compatibility shims such as `AGENTS.md`.
+Use `--global` for your normal personal assistant setup so Know-Me updates user-level MCP config, skills, and runtime hooks across repositories. Use `knownme setup agents` when you only need repo-local compatibility shims such as `AGENTS.md`.
 
 After setup, agent workflows can use the lightweight shim files, MCP config, and skills for that platform. Claude uses `/kn-*` skill commands; Codex uses `$kn-*` skill commands.
 
@@ -74,16 +74,16 @@ See [Platforms](../integrations/platforms.md) for supported setup targets.
 ## 7. Sync generated artifacts when needed
 
 ```bash
-knowns sync
-knowns update
+knownme sync
+knownme update
 ```
 
-Use `knowns sync` after cloning, after changing selected platforms, or after updating the CLI. Use `knowns update` when you want Know-Me to refresh generated project artifacts to the current CLI behavior.
+Use `knownme sync` after cloning, after changing selected platforms, or after updating the CLI. Use `knownme update` when you want Know-Me to refresh generated project artifacts to the current CLI behavior.
 
 ## 8. Open the Web UI again later
 
 ```bash
-knowns browser --open
+knownme browser --open
 ```
 
 ## What you have now

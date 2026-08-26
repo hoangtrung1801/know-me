@@ -31,20 +31,20 @@ Nội dung memory thường viết bằng tiếng Anh vì AI đọc trực tiế
 ## Lệnh
 
 ```bash
-knowns memory add "We use repository pattern" --category pattern
-knowns memory list --plain
-knowns memory <id> --plain
+knownme memory add "We use repository pattern" --category pattern
+knownme memory list --plain
+knownme memory <id> --plain
 ```
 
 Memory category `decision` là legacy và write mới sẽ bị từ chối. Record cũ vẫn đọc được cho tới khi migration đã review có replacement được verify, accepted, current và luồng consumption của Decision đã active. Lựa chọn architecture hoặc workflow bền vững phải dùng first-class System Decision:
 
 ```bash
-knowns decision create "Use Postgres for metadata"
-knowns decision link <id> --source @doc/architecture/storage --task <done-task-id>
-knowns decision accept <id>
+knownme decision create "Use Postgres for metadata"
+knownme decision link <id> --source @doc/architecture/storage --task <done-task-id>
+knownme decision accept <id>
 ```
 
-Dùng `knowns decision migrate preview --plain` để lấy inventory read-only. Mỗi lần chỉ apply một resolution đã review rõ ràng; dùng `knowns decision migrate rollback <memory-id>` để hoàn tác migration an toàn.
+Dùng `knownme decision migrate preview --plain` để lấy inventory read-only. Mỗi lần chỉ apply một resolution đã review rõ ràng; dùng `knownme decision migrate rollback <memory-id>` để hoàn tác migration an toàn.
 
 ## Xem thêm
 

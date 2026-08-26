@@ -30,9 +30,9 @@ func (i listItem) FilterValue() string { return i.title + " " + i.id }
 
 type listItemDelegate struct{}
 
-func (d listItemDelegate) Height() int                               { return 2 }
-func (d listItemDelegate) Spacing() int                              { return 0 }
-func (d listItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd   { return nil }
+func (d listItemDelegate) Height() int                             { return 2 }
+func (d listItemDelegate) Spacing() int                            { return 0 }
+func (d listItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d listItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
 	li, ok := item.(listItem)
 	if !ok {

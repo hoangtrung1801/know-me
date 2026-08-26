@@ -11,14 +11,48 @@ func TestGlobalRootPathPrefersHOMEOverride(t *testing.T) {
 	t.Setenv("HOME", home)
 
 	got := GlobalRootPath()
-	want := filepath.Join(home, ".knowns")
+	want := filepath.Join(home, ".known-me")
 	if got != want {
 		t.Fatalf("GlobalRootPath() = %q, want %q", got, want)
 	}
 }
 
+func TestFindProjectRootUsesKnownMeDirectory(t *testing.T) {
+	repo := t.TempDir()
+	storeRoot := filepath.Join(repo, ".known-me")
+	if err := os.MkdirAll(storeRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(storeRoot, "config.json"), []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := FindProjectRoot(filepath.Join(repo, "nested"))
+	if err != nil {
+		t.Fatalf("FindProjectRoot returned error: %v", err)
+	}
+	if got != storeRoot {
+		t.Fatalf("FindProjectRoot() = %q, want %q", got, storeRoot)
+	}
+}
+
+func TestFindProjectRootRejectsLegacyKnownsDirectory(t *testing.T) {
+	repo := t.TempDir()
+	storeRoot := filepath.Join(repo, ".knowns")
+	if err := os.MkdirAll(storeRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(storeRoot, "config.json"), []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := FindProjectRoot(filepath.Join(repo, "nested")); err == nil {
+		t.Fatal("FindProjectRoot accepted the legacy .knowns directory")
+	}
+}
+
 func TestSemanticDBWritableOpensExistingIndex(t *testing.T) {
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	if err := os.MkdirAll(filepath.Join(root, ".search"), 0o755); err != nil {
 		t.Fatalf("mkdir search dir: %v", err)
 	}

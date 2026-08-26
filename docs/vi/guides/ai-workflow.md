@@ -223,23 +223,23 @@ Nếu runtime không có skills, dùng CLI trực tiếp.
 
 ```bash
 # Load context
-knowns doc list --plain
-knowns doc "readme" --plain --smart
+knownme doc list --plain
+knownme doc "readme" --plain --smart
 
 # Nhận task
-knowns task edit 42 -s in-progress -a @me
-knowns time start 42
+knownme task edit 42 -s in-progress -a @me
+knownme time start 42
 
 # Thêm plan
-knowns task edit 42 --plan '1. Research\n2. Implement\n3. Test'
+knownme task edit 42 --plan '1. Research\n2. Implement\n3. Test'
 
 # Check AC và thêm notes
-knowns task edit 42 --check-ac 1
-knowns task edit 42 --append-notes "Completed feature X"
+knownme task edit 42 --check-ac 1
+knownme task edit 42 --append-notes "Completed feature X"
 
 # Xong
-knowns time stop
-knowns task edit 42 -s done
+knownme time stop
+knownme task edit 42 -s done
 ```
 
 ## Tách session khi cần

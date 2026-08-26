@@ -51,8 +51,8 @@ main() {
 
     removed=0
 
-    if remove_path "${INSTALL_DIR}/knowns"; then
-        success "Removed ${INSTALL_DIR}/knowns"
+    if remove_path "${INSTALL_DIR}/knownme"; then
+        success "Removed ${INSTALL_DIR}/knownme"
         removed=1
     fi
 
@@ -75,7 +75,7 @@ main() {
 
     printf "\n"
     success "Know-Me CLI uninstall complete"
-    info "Project folders and .knowns data were left untouched"
+    info "Project folders and .known-me data were left untouched"
     printf "\n"
 }
 

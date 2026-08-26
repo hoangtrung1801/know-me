@@ -155,7 +155,7 @@ func (r *Registry) Language(id string) (Language, bool) {
 }
 
 // ForPath resolves an explicit file request. Auto-detection-only exclusions
-// do not apply here, but .knowns remains a hard routing boundary.
+// do not apply here, but .known-me remains a hard routing boundary.
 func (r *Registry) ForPath(path string) (Language, bool) {
 	return r.matchPath(path, false)
 }
@@ -171,7 +171,7 @@ func (r *Registry) HasExtension(path string) bool {
 }
 
 func (r *Registry) matchPath(path string, detection bool) (Language, bool) {
-	if hasPathSegment(path, ".knowns") {
+	if hasPathSegment(path, ".known-me") {
 		return Language{}, false
 	}
 

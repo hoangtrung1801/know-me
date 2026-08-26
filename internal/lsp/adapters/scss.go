@@ -27,7 +27,7 @@ func (a *ScssAdapter) CheckPrerequisites(ctx context.Context) error {
 	return requireMinVersion(output, "Node.js", 18, 0)
 }
 func (a *ScssAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{Command: "npm install -g some-sass-language-server", KnownsCmd: "knowns lsp install scss", Notes: "Requires Node.js 18+; handles .scss, .sass, and .css files"}
+	return lsp.InstallGuide{Command: "npm install -g some-sass-language-server", KnownsCmd: "knownme lsp install scss", Notes: "Requires Node.js 18+; handles .scss, .sass, and .css files"}
 }
 func (a *ScssAdapter) CanInstall() bool { return true }
 func (a *ScssAdapter) RuntimeDeps() []lsp.RuntimeDependency {

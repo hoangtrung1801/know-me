@@ -19,7 +19,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-// projectRoot returns the project root directory (parent of .knowns/).
+// projectRoot returns the project root directory (parent of .known-me/).
 func projectRoot(store *storage.Store) string {
 	return store.RepositoryRoot()
 }

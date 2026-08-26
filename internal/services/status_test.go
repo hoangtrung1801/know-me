@@ -212,7 +212,7 @@ func TestDetectEmbeddingIgnoresRecoveredSemanticJobFailures(t *testing.T) {
 
 func newStatusSemanticStore(t *testing.T) *storage.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := storage.NewStore(root)
 	project := &models.Project{
 		Name: "status-test",

@@ -8,9 +8,9 @@
   "cpu": [
     "arm64"
   ],
-  "main": "knowns",
+  "main": "knownme",
   "files": [
-    "knowns",
+    "knownme",
     "*.so",
     "*.so.*"
   ],

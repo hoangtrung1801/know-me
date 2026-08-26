@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	ort "github.com/yalue/onnxruntime_go"
 )
 
@@ -212,22 +213,20 @@ func ensureORTEnvironment() error {
 			libName := ortSharedLibName()
 			// Check if a library file exists but was skipped due to arch mismatch.
 			archMismatch := false
-			if home, err := os.UserHomeDir(); err == nil {
-				candidate := filepath.Join(home, ".knowns", "bin", libName)
-				if ortIsFile(candidate) && !ortMatchesArch(candidate) {
-					archMismatch = true
-				}
+			candidate := filepath.Join(paths.GlobalStoreRoot(), "bin", libName)
+			if ortIsFile(candidate) && !ortMatchesArch(candidate) {
+				archMismatch = true
 			}
 			if archMismatch {
-				fmt.Fprintf(os.Stderr, "warning: %s found but has wrong CPU architecture (expected %s); reinstall knowns for the correct platform or set KNOWNS_ORT_LIB\n", libName, runtime.GOARCH)
+				fmt.Fprintf(os.Stderr, "warning: %s found but has wrong CPU architecture (expected %s); reinstall knownme for the correct platform or set KNOWNS_ORT_LIB\n", libName, runtime.GOARCH)
 			} else {
-				fmt.Fprintf(os.Stderr, "warning: bundled %s not found next to executable, sibling lib dirs, or ~/.knowns/bin; falling back to system search which may load an incompatible version\n", libName)
+				fmt.Fprintf(os.Stderr, "warning: bundled %s not found next to executable, sibling lib dirs, or ~/.known-me/bin; falling back to system search which may load an incompatible version\n", libName)
 			}
 		}
 		if err := ort.InitializeEnvironment(); err != nil {
 			hint := ""
 			if lib == "" {
-				hint = fmt.Sprintf(" (no bundled %s was found — a system copy may have been loaded with an incompatible version; reinstall knowns or set KNOWNS_ORT_LIB to the correct path)", ortSharedLibName())
+				hint = fmt.Sprintf(" (no bundled %s was found — a system copy may have been loaded with an incompatible version; reinstall knownme or set KNOWNS_ORT_LIB to the correct path)", ortSharedLibName())
 			}
 			ortInitErr = fmt.Errorf("initialize onnxruntime: %w%s", err, hint)
 			return
@@ -291,17 +290,16 @@ func ResolveORTLibraryPath() string {
 		}
 	}
 
-	if home, err := os.UserHomeDir(); err == nil {
-		candidate := filepath.Join(home, ".knowns", "bin", name)
-		if ortCandidate(candidate) {
-			return candidate
-		}
-		if runtime.GOOS == "linux" {
-			if matches, _ := filepath.Glob(filepath.Join(home, ".knowns", "bin", "libonnxruntime.so*")); len(matches) > 0 {
-				for _, m := range matches {
-					if ortMatchesArch(m) {
-						return m
-					}
+	root := filepath.Join(paths.GlobalStoreRoot(), "bin")
+	candidate := filepath.Join(root, name)
+	if ortCandidate(candidate) {
+		return candidate
+	}
+	if runtime.GOOS == "linux" {
+		if matches, _ := filepath.Glob(filepath.Join(root, "libonnxruntime.so*")); len(matches) > 0 {
+			for _, m := range matches {
+				if ortMatchesArch(m) {
+					return m
 				}
 			}
 		}
@@ -331,10 +329,8 @@ func resolveModelArtifacts(baseDir, huggingFaceID string) (string, string, error
 	if baseDir != "" {
 		addCandidate(filepath.Join(baseDir, filepath.FromSlash(huggingFaceID)))
 	}
-	if home, err := os.UserHomeDir(); err == nil {
-		root := filepath.Join(home, ".knowns", "models")
-		addCandidate(filepath.Join(root, filepath.FromSlash(huggingFaceID)))
-	}
+	root := filepath.Join(paths.GlobalStoreRoot(), "models")
+	addCandidate(filepath.Join(root, filepath.FromSlash(huggingFaceID)))
 
 	for _, dir := range candidates {
 		if !ortIsFile(filepath.Join(dir, "tokenizer.json")) {

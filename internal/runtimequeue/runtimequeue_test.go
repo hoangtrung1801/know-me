@@ -40,7 +40,7 @@ func TestGlobalRootHonorsHOMEOverride(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", t.TempDir())
 
-	want := filepath.Join(home, ".knowns")
+	want := filepath.Join(home, ".known-me")
 	if got := GlobalRoot(); got != want {
 		t.Fatalf("GlobalRoot() = %q, want HOME override %q", got, want)
 	}
@@ -65,7 +65,7 @@ func TestEnqueueCoalescesDuplicateJobs(t *testing.T) {
 	SetTestBypass(true)
 	defer SetTestBypass(false)
 	t.Setenv("HOME", t.TempDir())
-	storeRoot := filepath.Join(t.TempDir(), ".knowns")
+	storeRoot := filepath.Join(t.TempDir(), ".known-me")
 
 	job1, err := Enqueue(storeRoot, JobIndexTask, "abc")
 	if err != nil {
@@ -94,7 +94,7 @@ func TestEnqueueRequiresExplicitAPIForReindex(t *testing.T) {
 	SetTestBypass(true)
 	defer SetTestBypass(false)
 	t.Setenv("HOME", t.TempDir())
-	storeRoot := filepath.Join(t.TempDir(), ".knowns")
+	storeRoot := filepath.Join(t.TempDir(), ".known-me")
 
 	if _, err := Enqueue(storeRoot, JobReindex, storeRoot); err == nil {
 		t.Fatal("generic Enqueue should reject full search reindex jobs")
@@ -116,7 +116,7 @@ func TestAcquireClientTracksIndependentLeases(t *testing.T) {
 	SetTestBypass(true)
 	defer SetTestBypass(false)
 	t.Setenv("HOME", t.TempDir())
-	storeRoot := filepath.Join(t.TempDir(), ".knowns")
+	storeRoot := filepath.Join(t.TempDir(), ".known-me")
 
 	first, err := AcquireClient("mcp", storeRoot, false)
 	if err != nil {
@@ -184,7 +184,7 @@ func TestLoadJobSnapshotFindsQueuedAndCompletedJobs(t *testing.T) {
 	SetTestBypass(true)
 	defer SetTestBypass(false)
 	t.Setenv("HOME", t.TempDir())
-	storeRoot := filepath.Join(t.TempDir(), ".knowns")
+	storeRoot := filepath.Join(t.TempDir(), ".known-me")
 
 	job, err := EnqueueReindex(storeRoot)
 	if err != nil {
@@ -225,7 +225,7 @@ func TestLoadJobSnapshotMissingJob(t *testing.T) {
 	SetTestBypass(true)
 	defer SetTestBypass(false)
 	t.Setenv("HOME", t.TempDir())
-	storeRoot := filepath.Join(t.TempDir(), ".knowns")
+	storeRoot := filepath.Join(t.TempDir(), ".known-me")
 
 	snapshot, err := LoadJobSnapshot(storeRoot, "missing-job")
 	if err != nil {
@@ -240,7 +240,7 @@ func TestWaitForJobReturnsCompletedSnapshotResult(t *testing.T) {
 	SetTestBypass(true)
 	defer SetTestBypass(false)
 	t.Setenv("HOME", t.TempDir())
-	storeRoot := filepath.Join(t.TempDir(), ".knowns")
+	storeRoot := filepath.Join(t.TempDir(), ".known-me")
 
 	job, err := EnqueueReindex(storeRoot)
 	if err != nil {

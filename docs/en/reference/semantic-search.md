@@ -7,12 +7,12 @@ Code search is no longer part of semantic search. Code intelligence is LSP-based
 ## Main commands
 
 ```bash
-knowns model list
-knowns model download multilingual-e5-small
-knowns model set multilingual-e5-small
-knowns search --status-check
-knowns search --reindex
-knowns search "how authentication works" --plain
+knownme model list
+knownme model download multilingual-e5-small
+knownme model set multilingual-e5-small
+knownme search --status-check
+knownme search --reindex
+knownme search "how authentication works" --plain
 ```
 
 ## Search modes

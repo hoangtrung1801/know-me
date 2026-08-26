@@ -40,7 +40,7 @@ This document describes the standard development workflow for contributing to Kn
 
 ```bash
 # Create a new task
-knowns task create "Add new feature X" \
+knownme task create "Add new feature X" \
   -d "Description of what needs to be done" \
   --ac "User can perform action X" \
   --ac "Unit tests cover new functionality" \
@@ -71,8 +71,8 @@ knowns task create "Add new feature X" \
 
 ```bash
 # Assign to yourself and start timer
-knowns task edit <id> -s in-progress -a @me
-knowns time start <id>
+knownme task edit <id> -s in-progress -a @me
+knownme time start <id>
 ```
 
 ### Create Feature Branch
@@ -336,9 +336,9 @@ main: ──●── "feat: add --children option (#63)"
 
 ```bash
 # Update task status
-knowns time stop
-knowns task edit <id> -s done
-knowns task edit <id> --append-notes "Merged in PR #XX"
+knownme time stop
+knownme task edit <id> -s done
+knownme task edit <id> --append-notes "Merged in PR #XX"
 
 # Update local repository
 git checkout main
@@ -355,10 +355,10 @@ git fetch --prune
 
 ```bash
 # Verify all acceptance criteria are checked
-knowns task <id> --plain
+knownme task <id> --plain
 
 # If not done:
-knowns task edit <id> --check-ac 1 --check-ac 2 --check-ac 3
+knownme task edit <id> --check-ac 1 --check-ac 2 --check-ac 3
 ```
 
 ---
@@ -420,8 +420,8 @@ knowns task edit <id> --check-ac 1 --check-ac 2 --check-ac 3
 
 ```bash
 # 1. Claim task
-knowns task edit <id> -s in-progress -a @me
-knowns time start <id>
+knownme task edit <id> -s in-progress -a @me
+knownme time start <id>
 
 # 2. Create branch
 git checkout main && git pull
@@ -444,8 +444,8 @@ git push -u origin <branch>
 
 ```bash
 # Update task
-knowns time stop
-knowns task edit <id> -s done
+knownme time stop
+knownme task edit <id> -s done
 
 # Cleanup
 git checkout main && git pull
@@ -456,16 +456,16 @@ git branch -d <branch>
 
 ```bash
 # View task details
-knowns task <id> --plain
+knownme task <id> --plain
 
 # List your tasks
-knowns task list --assignee @me --status in-progress --plain
+knownme task list --assignee @me --status in-progress --plain
 
 # View task tree
-knowns task list --tree --plain
+knownme task list --tree --plain
 
 # Search tasks
-knowns search "keyword" --type task --plain
+knownme search "keyword" --type task --plain
 ```
 
 ---

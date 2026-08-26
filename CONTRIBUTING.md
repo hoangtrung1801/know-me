@@ -20,7 +20,7 @@ Know-Me is intentionally minimal. Before adding a feature, ask:
 
 ### 2. Files are the source of truth
 
-Any new feature must respect that `.knowns/` files are the source of truth.
+Any new feature must respect that `.known-me/` files are the source of truth.
 
 - Don't introduce hidden state
 - Don't require a database

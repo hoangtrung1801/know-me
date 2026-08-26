@@ -14,7 +14,7 @@ import (
 
 func TestMemoryStoreRejectsNewDecisionMemoryAndConstrainsLegacyWrites(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	store := NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("legacy-decision-memory-policy"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestParseMemoryContentDefaultsNoFrontmatterLifecycle(t *testing.T) {
 func TestMemoryStoreListLoadsLegacyLifecycle(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	memoryDir := filepath.Join(root, "memory")
 	if err := os.MkdirAll(memoryDir, 0o755); err != nil {
 		t.Fatalf("mkdir memory dir: %v", err)

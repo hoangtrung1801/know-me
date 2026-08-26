@@ -33,7 +33,7 @@ Project context thay đổi cùng code. Giữ nó gần repository giúp:
 - giữ decision và convention sau khi conversation kết thúc
 - validate generated project artifacts vẫn khớp config
 
-Know-Me cũng hỗ trợ user-level setup khi phù hợp. Ví dụ, `knowns setup codex --global` cài user-level MCP config, skills, và runtime hooks để assistant integration đi theo bạn qua nhiều repository.
+Know-Me cũng hỗ trợ user-level setup khi phù hợp. Ví dụ, `knownme setup codex --global` cài user-level MCP config, skills, và runtime hooks để assistant integration đi theo bạn qua nhiều repository.
 
 ## Vì sao dùng MCP `initial` và `help`?
 

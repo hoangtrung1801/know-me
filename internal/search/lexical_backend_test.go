@@ -346,7 +346,7 @@ func TestSearchWithLexicalBackendComparesHeuristicAndBM25Internally(t *testing.T
 func newSearchTestStore(t *testing.T) *storage.Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := storage.NewStore(root)
 	if err := store.Init("search-test"); err != nil {
 		t.Fatalf("init store: %v", err)

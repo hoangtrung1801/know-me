@@ -2,11 +2,11 @@ package models
 
 import "time"
 
-// Doc represents a documentation file stored under .knowns/docs/.
+// Doc represents a documentation file stored under .known-me/docs/.
 // Metadata is kept in a YAML frontmatter block; body content is plain
 // markdown.
 type Doc struct {
-	// Path is the relative path inside .knowns/docs/ without the .md suffix
+	// Path is the relative path inside .known-me/docs/ without the .md suffix
 	// (e.g., "guides/setup").  When a filename is needed use Path + ".md".
 	Path      string `json:"path"`
 	ProjectID string `json:"projectId,omitempty" yaml:"projectId,omitempty"`

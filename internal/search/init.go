@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
@@ -114,15 +115,14 @@ func initSemanticLocal(store *storage.Store, ss *models.SemanticSearchSettings) 
 		return nil, nil, fmt.Errorf("unknown embedding model %q", ss.Model)
 	}
 
-	home, _ := os.UserHomeDir()
-	modelDir := filepath.Join(home, ".knowns", "models", modelConfig.HuggingFaceID)
+	modelDir := filepath.Join(paths.GlobalStoreRoot(), "models", modelConfig.HuggingFaceID)
 
 	// Check model is installed.
 	onnxPath := filepath.Join(modelDir, "onnx", "model_quantized.onnx")
 	if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
 		onnxPath = filepath.Join(modelDir, "onnx", "model.onnx")
 		if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
-			return nil, nil, fmt.Errorf("embedding model %q not downloaded (run: knowns model download %s)", ss.Model, ss.Model)
+			return nil, nil, fmt.Errorf("embedding model %q not downloaded (run: knownme model download %s)", ss.Model, ss.Model)
 		}
 	}
 

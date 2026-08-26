@@ -5,6 +5,7 @@ src/
 
 # Development files
 .husky/
+.known-me/
 .knowns/
 backlog/
 node_modules/

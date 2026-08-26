@@ -47,7 +47,7 @@ func TestDoctorHumanAndJSONModesShareCompleteResult(t *testing.T) {
 			Summary: "Model needs attention",
 			Remediation: &doctor.Remediation{
 				Description: "Download the configured model.",
-				Command:     "knowns model download test-model",
+				Command:     "knownme model download test-model",
 			},
 		}),
 		{
@@ -68,7 +68,7 @@ func TestDoctorHumanAndJSONModesShareCompleteResult(t *testing.T) {
 	if strings.Contains(defaultOut, "project.ready") || strings.Contains(defaultOut, "online.version") {
 		t.Fatalf("default output exposed passing/skipped checks:\n%s", defaultOut)
 	}
-	for _, want := range []string{"Know-Me Doctor", "DEGRADED", "Summary:", "search.model", "knowns model download test-model"} {
+	for _, want := range []string{"Know-Me Doctor", "DEGRADED", "Summary:", "search.model", "knownme model download test-model"} {
 		if !strings.Contains(defaultOut, want) {
 			t.Fatalf("default output missing %q:\n%s", want, defaultOut)
 		}
@@ -237,7 +237,7 @@ func TestDoctorNoActiveProjectIsValidUnhealthyResult(t *testing.T) {
 	for _, check := range decoded.Checks {
 		if check.ID == "project.active" {
 			if check.Status != doctor.StatusFail || check.Remediation == nil ||
-				check.Remediation.Command != "knowns init" {
+				check.Remediation.Command != "knownme init" {
 				t.Fatalf("project.active = %#v", check)
 			}
 			return
@@ -375,7 +375,7 @@ func doctorTestChecker(id string, scope doctor.Scope, result doctor.CheckResult)
 
 func newDoctorCLIStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("doctor-cli-test"); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}

@@ -28,7 +28,7 @@ func (a *JdtlsAdapter) CheckPrerequisites(ctx context.Context) error {
 	return requireMinVersion(output, "Java", 17, 0)
 }
 func (a *JdtlsAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{KnownsCmd: "knowns lsp install java", URL: "https://github.com/eclipse-jdtls/eclipse.jdt.ls", Notes: "Requires JDK 17+"}
+	return lsp.InstallGuide{KnownsCmd: "knownme lsp install java", URL: "https://github.com/eclipse-jdtls/eclipse.jdt.ls", Notes: "Requires JDK 17+"}
 }
 func (a *JdtlsAdapter) CanInstall() bool { return true }
 func (a *JdtlsAdapter) RuntimeDeps() []lsp.RuntimeDependency {

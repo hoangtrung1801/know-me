@@ -18,7 +18,7 @@ bun test:e2e:headed
 
 ## Notes
 
-- Tests expect a built binary at `bin/knowns`
+- Tests expect a built binary at `bin/knownme`
 - `startServer()` creates an isolated temporary project for each spec file
 - Specs target browser-history routes such as `/kanban`, `/tasks`, `/docs`, `/imports`, and `/config`
 

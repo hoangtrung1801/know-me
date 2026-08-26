@@ -17,7 +17,7 @@ func TestRunCodeSearchDoesNotUseRegexFallbackWhenLSPUnavailable(t *testing.T) {
 	home, projectRoot := t.TempDir(), t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatalf("load registry: %v", err)
 	}
@@ -25,7 +25,7 @@ func TestRunCodeSearchDoesNotUseRegexFallbackWhenLSPUnavailable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create project: %v", err)
 	}
-	store := storage.NewProjectStore(filepath.Join(home, ".knowns"), project.ID, projectRoot)
+	store := storage.NewProjectStore(filepath.Join(home, ".known-me"), project.ID, projectRoot)
 	if err := store.Init("code-search-lsp-only"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

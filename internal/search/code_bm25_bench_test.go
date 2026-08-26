@@ -56,7 +56,7 @@ var goCommentRe = regexp.MustCompile(`^//\s*(.*)`)
 
 func extractGoSymbolsFromSource(relPath, source string) []CodeSummary {
 	lines := strings.Split(source, "\n")
-		pkg := PackageFromPath(relPath)
+	pkg := PackageFromPath(relPath)
 	var summaries []CodeSummary
 
 	for i, line := range lines {

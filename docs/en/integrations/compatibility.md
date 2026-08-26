@@ -41,28 +41,28 @@ For Antigravity, the MCP config is global:
 
 ## Init, sync, and update
 
-### `knowns init`
+### `knownme init`
 
 Creates the project structure, git tracking, semantic search setup, and selected lightweight project instruction shims such as `CLAUDE.md` and `AGENTS.md`.
 
-### `knowns setup`
+### `knownme setup`
 
-Generates AI platform artifacts such as skills, MCP configs, platform-specific configs, runtime hooks, and any additional instruction files for the selected target. Use `knowns setup <target> --global` for normal personal assistant setup. Use non-global setup only when you intentionally want repo-local integration files. Use `knowns setup agents` when you only need lightweight repo-local agent shims.
+Generates AI platform artifacts such as skills, MCP configs, platform-specific configs, runtime hooks, and any additional instruction files for the selected target. Use `knownme setup <target> --global` for normal personal assistant setup. Use non-global setup only when you intentionally want repo-local integration files. Use `knownme setup agents` when you only need lightweight repo-local agent shims.
 
-### `knowns sync`
+### `knownme sync`
 
-Re-applies `.knowns/config.json` to the current machine.
+Re-applies `.known-me/config.json` to the current machine.
 
 Use it after:
 
 - cloning a repository
 - wanting generated files to match the current config again
 
-### `knowns update`
+### `knownme update`
 
 Updates the CLI, then refreshes generated artifacts that depend on the binary or config policy.
 
 ## Recommendation
 
 - For new projects, follow the current primary layout.
-- For older projects, let `knowns sync` and `knowns update` preserve compatibility first, then migrate deliberately when needed.
+- For older projects, let `knownme sync` and `knownme update` preserve compatibility first, then migrate deliberately when needed.

@@ -1,6 +1,6 @@
 # Validate
 
-`knowns validate` kiểm tra tính nhất quán của project context hiện tại.
+`knownme validate` kiểm tra tính nhất quán của project context hiện tại.
 
 ## Dùng để làm gì
 
@@ -13,10 +13,10 @@ Phát hiện:
 ## Lệnh
 
 ```bash
-knowns validate --plain
-knowns validate --scope docs --plain
-knowns validate --scope sdd --plain
-knowns validate --strict --plain
+knownme validate --plain
+knownme validate --scope docs --plain
+knownme validate --scope sdd --plain
+knownme validate --strict --plain
 ```
 
 ## Khi nào chạy

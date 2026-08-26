@@ -24,7 +24,7 @@ search indexes and runs optional local or external runtimes around that data.
              +--------------------+--------------------+
              |                    |                    |
        Cobra CLI            Browser UI             MCP client
-    cmd/knowns             React + Vite             stdio JSON-RPC
+    cmd/knownme             React + Vite             stdio JSON-RPC
              |                    |                    |
              v                    v                    v
       internal/cli       internal/server        internal/mcp/handlers
@@ -35,7 +35,7 @@ search indexes and runs optional local or external runtimes around that data.
                          +--------+--------+
                          |                 |
                   project/global data   derived services
-                  .knowns + ~/.knowns   search, refs, runtimes
+                  .known-me + ~/.known-me   search, refs, runtimes
 ```
 
 The main dependency direction is inward:
@@ -53,7 +53,7 @@ format or business rule.
 
 ### CLI process
 
-`cmd/knowns/main.go` only translates process errors into exit codes and calls
+`cmd/knownme/main.go` only translates process errors into exit codes and calls
 `internal/cli.Execute`. The CLI uses Cobra to register commands such as
 `task`, `doc`, `search`, `retrieve`, `memory`, `decision`, `time`,
 `browser`, `mcp`, `lsp`, `runtime`, and `setup`.
@@ -113,7 +113,7 @@ project paths, lock files, and small JSON protocols to exchange state.
 
 | Package | Responsibility | Main boundary |
 |---|---|---|
-| `cmd/knowns` | Executable entry point | Process exit and CLI startup |
+| `cmd/knownme` | Executable entry point | Process exit and CLI startup |
 | `internal/cli` | Cobra commands, project resolution, rendering, setup | User-facing command adapter |
 | `internal/models` | Tasks, docs, decisions, memory, chat, agent, config, search, and runtime types | Shared data contracts |
 | `internal/storage` | `Store`, sub-stores, file formats, locks, versions, reference resolution | Durable state and project scope |
@@ -142,7 +142,7 @@ new package. Prefer an existing package when the responsibility already fits.
 
 ### Store and project scope
 
-`storage.Store` is the top-level coordinator for the `.knowns` data format. It
+`storage.Store` is the top-level coordinator for the `.known-me` data format. It
 owns sub-stores for tasks, docs, config, time, templates, versions,
 workspaces, chats, memory, decisions, and agent state.
 
@@ -158,11 +158,11 @@ search across projects.
 
 ### Durable files
 
-A normal project store is rooted at the repository's `.knowns/` directory.
+A normal project store is rooted at the repository's `.known-me/` directory.
 The exact set grows with enabled features, but the important ownership is:
 
 ```text
-.knowns/
+.known-me/
 ├── config.json                 project settings and feature flags
 ├── tasks/*.md                  active tasks with YAML frontmatter
 ├── archive/*.md                archived tasks
@@ -180,7 +180,7 @@ The exact set grows with enabled features, but the important ownership is:
 └── runtime/                    runtime logs and process-specific state
 ```
 
-The machine-level `~/.knowns/` store holds global data such as the project
+The machine-level `~/.known-me/` store holds global data such as the project
 registry, global memory, saved links, memos, embedding models/settings, and
 logs. Some project metadata also lives there when the global multi-project
 store is active.
@@ -221,13 +221,13 @@ for that domain and make recovery explicit.
 ### CLI mutation
 
 ```text
-knowns task edit ...
+knownme task edit ...
         |
         v
   Cobra command and project resolver
         |
         v
-  storage.Store -> domain sub-store -> .knowns file(s)
+  storage.Store -> domain sub-store -> .known-me file(s)
         |
         +-> version history / lifecycle event / derived index when applicable
 ```
@@ -390,7 +390,7 @@ Typical contributor checks are:
 
 ```bash
 go test ./...
-go build -o ./bin/knowns ./cmd/knowns
+go build -o ./bin/knownme ./cmd/knownme
 cd ui && npm run build
 ```
 
@@ -431,7 +431,7 @@ not be treated as required for the core local workspace:
 - multi-project registry and workspace switching.
 
 There is no central sync service in the current architecture. Local project
-files and the global `~/.knowns` store remain the source of truth; any future
+files and the global `~/.known-me` store remain the source of truth; any future
 network synchronization would be a separate design.
 
 ## Technology summary
@@ -444,7 +444,7 @@ network synchronization would be a separate design.
 | Browser UI | React, TypeScript, Vite, Tailwind CSS, Playwright E2E |
 | Real-time browser events | Server-Sent Events; WebSocket for chat transport |
 | AI tools | MCP over stdio via `mcp-go` |
-| Durable project data | Markdown/YAML frontmatter and JSON under `.knowns/` |
+| Durable project data | Markdown/YAML frontmatter and JSON under `.known-me/` |
 | Search | BM25/keyword, semantic embeddings, hybrid retrieval, derived vector/index stores |
 | Agent runtimes | Codex ACP and optional OpenCode daemon/server |
 | Code intelligence | LSP adapters with a project-scoped LSP daemon |
@@ -452,7 +452,7 @@ network synchronization would be a separate design.
 
 ## Useful starting points
 
-- CLI entry: `cmd/knowns/main.go`, `internal/cli/root.go`
+- CLI entry: `cmd/knownme/main.go`, `internal/cli/root.go`
 - Core store: `internal/storage/store.go`, `internal/storage/manager.go`
 - Browser server: `internal/server/server.go`, `internal/server/routes/router.go`
 - MCP bootstrap: `internal/mcp/server.go`, `internal/mcp/handlers/initial.go`

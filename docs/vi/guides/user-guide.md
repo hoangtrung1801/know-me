@@ -16,7 +16,7 @@ Know-Me là một context layer cho project, gồm 5 phần gắn với nhau:
 
 Thói quen quan trọng là đưa context có thể tái sử dụng vào Know-Me, thay vì chỉ để nó trong chat message.
 
-## `knowns init` làm gì?
+## `knownme init` làm gì?
 
 - Chạy interactive wizard
 - Sau wizard:
@@ -26,14 +26,14 @@ Thói quen quan trọng là đưa context có thể tái sử dụng vào Know-M
   - tạo lightweight project instruction shims như `CLAUDE.md` và `AGENTS.md`
   - build semantic index (nếu bật)
 
-Sau init, chạy `knowns setup <target> --global` để cấu hình user-level AI platform integrations như skills, MCP configs, runtime hooks. Đây là setup được khuyên dùng cho personal assistant usage trên nhiều repository. Chỉ dùng `knowns setup <target>` khi bạn chủ ý muốn repo-local integration files, hoặc `knowns setup agents` nếu chỉ cần lightweight repo-local shims như `AGENTS.md`.
+Sau init, chạy `knownme setup <target> --global` để cấu hình user-level AI platform integrations như skills, MCP configs, runtime hooks. Đây là setup được khuyên dùng cho personal assistant usage trên nhiều repository. Chỉ dùng `knownme setup <target>` khi bạn chủ ý muốn repo-local integration files, hoặc `knownme setup agents` nếu chỉ cần lightweight repo-local shims như `AGENTS.md`.
 
 ## Workflow tuần đầu thường dùng
 
 1. Tạo một task cho thay đổi thật tiếp theo.
 2. Thêm acceptance criteria để success có thể quan sát được.
 3. Tạo hoặc update doc cho architecture/product context mà task phụ thuộc.
-4. Dùng `knowns search` hoặc `knowns retrieve` để xác nhận context tìm được.
+4. Dùng `knownme search` hoặc `knownme retrieve` để xác nhận context tìm được.
 5. Cho AI assistant đọc task, doc, và memory qua MCP hoặc lightweight shim files.
 6. Validate trước khi đánh dấu work là xong.
 
@@ -49,37 +49,37 @@ Bạn không cần document mọi thứ trong ngày đầu. Bắt đầu với w
 ### Task
 
 ```bash
-knowns task create "Add authentication" -d "JWT-based auth"
-knowns task edit <id> -s in-progress
-knowns task edit <id> --check-ac 1
-knowns task edit <id> --append-notes "Completed auth middleware"
+knownme task create "Add authentication" -d "JWT-based auth"
+knownme task edit <id> -s in-progress
+knownme task edit <id> --check-ac 1
+knownme task edit <id> --append-notes "Completed auth middleware"
 ```
 
 ### Doc
 
 ```bash
-knowns doc create "Auth Architecture" -d "Design overview" -f architecture
-knowns doc "architecture/auth-architecture" --plain
-knowns doc "architecture/auth-architecture" --toc --plain
+knownme doc create "Auth Architecture" -d "Design overview" -f architecture
+knownme doc "architecture/auth-architecture" --plain
+knownme doc "architecture/auth-architecture" --toc --plain
 ```
 
 ### Search
 
 ```bash
-knowns search "authentication" --plain
-knowns retrieve "how auth works" --json
+knownme search "authentication" --plain
+knownme retrieve "how auth works" --json
 ```
 
 ### Validate
 
 ```bash
-knowns validate --plain
+knownme validate --plain
 ```
 
 ### Sync
 
 ```bash
-knowns sync
+knownme sync
 ```
 
 ## Chọn surface nào?

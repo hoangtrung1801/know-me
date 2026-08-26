@@ -11,7 +11,7 @@ func TestWorkflowCompletionRendersDecisionImpactGateForCLIAndMCP(t *testing.T) {
 		opts RenderOptions
 		want string
 	}{
-		{name: "cli", opts: RenderOptions{CLI: true}, want: `knowns decision create "<title>"`},
+		{name: "cli", opts: RenderOptions{CLI: true}, want: `knownme decision create "<title>"`},
 		{name: "mcp", opts: RenderOptions{MCP: true}, want: `mcp__knowns__decision({`},
 	} {
 		t.Run(test.name, func(t *testing.T) {

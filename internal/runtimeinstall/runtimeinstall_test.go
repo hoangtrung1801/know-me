@@ -26,7 +26,7 @@ func TestInstallClaudeMergesExistingSettingsAndStatus(t *testing.T) {
 
 	opts := Options{
 		HomeDir:        home,
-		ExecutablePath: "/usr/local/bin/knowns",
+		ExecutablePath: "/usr/local/bin/knownme",
 		LookPath: func(name string) (string, error) {
 			if name == "claude" {
 				return "/usr/local/bin/claude", nil
@@ -71,7 +71,7 @@ func TestInstallClaudeWindowsQuotesExecutableForBashHooks(t *testing.T) {
 		t.Fatalf("seed settings: %v", err)
 	}
 
-	exePath := `C:\Users\Admin\.knowns\bin\knowns.exe`
+	exePath := `C:\Users\Admin\.known-me\bin\knownme.exe`
 	opts := Options{
 		HomeDir:        home,
 		ExecutablePath: exePath,
@@ -111,7 +111,7 @@ func TestInstallClaudeWindowsWritesExactPromptSubmitHookJSON(t *testing.T) {
 		t.Fatalf("seed settings: %v", err)
 	}
 
-	exePath := `C:\Users\Admin\.knowns\bin\knowns.exe`
+	exePath := `C:\Users\Admin\.known-me\bin\knownme.exe`
 	opts := Options{
 		HomeDir:        home,
 		ExecutablePath: exePath,
@@ -191,7 +191,7 @@ func TestInstallCodexNormalizesDeprecatedFeatureAndUninstallRemovesManagedHookOn
   "hooks": {
     "SessionStart": [
       {"hooks": [{"type": "command", "command": "/tmp/existing-hook.sh"}]},
-      {"hooks": [{"type": "command", "command": "/tmp/old-knowns runtime-memory hook --runtime codex --event session-start", "statusMessage": "Knowns runtime memory"}]}
+      {"hooks": [{"type": "command", "command": "/tmp/old-knownme runtime-memory hook --runtime codex --event session-start", "statusMessage": "Knowns runtime memory"}]}
     ]
   }
 }`
@@ -201,7 +201,7 @@ func TestInstallCodexNormalizesDeprecatedFeatureAndUninstallRemovesManagedHookOn
 
 	opts := Options{
 		HomeDir:        home,
-		ExecutablePath: "/usr/local/bin/knowns",
+		ExecutablePath: "/usr/local/bin/knownme",
 		LookPath: func(name string) (string, error) {
 			if name == "codex" {
 				return "/usr/local/bin/codex", nil
@@ -302,7 +302,7 @@ func TestInstallOpenCodeCreatesPluginAndStatusInstalled(t *testing.T) {
 	home := t.TempDir()
 	opts := Options{
 		HomeDir:        home,
-		ExecutablePath: "/usr/local/bin/knowns",
+		ExecutablePath: "/usr/local/bin/knownme",
 		LookPath:       func(string) (string, error) { return "", os.ErrNotExist },
 	}
 	if err := Install("opencode", opts); err != nil {
@@ -351,7 +351,7 @@ func TestInstallKiroCreatesWorkspaceIDEHook(t *testing.T) {
 
 	opts := Options{
 		HomeDir:        home,
-		ExecutablePath: "/new/bin/knowns",
+		ExecutablePath: "/new/bin/knownme",
 		LookPath: func(name string) (string, error) {
 			if name == "kiro" {
 				return "/usr/local/bin/kiro", nil
@@ -391,7 +391,7 @@ func TestInstallKiroCreatesWorkspaceIDEHook(t *testing.T) {
 func TestRuntimePickerLabelIncludesAvailabilityForSupportedRuntimes(t *testing.T) {
 	opts := Options{
 		HomeDir:        t.TempDir(),
-		ExecutablePath: "/usr/local/bin/knowns",
+		ExecutablePath: "/usr/local/bin/knownme",
 		LookPath: func(name string) (string, error) {
 			if name == "codex" {
 				return "/usr/local/bin/codex", nil

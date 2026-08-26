@@ -536,7 +536,7 @@ func runGlobalSettings() error {
 			huh.NewGroup(
 				huh.NewSelect[string]().
 					Title("Global Settings").
-					Description("Defaults for new projects created by knowns init").
+					Description("Defaults for new projects created by knownme init").
 					Options(
 						huh.NewOption("Project Defaults", "project"),
 						huh.NewOption("Default Git Tracking", "git"),
@@ -565,7 +565,7 @@ func runGlobalSettings() error {
 				return err
 			}
 			fmt.Println(RenderSuccess("Global settings saved."))
-			fmt.Println(RenderHint("Run: knowns init to use these defaults in a new project."))
+			fmt.Println(RenderHint("Run: knownme init to use these defaults in a new project."))
 			return nil
 		case "project":
 			name := defaults.ProjectName
@@ -717,7 +717,7 @@ func configurePlatforms(store *storage.Store, project *models.Project) error {
 	if err := store.Config.Save(project); err != nil {
 		return err
 	}
-	fmt.Println(RenderHint("Run: knowns sync to apply platform changes to generated files."))
+	fmt.Println(RenderHint("Run: knownme sync to apply platform changes to generated files."))
 	return nil
 }
 
@@ -754,7 +754,7 @@ func configureCodeIntelligence(store *storage.Store, project *models.Project) er
 	if err := store.Config.Save(project); err != nil {
 		return err
 	}
-	fmt.Println(RenderHint("Run: knowns lsp status for missing server install guidance."))
+	fmt.Println(RenderHint("Run: knownme lsp status for missing server install guidance."))
 	return nil
 }
 
@@ -879,11 +879,11 @@ func configureLSPSettings(settings *models.ProjectSettings) error {
 
 func showSettingsMaintenance(project *models.Project) error {
 	fmt.Println(RenderSectionHeader("Maintenance"))
-	fmt.Println(RenderHint("Run: knowns sync to apply generated files, git rules, models, and MCP configs."))
+	fmt.Println(RenderHint("Run: knownme sync to apply generated files, git rules, models, and MCP configs."))
 	if project.Settings.SemanticSearch != nil && project.Settings.SemanticSearch.Enabled {
-		fmt.Println(RenderHint("Run: knowns search --reindex after changing search settings."))
+		fmt.Println(RenderHint("Run: knownme search --reindex after changing search settings."))
 	}
-	fmt.Println(RenderHint("Run: knowns config list --plain for scriptable inspection."))
+	fmt.Println(RenderHint("Run: knownme config list --plain for scriptable inspection."))
 	return nil
 }
 
@@ -988,7 +988,7 @@ func applyLocalONNXSelection(store *storage.Store, project *models.Project, mode
 		}
 		if !download {
 			fmt.Println(RenderWarning(fmt.Sprintf("Kept previous Local ONNX model; %q was not downloaded.", selected.ID)))
-			fmt.Println(RenderHint("Run: " + RenderCmd(fmt.Sprintf("knowns model download %s", selected.ID)) + " and select it again."))
+			fmt.Println(RenderHint("Run: " + RenderCmd(fmt.Sprintf("knownme model download %s", selected.ID)) + " and select it again."))
 			return false, nil
 		}
 		if err := runSemanticSetupForSettings(selected.ID, false); err != nil {
@@ -1168,7 +1168,7 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 		_ = store.Config.Set("settings.semanticSearch.model", model)
 		*embeddingEnabled = true
 
-		// Register model in ~/.knowns/settings.json so sync can find it
+		// Register model in ~/.known-me/settings.json so sync can find it
 		embStore := storage.NewEmbeddingSettingsStore()
 		embSettings, _ := embStore.Load()
 		// Find dimensions from the selected model
@@ -1272,7 +1272,7 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 			continue
 		}
 
-		// Save API key to ~/.knowns/settings.json (never in project config)
+		// Save API key to ~/.known-me/settings.json (never in project config)
 		embSettings.Providers["api"] = storage.EmbeddingProvider{
 			Name:    "API Provider",
 			APIBase: apiBase,
@@ -1470,7 +1470,7 @@ func listAPIModels(baseURL, apiKey string) ([]string, error) {
 }
 
 func init() {
-	settingsCmd.Flags().Bool("global", false, "Edit global defaults for future knowns init runs")
+	settingsCmd.Flags().Bool("global", false, "Edit global defaults for future knownme init runs")
 
 	configResetCmd.Flags().BoolP("yes", "y", false, "Skip confirmation prompt")
 

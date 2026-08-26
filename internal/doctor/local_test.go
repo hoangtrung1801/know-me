@@ -59,12 +59,12 @@ func TestSearchChecksReportUnavailableModelAndEmptyIndex(t *testing.T) {
 
 	model := findCheck(t, result, "search.model")
 	if model.Status != StatusWarn || model.Remediation == nil ||
-		model.Remediation.Command != "knowns model download all-MiniLM-L6-v2" {
+		model.Remediation.Command != "knownme model download all-MiniLM-L6-v2" {
 		t.Fatalf("model check = %#v", model)
 	}
 	index := findCheck(t, result, "search.project-index")
 	if index.Status != StatusWarn || index.Remediation == nil ||
-		index.Remediation.Command != "knowns search --reindex" {
+		index.Remediation.Command != "knownme search --reindex" {
 		t.Fatalf("project index check = %#v", index)
 	}
 	if got := snapshotTree(t, store.Root); !sameSnapshot(before, got) {
@@ -117,7 +117,7 @@ func TestSearchChecksReportStaleIndices(t *testing.T) {
 	for _, id := range []string{"search.project-index", "search.global-index"} {
 		check := findCheck(t, result, id)
 		if check.Status != StatusWarn || check.Evidence["stale"] != true ||
-			check.Remediation == nil || check.Remediation.Command != "knowns search --reindex" {
+			check.Remediation == nil || check.Remediation.Command != "knownme search --reindex" {
 			t.Fatalf("%s check = %#v", id, check)
 		}
 	}
@@ -215,7 +215,7 @@ func TestSearchChecksReportLocalONNXDependencyStates(t *testing.T) {
 				MissingArtifacts: []string{"onnx_model"},
 			},
 			summary: "Configured ONNX model is not downloaded",
-			command: "knowns model download gte-small",
+			command: "knownme model download gte-small",
 		},
 		{
 			name: "model incomplete",
@@ -224,7 +224,7 @@ func TestSearchChecksReportLocalONNXDependencyStates(t *testing.T) {
 				MissingArtifacts: []string{"config.json", "tokenizer.json"},
 			},
 			summary: "Configured ONNX model download is incomplete",
-			command: "knowns model download gte-small --force",
+			command: "knownme model download gte-small --force",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -267,7 +267,7 @@ func TestSearchChecksExplainUnsupportedMacOSIntelONNX(t *testing.T) {
 	if configResult.Status != StatusWarn ||
 		configResult.Evidence["errorCode"] != "onnx_platform_unsupported" ||
 		configResult.Remediation == nil ||
-		configResult.Remediation.Command != "knowns settings" {
+		configResult.Remediation.Command != "knownme settings" {
 		t.Fatalf("config check = %#v", configResult)
 	}
 
@@ -296,7 +296,7 @@ func TestInspectLocalONNXModelDetectsMissingIncompleteAndAvailable(t *testing.T)
 		Model:         "gte-small",
 		HuggingFaceID: "Xenova/gte-small",
 	}
-	modelDir := filepath.Join(home, ".knowns", "models", "Xenova", "gte-small")
+	modelDir := filepath.Join(home, ".known-me", "models", "Xenova", "gte-small")
 
 	status := inspectLocalONNXModel(settings)
 	if status.State != localONNXModelMissing {
@@ -354,7 +354,7 @@ func TestLSPChecksReportMissingAndDisabledLanguages(t *testing.T) {
 					InstallState:   lsp.RuntimeInstallNotInstalled,
 					RunningState:   lsp.RuntimeRunningStopped,
 					ReadinessState: lsp.RuntimeReadinessNotApplicable,
-					InstallCmd:     "knowns lsp install go",
+					InstallCmd:     "knownme lsp install go",
 				},
 				{
 					ID:             "java",
@@ -364,7 +364,7 @@ func TestLSPChecksReportMissingAndDisabledLanguages(t *testing.T) {
 					InstallState:   lsp.RuntimeInstallNotInstalled,
 					RunningState:   lsp.RuntimeRunningStopped,
 					ReadinessState: lsp.RuntimeReadinessNotApplicable,
-					InstallCmd:     "knowns lsp install java",
+					InstallCmd:     "knownme lsp install java",
 				},
 				{
 					ID:             "python",
@@ -387,7 +387,7 @@ func TestLSPChecksReportMissingAndDisabledLanguages(t *testing.T) {
 	}
 	goCheck := findCheck(t, result, "lsp.go")
 	if goCheck.Status != StatusWarn || goCheck.Remediation == nil ||
-		goCheck.Remediation.Command != "knowns lsp install go" {
+		goCheck.Remediation.Command != "knownme lsp install go" {
 		t.Fatalf("Go check = %#v", goCheck)
 	}
 	javaCheck := findCheck(t, result, "lsp.java")
@@ -473,7 +473,7 @@ func TestAIChecksReportArtifactDriftWithoutSyncing(t *testing.T) {
 		t.Fatalf("instruction check = %#v", instructions)
 	}
 	skills := findCheck(t, result, "ai.skills")
-	if skills.Status != StatusWarn || skills.Remediation == nil || skills.Remediation.Command != "knowns sync" {
+	if skills.Status != StatusWarn || skills.Remediation == nil || skills.Remediation.Command != "knownme sync" {
 		t.Fatalf("skills check = %#v", skills)
 	}
 	if got := snapshotTree(t, store.Root); !sameSnapshot(before, got) {
@@ -553,13 +553,13 @@ func TestAIRuntimeHookChecksReportConfiguredAndAvailableRuntimes(t *testing.T) {
 		{
 			id:        "ai.runtime-hook.claude-code",
 			status:    StatusWarn,
-			command:   "knowns runtime install claude-code",
+			command:   "knownme runtime install claude-code",
 			available: true,
 		},
 		{
 			id:         "ai.runtime-hook.codex",
 			status:     StatusWarn,
-			command:    "knowns runtime install codex",
+			command:    "knownme runtime install codex",
 			configured: true,
 		},
 		{
@@ -604,7 +604,7 @@ func TestDefaultLocalChecksDoNotMutateProject(t *testing.T) {
 
 func newDoctorStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("doctor-local-test"); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}

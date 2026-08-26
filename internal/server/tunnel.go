@@ -16,7 +16,6 @@ type ServerTunnelManager struct {
 	port   int
 }
 
-
 // NewServerTunnelManager creates a tunnel manager for the given local port.
 func NewServerTunnelManager(port int) *ServerTunnelManager {
 	return &ServerTunnelManager{port: port}

@@ -41,10 +41,10 @@ type openaiEmbeddingRequest struct {
 
 // openaiEmbeddingResponse is the response from /v1/embeddings.
 type openaiEmbeddingResponse struct {
-	Object string                    `json:"object"`
-	Data   []openaiEmbeddingDatum    `json:"data"`
-	Model  string                    `json:"model"`
-	Usage  *openaiEmbeddingUsage     `json:"usage,omitempty"`
+	Object string                 `json:"object"`
+	Data   []openaiEmbeddingDatum `json:"data"`
+	Model  string                 `json:"model"`
+	Usage  *openaiEmbeddingUsage  `json:"usage,omitempty"`
 }
 
 type openaiEmbeddingDatum struct {

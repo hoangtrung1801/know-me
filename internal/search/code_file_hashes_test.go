@@ -52,7 +52,7 @@ func TestLoadSaveCodeFileHashes(t *testing.T) {
 			FilePath: "src/main.go",
 			FileHash: "abc123",
 			ChunkHashes: map[string]string{
-				"code::src/main.go::main":    "hash1",
+				"code::src/main.go::main":     "hash1",
 				"code::src/main.go::__file__": "hash2",
 			},
 		},

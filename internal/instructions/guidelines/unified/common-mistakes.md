@@ -10,10 +10,10 @@
 
 ```bash
 # WRONG (sets assignee to garbage!)
-knowns task edit 35 -a "Criterion text"
+knownme task edit 35 -a "Criterion text"
 
 # CORRECT (use --ac)
-knowns task edit 35 --ac "Criterion text"
+knownme task edit 35 --ac "Criterion text"
 ```
 
 ---
@@ -26,10 +26,10 @@ knowns task edit 35 --ac "Criterion text"
 {{#if cli}}
 ```bash
 # ❌ WRONG - Destroys audit trail!
-knowns task edit <id> --notes "Done: feature X"
+knownme task edit <id> --notes "Done: feature X"
 
 # ✅ CORRECT - Preserves history
-knowns task edit <id> --append-notes "Done: feature X"
+knownme task edit <id> --append-notes "Done: feature X"
 ```
 {{/if}}
 {{#if mcp}}
@@ -136,12 +136,12 @@ this.logger.log(`Created: ${ \{{~camelCase entity~}}.id}`);
 | Problem | Solution |
 |---------|----------|
 {{#if cli}}
-| Set assignee to AC text | `knowns task edit <id> -a @me` |
-| Forgot to stop timer | `knowns time add <id> <duration>` |
-| Checked AC too early | `knowns task edit <id> --uncheck-ac N` |
-| Task not found | `knowns task list --plain` |
+| Set assignee to AC text | `knownme task edit <id> -a @me` |
+| Forgot to stop timer | `knownme time add <id> <duration>` |
+| Checked AC too early | `knownme task edit <id> --uncheck-ac N` |
+| Task not found | `knownme task list --plain` |
 | Replaced notes by mistake | Cannot recover - notes are lost. Use `--append-notes` next time |
-| Broken refs in task/doc | Run `knowns validate`, fix refs, validate again |
+| Broken refs in task/doc | Run `knownme validate`, fix refs, validate again |
 {{/if}}
 {{#if mcp}}
 | Forgot to stop timer | `mcp__knowns__add_time` with duration |

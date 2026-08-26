@@ -3,7 +3,6 @@ package adapters
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 func checkBinary(ctx context.Context, name string, args ...string) error {
@@ -33,11 +33,7 @@ func installedPath(adapterID string, deps []lsp.RuntimeDependency) (string, bool
 }
 
 func homeLSPDir() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return filepath.Join(".knowns", "lsp-servers")
-	}
-	return filepath.Join(home, ".knowns", "lsp-servers")
+	return filepath.Join(paths.GlobalStoreRoot(), "lsp-servers")
 }
 
 func initializationOptions(settings map[string]any) map[string]any {

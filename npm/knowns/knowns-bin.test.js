@@ -22,9 +22,9 @@ function createPlatformPackage() {
   const cacheRoot = path.join(root, "cache");
   fs.mkdirSync(packageDir, { recursive: true });
   fs.writeFileSync(path.join(packageDir, "package.json"), JSON.stringify({ version: "1.2.3" }));
-  fs.writeFileSync(path.join(packageDir, "knowns.exe"), "binary");
+  fs.writeFileSync(path.join(packageDir, "knownme.exe"), "binary");
   fs.writeFileSync(path.join(packageDir, "onnxruntime.dll"), "dll");
-  return { binary: path.join(packageDir, "knowns.exe"), cacheRoot };
+  return { binary: path.join(packageDir, "knownme.exe"), cacheRoot };
 }
 
 test("stages the Windows binary and adjacent DLLs outside node_modules", () => {
@@ -32,7 +32,7 @@ test("stages the Windows binary and adjacent DLLs outside node_modules", () => {
 
   const staged = stageWindowsBinary(binary, { platform: "win32", arch: "x64", cacheRoot });
 
-  expect(staged).toBe(path.join(cacheRoot, "1.2.3-x64", "knowns.exe"));
+  expect(staged).toBe(path.join(cacheRoot, "1.2.3-x64", "knownme.exe"));
   expect(fs.readFileSync(staged, "utf8")).toBe("binary");
   expect(fs.readFileSync(path.join(path.dirname(staged), "onnxruntime.dll"), "utf8")).toBe("dll");
 });

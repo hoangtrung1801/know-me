@@ -74,7 +74,7 @@ func TestSearchMCPDoesNotExposeEvaluationAction(t *testing.T) {
 }
 
 func TestHandleSearchHybridFallsBackToKeywordCompatibleResults(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("search-mcp-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestHandleSearchConcurrentHybridUsesSingleSemanticRuntimeEntry(t *testing.T
 	t.Setenv("HOME", t.TempDir())
 	search.DefaultSemanticRuntime().Close()
 	t.Cleanup(search.DefaultSemanticRuntime().Close)
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("search-mcp-runtime-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -218,7 +218,7 @@ func TestHandleSearchConcurrentHybridUsesSingleSemanticRuntimeEntry(t *testing.T
 }
 
 func TestHandleRetrieveHybridRuntimeMetadataIsAdditive(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("retrieve-mcp-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -264,7 +264,7 @@ func TestHandleRetrieveHybridRuntimeMetadataIsAdditive(t *testing.T) {
 }
 
 func TestHandleSearchAndRetrieveIncludeHistoricalDecisions(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("search-mcp-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -359,7 +359,7 @@ func TestHandleSearchAndRetrieveIncludeHistoricalDecisions(t *testing.T) {
 func TestResolveReferenceJSON(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := storage.NewStore(root)
 	if err := store.Init("resolve-mcp-test"); err != nil {
 		t.Fatalf("init store: %v", err)
@@ -401,7 +401,7 @@ func TestResolveReferenceJSON(t *testing.T) {
 }
 
 func TestResolveReferenceJSONInvalid(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if _, err := resolveReferenceJSON(store, "bad-ref"); err == nil {
 		t.Fatal("expected invalid ref error")
 	}

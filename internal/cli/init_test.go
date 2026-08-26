@@ -16,7 +16,7 @@ import (
 )
 
 func TestCreateOpenCodeConfigQuietCreatesConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
 
 	projectRoot := t.TempDir()
@@ -34,20 +34,20 @@ func TestCreateOpenCodeConfigQuietCreatesConfig(t *testing.T) {
 	mcp := getMap(t, config, "mcp")
 	knowns := getMap(t, mcp, "knowns")
 	if got := knowns["type"]; got != "local" {
-		t.Fatalf("expected knowns MCP type local, got %#v", got)
+		t.Fatalf("expected knownme MCP type local, got %#v", got)
 	}
 	if got := knowns["enabled"]; got != true {
-		t.Fatalf("expected knowns MCP enabled true, got %#v", got)
+		t.Fatalf("expected knownme MCP enabled true, got %#v", got)
 	}
 
 	command, ok := knowns["command"].([]any)
 	if !ok {
-		t.Fatalf("expected knowns command to be []any, got %T", knowns["command"])
+		t.Fatalf("expected knownme command to be []any, got %T", knowns["command"])
 	}
 	if len(command) != 3 {
 		t.Fatalf("expected 3 command parts, got %d", len(command))
 	}
-	expected := []string{"knowns", "mcp", "--stdio"}
+	expected := []string{"knownme", "mcp", "--stdio"}
 	for i, want := range expected {
 		if command[i] != want {
 			t.Fatalf("expected command[%d] = %q, got %#v", i, want, command[i])
@@ -80,7 +80,7 @@ func TestRunInitCreatesGlobalDefaultConfig(t *testing.T) {
 		_ = os.Setenv("USERPROFILE", oldUserProfile)
 	})
 
-	settingsPath := filepath.Join(home, ".knowns", "settings.json")
+	settingsPath := filepath.Join(home, ".known-me", "settings.json")
 	if err := os.MkdirAll(filepath.Dir(settingsPath), 0755); err != nil {
 		t.Fatalf("mkdir settings dir: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestRunInitRegistersNamedProject(t *testing.T) {
 		t.Fatalf("runInit returned error: %v", err)
 	}
 
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatalf("load registry: %v", err)
 	}
@@ -172,14 +172,14 @@ func TestRunInitWritesWorkspaceProjectLink(t *testing.T) {
 	}
 
 	link := readJSONFile(t, filepath.Join(projectRoot, ".known-me.json"))
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}
 	if len(reg.Projects) != 1 || link["projectId"] != reg.Projects[0].ID {
 		t.Fatalf("link = %#v, projects = %#v", link, reg.Projects)
 	}
-	projectStore := storage.NewProjectStore(filepath.Join(home, ".knowns"), reg.Projects[0].ID, projectRoot)
+	projectStore := storage.NewProjectStore(filepath.Join(home, ".known-me"), reg.Projects[0].ID, projectRoot)
 	if _, err := projectStore.Config.Load(); err != nil {
 		t.Fatalf("project config: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestRunInitDefaultsProjectNameToDirectory(t *testing.T) {
 		t.Fatalf("runInit returned error: %v", err)
 	}
 
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatalf("load registry: %v", err)
 	}
@@ -215,7 +215,7 @@ func TestRunInitRejectsExplicitBlankProjectName(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "project name is required") {
 		t.Fatalf("runInit error = %v, want project name validation", err)
 	}
-	if _, statErr := os.Stat(filepath.Join(home, ".knowns", "registry.json")); !os.IsNotExist(statErr) {
+	if _, statErr := os.Stat(filepath.Join(home, ".known-me", "registry.json")); !os.IsNotExist(statErr) {
 		t.Fatalf("registry exists after rejected name, stat error = %v", statErr)
 	}
 }
@@ -226,7 +226,7 @@ func TestSettingsCommandSurface(t *testing.T) {
 	}
 	for _, child := range configCmd.Commands() {
 		if child.Name() == "toggle" {
-			t.Fatalf("knowns config toggle must not be registered")
+			t.Fatalf("knownme config toggle must not be registered")
 		}
 	}
 }
@@ -245,7 +245,7 @@ func setInitBoolFlag(t *testing.T, name string, value bool) {
 }
 
 func TestCreateMCPJsonFileQuietUsesNpxKnowns(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
 
 	projectRoot := t.TempDir()
@@ -258,7 +258,7 @@ func TestCreateMCPJsonFileQuietUsesNpxKnowns(t *testing.T) {
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
 
-	if got := knowns["command"]; got != "knowns" {
+	if got := knowns["command"]; got != "knownme" {
 		t.Fatalf("expected command knowns, got %#v", got)
 	}
 
@@ -315,12 +315,12 @@ func TestCreateOpenCodeConfigQuietMergesExistingConfig(t *testing.T) {
 		t.Fatalf("expected existing MCP entry to be preserved")
 	}
 	if _, ok := mcp["knowns"]; !ok {
-		t.Fatalf("expected knowns MCP entry to be added")
+		t.Fatalf("expected knownme MCP entry to be added")
 	}
 }
 
 func TestCreateCursorMCPConfigQuietCreatesConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
 
 	projectRoot := t.TempDir()
@@ -333,7 +333,7 @@ func TestCreateCursorMCPConfigQuietCreatesConfig(t *testing.T) {
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
 
-	if got := knowns["command"]; got != "knowns" {
+	if got := knowns["command"]; got != "knownme" {
 		t.Fatalf("expected command knowns, got %#v", got)
 	}
 
@@ -353,7 +353,7 @@ func TestCreateCursorMCPConfigQuietCreatesConfig(t *testing.T) {
 }
 
 func TestCreateCodexMCPConfigQuietCreatesConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
 
 	projectRoot := t.TempDir()
@@ -364,12 +364,12 @@ func TestCreateCodexMCPConfigQuietCreatesConfig(t *testing.T) {
 
 	content := readTextFile(t, filepath.Join(projectRoot, ".codex", "config.toml"))
 	assertContains(t, content, "[mcp_servers.knowns]")
-	assertContains(t, content, `command = "knowns"`)
+	assertContains(t, content, `command = "knownme"`)
 	assertContains(t, content, `args = ["mcp", "--stdio"]`)
 }
 
 func TestCreateCodexMCPConfigQuietMergesExistingConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
 
 	projectRoot := t.TempDir()
@@ -412,11 +412,11 @@ func TestCreateAntigravityRulesQuietCreatesRuleFile(t *testing.T) {
 	assertContains(t, content, "trigger: always_on")
 	assertContains(t, content, "Start with Know-Me MCP `initial`")
 	assertContains(t, content, "Prefer Know-Me MCP tools")
-	assertContains(t, content, "`knowns`")
+	assertContains(t, content, "`knownme`")
 }
 
 func TestCreateAntigravityMCPConfigQuietUsesAbsoluteProjectPath(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	home := t.TempDir()
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
@@ -434,7 +434,7 @@ func TestCreateAntigravityMCPConfigQuietUsesAbsoluteProjectPath(t *testing.T) {
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
 
-	if got := knowns["command"]; got != "knowns" {
+	if got := knowns["command"]; got != "knownme" {
 		t.Fatalf("expected command knowns, got %#v", got)
 	}
 
@@ -454,7 +454,7 @@ func TestCreateAntigravityMCPConfigQuietUsesAbsoluteProjectPath(t *testing.T) {
 }
 
 func TestCreateHermesMCPConfigQuietUsesAbsoluteProjectPathAndSkills(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	home := t.TempDir()
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
@@ -472,7 +472,7 @@ func TestCreateHermesMCPConfigQuietUsesAbsoluteProjectPathAndSkills(t *testing.T
 	mcpServers := getMap(t, config, "mcp_servers")
 	knowns := getMap(t, mcpServers, "knowns")
 
-	if got := knowns["command"]; got != "knowns" {
+	if got := knowns["command"]; got != "knownme" {
 		t.Fatalf("expected command knowns, got %#v", got)
 	}
 
@@ -491,7 +491,7 @@ func TestCreateHermesMCPConfigQuietUsesAbsoluteProjectPathAndSkills(t *testing.T
 }
 
 func TestSetupGlobalHermesMCPUsesGlobalSkillsWithoutProject(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
 
 	home := t.TempDir()
@@ -519,7 +519,7 @@ func TestSetupGlobalHermesMCPUsesGlobalSkillsWithoutProject(t *testing.T) {
 func TestRunSyncPlatformConfigsSkipsWhenPlatformsUnset(t *testing.T) {
 	projectRoot := t.TempDir()
 	home := t.TempDir()
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
 		execLookPath = defaultExecLookPath
@@ -547,7 +547,7 @@ func TestRunSyncPlatformConfigsSkipsWhenPlatformsUnset(t *testing.T) {
 func TestRunSyncPlatformConfigsCreatesCursorHermesAndAntigravityArtifacts(t *testing.T) {
 	projectRoot := t.TempDir()
 	home := t.TempDir()
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
 		execLookPath = defaultExecLookPath
@@ -729,7 +729,7 @@ func TestSyncAntigravityMCPConfigUpdatesCommandAndProject(t *testing.T) {
 		},
 	})
 
-	updated, err := syncAntigravityMCPConfig(projectRoot, "knowns", []string{"mcp", "--stdio"})
+	updated, err := syncAntigravityMCPConfig(projectRoot, "knownme", []string{"mcp", "--stdio"})
 	if err != nil {
 		t.Fatalf("syncAntigravityMCPConfig returned error: %v", err)
 	}
@@ -740,7 +740,7 @@ func TestSyncAntigravityMCPConfigUpdatesCommandAndProject(t *testing.T) {
 	config := readJSONFile(t, configPath)
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
-	if got := knowns["command"]; got != "knowns" {
+	if got := knowns["command"]; got != "knownme" {
 		t.Fatalf("expected command knowns, got %#v", got)
 	}
 	args, ok := knowns["args"].([]any)
@@ -774,7 +774,7 @@ func TestSyncCodexMCPConfigUpdatesCommand(t *testing.T) {
 		t.Fatalf("seed config.toml: %v", err)
 	}
 
-	updated, err := syncCodexMCPConfig(projectRoot, "knowns", []string{"mcp", "--stdio"})
+	updated, err := syncCodexMCPConfig(projectRoot, "knownme", []string{"mcp", "--stdio"})
 	if err != nil {
 		t.Fatalf("syncCodexMCPConfig returned error: %v", err)
 	}
@@ -783,7 +783,7 @@ func TestSyncCodexMCPConfigUpdatesCommand(t *testing.T) {
 	}
 
 	content := readTextFile(t, configPath)
-	assertContains(t, content, `command = "knowns"`)
+	assertContains(t, content, `command = "knownme"`)
 	assertContains(t, content, `args = ["mcp", "--stdio"]`)
 	assertNotContains(t, content, `command = "npx"`)
 }
@@ -845,7 +845,7 @@ func TestPlatformLabelUsesUnifiedRuntimeArtifactSummary(t *testing.T) {
 func TestRuntimeInstallHelpersExposeAvailabilitySummary(t *testing.T) {
 	opts := runtimeinstall.Options{
 		HomeDir:        t.TempDir(),
-		ExecutablePath: "/usr/local/bin/knowns",
+		ExecutablePath: "/usr/local/bin/knownme",
 		LookPath: func(name string) (string, error) {
 			if name == "claude" {
 				return "/usr/local/bin/claude", nil
@@ -879,8 +879,8 @@ func TestWriteKnownsGitignoreGitIgnoredTracksKnowledgeSections(t *testing.T) {
 		t.Fatalf("root .gitignore modified unexpectedly:\n%s", rootContent)
 	}
 
-	// .knowns/.gitignore should ignore everything except tracked dirs.
-	knownsGitignore := filepath.Join(dir, ".knowns", ".gitignore")
+	// .known-me/.gitignore should ignore everything except tracked dirs.
+	knownsGitignore := filepath.Join(dir, ".known-me", ".gitignore")
 	content := readTextFile(t, knownsGitignore)
 	assertContains(t, content, "*")
 	assertContains(t, content, "!docs/")
@@ -904,8 +904,8 @@ func TestWriteKnownsGitignoreGitTrackedRemovesManagedBlock(t *testing.T) {
 	seed := strings.Join([]string{
 		"bin/",
 		knownsGitignoreBegin,
-		".knowns/*",
-		"!.knowns/docs/**",
+		".known-me/*",
+		"!.known-me/docs/**",
 		knownsGitignoreEnd,
 		"tmp/",
 	}, "\n") + "\n"
@@ -924,8 +924,8 @@ func TestWriteKnownsGitignoreGitTrackedRemovesManagedBlock(t *testing.T) {
 		t.Fatalf("unexpected root .gitignore content:\nwant:\n%s\n got:\n%s", want, rootContent)
 	}
 
-	// .knowns/.gitignore should contain runtime/cache ignores.
-	knownsGitignore := filepath.Join(dir, ".knowns", ".gitignore")
+	// .known-me/.gitignore should contain runtime/cache ignores.
+	knownsGitignore := filepath.Join(dir, ".known-me", ".gitignore")
 	content := readTextFile(t, knownsGitignore)
 	assertContains(t, content, ".search/")
 	assertContains(t, content, "runtime/")
@@ -938,8 +938,8 @@ func TestWriteKnownsGitignoreNoneLeavesGitignoreUnmanaged(t *testing.T) {
 	seed := strings.Join([]string{
 		"bin/",
 		knownsGitignoreBegin,
-		".knowns/*",
-		"!.knowns/docs/**",
+		".known-me/*",
+		"!.known-me/docs/**",
 		knownsGitignoreEnd,
 	}, "\n") + "\n"
 
@@ -1048,7 +1048,7 @@ func TestWriteKnownsGitignoreTrackedWithExplicitDisabled(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".knowns", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
 
 	assertContains(t, content, "docs/")
 	assertContains(t, content, "decisions/")
@@ -1069,7 +1069,7 @@ func TestWriteKnownsGitignoreIgnoredWithDisabledDocs(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".knowns", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
 
 	assertNotContains(t, content, "!docs/")
 	assertContains(t, content, "!tasks/")
@@ -1085,7 +1085,7 @@ func TestWriteKnownsGitignoreTaskToggleControlsTaskTombstones(t *testing.T) {
 	if err := writeKnownsGitignore(dir, "git-ignored", tracking); err != nil {
 		t.Fatalf("writeKnownsGitignore git-ignored: %v", err)
 	}
-	content := readTextFile(t, filepath.Join(dir, ".knowns", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
 	assertNotContains(t, content, "!tasks/")
 	assertNotContains(t, content, "!tombstones/")
 	assertNotContains(t, content, "!tombstones/tasks/")
@@ -1093,7 +1093,7 @@ func TestWriteKnownsGitignoreTaskToggleControlsTaskTombstones(t *testing.T) {
 	if err := writeKnownsGitignore(dir, "git-tracked", tracking); err != nil {
 		t.Fatalf("writeKnownsGitignore git-tracked: %v", err)
 	}
-	content = readTextFile(t, filepath.Join(dir, ".knowns", ".gitignore"))
+	content = readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
 	assertContains(t, content, "tasks/")
 	assertContains(t, content, "tombstones/tasks/")
 }
@@ -1110,7 +1110,7 @@ func TestWriteKnownsGitignoreIgnoredWithDisabledDecisions(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".knowns", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
 
 	assertNotContains(t, content, "!decisions/")
 	assertContains(t, content, "!tasks/")
@@ -1125,7 +1125,7 @@ func TestWriteKnownsGitignoreTrackedMemoriesDisabledByDefault(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".knowns", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
 
 	assertContains(t, content, "memories/")
 	assertNotContains(t, content, "decisions/")
@@ -1152,7 +1152,7 @@ func TestSyncGitIntegrationPreservesSectionToggles(t *testing.T) {
 		t.Fatalf("syncGitIntegration returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".knowns", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
 
 	assertNotContains(t, content, "!decisions/")
 	assertContains(t, content, "!memories/")

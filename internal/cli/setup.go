@@ -33,7 +33,7 @@ Targets:
   all       Generate all supported AI integration files
 
 Use --global to install at user-level paths (no project required).
-Global MCP uses 'knowns mcp --stdio' without --project flag.`,
+Global MCP uses 'knownme mcp --stdio' without --project flag.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runSetupCmd,
 }
@@ -41,7 +41,7 @@ Global MCP uses 'knowns mcp --stdio' without --project flag.`,
 func runSetupCmd(cmd *cobra.Command, args []string) error {
 	force, _ := cmd.Flags().GetBool("force")
 
-	// Check --global first, before .knowns check
+	// Check --global first, before .known-me check
 	global, _ := cmd.Flags().GetBool("global")
 	if global {
 		return runGlobalSetup(cmd, args, force)
@@ -52,10 +52,10 @@ func runSetupCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot determine working directory: %w", err)
 	}
 
-	root := filepath.Join(cwd, ".knowns")
+	root := filepath.Join(cwd, ".known-me")
 	if _, err := os.Stat(root); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("project is not initialized; run 'knowns init' first")
+			return fmt.Errorf("project is not initialized; run 'knownme init' first")
 		}
 		return err
 	}

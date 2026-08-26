@@ -307,7 +307,7 @@ func buildOpenCodeProxy(cfg opencode.Config) *httputil.ReverseProxy {
 }
 
 // NewServer creates a Server wired to the given store.
-// projectRoot is the directory that contains the .knowns/ folder.
+// projectRoot is the directory that contains the .known-me/ folder.
 // port is the TCP port to listen on (e.g. 3737).
 func NewServer(store *storage.Store, projectRoot string, port int, opts Options) *Server {
 	// Silence standard log output unless dev mode is enabled.
@@ -898,7 +898,7 @@ func (s *Server) startOpenCodeSSEForwarder(ctx context.Context) {
 	}()
 }
 
-// writePortFile saves the active port to .knowns/.server-port so CLI commands
+// writePortFile saves the active port to .known-me/.server-port so CLI commands
 // can discover the running server.
 func (s *Server) writePortFile() error {
 	if s.store == nil {

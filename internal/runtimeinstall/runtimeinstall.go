@@ -96,7 +96,7 @@ func DefaultOptions() Options {
 	home, _ := os.UserHomeDir()
 	exe, err := os.Executable()
 	if err != nil {
-		exe = "knowns"
+		exe = "knownme"
 	}
 	return Options{
 		HomeDir:        home,
@@ -300,8 +300,8 @@ func baselineHookCommandPath(spec runtimeSpec, opts Options) string {
 func hookCommandArgsForEvent(spec runtimeSpec, opts Options, event string) []string {
 	exe := opts.ExecutablePath
 	if opts.LookPath != nil {
-		if _, err := opts.LookPath("knowns"); err == nil {
-			exe = "knowns"
+		if _, err := opts.LookPath("knownme"); err == nil {
+			exe = "knownme"
 		}
 	}
 	return []string{exe, "runtime-memory", "hook", "--runtime", spec.Runtime, "--event", event}
@@ -539,10 +539,10 @@ func installKiro(spec runtimeSpec, opts Options) error {
 		return err
 	}
 
-	// Prefer bare "knowns" command when it's available in PATH,
+	// Prefer bare "knownme" command when it's available in PATH,
 	// so the hook stays portable across machines.
-	cmdPath := "knowns"
-	if _, lookErr := opts.LookPath("knowns"); lookErr != nil {
+	cmdPath := "knownme"
+	if _, lookErr := opts.LookPath("knownme"); lookErr != nil {
 		cmdPath = opts.ExecutablePath
 	}
 
@@ -629,7 +629,7 @@ func installOpenCode(spec runtimeSpec, opts Options) error {
 	}
 	mcp["knowns"] = map[string]any{
 		"type":    "local",
-		"command": []string{"knowns", "mcp", "--stdio"},
+		"command": []string{"knownme", "mcp", "--stdio"},
 		"enabled": true,
 	}
 	config["mcp"] = mcp
@@ -677,11 +677,11 @@ func renderOpenCodePlugin(opts Options) string {
 		"export const KnownsRuntimeMemoryPlugin = async ({ client }) => {",
 		"  const injectedSessions = new Set()",
 		"  const debugEnabled = process.env.KNOWNS_RUNTIME_DEBUG === \"1\"",
-		"  const logPath = join(process.env.HOME || process.cwd(), \".knowns\", \"runtime\", \"opencode-runtime-memory.log\")",
+		"  const logPath = join(process.env.HOME || process.cwd(), \".known-me\", \"runtime\", \"opencode-runtime-memory.log\")",
 		"  const log = (message, extra) => {",
 		"    if (!debugEnabled) return",
 		"    try {",
-		"      mkdirSync(join(process.env.HOME || process.cwd(), \".knowns\", \"runtime\"), { recursive: true })",
+		"      mkdirSync(join(process.env.HOME || process.cwd(), \".known-me\", \"runtime\"), { recursive: true })",
 		"      const suffix = extra ? ` ${JSON.stringify(extra)}` : \"\"",
 		"      appendFileSync(logPath, `[${new Date().toISOString()}] ${message}${suffix}\\n`)",
 		"    } catch (_) {",
@@ -703,7 +703,7 @@ func renderOpenCodePlugin(opts Options) string {
 		"          cwd,",
 		"          env: { ...process.env },",
 		"        }).toString().trim()",
-		"        log(\"knowns hook returned\", { resultLength: result.length })",
+		"        log(\"knownme hook returned\", { resultLength: result.length })",
 		"        if (!result) return",
 		"        injectedSessions.add(sessionID)",
 		"        await client.session.prompt({",

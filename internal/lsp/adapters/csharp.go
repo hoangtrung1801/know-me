@@ -27,7 +27,7 @@ func (a *RoslynAdapter) CheckPrerequisites(ctx context.Context) error {
 	return requireMinVersion(output, ".NET SDK", 10, 0)
 }
 func (a *RoslynAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{Command: "knowns lsp install csharp", KnownsCmd: "knowns lsp install csharp", URL: "https://www.nuget.org/packages/Microsoft.CodeAnalysis.LanguageServer.neutral", Notes: "Downloads Roslyn LS from NuGet and requires .NET SDK 10+"}
+	return lsp.InstallGuide{Command: "knownme lsp install csharp", KnownsCmd: "knownme lsp install csharp", URL: "https://www.nuget.org/packages/Microsoft.CodeAnalysis.LanguageServer.neutral", Notes: "Downloads Roslyn LS from NuGet and requires .NET SDK 10+"}
 }
 func (a *RoslynAdapter) CanInstall() bool { return true }
 func (a *RoslynAdapter) RuntimeDeps() []lsp.RuntimeDependency {

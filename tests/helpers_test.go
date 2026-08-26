@@ -28,8 +28,8 @@ type CLIResult struct {
 
 var ensureBinaryOnce sync.Once
 
-// getBinaryPath returns the absolute path to the knowns binary.
-// Respects TEST_BINARY env var; defaults to ../bin/knowns relative to this source file.
+// getBinaryPath returns the absolute path to the knownme binary.
+// Respects TEST_BINARY env var; defaults to ../bin/knownme relative to this source file.
 func getBinaryPath(t *testing.T) string {
 	t.Helper()
 	if p := os.Getenv("TEST_BINARY"); p != "" {
@@ -41,8 +41,8 @@ func getBinaryPath(t *testing.T) string {
 	}
 	// Resolve relative to this source file's directory.
 	// When go test runs, the working dir is the package dir (tests/),
-	// so ../bin/knowns should work, but let's make it absolute.
-	binaryName := "knowns"
+	// so ../bin/knownme should work, but let's make it absolute.
+	binaryName := "knownme"
 	if runtime.GOOS == "windows" {
 		binaryName += ".exe"
 	}
@@ -68,7 +68,7 @@ func ensureTestBinary(t *testing.T, abs string) {
 			return
 		}
 
-		cmd := exec.Command("go", "build", "-o", abs, "./cmd/knowns")
+		cmd := exec.Command("go", "build", "-o", abs, "./cmd/knownme")
 		cmd.Dir = repoRoot
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -85,7 +85,7 @@ func ensureTestBinary(t *testing.T, abs string) {
 	}
 }
 
-// setupTestProject creates an isolated temp directory with git init + knowns init.
+// setupTestProject creates an isolated temp directory with git init + knownme init.
 // Returns the project dir. Cleanup is automatic via t.Cleanup.
 func setupTestProject(t *testing.T) string {
 	t.Helper()
@@ -112,16 +112,16 @@ func setupTestProject(t *testing.T) string {
 		_ = c.Run()
 	}
 
-	// knowns init
+	// knownme init
 	res := runCli(t, dir, "init", "e2e-test", "--no-wizard")
 	if res.ExitCode != 0 {
-		t.Fatalf("knowns init failed (code %d): %s\n%s", res.ExitCode, res.Stderr, res.Stdout)
+		t.Fatalf("knownme init failed (code %d): %s\n%s", res.ExitCode, res.Stderr, res.Stdout)
 	}
 
 	return dir
 }
 
-// runCli executes the knowns binary with the given args inside dir.
+// runCli executes the knownme binary with the given args inside dir.
 // Timeout is 60 seconds.
 func runCli(t *testing.T, dir string, args ...string) CLIResult {
 	t.Helper()
@@ -223,7 +223,7 @@ type MCPClient struct {
 	mu     sync.Mutex
 }
 
-// startMCPServer spawns "knowns mcp" and returns a client.
+// startMCPServer spawns "knownme mcp" and returns a client.
 func startMCPServer(t *testing.T) *MCPClient {
 	t.Helper()
 

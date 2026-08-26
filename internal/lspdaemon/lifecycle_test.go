@@ -209,7 +209,7 @@ func daemonProjectRoot(t *testing.T) string {
 	t.Helper()
 	isolateHome(t)
 	root := t.TempDir()
-	store := storage.NewStore(filepath.Join(root, ".knowns"))
+	store := storage.NewStore(filepath.Join(root, ".known-me"))
 	project := &models.Project{
 		Name:      "daemon-lifecycle-test",
 		ID:        "daemon-lifecycle-test",

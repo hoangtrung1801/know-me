@@ -437,7 +437,7 @@ func newSemanticRuntimeTestStore(t *testing.T, model string, dimensions int) *st
 
 func newSemanticRuntimeTestStoreWithProvider(t *testing.T, model string, dimensions int, provider string) *storage.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	if err := os.MkdirAll(root, 0755); err != nil {
 		t.Fatalf("mkdir store: %v", err)
 	}

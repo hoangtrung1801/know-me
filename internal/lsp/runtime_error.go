@@ -82,5 +82,5 @@ func CSharpLogPath(root, backend string) string {
 	if backend == "" {
 		backend = CSharpLanguageID
 	}
-	return filepath.Join(root, ".knowns", "logs", "lsp", CSharpLanguageID+"-"+backend+".log")
+	return filepath.Join(root, ".known-me", "logs", "lsp", CSharpLanguageID+"-"+backend+".log")
 }

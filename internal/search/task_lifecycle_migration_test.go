@@ -12,7 +12,7 @@ import (
 )
 
 func TestLegacyTaskLifecycleProjectLoadsAndReindexesWithoutRewrite(t *testing.T) {
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := storage.NewStore(root)
 	if err := store.Init("legacy-lifecycle"); err != nil {
 		t.Fatalf("Init: %v", err)

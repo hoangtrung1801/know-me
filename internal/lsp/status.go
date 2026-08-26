@@ -534,7 +534,7 @@ func installCommand(languageID string) string {
 	if languageID == "" {
 		return ""
 	}
-	return "knowns lsp install " + languageID
+	return "knownme lsp install " + languageID
 }
 
 // LanguageLogPath returns the shared wrapper log path for non-backend-specific
@@ -543,5 +543,5 @@ func LanguageLogPath(root, languageID string) string {
 	if root == "" || languageID == "" {
 		return ""
 	}
-	return filepath.Join(root, ".knowns", "logs", "lsp", languageID+".log")
+	return filepath.Join(root, ".known-me", "logs", "lsp", languageID+".log")
 }

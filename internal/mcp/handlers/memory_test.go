@@ -172,7 +172,7 @@ func TestMemoryUpdateTouchRemovesEntryFromCleanup(t *testing.T) {
 func setupMemoryCleanupStore(t *testing.T) *storage.Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("memory-cleanup-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

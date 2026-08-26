@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // PluginAdapterManifest is the JSON schema for user-contributed LSP adapters.
@@ -81,11 +83,7 @@ type PluginAdapter struct {
 }
 
 func DefaultPluginAdapterDir() string {
-	home, err := os.UserHomeDir()
-	if err != nil || home == "" {
-		return filepath.Join(".knowns", "lsp-adapters")
-	}
-	return filepath.Join(home, ".knowns", "lsp-adapters")
+	return filepath.Join(paths.GlobalStoreRoot(), "lsp-adapters")
 }
 
 func LoadPluginAdapters(opts PluginAdapterLoadOptions) PluginAdapterLoadResult {

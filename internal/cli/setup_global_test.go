@@ -8,7 +8,7 @@ import (
 
 func TestSetupGlobalClaudeCodeMCPUsesClaudeUserConfig(t *testing.T) {
 	home := t.TempDir()
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowns", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
 
 	configPath := filepath.Join(home, ".claude.json")
@@ -37,20 +37,20 @@ func TestSetupGlobalClaudeCodeMCPUsesClaudeUserConfig(t *testing.T) {
 	}
 
 	knowns := getMap(t, servers, "knowns")
-	if got := knowns["command"]; got != "knowns" {
-		t.Fatalf("expected knowns MCP command, got %#v", got)
+	if got := knowns["command"]; got != "knownme" {
+		t.Fatalf("expected knownme MCP command, got %#v", got)
 	}
 	args, ok := knowns["args"].([]any)
 	if !ok {
-		t.Fatalf("expected knowns MCP args to be []any, got %T", knowns["args"])
+		t.Fatalf("expected knownme MCP args to be []any, got %T", knowns["args"])
 	}
 	wantArgs := []string{"mcp", "--stdio"}
 	if len(args) != len(wantArgs) {
-		t.Fatalf("expected %d knowns MCP args, got %d", len(wantArgs), len(args))
+		t.Fatalf("expected %d knownme MCP args, got %d", len(wantArgs), len(args))
 	}
 	for i, want := range wantArgs {
 		if args[i] != want {
-			t.Fatalf("expected knowns MCP arg %d to be %q, got %#v", i, want, args[i])
+			t.Fatalf("expected knownme MCP arg %d to be %q, got %#v", i, want, args[i])
 		}
 	}
 

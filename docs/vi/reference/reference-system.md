@@ -23,6 +23,6 @@ Reference giúp navigate giữa các entity mà không cần nhớ path hay ID.
 
 ```bash
 knowns resolve "@doc/specs/auth{implements}" --plain
-knowns search "authentication" --plain
-knowns retrieve "how auth works" --json
+knownme search "authentication" --plain
+knownme retrieve "how auth works" --json
 ```

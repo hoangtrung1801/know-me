@@ -12,11 +12,11 @@ MCP_CLIENTS="${MCP_CLIENTS:-3}"
 MCP_CALLS="${MCP_CALLS:-3}"
 RUN_CODE="${RUN_CODE:-0}"
 MCP_SEARCH_MODE="${MCP_SEARCH_MODE:-keyword}"
-MCP_QUERY="${MCP_QUERY:-knowns runtime MCP}"
-MCP_CODE_PATH="${MCP_CODE_PATH:-cmd/knowns/main.go}"
+MCP_QUERY="${MCP_QUERY:-knownme runtime MCP}"
+MCP_CODE_PATH="${MCP_CODE_PATH:-cmd/knownme/main.go}"
 MCP_HOLD_SECONDS="${MCP_HOLD_SECONDS:-5}"
 LSP_STRESS="${LSP_STRESS:-0}"
-LSP_PATHS="${LSP_PATHS:-cmd/knowns/main.go,ui/src/lib/utils.ts,ui/src/api/client.ts,tests/runtime-docker/fixtures/csharp/Program.cs}"
+LSP_PATHS="${LSP_PATHS:-cmd/knownme/main.go,ui/src/lib/utils.ts,ui/src/api/client.ts,tests/runtime-docker/fixtures/csharp/Program.cs}"
 VERBOSE="${VERBOSE:-0}"
 USE_ONNX="${USE_ONNX:-0}"
 ONNX_MODEL="${ONNX_MODEL:-gte-small}"
@@ -32,8 +32,8 @@ RESTORE_CONFIG=0
 mkdir -p "$HOME"
 
 restore_project_config() {
-  if (( RESTORE_CONFIG == 1 )) && [[ -f "$CONFIG_BACKUP" && -d "$PROJECT/.knowns" ]]; then
-    cp "$CONFIG_BACKUP" "$PROJECT/.knowns/config.json" || true
+  if (( RESTORE_CONFIG == 1 )) && [[ -f "$CONFIG_BACKUP" && -d "$PROJECT/.known-me" ]]; then
+    cp "$CONFIG_BACKUP" "$PROJECT/.known-me/config.json" || true
   fi
 }
 
@@ -68,13 +68,13 @@ dump_memory() {
 dump_summary() {
   local label="${1:-state}"
   echo "=== ${label}: runtime summary ==="
-  knowns runtime ps --json 2>/tmp/knowns-runtime-ps.err \
+  knownme runtime ps --json 2>/tmp/knowns-runtime-ps.err \
     | jq '{running:.status.running,pid:.status.pid,version:.status.version,clients:(.status.clients // [] | length),projects:(.status.projects // [])}' \
     || { cat /tmp/knowns-runtime-ps.err || true; true; }
 
   if [[ "$LSP_STRESS" == "1" ]]; then
     echo "=== ${label}: lsp summary ==="
-    knowns lsp list --json 2>/tmp/knowns-lsp-list.err \
+    knownme lsp list --json 2>/tmp/knowns-lsp-list.err \
       | jq '[.[] | select(.id == "go" or .id == "typescript" or .id == "csharp") | {id,status,running_state,readiness_state,owner,daemon_pid,binary,backend}]' \
       || { cat /tmp/knowns-lsp-list.err || true; true; }
   fi
@@ -89,13 +89,13 @@ dump_summary() {
 dump_state() {
   local label="${1:-state}"
   echo "=== ${label}: knowns runtime ps --json ==="
-  knowns runtime ps --json 2>/tmp/knowns-runtime-ps.err || {
+  knownme runtime ps --json 2>/tmp/knowns-runtime-ps.err || {
     cat /tmp/knowns-runtime-ps.err || true
     true
   }
 
   echo "=== ${label}: knowns lsp list --json ==="
-  knowns lsp list --json 2>/tmp/knowns-lsp-list.err || {
+  knownme lsp list --json 2>/tmp/knowns-lsp-list.err || {
     cat /tmp/knowns-lsp-list.err || true
     true
   }
@@ -109,15 +109,15 @@ dump_state() {
   dump_memory "$label"
 
   echo "=== ${label}: knowns logs ==="
-  find "$HOME/.knowns" -maxdepth 4 -type f 2>/dev/null | sort || true
-  for log in "$HOME/.knowns/logs/runtime.log" "$HOME/.knowns/logs/mcp.log"; do
+  find "$HOME/.known-me" -maxdepth 4 -type f 2>/dev/null | sort || true
+  for log in "$HOME/.known-me/logs/runtime.log" "$HOME/.known-me/logs/mcp.log"; do
     if [[ -f "$log" ]]; then
       echo "--- tail ${log} ---"
       tail -120 "$log" || true
     fi
   done
-  if [[ -d "$PROJECT/.knowns/logs/lsp" ]]; then
-    for log in "$PROJECT"/.knowns/logs/lsp/*.log(N); do
+  if [[ -d "$PROJECT/.known-me/logs/lsp" ]]; then
+    for log in "$PROJECT"/.known-me/logs/lsp/*.log(N); do
       echo "--- tail ${log} ---"
       tail -80 "$log" || true
     done
@@ -129,7 +129,7 @@ on_exit() {
   if (( code != 0 )); then
     dump_state "failure"
   fi
-  knowns runtime stop >/dev/null 2>&1 || true
+  knownme runtime stop >/dev/null 2>&1 || true
   restore_project_config
   exit "$code"
 }
@@ -139,7 +139,7 @@ OOM_BEFORE="$(memory_event_value oom_kill)"
 OOM_BEFORE="${OOM_BEFORE:-0}"
 
 echo "=== zsh PATH check ==="
-zsh -c 'echo "shell=$SHELL"; echo "path=$PATH"; which knowns; knowns --version'
+zsh -c 'echo "shell=$SHELL"; echo "path=$PATH"; which knownme; knownme --version'
 
 if [[ ! -d "$PROJECT" ]]; then
   echo "project mount not found: $PROJECT" >&2
@@ -148,29 +148,29 @@ fi
 
 cd "$PROJECT"
 
-if [[ ! -d .knowns ]]; then
+if [[ ! -d .known-me ]]; then
   echo "mounted project is not a Knowns project: $PROJECT" >&2
   exit 1
 fi
 
-if [[ ! -w .knowns ]]; then
-  echo "mounted project .knowns is not writable; Docker bind mount must allow writes for runtime state" >&2
+if [[ ! -w .known-me ]]; then
+  echo "mounted project .known-me is not writable; Docker bind mount must allow writes for runtime state" >&2
   exit 1
 fi
 
 if [[ "$USE_ONNX" == "1" ]]; then
   echo "=== configure local ONNX semantic search ==="
-  cp .knowns/config.json "$CONFIG_BACKUP"
+  cp .known-me/config.json "$CONFIG_BACKUP"
   RESTORE_CONFIG=1
-  knowns model download "$ONNX_MODEL"
-  knowns model set "$ONNX_MODEL"
-  knowns config set settings.semanticSearch.provider local
+  knownme model download "$ONNX_MODEL"
+  knownme model set "$ONNX_MODEL"
+  knownme config set settings.semanticSearch.provider local
   if [[ "$MCP_SEARCH_MODE" == "keyword" ]]; then
     MCP_SEARCH_MODE="semantic"
   fi
-  knowns model status --plain || true
+  knownme model status --plain || true
   if [[ "$ONNX_REINDEX" == "1" ]]; then
-    KNOWNS_RUNTIME_INLINE=1 knowns search --reindex
+    KNOWNS_RUNTIME_INLINE=1 knownme search --reindex
   fi
 fi
 
@@ -181,22 +181,22 @@ git rev-parse --short HEAD 2>/dev/null || true
 
 echo "=== start runtime surfaces on mounted project ==="
 if [[ "$MCP_SEARCH_MODE" == "keyword" ]]; then
-  knowns search "$MCP_QUERY" --keyword --plain >/tmp/knowns-project-search.txt || true
+  knownme search "$MCP_QUERY" --keyword --plain >/tmp/knowns-project-search.txt || true
 else
-  knowns search "$MCP_QUERY" --plain >/tmp/knowns-project-search.txt || true
+  knownme search "$MCP_QUERY" --plain >/tmp/knowns-project-search.txt || true
 fi
 if is_verbose; then
-  knowns runtime ps --json || true
+  knownme runtime ps --json || true
 else
-  knowns runtime ps --json \
+  knownme runtime ps --json \
     | jq '{running:.status.running,pid:.status.pid,version:.status.version,clients:(.status.clients // [] | length),projects:(.status.projects // [])}' \
     || true
 fi
 if [[ "$LSP_STRESS" == "1" ]]; then
   if is_verbose; then
-    knowns lsp list --json || true
+    knownme lsp list --json || true
   else
-    knowns lsp list --json \
+    knownme lsp list --json \
       | jq '[.[] | select(.id == "go" or .id == "typescript" or .id == "csharp") | {id,status,running_state,readiness_state,owner,daemon_pid,binary,backend}]' \
       || true
   fi
@@ -220,5 +220,5 @@ if (( OOM_AFTER > OOM_BEFORE )); then
   exit 1
 fi
 
-knowns runtime stop || true
+knownme runtime stop || true
 echo "runtime docker project stress passed"

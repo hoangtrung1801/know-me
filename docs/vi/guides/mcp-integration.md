@@ -5,8 +5,8 @@ Know-Me expose MCP server để AI assistants truy cập trực tiếp task, doc
 ## Server command
 
 ```bash
-knowns mcp --stdio
-knowns mcp --stdio --project /path/to/project
+knownme mcp --stdio
+knownme mcp --stdio --project /path/to/project
 ```
 
 Nếu không truyền `--project`, Know-Me sẽ cố auto-detect project từ current working directory.
@@ -54,7 +54,7 @@ Nếu không truyền `--project`, Know-Me sẽ cố auto-detect project từ cu
 ### Codex
 
 ```toml
-[mcp_servers.knowns]
+[mcp_servers.known-me]
 command = "knowns"
 args = ["mcp", "--stdio"]
 ```
@@ -81,7 +81,7 @@ Với config MCP global, server có thể không biết project nào cần dùng
 Ưu tiên server command có project rõ ràng khi client hỗ trợ:
 
 ```bash
-knowns mcp --stdio --project /path/to/project
+knownme mcp --stdio --project /path/to/project
 ```
 
 Hoặc set active project bằng MCP `project` tool:

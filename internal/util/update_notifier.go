@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 const (
@@ -24,7 +26,7 @@ type updateCache struct {
 
 // CheckForUpdate checks npm registry for a newer version and returns
 // a notification string if one is available (empty string if up to date).
-// It caches the result for 1 hour at ~/.knowns/cli-cache.json.
+// It caches the result for 1 hour at ~/.known-me/cli-cache.json.
 //
 // This is silent on any error — it should never interfere with normal CLI operation.
 func CheckForUpdate() string {
@@ -54,7 +56,7 @@ func CheckForUpdate() string {
 		return ""
 	}
 
-	return fmt.Sprintf("\n UPDATE  v%s available (current v%s) → knowns update\n", latest, Version)
+	return fmt.Sprintf("\n UPDATE  v%s available (current v%s) → knownme update\n", latest, Version)
 }
 
 func shouldSkipUpdateCheck() bool {
@@ -68,7 +70,7 @@ func shouldSkipUpdateCheck() bool {
 		if arg == "--plain" {
 			return true
 		}
-		// Skip when running "knowns update" — it handles its own check.
+		// Skip when running "knownme update" — it handles its own check.
 		if arg == "update" {
 			return true
 		}
@@ -77,11 +79,7 @@ func shouldSkipUpdateCheck() bool {
 }
 
 func getCachePath() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(home, ".knowns", "cli-cache.json")
+	return filepath.Join(paths.GlobalStoreRoot(), "cli-cache.json")
 }
 
 func readUpdateCache(path string) *updateCache {
@@ -166,7 +164,7 @@ func CompareVersions(a, b string) int {
 	return 0
 }
 
-// InstallMethod describes how knowns was installed.
+// InstallMethod describes how knownme was installed.
 type InstallMethod string
 
 const (
@@ -198,7 +196,7 @@ func DetectInstallMethod() (InstallMethod, string) {
 		candidates = append(candidates, meta.BinaryPath)
 	}
 
-	home, _ := os.UserHomeDir()
+	globalRoot := paths.GlobalStoreRoot()
 
 	// 2. Detect from binary path (most reliable).
 	// Normalize to forward slashes for consistent matching across platforms.
@@ -222,13 +220,13 @@ func DetectInstallMethod() (InstallMethod, string) {
 			return InstallMethodNPM, "npm i -g knowns"
 		}
 
-		// Script install: binary in ~/.knowns/bin/
-		if home != "" {
-			defaultDir := filepath.ToSlash(filepath.Join(home, ".knowns", "bin"))
+		// Script install: binary in ~/.known-me/bin/
+		if globalRoot != "" {
+			defaultDir := filepath.ToSlash(filepath.Join(globalRoot, "bin"))
 			if strings.HasPrefix(pathLower, strings.ToLower(defaultDir)+"/") ||
-				pathLower == strings.ToLower(defaultDir+"/knowns") ||
-				pathLower == strings.ToLower(defaultDir+"/knowns.exe") {
-				return InstallMethodScript, "knowns update"
+			pathLower == strings.ToLower(defaultDir+"/knownme") ||
+			pathLower == strings.ToLower(defaultDir+"/knownme.exe") {
+				return InstallMethodScript, "knownme update"
 			}
 		}
 	}
@@ -251,7 +249,7 @@ func DetectInstallMethod() (InstallMethod, string) {
 		if meta.ManagedBy != "" {
 			switch {
 			case meta.IsScriptManaged():
-				return InstallMethodScript, "knowns update"
+				return InstallMethodScript, "knownme update"
 			case strings.Contains(meta.ManagedBy, "brew"):
 				return InstallMethodBrew, "brew upgrade knowns-dev/tap/knowns"
 			case strings.Contains(meta.ManagedBy, "bun"):
@@ -265,22 +263,22 @@ func DetectInstallMethod() (InstallMethod, string) {
 			}
 		}
 		if meta.Method == "script" {
-			return InstallMethodScript, "knowns update"
+			return InstallMethodScript, "knownme update"
 		}
 	}
 
 	// 5. Last resort: check if install.json exists at all.
-	if home != "" {
-		installJSON := filepath.Join(home, ".knowns", "install.json")
+	if globalRoot != "" {
+		installJSON := filepath.Join(globalRoot, "install.json")
 		if _, err := os.Stat(installJSON); err == nil {
-			return InstallMethodScript, "knowns update"
+			return InstallMethodScript, "knownme update"
 		}
 	}
 
 	return InstallMethodUnknown, ""
 }
 
-// DetectInstallCmd returns the appropriate upgrade command based on how knowns was installed.
+// DetectInstallCmd returns the appropriate upgrade command based on how knownme was installed.
 func DetectInstallCmd() string {
 	_, cmd := DetectInstallMethod()
 	if cmd == "" {

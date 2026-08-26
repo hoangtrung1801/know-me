@@ -573,7 +573,7 @@ func runStatusCheck() error {
 		fmt.Println(searchDimStyle.Render(fmt.Sprintf("    Path: %s", onnxPath)))
 	} else {
 		fmt.Println(searchWarnStyle.Render("  ONNX runtime: not found"))
-		fmt.Println(searchDimStyle.Render("    Reinstall knowns to restore the ONNX runtime library"))
+		fmt.Println(searchDimStyle.Render("    Reinstall knownme to restore the ONNX runtime library"))
 	}
 
 	// Model.
@@ -585,7 +585,7 @@ func runStatusCheck() error {
 		fmt.Println(RenderField("Max Tokens", fmt.Sprintf("%d", ss.MaxTokens)))
 	} else {
 		fmt.Println(RenderField("Model", StyleDim.Render("not configured")))
-		fmt.Println(searchDimStyle.Render("    Set up: knowns search --setup"))
+		fmt.Println(searchDimStyle.Render("    Set up: knownme search --setup"))
 	}
 
 	// Vector index.
@@ -597,7 +597,7 @@ func runStatusCheck() error {
 		fmt.Println(RenderField("Indexed at", indexedAt.Format(time.RFC3339)))
 	} else {
 		fmt.Println(RenderField("Index", StyleDim.Render("empty")))
-		fmt.Println(searchDimStyle.Render("    Build: knowns search --reindex"))
+		fmt.Println(searchDimStyle.Render("    Build: knownme search --reindex"))
 	}
 
 	// Overall status.
@@ -606,7 +606,7 @@ func runStatusCheck() error {
 	if providerReady && semanticSettings != nil && semanticSettings.Enabled && count > 0 {
 		fmt.Println(searchSuccessStyle.Render("  Status: ready (hybrid search active)"))
 	} else if providerReady && semanticSettings != nil && semanticSettings.Enabled {
-		fmt.Println(searchWarnStyle.Render("  Status: needs search reindex (run: knowns search --reindex)"))
+		fmt.Println(searchWarnStyle.Render("  Status: needs search reindex (run: knownme search --reindex)"))
 	} else {
 		fmt.Println(searchDimStyle.Render("  Status: keyword-only mode"))
 	}
@@ -630,7 +630,7 @@ func runSetup() error {
 		if ss.Model == "" {
 			fmt.Println(searchWarnStyle.Render("No embedding model configured."))
 			fmt.Println()
-			fmt.Println(RenderHint("Choose a remote embedding model with: " + RenderCmd("knowns settings")))
+			fmt.Println(RenderHint("Choose a remote embedding model with: " + RenderCmd("knownme settings")))
 			fmt.Println()
 			return nil
 		}
@@ -643,8 +643,8 @@ func runSetup() error {
 		}
 		fmt.Println()
 		fmt.Println(RenderNextSteps(
-			RenderCmd("knowns search --reindex"),
-			RenderCmd("knowns search \"your query\""),
+			RenderCmd("knownme search --reindex"),
+			RenderCmd("knownme search \"your query\""),
 		))
 		return nil
 	}
@@ -662,7 +662,7 @@ func runSetup() error {
 	if !onnxAvail {
 		fmt.Println(searchWarnStyle.Render("ONNX runtime not found."))
 		fmt.Println()
-		fmt.Println(RenderHint("Reinstall knowns to restore the ONNX runtime library."))
+		fmt.Println(RenderHint("Reinstall knownme to restore the ONNX runtime library."))
 		fmt.Println()
 		return nil
 	}
@@ -672,7 +672,7 @@ func runSetup() error {
 		fmt.Println(searchWarnStyle.Render("No embedding model configured."))
 		fmt.Println()
 		fmt.Println(RenderHint("Set a model first:"))
-		fmt.Println(RenderHint("  " + RenderCmd("knowns model set gte-small")))
+		fmt.Println(RenderHint("  " + RenderCmd("knownme model set gte-small")))
 		fmt.Println()
 		return nil
 	}
@@ -687,8 +687,8 @@ func runSetup() error {
 
 	fmt.Println()
 	fmt.Println(RenderNextSteps(
-		RenderCmd("knowns search --reindex"),
-		RenderCmd("knowns search \"your query\""),
+		RenderCmd("knownme search --reindex"),
+		RenderCmd("knownme search \"your query\""),
 	))
 
 	return nil
@@ -1011,8 +1011,8 @@ func runReindex() error {
 		fmt.Println(searchDimStyle.Render("Semantic search is not configured."))
 		fmt.Println()
 		fmt.Println(RenderNextSteps(
-			RenderCmd("knowns model download multilingual-e5-small"),
-			RenderCmd("knowns search --reindex"),
+			RenderCmd("knownme model download multilingual-e5-small"),
+			RenderCmd("knownme search --reindex"),
 		))
 	}
 	fmt.Println(searchDimStyle.Render("Keyword search does not require indexing (scans tasks/docs on each query)."))

@@ -15,14 +15,14 @@ Runtime-critical guidance lives in MCP `initial` and `help`, not in a large repo
 ## Refresh generated content
 
 ```bash
-knowns init
-knowns setup agents
-knowns setup --global
-knowns sync
-knowns sync --instructions
+knownme init
+knownme setup agents
+knownme setup --global
+knownme sync
+knownme sync --instructions
 ```
 
-Use `knowns init` to create the initial project state and selected lightweight shims. Use `knowns setup agents` to create or refresh generic repo-local shims, `knowns setup <target> --global` for normal personal platform integrations, or `knowns sync` to refresh generated files from config.
+Use `knownme init` to create the initial project state and selected lightweight shims. Use `knownme setup agents` to create or refresh generic repo-local shims, `knownme setup <target> --global` for normal personal platform integrations, or `knownme sync` to refresh generated files from config.
 
 ## Agent bootstrap
 

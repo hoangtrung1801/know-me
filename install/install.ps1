@@ -3,16 +3,16 @@
 #   irm https://raw.githubusercontent.com/knowns-dev/knowns/main/install/install.ps1 | iex
 #
 # Options (via env vars):
-#   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.knowns\bin)
+#   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.known-me\bin)
 #   $env:KNOWNS_VERSION      — specific version (default: latest)
 
 $ErrorActionPreference = "Stop"
 
 $Repo = "knowns-dev/knowns"
-$Binary = "knowns.exe"
+$Binary = "knownme.exe"
 $AliasBinary = "kn.exe"
-$DefaultInstallDir = Join-Path $env:USERPROFILE ".knowns\bin"
-$KnownsHome = Join-Path $env:USERPROFILE ".knowns"
+$DefaultInstallDir = Join-Path $env:USERPROFILE ".known-me\bin"
+$KnownsHome = Join-Path $env:USERPROFILE ".known-me"
 $InstallDir = if ($env:KNOWNS_INSTALL_DIR) { $env:KNOWNS_INSTALL_DIR } else { $DefaultInstallDir }
 
 # ─── Platform detection ───────────────────────────────────────────────
@@ -99,10 +99,10 @@ try {
     tar -xzf (Join-Path $TmpDir $Archive) -C $TmpDir
     Write-Host "`r  + Extracted                  " -ForegroundColor Green
 
-    # Find the main binary (knowns.exe specifically — avoid matching knowns-embed.exe)
-    $ExtractedBin = Get-ChildItem -Path $TmpDir -Filter "knowns.exe" -Recurse | Select-Object -First 1
+    # Find the main binary (knownme.exe specifically — avoid matching knowns-embed.exe)
+    $ExtractedBin = Get-ChildItem -Path $TmpDir -Filter "knownme.exe" -Recurse | Select-Object -First 1
     if (-not $ExtractedBin) {
-        Write-Host "  x knowns.exe not found in archive" -ForegroundColor Red
+        Write-Host "  x knownme.exe not found in archive" -ForegroundColor Red
         exit 1
     }
     $ExtractRoot = $ExtractedBin.Directory.FullName
@@ -156,8 +156,8 @@ try {
 
     Write-Host ""
     Write-Host "  Get started:" -ForegroundColor DarkGray
-    Write-Host "    knowns init" -ForegroundColor DarkGray
-    Write-Host "    knowns task create `"My first task`"" -ForegroundColor DarkGray
+    Write-Host "    knownme init" -ForegroundColor DarkGray
+    Write-Host "    knownme task create `"My first task`"" -ForegroundColor DarkGray
     Write-Host "" 
     Write-Host "  Uninstall:" -ForegroundColor DarkGray
     Write-Host "    irm https://github.com/$Repo/releases/download/$Version/uninstall.ps1 | iex" -ForegroundColor DarkGray

@@ -13,10 +13,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // Daemon manages a shared `cloudflared tunnel --url` process keyed by the
-// local port being tunneled. State lives in `~/.knowns/cloudflared-<port>.{pid,url,log}`.
+// local port being tunneled. State lives in `~/.known-me/cloudflared-<port>.{pid,url,log}`.
 type Daemon struct {
 	LocalPort int
 	PIDFile   string
@@ -27,8 +29,7 @@ type Daemon struct {
 }
 
 func defaultStateDir() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".knowns")
+	return paths.GlobalStoreRoot()
 }
 
 func NewDaemon(localPort int) *Daemon {
@@ -41,8 +42,8 @@ func NewDaemon(localPort int) *Daemon {
 	}
 }
 
-func (d *Daemon) StartedByUs() bool  { return d.startedByUs }
-func (d *Daemon) IsHealthy() bool     { return d.isHealthy() }
+func (d *Daemon) StartedByUs() bool { return d.startedByUs }
+func (d *Daemon) IsHealthy() bool   { return d.isHealthy() }
 
 // InstallHint returns OS-specific install instructions for cloudflared.
 func InstallHint() string {

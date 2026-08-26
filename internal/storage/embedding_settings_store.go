@@ -1,5 +1,5 @@
 // Package storage — EmbeddingSettingsStore manages global embedding provider
-// and model configuration at ~/.knowns/settings.json.
+// and model configuration at ~/.known-me/settings.json.
 // API keys and provider credentials live here (never in project config).
 package storage
 
@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // RetryConfig configures exponential backoff for API rate limiting.
@@ -44,22 +45,21 @@ type EmbeddingSettings struct {
 	ProjectDefaults       *ProjectDefaults             `json:"projectDefaults,omitempty"`
 }
 
-// ProjectDefaults are user-level defaults applied by future `knowns init` runs.
+// ProjectDefaults are user-level defaults applied by future `knownme init` runs.
 type ProjectDefaults struct {
 	ProjectName string                 `json:"projectName,omitempty"`
 	Settings    models.ProjectSettings `json:"settings,omitempty"`
 }
 
-// EmbeddingSettingsStore reads and writes ~/.knowns/settings.json.
+// EmbeddingSettingsStore reads and writes ~/.known-me/settings.json.
 type EmbeddingSettingsStore struct {
 	filePath string
 }
 
-// NewEmbeddingSettingsStore creates a store with the default path (~/.knowns/settings.json).
+// NewEmbeddingSettingsStore creates a store with the default path (~/.known-me/settings.json).
 func NewEmbeddingSettingsStore() *EmbeddingSettingsStore {
-	home, _ := os.UserHomeDir()
 	return &EmbeddingSettingsStore{
-		filePath: filepath.Join(home, ".knowns", "settings.json"),
+		filePath: filepath.Join(paths.GlobalStoreRoot(), "settings.json"),
 	}
 }
 
@@ -167,7 +167,7 @@ func (s *EmbeddingSettings) AddModel(id string, model EmbeddingModel) error {
 		return fmt.Errorf("embedding model %q already exists", id)
 	}
 	if _, exists := s.Providers[model.Provider]; !exists {
-		return fmt.Errorf("provider %q not found; register it first with 'knowns provider add'", model.Provider)
+		return fmt.Errorf("provider %q not found; register it first with 'knownme provider add'", model.Provider)
 	}
 	s.Models[id] = model
 	return nil

@@ -1,5 +1,5 @@
 /**
- * E2E test helpers — start/stop knowns server with isolated project
+ * E2E test helpers — start/stop knownme server with isolated project
  */
 
 import { execSync, execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
@@ -14,7 +14,7 @@ const __dirname = dirname(__filename);
 const isWindows = process.platform === "win32";
 const defaultBinary = resolve(
 	__dirname,
-	isWindows ? "../../bin/knowns.exe" : "../../bin/knowns",
+	isWindows ? "../../bin/knownme.exe" : "../../bin/knownme",
 );
 const BINARY = process.env.TEST_BINARY
 	? resolve(process.cwd(), process.env.TEST_BINARY)
@@ -71,7 +71,7 @@ export interface TestServer {
 }
 
 /**
- * Start a knowns server with an isolated temporary project.
+ * Start a knownme server with an isolated temporary project.
  * Returns helpers for interacting with the server.
  */
 export async function startServer(): Promise<TestServer> {

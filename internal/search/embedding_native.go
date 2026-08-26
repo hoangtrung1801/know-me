@@ -2,8 +2,9 @@ package search
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // Embedder produces embedding vectors using the native Go ONNX runtime.
@@ -39,9 +40,7 @@ func NewEmbedder(cfg EmbedderConfig) (*Embedder, error) {
 
 	cacheDir := cfg.ModelDir
 	if cacheDir == "" {
-		if home, err := os.UserHomeDir(); err == nil {
-			cacheDir = filepath.Join(home, ".knowns", "models")
-		}
+		cacheDir = filepath.Join(paths.GlobalStoreRoot(), "models")
 	}
 
 	e := &Embedder{

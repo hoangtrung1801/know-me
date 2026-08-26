@@ -25,7 +25,7 @@ func TestLspRowFromRuntimeIncludesRuntimeFields(t *testing.T) {
 		BackendSource:          lsp.RuntimeSourceAuto,
 		ProjectPath:            "/repo/App.sln",
 		ProjectKind:            "sln",
-		LogPath:                "/repo/.knowns/logs/lsp/csharp-csharp-ls.log",
+		LogPath:                "/repo/.known-me/logs/lsp/csharp-csharp-ls.log",
 		Attempts:               []lsp.BackendAttempt{{Backend: lsp.CSharpBackendCSharp, Status: lsp.BackendAttemptChosen}},
 		Owner:                  "daemon",
 		DaemonState:            "running",
