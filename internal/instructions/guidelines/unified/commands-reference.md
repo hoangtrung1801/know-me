@@ -243,7 +243,7 @@ If large, returns TOC. Then read section:
 ## task create
 
 ```bash
-knowns task create <title> [options]
+knownme task create <title> [options]
 ```
 
 | Flag | Short | Purpose |
@@ -262,7 +262,7 @@ knowns task create <title> [options]
 ## task edit
 
 ```bash
-knowns task edit <id> [options]
+knownme task edit <id> [options]
 ```
 
 | Flag | Short | Purpose |
@@ -281,10 +281,10 @@ knowns task edit <id> [options]
 ## task view/list
 
 ```bash
-knowns task <id> --plain
-knowns task list --plain
-knowns task list --status in-progress --plain
-knowns task list --tree --plain
+knownme task <id> --plain
+knownme task list --plain
+knownme task list --status in-progress --plain
+knownme task list --tree --plain
 ```
 
 ---
@@ -292,7 +292,7 @@ knowns task list --tree --plain
 ## doc create
 
 ```bash
-knowns doc create <title> [options]
+knownme doc create <title> [options]
 ```
 
 | Flag | Short | Purpose |
@@ -306,7 +306,7 @@ knowns doc create <title> [options]
 ## doc edit
 
 ```bash
-knowns doc edit <name> [options]
+knownme doc edit <name> [options]
 ```
 
 | Flag | Short | Purpose |
@@ -324,17 +324,17 @@ knowns doc edit <name> [options]
 **ALWAYS use `--smart`** - auto-handles small/large docs:
 
 ```bash
-knowns doc <path> --plain --smart
+knownme doc <path> --plain --smart
 ```
 
 If large, returns TOC. Then read section:
 ```bash
-knowns doc <path> --plain --section 3
+knownme doc <path> --plain --section 3
 ```
 
 ```bash
-knowns doc list --plain
-knowns doc list --tag api --plain
+knownme doc list --plain
+knownme doc list --tag api --plain
 ```
 
 ---
@@ -342,10 +342,10 @@ knowns doc list --tag api --plain
 ## time
 
 ```bash
-knowns time start <id>    # REQUIRED when taking task
-knowns time stop          # REQUIRED when completing
-knowns time status
-knowns time add <id> <duration> -n "Note"
+knownme time start <id>    # REQUIRED when taking task
+knownme time stop          # REQUIRED when completing
+knownme time status
+knownme time add <id> <duration> -n "Note"
 ```
 
 ---
@@ -353,9 +353,9 @@ knowns time add <id> <duration> -n "Note"
 ## search
 
 ```bash
-knowns search "query" --plain
-knowns search "auth" --type task --plain
-knowns search "api" --type doc --plain
+knownme search "query" --plain
+knownme search "auth" --type task --plain
+knownme search "api" --type doc --plain
 ```
 
 ---
@@ -363,10 +363,10 @@ knowns search "api" --type doc --plain
 ## template
 
 ```bash
-knowns template list
-knowns template info <name>
-knowns template run <name> --name "X" --dry-run
-knowns template create <name>
+knownme template list
+knownme template info <name>
+knownme template run <name> --name "X" --dry-run
+knownme template create <name>
 ```
 
 ---
@@ -374,6 +374,6 @@ knowns template create <name>
 ## Multi-line Input
 
 ```bash
-knowns task edit <id> --plan $'1. Step\n2. Step\n3. Step'
+knownme task edit <id> --plan $'1. Step\n2. Step\n3. Step'
 ```
 {{/if}}

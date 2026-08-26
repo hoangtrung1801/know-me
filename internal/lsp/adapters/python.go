@@ -35,7 +35,7 @@ func (a *PythonAdapter) CheckPrerequisites(ctx context.Context) error {
 	return requireMinVersion(output, "Python", 3, 9)
 }
 func (a *PythonAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{Command: "pip install python-lsp-server", KnownsCmd: "knowns lsp install python", Notes: "Requires Python 3.9+ installed; pyright-langserver is also supported"}
+	return lsp.InstallGuide{Command: "pip install python-lsp-server", KnownsCmd: "knownme lsp install python", Notes: "Requires Python 3.9+ installed; pyright-langserver is also supported"}
 }
 func (a *PythonAdapter) CanInstall() bool                     { return true }
 func (a *PythonAdapter) RuntimeDeps() []lsp.RuntimeDependency { return nil }

@@ -1,4 +1,4 @@
-// Package storage — UserPrefsStore manages user-level preferences at ~/.knowns/preferences.json.
+// Package storage — UserPrefsStore manages user-level preferences at ~/.known-me/preferences.json.
 // These preferences apply across all projects and serve as defaults when
 // a project does not define its own value.
 package storage
@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // UserPrefs holds user-level preferences that apply across all projects.
@@ -17,16 +18,15 @@ type UserPrefs struct {
 	OpenCodeModels *models.OpenCodeModelSettings `json:"opencodeModels,omitempty"`
 }
 
-// UserPrefsStore reads and writes ~/.knowns/preferences.json.
+// UserPrefsStore reads and writes ~/.known-me/preferences.json.
 type UserPrefsStore struct {
 	filePath string
 }
 
-// NewUserPrefsStore creates a store with the default path (~/.knowns/preferences.json).
+// NewUserPrefsStore creates a store with the default path (~/.known-me/preferences.json).
 func NewUserPrefsStore() *UserPrefsStore {
-	home, _ := os.UserHomeDir()
 	return &UserPrefsStore{
-		filePath: filepath.Join(home, ".knowns", "preferences.json"),
+		filePath: filepath.Join(paths.GlobalStoreRoot(), "preferences.json"),
 	}
 }
 

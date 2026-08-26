@@ -11,11 +11,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // Daemon manages a shared OpenCode server process that persists across
 // Know-Me server restarts. Only one daemon runs at a time, identified by
-// a PID file under ~/.knowns scoped to the target host/port.
+// a PID file under ~/.known-me scoped to the target host/port.
 type Daemon struct {
 	Host    string
 	Port    int
@@ -29,16 +31,15 @@ type Daemon struct {
 var pidFileSegmentSanitizer = regexp.MustCompile(`[^A-Za-z0-9._-]+`)
 
 func defaultPIDFile(host string, port int) string {
-	home, _ := os.UserHomeDir()
 	safeHost := pidFileSegmentSanitizer.ReplaceAllString(host, "_")
 	if safeHost == "" {
 		safeHost = "127.0.0.1"
 	}
-	return filepath.Join(home, ".knowns", fmt.Sprintf("opencode-%s-%d.pid", safeHost, port))
+	return filepath.Join(paths.GlobalStoreRoot(), fmt.Sprintf("opencode-%s-%d.pid", safeHost, port))
 }
 
 // NewDaemon creates a Daemon targeting the given host:port.
-// The PID file defaults to ~/.knowns/opencode-<host>-<port>.pid.
+// The PID file defaults to ~/.known-me/opencode-<host>-<port>.pid.
 func NewDaemon(host string, port int) *Daemon {
 	return &Daemon{
 		Host:    host,

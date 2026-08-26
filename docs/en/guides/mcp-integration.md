@@ -5,8 +5,8 @@ Know-Me exposes an MCP server so AI assistants can access tasks, docs, memory, d
 ## Server command
 
 ```bash
-knowns mcp --stdio
-knowns mcp --stdio --project /path/to/project
+knownme mcp --stdio
+knownme mcp --stdio --project /path/to/project
 ```
 
 If `--project` is not set, Know-Me attempts to auto-detect the project from the current working directory.
@@ -54,7 +54,7 @@ If `--project` is not set, Know-Me attempts to auto-detect the project from the 
 ### Codex
 
 ```toml
-[mcp_servers.knowns]
+[mcp_servers.known-me]
 command = "knowns"
 args = ["mcp", "--stdio"]
 ```
@@ -81,7 +81,7 @@ For global MCP configs, the server may not know which project to use at session 
 Prefer a project-aware server command when the client supports it:
 
 ```bash
-knowns mcp --stdio --project /path/to/project
+knownme mcp --stdio --project /path/to/project
 ```
 
 Or set the active project with the MCP `project` tool:

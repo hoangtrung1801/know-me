@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TemplateStore reads templates from .knowns/templates/ and .knowns/imports/*/templates/.
+// TemplateStore reads templates from .known-me/templates/ and .known-me/imports/*/templates/.
 type TemplateStore struct {
 	root string
 }
@@ -21,14 +21,14 @@ func (ts *TemplateStore) importsDir() string   { return filepath.Join(ts.root, "
 // templateYAML is the raw parsed form of _template.yaml, using the exact field
 // structure that matches the TypeScript _template.yaml format.
 type templateYAML struct {
-	Name        string                  `yaml:"name"`
-	Description string                  `yaml:"description"`
-	Version     string                  `yaml:"version"`
-	Author      string                  `yaml:"author"`
-	Doc         string                  `yaml:"doc"`
-	Destination string                  `yaml:"destination"`
-	Prompts     []models.TemplatePrompt `yaml:"prompts"`
-	Actions     []models.TemplateAction `yaml:"actions"`
+	Name        string                   `yaml:"name"`
+	Description string                   `yaml:"description"`
+	Version     string                   `yaml:"version"`
+	Author      string                   `yaml:"author"`
+	Doc         string                   `yaml:"doc"`
+	Destination string                   `yaml:"destination"`
+	Prompts     []models.TemplatePrompt  `yaml:"prompts"`
+	Actions     []models.TemplateAction  `yaml:"actions"`
 	Messages    *models.TemplateMessages `yaml:"messages"`
 }
 

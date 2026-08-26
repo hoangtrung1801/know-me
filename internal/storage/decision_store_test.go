@@ -291,7 +291,7 @@ func TestDecisionStoreAcceptIsRollbackSafeAndIdempotent(t *testing.T) {
 func setupDecisionStore(t *testing.T) *Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("decision-store-test"); err != nil {
 		t.Fatalf("Init: %v", err)

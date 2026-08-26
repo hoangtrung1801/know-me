@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 const daemonRuntimeDir = "lsp-daemon"
@@ -29,11 +31,14 @@ type Paths struct {
 
 // GlobalRoot returns the Know-Me user state directory.
 func GlobalRoot() string {
+	if home := os.Getenv("HOME"); home != "" {
+		return paths.GlobalStoreRoot()
+	}
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
-		return filepath.Join(os.TempDir(), ".knowns")
+		return filepath.Join(os.TempDir(), paths.StoreDirName)
 	}
-	return filepath.Join(home, ".knowns")
+	return filepath.Join(home, paths.StoreDirName)
 }
 
 // RuntimeRoot returns the Know-Me runtime root used by shared runtime helpers.

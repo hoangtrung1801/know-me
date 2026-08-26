@@ -1,6 +1,6 @@
 # Validate
 
-`knowns validate` checks the consistency of the current project context.
+`knownme validate` checks the consistency of the current project context.
 
 ## What it is for
 
@@ -13,10 +13,10 @@ Use validation to catch issues such as:
 ## Common commands
 
 ```bash
-knowns validate --plain
-knowns validate --scope docs --plain
-knowns validate --scope sdd --plain
-knowns validate --strict --plain
+knownme validate --plain
+knownme validate --scope docs --plain
+knownme validate --scope sdd --plain
+knownme validate --strict --plain
 ```
 
 ## When to run it

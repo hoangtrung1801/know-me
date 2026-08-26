@@ -27,7 +27,7 @@ func (a *IntelephenseAdapter) CheckPrerequisites(ctx context.Context) error {
 	return requireMinVersion(output, "Node.js", 18, 0)
 }
 func (a *IntelephenseAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{Command: "npm install -g intelephense", KnownsCmd: "knowns lsp install php", URL: "https://intelephense.com/", Notes: "Requires Node.js 18+"}
+	return lsp.InstallGuide{Command: "npm install -g intelephense", KnownsCmd: "knownme lsp install php", URL: "https://intelephense.com/", Notes: "Requires Node.js 18+"}
 }
 func (a *IntelephenseAdapter) CanInstall() bool { return true }
 func (a *IntelephenseAdapter) RuntimeDeps() []lsp.RuntimeDependency {

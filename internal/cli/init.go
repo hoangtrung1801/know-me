@@ -328,11 +328,11 @@ var defaultExecLookPath = exec.LookPath
 var osUserHomeDir = os.UserHomeDir
 
 // mcpCommand returns the command and args for starting the Know-Me MCP server
-// in generated project configs. Uses the local knowns binary if available,
+// in generated project configs. Uses the local knownme binary if available,
 // otherwise falls back to npx so configs work on machines without a global install.
 func mcpCommand() (command string, args []string) {
-	if _, err := execLookPath("knowns"); err == nil {
-		return "knowns", []string{"mcp", "--stdio"}
+	if _, err := execLookPath("knownme"); err == nil {
+		return "knownme", []string{"mcp", "--stdio"}
 	}
 	return "npx", []string{"-y", "knowns", "mcp", "--stdio"}
 }
@@ -427,7 +427,7 @@ description: Know-Me project guidelines — prefer MCP initial/help and Know-Me 
 
 Start with Know-Me MCP ` + "`initial`" + ` when available. Use ` + "`help(\"tool.*\")`" + ` or ` + "`help(\"workflow.*\")`" + ` for domain details on demand.
 
-Use Know-Me docs, tasks, search, memory, and validation as the project working layer. If MCP is unavailable, use the ` + "`knowns`" + ` CLI for project context.
+Use Know-Me docs, tasks, search, memory, and validation as the project working layer. If MCP is unavailable, use the ` + "`knownme`" + ` CLI for project context.
 `
 	return os.WriteFile(steeringPath, []byte(content), 0644)
 }
@@ -552,7 +552,7 @@ description: Prefer Know-Me MCP initial/help and Know-Me tools for project conte
 - Use ` + "`help(\"tool.*\")`" + ` or ` + "`help(\"workflow.*\")`" + ` for domain details on demand.
 - Treat Know-Me docs, tasks, and memory as the working layer for the project.
 - Prefer Know-Me MCP tools for docs, tasks, search, and validation when available.
-- If MCP is unavailable, fall back to the ` + "`knowns`" + ` CLI.
+- If MCP is unavailable, fall back to the ` + "`knownme`" + ` CLI.
 `
 
 	return os.WriteFile(rulePath, []byte(content), 0644)
@@ -722,7 +722,7 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("- Use Know-Me as the memory layer for humans and the AI-friendly working layer for agents.\n")
 	sb.WriteString("- Search before reading; read only the sections and docs relevant to the current task.\n")
 	sb.WriteString("- Never manually edit Know-Me-managed task or doc markdown.\n")
-	sb.WriteString("- Prefer Know-Me MCP tools; use the `knowns` CLI only as fallback.\n")
+	sb.WriteString("- Prefer Know-Me MCP tools; use the `knownme` CLI only as fallback.\n")
 	sb.WriteString("- Let skills handle detailed workflows; use this file for rules, conventions, and context routing.\n")
 	sb.WriteString("- Validate before marking work complete.\n")
 	sb.WriteString("- Do not revert user changes you did not make.\n\n")
@@ -749,8 +749,8 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("- Use Know-Me `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.\n")
 	sb.WriteString("- Use shell commands for git, tests, builds, generators, and other terminal operations.\n")
 	sb.WriteString("- Prefer targeted retrieval over loading large files in full.\n")
-	sb.WriteString("- Use `knowns search` for discovery and quick relevance checks.\n")
-	sb.WriteString("- Use MCP `retrieve` tool when a workflow needs structured context with citations and context-pack assembly. Fall back to CLI `knowns retrieve` if MCP is unavailable.\n")
+	sb.WriteString("- Use `knownme search` for discovery and quick relevance checks.\n")
+	sb.WriteString("- Use MCP `retrieve` tool when a workflow needs structured context with citations and context-pack assembly. Fall back to CLI `knownme retrieve` if MCP is unavailable.\n")
 	sb.WriteString("- Prefer `--json` for structured CLI reads consumed by agents, scripts, or workflows, including `get`, `list`, `search`, and `retrieve` commands.\n")
 	sb.WriteString("- Prefer `--plain` for human-facing inspection, quick content reads, and logs when JSON is unnecessary.\n")
 	sb.WriteString("- Do not rely on styled default CLI output for automation or parsing.\n\n")
@@ -859,7 +859,7 @@ func renderCompatibilityInstructionContent(relativePath, platform, projectRoot s
 	sb.WriteString("- Use Know-Me as the canonical system for tasks, docs, templates, and workflow state.\n")
 	sb.WriteString("- Never manually edit Know-Me-managed task or doc markdown.\n")
 	sb.WriteString("- Search first, then read only relevant docs and code.\n")
-	sb.WriteString("- Use `search` for discovery; use MCP `retrieve` tool when a workflow needs structured context with citations. Fall back to CLI `knowns retrieve` if MCP is unavailable.\n")
+	sb.WriteString("- Use `search` for discovery; use MCP `retrieve` tool when a workflow needs structured context with citations. Fall back to CLI `knownme retrieve` if MCP is unavailable.\n")
 	sb.WriteString("- For code operations, use `code` tool: `find`/`symbols` for structure, `references`/`definition` for navigation, `rename`/`replace`/`replace_body`/`insert`/`delete` for editing. Use `help(\"code.*\")` or `help(\"workflow.code-edit\")` for details.\n")
 	sb.WriteString("- Plan before implementation unless the user explicitly overrides that workflow.\n")
 	sb.WriteString("- Validate before considering work complete.\n")
@@ -867,12 +867,12 @@ func renderCompatibilityInstructionContent(relativePath, platform, projectRoot s
 	sb.WriteString("- Proactively capture durable memory when scope and durability are clear.\n\n")
 	sb.WriteString("## Quick Reference\n\n")
 	sb.WriteString("```bash\n")
-	sb.WriteString("knowns doc list --plain               # List docs\n")
-	sb.WriteString("knowns task list --plain              # List tasks\n")
-	sb.WriteString("knowns task <id> --plain              # View task\n")
-	sb.WriteString("knowns doc \"<path>\" --plain --smart  # View doc\n")
-	sb.WriteString("knowns search \"query\" --plain        # Search docs/tasks\n")
-	sb.WriteString("knowns retrieve \"query\" --json      # Retrieve structured context pack (CLI fallback)\n")
+	sb.WriteString("knownme doc list --plain               # List docs\n")
+	sb.WriteString("knownme task list --plain              # List tasks\n")
+	sb.WriteString("knownme task <id> --plain              # View task\n")
+	sb.WriteString("knownme doc \"<path>\" --plain --smart  # View doc\n")
+	sb.WriteString("knownme search \"query\" --plain        # Search docs/tasks\n")
+	sb.WriteString("knownme retrieve \"query\" --json      # Retrieve structured context pack (CLI fallback)\n")
 	sb.WriteString("```\n\n")
 	sb.WriteString("<!-- KNOWNS GUIDELINES END -->\n")
 	return sb.String()
@@ -900,14 +900,14 @@ const (
 	knownsGitignoreEnd   = "# <<< KNOWNS <<<"
 )
 
-// writeKnownsGitignore creates .knowns/.gitignore with ignore rules based on
+// writeKnownsGitignore creates .known-me/.gitignore with ignore rules based on
 // the git tracking mode and per-section toggles. Also removes any legacy marker
 // block from root .gitignore.
 func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error {
 	// Remove legacy marker block from root .gitignore if present.
 	removeLegacyGitignoreBlock(dir)
 
-	knownsDir := filepath.Join(dir, ".knowns")
+	knownsDir := filepath.Join(dir, ".known-me")
 	gitignorePath := filepath.Join(knownsDir, ".gitignore")
 
 	switch mode {
@@ -957,11 +957,11 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 
 	switch mode {
 	case "git-tracked":
-		// Track all .knowns/ content; only ignore runtime/cache files and
+		// Track all .known-me/ content; only ignore runtime/cache files and
 		// sections explicitly disabled.
 		var buf strings.Builder
 		buf.WriteString("# Managed by Know-Me CLI — do not edit manually.\n")
-		buf.WriteString("# Run 'knowns init' to regenerate.\n\n")
+		buf.WriteString("# Run 'knownme init' to regenerate.\n\n")
 		buf.WriteString("# Runtime & cache\n")
 		buf.WriteString(".search/\n")
 		buf.WriteString(".working-memory/\n")
@@ -992,7 +992,7 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 		// Ignore everything by default, then un-ignore sections that are enabled.
 		var buf strings.Builder
 		buf.WriteString("# Managed by Know-Me CLI — do not edit manually.\n")
-		buf.WriteString("# Run 'knowns init' to regenerate.\n\n")
+		buf.WriteString("# Run 'knownme init' to regenerate.\n\n")
 		buf.WriteString("# Ignore everything by default\n")
 		buf.WriteString("*\n\n")
 		buf.WriteString("# Track these\n")
@@ -1024,7 +1024,7 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 		return os.WriteFile(gitignorePath, []byte(buf.String()), 0644)
 
 	case "none":
-		// Remove .knowns/.gitignore if it exists.
+		// Remove .known-me/.gitignore if it exists.
 		_ = os.Remove(gitignorePath)
 		return nil
 	}
@@ -1076,8 +1076,8 @@ func removeLegacyGitignoreBlock(dir string) {
 }
 
 func init() {
-	initCmd.Flags().Bool("git-tracked", false, "Track .knowns/ files in git")
-	initCmd.Flags().Bool("git-ignored", false, "Add .knowns/ to .gitignore")
+	initCmd.Flags().Bool("git-tracked", false, "Track .known-me/ files in git")
+	initCmd.Flags().Bool("git-ignored", false, "Add .known-me/ to .gitignore")
 	initCmd.Flags().Bool("wizard", false, "Run interactive setup wizard")
 	initCmd.Flags().Bool("no-wizard", false, "Skip interactive prompts, use defaults")
 	initCmd.Flags().BoolP("force", "f", false, "Force reinitialize even if already initialized")

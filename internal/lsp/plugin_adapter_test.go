@@ -37,7 +37,7 @@ func TestLoadPluginAdaptersParsesManifest(t *testing.T) {
 		"binary_candidates": [{"name": "toy-lsp"}],
 		"default_args": ["--stdio"],
 		"prerequisites": [{"name": "Node.js", "check_cmd": "node --version", "install_hint": "Install Node"}],
-		"install_guide": {"command": "npm install -g toy-lsp", "knowns_cmd": "knowns lsp install toy", "notes": "Requires Node"},
+		"install_guide": {"command": "npm install -g toy-lsp", "knowns_cmd": "knownme lsp install toy", "notes": "Requires Node"},
 		"runtime_dependencies": [{"id": "toy-lsp", "version": "1.0.0", "source": "npm", "archive_type": "npm", "binary_name": "toy-lsp", "package_name": "toy-lsp"}],
 		"initialization_options": {"diagnostics": true},
 		"ignored_dirs": ["vendor"],
@@ -157,7 +157,7 @@ func TestPluginAdapterRuntimeStatusMetadata(t *testing.T) {
 		"name":"Toy",
 		"extensions":[".toy"],
 		"binaries":[{"name":"toy-lsp"}],
-		"install_guide":{"knowns_cmd":"knowns lsp install toy"}
+		"install_guide":{"knowns_cmd":"knownme lsp install toy"}
 	}`)
 	manager := NewManager(root, Config{})
 	if errs := manager.RegisterPluginAdapters(PluginAdapterLoadOptions{Dir: dir}); len(errs) != 0 {
@@ -186,7 +186,7 @@ func TestPluginAdapterRuntimeStatusMetadata(t *testing.T) {
 	if status.InstallState != RuntimeInstallInstalled || status.Source != RuntimeSourcePATH || status.Binary != "toy-lsp" {
 		t.Fatalf("install/source/binary = %q/%q/%q, want installed/PATH/toy-lsp", status.InstallState, status.Source, status.Binary)
 	}
-	if status.InstallCmd != "knowns lsp install toy" {
+	if status.InstallCmd != "knownme lsp install toy" {
 		t.Fatalf("InstallCmd = %q, want plugin guide command", status.InstallCmd)
 	}
 	if status.LogPath != LanguageLogPath(root, "toy") {

@@ -41,28 +41,28 @@ Antigravity dùng global config:
 
 ## Init, setup, sync, update
 
-### `knowns init`
+### `knownme init`
 
 Tạo project structure, git tracking, semantic search setup, và selected lightweight project instruction shims như `CLAUDE.md` và `AGENTS.md`.
 
-### `knowns setup`
+### `knownme setup`
 
-Tạo AI platform artifacts như skills, MCP configs, platform-specific configs, runtime hooks, và instruction files bổ sung cho target được chọn. Dùng `knowns setup <target> --global` cho personal assistant setup thông thường. Chỉ dùng setup không có `--global` khi bạn chủ ý muốn repo-local integration files. Dùng `knowns setup agents` khi chỉ cần lightweight repo-local agent shims.
+Tạo AI platform artifacts như skills, MCP configs, platform-specific configs, runtime hooks, và instruction files bổ sung cho target được chọn. Dùng `knownme setup <target> --global` cho personal assistant setup thông thường. Chỉ dùng setup không có `--global` khi bạn chủ ý muốn repo-local integration files. Dùng `knownme setup agents` khi chỉ cần lightweight repo-local agent shims.
 
-### `knowns sync`
+### `knownme sync`
 
-Re-apply `.knowns/config.json` lên máy hiện tại.
+Re-apply `.known-me/config.json` lên máy hiện tại.
 
 Dùng sau khi:
 
 - clone repo
 - muốn generated files khớp lại với config
 
-### `knowns update`
+### `knownme update`
 
 Update CLI, rồi refresh generated artifacts phụ thuộc vào binary hoặc config policy.
 
 ## Khuyến nghị
 
 - Project mới → follow layout chính hiện tại
-- Project cũ → để `knowns sync` và `knowns update` giữ tương thích trước, migrate có chủ đích sau
+- Project cũ → để `knownme sync` và `knownme update` giữ tương thích trước, migrate có chủ đích sau

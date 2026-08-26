@@ -18,11 +18,11 @@ import (
 var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync project from config.json (skills, instructions, model, search index)",
-	Long: `Apply project configuration from .knowns/config.json.
+	Long: `Apply project configuration from .known-me/config.json.
 
 This is the recommended command after cloning a repo with Know-Me:
   git clone <repo>
-  knowns sync
+  knownme sync
 
 It reads config.json and sets up everything locally:
   • Skills — copies built-in skills to platform directories
@@ -296,15 +296,15 @@ func runSyncModelAPI(cfg *models.Project) error {
 
 	model, err := settings.GetModel(ss.Model)
 	if err != nil {
-		fmt.Printf("%s Embedding model %q not found in ~/.knowns/settings.json\n", StyleWarning.Render("⚠"), ss.Model)
-		fmt.Println(StyleDim.Render("  Configure it: knowns model add --provider <id> <model-name>"))
+		fmt.Printf("%s Embedding model %q not found in ~/.known-me/settings.json\n", StyleWarning.Render("⚠"), ss.Model)
+		fmt.Println(StyleDim.Render("  Configure it: knownme model add --provider <id> <model-name>"))
 		return nil
 	}
 
 	provider, err := settings.GetProvider(model.Provider)
 	if err != nil {
-		fmt.Printf("%s Provider %q not found in ~/.knowns/settings.json\n", StyleWarning.Render("⚠"), model.Provider)
-		fmt.Println(StyleDim.Render("  Configure it: knowns provider add"))
+		fmt.Printf("%s Provider %q not found in ~/.known-me/settings.json\n", StyleWarning.Render("⚠"), model.Provider)
+		fmt.Println(StyleDim.Render("  Configure it: knownme provider add"))
 		return nil
 	}
 
@@ -505,7 +505,7 @@ func syncInstructionMarkerBlock(filePath, newContent string) error {
 	return os.WriteFile(filePath, []byte(result), 0644)
 }
 
-// runSyncImports syncs all git-based imports during knowns sync.
+// runSyncImports syncs all git-based imports during knownme sync.
 func runSyncImports(store *storage.Store, force bool) error {
 	importsDir := filepath.Join(store.Root, "imports")
 	entries, err := os.ReadDir(importsDir)

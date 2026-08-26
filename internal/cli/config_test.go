@@ -23,7 +23,7 @@ func TestLocalONNXModelChoicesShowDownloadStatus(t *testing.T) {
 	if model == nil {
 		t.Fatal("missing gte-small model")
 	}
-	installedPath := filepath.Join(home, ".knowns", "models", model.HuggingFace, "onnx", "model_quantized.onnx")
+	installedPath := filepath.Join(home, ".known-me", "models", model.HuggingFace, "onnx", "model_quantized.onnx")
 	if err := os.MkdirAll(filepath.Dir(installedPath), 0755); err != nil {
 		t.Fatalf("mkdir model dir: %v", err)
 	}
@@ -194,7 +194,7 @@ func TestProviderSettingsForAPIAndOllamaRemainMinimal(t *testing.T) {
 
 func newConfigTestProject(t *testing.T) (*storage.Store, *models.Project) {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := storage.NewStore(root)
 	if err := store.Init("config-test"); err != nil {
 		t.Fatalf("init store: %v", err)

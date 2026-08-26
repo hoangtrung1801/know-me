@@ -17,15 +17,15 @@ var codeCmd = &cobra.Command{
 	Long: `Code intelligence commands for AST-based indexing and graph analysis.
 
 Recommended context flow:
-  1. Use 'knowns code search <query>' for keyword code discovery across LSP symbols.
-  2. Use 'knowns code symbols' to verify what was actually indexed in a file or scope.
-  3. Use 'knowns code deps' to inspect raw relationships such as calls, imports, ownership, and inheritance.
+  1. Use 'knownme code search <query>' for keyword code discovery across LSP symbols.
+  2. Use 'knownme code symbols' to verify what was actually indexed in a file or scope.
+  3. Use 'knownme code deps' to inspect raw relationships such as calls, imports, ownership, and inheritance.
 
 Examples:
-  knowns code search "login auth"
-  knowns code search "handleCodeDefinition" --path internal/mcp
-  knowns code deps --type calls
-  knowns code symbols --kind function`,
+  knownme code search "login auth"
+  knownme code search "handleCodeDefinition" --path internal/mcp
+  knownme code deps --type calls
+  knownme code symbols --kind function`,
 }
 
 var codeDepsCmd = &cobra.Command{
@@ -54,7 +54,7 @@ func runCodeDeps(cmd *cobra.Command, args []string) error {
 		if isJSON(cmd) {
 			printJSON([]map[string]any{})
 		} else {
-			fmt.Println(RenderWarning("No code dependency index found. Run 'knowns code ingest' first."))
+			fmt.Println(RenderWarning("No code dependency index found. Run 'knownme code ingest' first."))
 		}
 		return nil
 	}
@@ -139,7 +139,7 @@ func runCodeSymbols(cmd *cobra.Command, args []string) error {
 		if isJSON(cmd) {
 			printJSON([]map[string]any{})
 		} else {
-			fmt.Println(RenderWarning("No code symbol index found. Run 'knowns code ingest' first."))
+			fmt.Println(RenderWarning("No code symbol index found. Run 'knownme code ingest' first."))
 		}
 		return nil
 	}

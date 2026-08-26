@@ -259,12 +259,12 @@ func (t *WordPieceTokenizer) wordPiece(word string) []int64 {
 // UnigramTokenizer implements SentencePiece Unigram tokenization using the
 // Viterbi algorithm for optimal segmentation.
 type UnigramTokenizer struct {
-	vocab   map[string]int     // token -> id
-	scores  map[string]float64 // token -> log probability
-	unkID   int
-	bosID   int // beginning of sequence (<s>)
-	eosID   int // end of sequence (</s>)
-	padID   int
+	vocab  map[string]int     // token -> id
+	scores map[string]float64 // token -> log probability
+	unkID  int
+	bosID  int // beginning of sequence (<s>)
+	eosID  int // end of sequence (</s>)
+	padID  int
 
 	// maxPieceLen is the length of the longest token in the vocab (in runes).
 	maxPieceLen int
@@ -539,4 +539,3 @@ func isControl(r rune) bool {
 	}
 	return unicode.IsControl(r)
 }
-

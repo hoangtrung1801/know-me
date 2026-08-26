@@ -16,7 +16,7 @@ Know-Me works best when you think of it as a project context layer with five con
 
 The important habit is to put reusable context into Know-Me instead of leaving it only in chat messages.
 
-## What you will see during `knowns init`
+## What you will see during `knownme init`
 
 - an interactive wizard
 - post-wizard steps such as:
@@ -26,14 +26,14 @@ The important habit is to put reusable context into Know-Me instead of leaving i
   - lightweight project instruction shim creation, such as `CLAUDE.md` and `AGENTS.md`
   - semantic index building (if enabled)
 
-After init, run `knowns setup <target> --global` to configure user-level AI platform integrations such as skills, MCP configs, and runtime hooks. This is the recommended setup for personal assistant usage across repositories. Use `knowns setup <target>` only when you intentionally want repo-local integration files, or `knowns setup agents` if you only need lightweight repo-local shims such as `AGENTS.md`.
+After init, run `knownme setup <target> --global` to configure user-level AI platform integrations such as skills, MCP configs, and runtime hooks. This is the recommended setup for personal assistant usage across repositories. Use `knownme setup <target>` only when you intentionally want repo-local integration files, or `knownme setup agents` if you only need lightweight repo-local shims such as `AGENTS.md`.
 
 ## Common first-week workflow
 
 1. Create one task for the next real change.
 2. Add acceptance criteria that make success observable.
 3. Create or update a doc for architecture or product context the task depends on.
-4. Use `knowns search` or `knowns retrieve` to confirm the context can be found.
+4. Use `knownme search` or `knownme retrieve` to confirm the context can be found.
 5. Let your AI assistant read the task, docs, and memory through MCP or lightweight shim files.
 6. Validate before marking the work done.
 
@@ -49,37 +49,37 @@ You do not need to document everything on day one. Start with the work that is a
 ### Create and update tasks
 
 ```bash
-knowns task create "Add authentication" -d "JWT-based auth"
-knowns task edit <id> -s in-progress
-knowns task edit <id> --check-ac 1
-knowns task edit <id> --append-notes "Completed auth middleware"
+knownme task create "Add authentication" -d "JWT-based auth"
+knownme task edit <id> -s in-progress
+knownme task edit <id> --check-ac 1
+knownme task edit <id> --append-notes "Completed auth middleware"
 ```
 
 ### Create and read docs
 
 ```bash
-knowns doc create "Auth Architecture" -d "Design overview" -f architecture
-knowns doc "architecture/auth-architecture" --plain
-knowns doc "architecture/auth-architecture" --toc --plain
+knownme doc create "Auth Architecture" -d "Design overview" -f architecture
+knownme doc "architecture/auth-architecture" --plain
+knownme doc "architecture/auth-architecture" --toc --plain
 ```
 
 ### Search for context
 
 ```bash
-knowns search "authentication" --plain
-knowns retrieve "how auth works" --json
+knownme search "authentication" --plain
+knownme retrieve "how auth works" --json
 ```
 
 ### Validate before finishing work
 
 ```bash
-knowns validate --plain
+knownme validate --plain
 ```
 
 ### Keep generated artifacts aligned
 
 ```bash
-knowns sync
+knownme sync
 ```
 
 ## Choosing a surface

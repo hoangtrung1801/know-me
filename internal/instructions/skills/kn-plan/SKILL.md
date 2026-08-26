@@ -120,7 +120,7 @@ If the plan needs assembled execution context rather than raw search hits, use r
 ```json
 mcp_knowns_search({ "action": "retrieve", "query": "<keywords>" })
 ```
-If MCP is unavailable, fall back to CLI: `knowns retrieve "<keywords>" --json`
+If MCP is unavailable, fall back to CLI: `knownme retrieve "<keywords>" --json`
 
 Use `search` for discovery. Use `retrieve` when you need ranked candidates plus a context pack with citations.
 

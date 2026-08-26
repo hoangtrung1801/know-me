@@ -69,7 +69,7 @@ Use `search` for discovery-first research. Only use `retrieve` when the next con
 ```json
 mcp_knowns_search({ "action": "retrieve", "query": "<topic>" })
 ```
-If MCP is unavailable, fall back to CLI: `knowns retrieve "<topic>" --json`
+If MCP is unavailable, fall back to CLI: `knownme retrieve "<topic>" --json`
 
 ## Step 2: Expand Context via Relations
 

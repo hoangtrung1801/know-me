@@ -1,7 +1,7 @@
 package models
 
 // ChatSession represents a single chat conversation with an AI agent.
-// Persisted in .knowns/chats.json.
+// Persisted in .known-me/chats.json.
 type ChatSession struct {
 	ID           string        `json:"id"`        // base36 (NewTaskID)
 	SessionID    string        `json:"sessionId"` // UUID for --session-id

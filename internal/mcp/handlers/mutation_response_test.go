@@ -39,7 +39,7 @@ func TestParseMutationReturn(t *testing.T) {
 }
 
 func TestRegisteredMutationToolsRejectInvalidReturn(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("registered-mutation-response"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestRegisteredMutationToolsRejectInvalidReturn(t *testing.T) {
 }
 
 func TestTaskMutationResponseModes(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("task-mutation-response"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -201,7 +201,7 @@ func TestTaskMutationResponseModes(t *testing.T) {
 }
 
 func TestDocMutationResponseModes(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("doc-mutation-response"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

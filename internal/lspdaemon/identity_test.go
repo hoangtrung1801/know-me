@@ -76,7 +76,7 @@ func TestProjectIdentitySymlinkEquivalentPaths(t *testing.T) {
 func TestPathsUseKnownsRuntimeRootAndProjectScope(t *testing.T) {
 	paths, home, _ := newTestPaths(t)
 
-	wantGlobal := filepath.Join(home, ".knowns")
+	wantGlobal := filepath.Join(home, ".known-me")
 	wantRuntime := filepath.Join(wantGlobal, "runtime")
 	if paths.GlobalRoot != wantGlobal {
 		t.Fatalf("global root = %q, want %q", paths.GlobalRoot, wantGlobal)
@@ -126,7 +126,7 @@ func TestClientsForSameProjectShareEndpointAndToken(t *testing.T) {
 	if clientA.token == "" || clientA.token != clientB.token {
 		t.Fatalf("shared token mismatch: %q != %q", clientA.token, clientB.token)
 	}
-	if !strings.HasPrefix(clientA.paths.DaemonDir, filepath.Join(home, ".knowns", "runtime")) {
+	if !strings.HasPrefix(clientA.paths.DaemonDir, filepath.Join(home, ".known-me", "runtime")) {
 		t.Fatalf("daemon dir = %q, want under isolated runtime root", clientA.paths.DaemonDir)
 	}
 }
@@ -134,7 +134,7 @@ func TestClientsForSameProjectShareEndpointAndToken(t *testing.T) {
 func TestRunAcceptsSharedClients(t *testing.T) {
 	isolateHome(t)
 	root := t.TempDir()
-	store := storage.NewStore(filepath.Join(root, ".knowns"))
+	store := storage.NewStore(filepath.Join(root, ".known-me"))
 	project := &models.Project{
 		Name:      "daemon-test",
 		ID:        "daemon-test",

@@ -20,7 +20,7 @@ class MCPClient:
         env.setdefault("NO_COLOR", "1")
         env.setdefault("NO_UPDATE_CHECK", "1")
         self.proc = subprocess.Popen(
-            ["knowns", "mcp", "--stdio", "--project", project],
+            ["knownme", "mcp", "--stdio", "--project", project],
             cwd=project,
             env=env,
             stdin=subprocess.PIPE,
@@ -118,7 +118,7 @@ class MCPClient:
 
 
 def run_knowns_json(args):
-    raw = subprocess.check_output(["knowns", *args], text=True)
+    raw = subprocess.check_output(["knownme", *args], text=True)
     return json.loads(raw)
 
 
@@ -278,7 +278,7 @@ def main():
     lsp_stress = os.environ.get("LSP_STRESS", "0") == "1"
     lsp_paths = csv_env(
         "LSP_PATHS",
-        "cmd/knowns/main.go,ui/src/lib/utils.ts,ui/src/api/client.ts,tests/runtime-docker/fixtures/csharp/Program.cs",
+        "cmd/knownme/main.go,ui/src/lib/utils.ts,ui/src/api/client.ts,tests/runtime-docker/fixtures/csharp/Program.cs",
     )
     if lsp_stress:
         run_code = True

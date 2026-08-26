@@ -238,7 +238,7 @@ func buildKnowledge(store *storage.Store) *KnowledgeStatus {
 		}
 	}
 
-	// Import count: count subdirectories in .knowns/imports/ that have _import.json.
+	// Import count: count subdirectories in .known-me/imports/ that have _import.json.
 	importsDir := filepath.Join(store.Root, "imports")
 	if entries, err := os.ReadDir(importsDir); err == nil {
 		for _, e := range entries {

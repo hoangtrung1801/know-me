@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 type InstallMetadata struct {
@@ -23,11 +25,7 @@ type InstallMetadata struct {
 }
 
 func InstallMetadataPath() string {
-	home, err := os.UserHomeDir()
-	if err != nil || home == "" {
-		return ""
-	}
-	return filepath.Join(home, ".knowns", "install.json")
+	return filepath.Join(paths.GlobalStoreRoot(), "install.json")
 }
 
 func LoadInstallMetadata() (*InstallMetadata, error) {

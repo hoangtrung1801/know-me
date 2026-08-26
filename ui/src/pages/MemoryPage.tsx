@@ -2115,7 +2115,7 @@ function normalizeSuggestedDocPath(path: string) {
 	return path
 		.trim()
 		.replace(/^@doc\//, "")
-		.replace(/^\.knowns\/docs\//, "")
+		.replace(/^\.known-me\/docs\//, "")
 		.replace(/\.md$/, "");
 }
 

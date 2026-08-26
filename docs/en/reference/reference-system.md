@@ -23,6 +23,6 @@ References let humans and AI move through project context without guessing filen
 
 ```bash
 knowns resolve "@doc/specs/auth{implements}" --plain
-knowns search "authentication" --plain
-knowns retrieve "how auth works" --json
+knownme search "authentication" --plain
+knownme retrieve "how auth works" --json
 ```

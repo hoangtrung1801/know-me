@@ -41,7 +41,7 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 - Use Know-Me as the memory layer for humans and the AI-friendly working layer for agents.
 - Search before reading; read only the sections and docs relevant to the current task.
 - Never manually edit Know-Me-managed task or doc markdown.
-- Prefer Know-Me MCP tools; use the `knowns` CLI only as fallback.
+- Prefer Know-Me MCP tools; use the `knownme` CLI only as fallback.
 - Let skills handle detailed workflows; use this file for rules, conventions, and context routing.
 - Validate before marking work complete.
 - Do not revert user changes you did not make.
@@ -74,8 +74,8 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 - Use Know-Me `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.
 - Use shell commands for git, tests, builds, generators, and other terminal operations.
 - Prefer targeted retrieval over loading large files in full.
-- Use `knowns search` for discovery and quick relevance checks.
-- Use MCP `retrieve` tool when a workflow needs structured context with citations and context-pack assembly. Fall back to CLI `knowns retrieve` if MCP is unavailable.
+- Use `knownme search` for discovery and quick relevance checks.
+- Use MCP `retrieve` tool when a workflow needs structured context with citations and context-pack assembly. Fall back to CLI `knownme retrieve` if MCP is unavailable.
 - Prefer `--json` for structured CLI reads consumed by agents, scripts, or workflows, including `get`, `list`, `search`, and `retrieve` commands.
 - Prefer `--plain` for human-facing inspection, quick content reads, and logs when JSON is unnecessary.
 - Do not rely on styled default CLI output for automation or parsing.

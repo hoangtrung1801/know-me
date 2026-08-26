@@ -77,7 +77,7 @@ func TestJSONAdapterRuntimeMetadata(t *testing.T) {
 	}
 
 	guide := adapter.InstallGuide()
-	if guide.KnownsCmd != "knowns lsp install json" || guide.URL == "" {
+	if guide.KnownsCmd != "knownme lsp install json" || guide.URL == "" {
 		t.Fatalf("InstallGuide() = %#v", guide)
 	}
 	prerequisites := adapter.Prerequisites()
@@ -108,7 +108,7 @@ func TestJSONAdapterRouting(t *testing.T) {
 		})
 	}
 
-	for _, path := range []string{".knowns/config.json", `C:\repo\.knowns\config.json`} {
+	for _, path := range []string{".known-me/config.json", `C:\repo\.known-me\config.json`} {
 		t.Run(path+" hard excluded", func(t *testing.T) {
 			if lang, ok := registry.ForPath(path); ok {
 				t.Fatalf("ForPath(%q) = %q, want no route", path, lang.ID)

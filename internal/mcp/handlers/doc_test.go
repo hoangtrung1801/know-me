@@ -11,7 +11,7 @@ import (
 )
 
 func TestHandleDocUpdateRecordsMCPSectionHistoryMetadata(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("doc-mcp-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestHandleDocRestoreSectionRecordsRestoreRevision(t *testing.T) {
 
 func setupDocHandlerHistoryStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("doc-mcp-history-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

@@ -64,7 +64,7 @@ const (
 	LegacyDecisionMigrationDecisionKey   = "decisionMigration.decisionId"
 )
 
-var ErrLegacyDecisionMemoryWrite = errors.New("memory category \"decision\" is legacy and read-only; archive, reject, reclassify, or migrate existing entries, and create new durable guidance as a first-class System Decision with `knowns decision create` or the Decision MCP/API")
+var ErrLegacyDecisionMemoryWrite = errors.New("memory category \"decision\" is legacy and read-only; archive, reject, reclassify, or migrate existing entries, and create new durable guidance as a first-class System Decision with `knownme decision create` or the Decision MCP/API")
 
 // IsLegacyDecisionMemoryCategory normalizes user input before applying the
 // legacy category policy at every Memory write boundary.

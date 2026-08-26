@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/util"
 )
 
@@ -33,8 +34,7 @@ type Registry struct {
 }
 
 func NewRegistry() *Registry {
-	home, _ := os.UserHomeDir()
-	return &Registry{filePath: filepath.Join(home, ".knowns", "registry.json")}
+	return &Registry{filePath: filepath.Join(paths.GlobalStoreRoot(), "registry.json")}
 }
 func NewRegistryWithPath(path string) *Registry { return &Registry{filePath: path} }
 

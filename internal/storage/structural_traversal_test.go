@@ -14,7 +14,7 @@ func newTestStoreWithData(t *testing.T) *Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
 
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("structural-test"); err != nil {
 		t.Fatalf("init store: %v", err)
@@ -202,7 +202,7 @@ func TestStructuralResolve_MultiHopBlockedChain(t *testing.T) {
 
 func TestStructuralResolve_CanonicalAndLegacyRefs(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("canonical-ref-test"); err != nil {
 		t.Fatalf("init store: %v", err)
@@ -265,7 +265,7 @@ func TestStructuralResolve_CanonicalAndLegacyRefs(t *testing.T) {
 func TestStructuralResolve_MixedOriginDedup(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("dedup-test"); err != nil {
 		t.Fatalf("init store: %v", err)
@@ -393,7 +393,7 @@ func TestStructuralResolve_DepthLimit(t *testing.T) {
 func TestStructuralResolve_DocRenamePreservesEdges(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("rename-test"); err != nil {
 		t.Fatalf("init store: %v", err)
@@ -530,7 +530,7 @@ func TestStructuralResolve_BothDirection(t *testing.T) {
 // Test backward compatibility: no structural params returns error-free.
 func TestStructuralResolve_InvalidRef(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("invalid-test"); err != nil {
 		t.Fatalf("init store: %v", err)

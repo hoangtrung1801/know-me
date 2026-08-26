@@ -22,6 +22,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/lspdaemon"
 	"github.com/hoangtrung1801/known-me/internal/mcp/handlers"
 	"github.com/hoangtrung1801/known-me/internal/memos"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/permissions"
 	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
 	"github.com/hoangtrung1801/known-me/internal/storage"
@@ -44,15 +45,12 @@ func newMCPLogger() *log.Logger {
 	writers := []io.Writer{os.Stderr}
 	pid := os.Getpid()
 
-	home, err := os.UserHomeDir()
-	if err == nil && home != "" {
-		logDir := filepath.Join(home, ".knowns", "logs")
-		if mkdirErr := os.MkdirAll(logDir, 0755); mkdirErr == nil {
-			cleanupOldMCPLogs(logDir, 7*24*time.Hour)
-			logPath := filepath.Join(logDir, "mcp.log")
-			if writer, openErr := newRotatingFileWriter(logPath, mcpLogMaxSizeBytes(), mcpLogMaxBackups()); openErr == nil {
-				writers = append(writers, writer)
-			}
+	logDir := filepath.Join(paths.GlobalStoreRoot(), "logs")
+	if mkdirErr := os.MkdirAll(logDir, 0755); mkdirErr == nil {
+		cleanupOldMCPLogs(logDir, 7*24*time.Hour)
+		logPath := filepath.Join(logDir, "mcp.log")
+		if writer, openErr := newRotatingFileWriter(logPath, mcpLogMaxSizeBytes(), mcpLogMaxBackups()); openErr == nil {
+			writers = append(writers, writer)
 		}
 	}
 
@@ -231,7 +229,7 @@ func (s *MCPServer) getHelpRegistry() map[string]handlers.HelpEntry {
 // NewMCPServer creates and configures a new MCPServer with all registered tools.
 // projectHint is an optional project root path. Detection order:
 //  1. projectHint (from --project flag or KNOWNS_PROJECT env)
-//  2. Walk up from cwd looking for .knowns/
+//  2. Walk up from cwd looking for .known-me/
 //
 // If a project is found, it is automatically set so callers don't need to call
 // set_project first. set_project can still be used to switch projects at runtime.
@@ -317,7 +315,7 @@ func NewMCPServer(projectHint string) *MCPServer {
 		return nil
 	}
 
-	// Create global audit store at ~/.knowns/audit.jsonl.
+	// Create global audit store at ~/.known-me/audit.jsonl.
 	auditStore := storage.NewGlobalAuditStore()
 
 	// Build permission guard config loader.

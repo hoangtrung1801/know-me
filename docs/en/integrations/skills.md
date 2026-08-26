@@ -12,15 +12,15 @@ Skills are separate from MCP tools. MCP tools appear in clients as structured do
 
 ## Setup
 
-Skills are generated via `knowns setup <target> --global` for normal personal assistant setup, via `knowns setup <target>` for intentional repo-local setup, or re-synced with `knowns sync --skills`:
+Skills are generated via `knownme setup <target> --global` for normal personal assistant setup, via `knownme setup <target>` for intentional repo-local setup, or re-synced with `knownme sync --skills`:
 
 ```bash
-knowns setup claude --global    # Syncs Claude skills/config at user scope
-knowns setup opencode --global  # Syncs OpenCode skills/config at user scope
-knowns setup codex --global     # Syncs Codex skills/config at user scope
-knowns setup hermes --global    # Syncs Hermes external skill config at user scope
-knowns setup kiro --global      # Syncs Kiro skills/config at user scope
-knowns sync --skills   # Re-syncs all configured platforms
+knownme setup claude --global    # Syncs Claude skills/config at user scope
+knownme setup opencode --global  # Syncs OpenCode skills/config at user scope
+knownme setup codex --global     # Syncs Codex skills/config at user scope
+knownme setup hermes --global    # Syncs Hermes external skill config at user scope
+knownme setup kiro --global      # Syncs Kiro skills/config at user scope
+knownme sync --skills   # Re-syncs all configured platforms
 ```
 
 ## Invocation syntax
@@ -59,5 +59,5 @@ When the research scope is large and the runtime exposes sub-agent tools, `kn-re
 ## Notes
 
 - `.agents/skills` is the primary path for agent-compatible platforms
-- `knowns init` no longer syncs skills — use `knowns setup <target> --global` after init for personal assistant setup
-- `knowns sync --skills` is the entrypoint for regenerating skills after updates
+- `knownme init` no longer syncs skills — use `knownme setup <target> --global` after init for personal assistant setup
+- `knownme sync --skills` is the entrypoint for regenerating skills after updates

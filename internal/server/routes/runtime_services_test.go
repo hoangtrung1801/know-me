@@ -19,7 +19,7 @@ func TestRuntimeServicesUsesInjectedLSPRuntimeSnapshot(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Config.Save(&models.Project{Name: "runtime-services-test", ID: "runtime-services-test"}); err != nil {
 		t.Fatalf("save project config: %v", err)
 	}

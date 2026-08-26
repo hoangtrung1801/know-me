@@ -622,7 +622,7 @@ func shortenTarget(s string, max int) string {
 
 func projectDisplayName(root string) string {
 	base := filepath.Base(root)
-	if base == ".knowns" {
+	if base == ".known-me" {
 		return filepath.Base(filepath.Dir(root))
 	}
 	return base

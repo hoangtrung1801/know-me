@@ -87,14 +87,14 @@ Know-Me 是一个**本地优先、支持自托管的生产力工作空间**。�
 
 ```bash
 # 开始一个项目工作空间
-knowns init
+knownme init
 
 # 添加一个任务
-knowns task create "规划发布" --ac "确定第一个里程碑"
+knownme task create "规划发布" --ac "确定第一个里程碑"
 
 # 保存有用的信息
-knowns link add "https://example.com/article"
-knowns memo add "询问 Sam 关于发布计划的时间安排"
+knownme link add "https://example.com/article"
+knownme memo add "询问 Sam 关于发布计划的时间安排"
 ```
 
 ## 快速开始
@@ -116,17 +116,17 @@ brew install knowns-dev/tap/knowns
 # 创建或注册项目工作空间
 mkdir my-project
 cd my-project
-knowns init
+knownme init
 
 # 为项目添加工作
-knowns task create "选择发布日期" --ac "确认日期"
+knownme task create "选择发布日期" --ac "确认日期"
 
 # 保存以后有用的信息
-knowns link add "https://example.com/launch-checklist"
-knowns memo add "周五查看清单"
+knownme link add "https://example.com/launch-checklist"
+knownme memo add "周五查看清单"
 
 # 在浏览器中打开工作空间
-knowns browser --open
+knownme browser --open
 ```
 
 ## 安装
@@ -160,7 +160,7 @@ npm install -g knowns
 需要 Go 1.24.2 或更高版本。
 
 ```bash
-go install github.com/hoangtrung1801/known-me/cmd/knowns@latest
+go install github.com/hoangtrung1801/known-me/cmd/knownme@latest
 ```
 
 ## 文档

@@ -5,12 +5,12 @@ Know-Me dùng local embedding models cho semantic search.
 ## Lệnh chính
 
 ```bash
-knowns model add <model-name>
-knowns model list
-knowns model download multilingual-e5-small
-knowns model set multilingual-e5-small
-knowns model status
-knowns model remove <id>
+knownme model add <model-name>
+knownme model list
+knownme model download multilingual-e5-small
+knownme model set multilingual-e5-small
+knownme model status
+knownme model remove <id>
 ```
 
 ## Flow
@@ -23,8 +23,8 @@ knowns model remove <id>
 ## Lệnh liên quan
 
 ```bash
-knowns search --status-check
-knowns search --reindex
+knownme search --status-check
+knownme search --reindex
 ```
 
 ## Lưu ý

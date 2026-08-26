@@ -10,7 +10,7 @@
 #     | GITHUB_PAT="$GITHUB_PAT" sh
 #
 # Options (via env vars):
-#   KNOWNS_INSTALL_DIR  — install directory (default: ~/.knowns/bin)
+#   KNOWNS_INSTALL_DIR  — install directory (default: ~/.known-me/bin)
 #   KNOWNS_VERSION      — specific version (default: latest)
 #   KNOWNS_NO_SYMLINK   — set to 1 to skip creating 'kn' symlink
 #   GITHUB_PAT          — GitHub PAT; prompted for when not set
@@ -19,10 +19,10 @@
 set -e
 
 REPO="hoangtrung1801/known-me"
-BINARY="knowns"
-DEFAULT_INSTALL_DIR="${HOME}/.knowns/bin"
+BINARY="knownme"
+DEFAULT_INSTALL_DIR="${HOME}/.known-me/bin"
 INSTALL_DIR="${KNOWNS_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
-KNOWN_DIR="${HOME}/.knowns"
+KNOWN_DIR="${HOME}/.known-me"
 
 # ─── Colors ───────────────────────────────────────────────────────────
 
@@ -244,7 +244,7 @@ main() {
     if [ "${KNOWNS_NO_SYMLINK:-0}" != "1" ]; then
         ln -sf "${INSTALL_DIR}/${BINARY}" "${INSTALL_DIR}/kn" 2>/dev/null || true
         if [ -L "${INSTALL_DIR}/kn" ]; then
-            success "Created symlink: kn → knowns"
+            success "Created symlink: kn → knownme"
         fi
     fi
 
@@ -253,8 +253,8 @@ main() {
 
     # Verify installation
     printf "\n"
-    if command -v knowns >/dev/null 2>&1; then
-        INSTALLED_VERSION=$(knowns --version 2>/dev/null || echo "unknown")
+    if command -v knownme >/dev/null 2>&1; then
+        INSTALLED_VERSION=$(knownme --version 2>/dev/null || echo "unknown")
         printf "  ${GREEN}${BOLD}Know-Me CLI ${INSTALLED_VERSION} installed successfully!${RESET}\n"
     else
         printf "  ${GREEN}${BOLD}Know-Me CLI installed successfully!${RESET}\n"
@@ -269,8 +269,8 @@ main() {
     fi
 
     printf "\n  ${DIM}Get started:${RESET}\n"
-    printf "  ${DIM}  knowns init${RESET}\n"
-    printf "  ${DIM}  knowns task create \"My first task\"${RESET}\n\n"
+    printf "  ${DIM}  knownme init${RESET}\n"
+    printf "  ${DIM}  knownme task create \"My first task\"${RESET}\n\n"
 
     printf "  ${DIM}Uninstall:${RESET}\n"
     printf "  ${DIM}  curl -fsSL https://github.com/${REPO}/releases/download/${VERSION}/uninstall.sh | sh${RESET}\n\n"

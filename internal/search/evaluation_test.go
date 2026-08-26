@@ -59,7 +59,7 @@ func TestCanonicalEvaluationFilesStayOutsideIndexedKnowledge(t *testing.T) {
 		CanonicalSemanticEvaluationBaselinePath,
 		CanonicalHybridEvaluationBaselinePath,
 	} {
-		if strings.Contains(path, ".knowns/") {
+		if strings.Contains(path, ".known-me/") {
 			t.Fatalf("evaluation file %q must remain outside indexed Knowns knowledge", path)
 		}
 		if !strings.HasPrefix(path, "internal/search/testdata/") {

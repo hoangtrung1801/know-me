@@ -19,6 +19,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/lsp"
 	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
 	goruntime "runtime"
 
@@ -399,7 +400,7 @@ func detectCloudflared(cleanupStale bool) []ServiceStatus {
 		return []ServiceStatus{ss}
 	}
 
-	// Look for PID files matching cloudflared-*.pid in ~/.knowns/.
+	// Look for PID files matching cloudflared-*.pid in ~/.known-me/.
 	stateDir := storage.GlobalRootPath()
 
 	entries, err := os.ReadDir(stateDir)
@@ -584,8 +585,7 @@ func detectEmbedding(store *storage.Store) []ServiceStatus {
 			dims = modelCfg.Dimensions
 		}
 		ss.Details["dimensions"] = strconv.Itoa(dims)
-		home, _ := os.UserHomeDir()
-		modelDir := filepath.Join(home, ".knowns", "models", modelCfg.HuggingFaceID)
+		modelDir := filepath.Join(paths.GlobalStoreRoot(), "models", modelCfg.HuggingFaceID)
 		if localONNXModelAvailable(modelDir) {
 			ss.Details["model_available"] = "true"
 			setEmbeddingRuntimeActivityStatus(&ss)

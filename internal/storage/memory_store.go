@@ -12,11 +12,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// MemoryStore reads and writes memory files from .knowns/memory/ (project),
-// .knowns/.working-memory/ (working), and ~/.knowns/memory/ (global).
+// MemoryStore reads and writes memory files from .known-me/memory/ (project),
+// .known-me/.working-memory/ (working), and ~/.known-me/memory/ (global).
 type MemoryStore struct {
-	root       string // .knowns/ directory (project)
-	globalRoot string // ~/.knowns/ directory
+	root       string // .known-me/ directory (project)
+	globalRoot string // ~/.known-me/ directory
 }
 
 func (ms *MemoryStore) projectDir() string { return filepath.Join(ms.root, "memory") }

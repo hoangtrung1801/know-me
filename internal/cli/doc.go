@@ -18,7 +18,7 @@ var docCmd = &cobra.Command{
 	Use:   "doc",
 	Short: "Manage documentation",
 	Long:  "Create, view, and edit project documentation.",
-	// Allow 'knowns doc <path>' as a shorthand for 'knowns doc view <path>'
+	// Allow 'knownme doc <path>' as a shorthand for 'knownme doc view <path>'
 	Args: cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {

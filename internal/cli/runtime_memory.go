@@ -52,7 +52,7 @@ func runRuntimeMemoryHook(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	store := storage.NewStore(filepath.Join(projectRoot, ".knowns"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
 	settings := runtimememory.NormalizeSettings(nil)
 	if project, err := store.Config.Load(); err == nil {
 		settings = runtimememory.NormalizeSettings(project.Settings.RuntimeMemory)

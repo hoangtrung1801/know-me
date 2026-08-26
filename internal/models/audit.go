@@ -3,7 +3,7 @@ package models
 import "time"
 
 // AuditEvent records a single MCP tool invocation for the audit trail.
-// Events are stored as JSON-lines in ~/.knowns/audit.jsonl.
+// Events are stored as JSON-lines in ~/.known-me/audit.jsonl.
 type AuditEvent struct {
 	// Timestamp is when the tool call started.
 	Timestamp time.Time `json:"timestamp"`

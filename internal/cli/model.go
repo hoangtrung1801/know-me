@@ -13,6 +13,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/search"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
@@ -143,11 +144,7 @@ model is used for generating embeddings.`,
 }
 
 func getModelsDir() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(home, ".knowns", "models")
+	return filepath.Join(paths.GlobalStoreRoot(), "models")
 }
 
 func getModelDir(huggingFaceID string) string {
@@ -596,7 +593,7 @@ func runModelList(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println()
 	if !hasInstalled {
-		fmt.Println(RenderHint("Use " + RenderCmd("knowns model download <modelId>") + " to download a model."))
+		fmt.Println(RenderHint("Use " + RenderCmd("knownme model download <modelId>") + " to download a model."))
 	}
 	return nil
 }
@@ -807,12 +804,12 @@ func runModelStatus(cmd *cobra.Command, args []string) error {
 		fmt.Println(modelDimStyle.Render("  No models downloaded"))
 		fmt.Println()
 		fmt.Println(RenderHint("Download a model to enable semantic search:"))
-		fmt.Println(RenderHint("  " + RenderCmd("knowns model download gte-small")))
+		fmt.Println(RenderHint("  " + RenderCmd("knownme model download gte-small")))
 	}
 	fmt.Println()
 
 	// Current project section.
-	projectRoot := strings.TrimSuffix(store.Root, "/.knowns")
+	projectRoot := strings.TrimSuffix(store.Root, "/.known-me")
 	fmt.Println(StyleBold.Render("Current Project"))
 	fmt.Println(RenderField("Path", projectRoot))
 	if cfg != nil && cfg.Settings.SemanticSearch != nil {
@@ -826,7 +823,7 @@ func runModelStatus(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		fmt.Println(modelDimStyle.Render("  No model configured"))
-		fmt.Println(RenderHint("Set one: " + RenderCmd("knowns model set gte-small")))
+		fmt.Println(RenderHint("Set one: " + RenderCmd("knownme model set gte-small")))
 	}
 	fmt.Println()
 
@@ -887,7 +884,7 @@ func runModelSet(cmd *cobra.Command, args []string) error {
 
 	fmt.Println(modelSuccessStyle.Render(fmt.Sprintf("✓ Set default embedding model to %s (%s)", selected.ID, selected.Name)))
 	if !isModelInstalled(selected) {
-		fmt.Println(modelDimStyle.Render(fmt.Sprintf("  Download the model: knowns model download %s", selected.ID)))
+		fmt.Println(modelDimStyle.Render(fmt.Sprintf("  Download the model: knownme model download %s", selected.ID)))
 	}
 	return nil
 }
@@ -942,7 +939,7 @@ func runModelAdd(cmd *cobra.Command, args []string) error {
 	// Register in the hardcoded map is not possible at runtime,
 	// so we register in global settings as a local model reference.
 	fmt.Printf("✓ Model %q registered (local ONNX, HuggingFace: %s, %dd)\n", modelID, hfID, dims)
-	fmt.Printf("  Download: knowns model download %s\n", modelID)
+	fmt.Printf("  Download: knownme model download %s\n", modelID)
 	return nil
 }
 
@@ -955,7 +952,7 @@ func addAPIModel(modelID, modelName, providerID string, dims int) error {
 
 	provider, err := settings.GetProvider(providerID)
 	if err != nil {
-		return fmt.Errorf("provider %q not found; register it first with 'knowns provider add'", providerID)
+		return fmt.Errorf("provider %q not found; register it first with 'knownme provider add'", providerID)
 	}
 	provider = provider.WithDefaults()
 
@@ -998,7 +995,7 @@ func addAPIModel(modelID, modelName, providerID string, dims int) error {
 	}
 
 	fmt.Printf("✓ Model %q registered (provider: %s, model: %s, %dd)\n", modelID, providerID, modelName, dims)
-	fmt.Printf("  Use it: knowns model set %s\n", modelID)
+	fmt.Printf("  Use it: knownme model set %s\n", modelID)
 	return nil
 }
 

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/hoangtrung1801/known-me/internal/lsp"
 	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
@@ -208,7 +208,7 @@ func (s *Server) dispatch(ctx context.Context, req Request) Response {
 }
 
 func (s *Server) reloadConfig() error {
-	store := storage.NewStore(filepath.Join(s.identity.Root, ".knowns"))
+	store := storage.NewStore(paths.ProjectStoreRoot(s.identity.Root))
 	project, err := store.Config.Load()
 	if err != nil {
 		return err
@@ -434,7 +434,7 @@ func (s *Server) errorResponse(path string, err error) Response {
 }
 
 func newProjectManager(root string) (*lsp.Manager, error) {
-	store := storage.NewStore(filepath.Join(root, ".knowns"))
+	store := storage.NewStore(paths.ProjectStoreRoot(root))
 	project, err := store.Config.Load()
 	if err != nil {
 		return nil, err

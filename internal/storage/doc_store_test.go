@@ -12,7 +12,7 @@ import (
 func TestDocStoreRenameAndRewriteDocReferences(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("doc-rename-test"); err != nil {
 		t.Fatalf("init store: %v", err)
@@ -115,7 +115,7 @@ func TestDocStoreRenameAndRewriteDocReferences(t *testing.T) {
 
 func TestDocStoreApprovedLockedDecisionEditRequiresReview(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	store := NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("spec-review-gate-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

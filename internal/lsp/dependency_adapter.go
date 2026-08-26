@@ -2,16 +2,13 @@ package lsp
 
 import (
 	"context"
-	"os"
 	"path/filepath"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 func DefaultLSPBaseDir() string {
-	home, err := os.UserHomeDir()
-	if err != nil || home == "" {
-		return filepath.Join(".knowns", "lsp-servers")
-	}
-	return filepath.Join(home, ".knowns", "lsp-servers")
+	return filepath.Join(paths.GlobalStoreRoot(), "lsp-servers")
 }
 
 type dependencyAdapter struct {

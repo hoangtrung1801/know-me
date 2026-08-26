@@ -8,6 +8,17 @@ import (
 	"time"
 )
 
+func TestNewRegistryUsesKnowMeGlobalRoot(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	registry := NewRegistry()
+	want := filepath.Join(home, ".known-me", "registry.json")
+	if registry.filePath != want {
+		t.Fatalf("registry path = %q, want %q", registry.filePath, want)
+	}
+}
+
 func TestRegistryLoadPreservesProjectPaths(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "registry.json")
 	projectRoot := t.TempDir()

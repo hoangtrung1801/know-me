@@ -26,9 +26,9 @@ if [[ $deb == */knowns-linux-arm64.tar.gz || $deb == knowns-linux-arm64.tar.gz ]
 
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' EXIT
-  tar -xzf "$deb" -C "$tmp" knowns
-  [[ -f $tmp/knowns ]] || { echo "Archive does not contain knowns." >&2; exit 1; }
-  sudo install -m 0755 "$tmp/knowns" /usr/local/bin/knowns
+  tar -xzf "$deb" -C "$tmp" knownme
+  [[ -f $tmp/knownme ]] || { echo "Archive does not contain knownme." >&2; exit 1; }
+  sudo install -m 0755 "$tmp/knownme" /usr/local/bin/knownme
   exit
 fi
 

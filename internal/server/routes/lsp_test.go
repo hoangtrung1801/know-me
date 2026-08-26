@@ -191,7 +191,7 @@ func TestLSPRoutesInstallAndCleanupUseManagerLifecycle(t *testing.T) {
 	if err := manager.RegisterAdapter(routeLSPAdapter{
 		id:    "installable",
 		name:  "Installable",
-		guide: lsp.InstallGuide{KnownsCmd: "knowns lsp install installable"},
+		guide: lsp.InstallGuide{KnownsCmd: "knownme lsp install installable"},
 		installFn: func(_ context.Context, targetDir string) (string, error) {
 			path := filepath.Join(targetDir, "installable", "bin", "installable-ls")
 			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -233,7 +233,7 @@ func TestLSPRoutesInstallAndCleanupUseManagerLifecycle(t *testing.T) {
 
 func setupLSPRouteStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("lsp-route-test"); err != nil {
 		t.Fatalf("Init: %v", err)
 	}

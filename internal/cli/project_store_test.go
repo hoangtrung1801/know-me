@@ -20,7 +20,7 @@ func TestResolveProjectStoreUsesWorkspaceLink(t *testing.T) {
 	}
 	t.Setenv("HOME", home)
 
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func TestResolveProjectStoreUsesWorkspaceLink(t *testing.T) {
 	if store.ProjectID != project.ID || store.RepositoryRoot() != wantRoot {
 		t.Fatalf("store = %#v, want project %q and root %q", store, project.ID, wantRoot)
 	}
-	reloaded := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reloaded := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reloaded.Load(); err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestResolveProjectStoreUsesWorkspaceLink(t *testing.T) {
 func TestResolveProjectStoreFallsBackToActiveProject(t *testing.T) {
 	home, repo := t.TempDir(), t.TempDir()
 	t.Setenv("HOME", home)
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestResolveProjectStoreFallsBackToActiveProject(t *testing.T) {
 func TestResolveProjectStoreUsesRegisteredProjectPathWithoutWorkspaceLink(t *testing.T) {
 	home, repositoryRoot, start := t.TempDir(), t.TempDir(), t.TempDir()
 	t.Setenv("HOME", home)
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestResolveProjectStoreUsesRegisteredProjectPathWithoutWorkspaceLink(t *tes
 func TestResolveProjectStoreRejectsBadWorkspaceLink(t *testing.T) {
 	home, repo := t.TempDir(), t.TempDir()
 	t.Setenv("HOME", home)
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}
@@ -125,12 +125,12 @@ func TestResolveProjectStoreRejectsBadWorkspaceLink(t *testing.T) {
 func TestResolveProjectStoreRequiresActiveProject(t *testing.T) {
 	home, repo := t.TempDir(), t.TempDir()
 	t.Setenv("HOME", home)
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".knowns", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}
 	store, err := resolveProjectStore(repo)
-	if err == nil || store != nil || !strings.Contains(err.Error(), "run 'knowns init'") {
+	if err == nil || store != nil || !strings.Contains(err.Error(), "run 'knownme init'") {
 		t.Fatalf("store = %#v, err = %v, want initialization error", store, err)
 	}
 }
@@ -156,7 +156,7 @@ func TestProjectStoreInitWritesCentralConfig(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(globalRoot, "projects", "p12345", "config.json")); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(repo, ".knowns")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(repo, ".known-me")); !os.IsNotExist(err) {
 		t.Fatalf("unexpected repository-local store: %v", err)
 	}
 }

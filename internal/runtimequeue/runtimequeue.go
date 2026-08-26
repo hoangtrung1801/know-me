@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/util"
 )
 
@@ -230,13 +231,13 @@ func isGoTestBinary(path string) bool {
 
 func GlobalRoot() string {
 	if home := os.Getenv("HOME"); home != "" {
-		return filepath.Join(home, ".knowns")
+		return paths.GlobalStoreRoot()
 	}
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
-		return filepath.Join(os.TempDir(), ".knowns")
+		return filepath.Join(os.TempDir(), paths.StoreDirName)
 	}
-	return filepath.Join(home, ".knowns")
+	return filepath.Join(home, paths.StoreDirName)
 }
 
 func RuntimeRoot() string {
@@ -256,7 +257,7 @@ func queuePath(storeRoot string) string {
 // keeping the filename human-readable.
 func sanitizeProjectKey(storeRoot string) string {
 	clean := filepath.Clean(storeRoot)
-	base := filepath.Base(filepath.Dir(clean)) // parent of .knowns
+	base := filepath.Base(filepath.Dir(clean)) // parent of .known-me
 	if base == "" || base == "." || base == string(filepath.Separator) {
 		base = "default"
 	}

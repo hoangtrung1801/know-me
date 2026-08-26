@@ -398,7 +398,7 @@ function writeDecisionFile(
 	decision: string,
 	options: { status: "accepted" | "superseded"; supersedes?: string[]; supersededBy?: string[] },
 ) {
-	const dir = join(server.projectDir, ".knowns", "decisions");
+	const dir = join(server.projectDir, ".known-me", "decisions");
 	mkdirSync(dir, { recursive: true });
 	const now = "2026-06-18T10:24:00Z";
 	const listYaml = (name: string, values?: string[]) => {

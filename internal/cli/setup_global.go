@@ -382,7 +382,7 @@ Global Know-Me integration. Project-level MCP configuration takes precedence whe
 
 Know-Me is the repository memory and workflow layer for AI-native development.
 
-- When working in a project with a .knowns/ directory, use Know-Me MCP for project-specific context.
+- When working in a project with a .known-me/ directory, use Know-Me MCP for project-specific context.
 - Use Know-Me MCP tools for tasks, docs, templates, and workflow state.
 - Search first, then read only relevant docs and code.
 - Plan before implementation unless the user explicitly overrides.
@@ -396,7 +396,7 @@ Global Know-Me integration for Kiro. Project-level configuration takes precedenc
 
 Know-Me is the repository memory and workflow layer for AI-native development.
 
-- When working in a project with a .knowns/ directory, use Know-Me MCP for project-specific context.
+- When working in a project with a .known-me/ directory, use Know-Me MCP for project-specific context.
 - Use Know-Me MCP tools for tasks, docs, templates, and workflow state.
 - Search first, then read only relevant docs and code.
 `

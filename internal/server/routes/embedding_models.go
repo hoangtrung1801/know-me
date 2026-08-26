@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/search"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
@@ -180,11 +181,7 @@ func localEmbeddingModelInstalled(huggingFaceID string) bool {
 	if huggingFaceID == "" {
 		return false
 	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return false
-	}
-	base := filepath.Join(home, ".knowns", "models", filepath.FromSlash(huggingFaceID), "onnx")
+	base := filepath.Join(paths.GlobalStoreRoot(), "models", filepath.FromSlash(huggingFaceID), "onnx")
 	for _, file := range []string{"model_quantized.onnx", "model.onnx"} {
 		if info, err := os.Stat(filepath.Join(base, file)); err == nil && !info.IsDir() {
 			return true

@@ -82,7 +82,7 @@ func TestInstallGuide_Construction(t *testing.T) {
 	g := InstallGuide{
 		Command:   "go install golang.org/x/tools/gopls@latest",
 		URL:       "https://pkg.go.dev/golang.org/x/tools/gopls",
-		KnownsCmd: "knowns lsp install go",
+		KnownsCmd: "knownme lsp install go",
 		Notes:     "Requires Go 1.21+",
 	}
 	if g.Command == "" || g.URL == "" || g.KnownsCmd == "" || g.Notes == "" {

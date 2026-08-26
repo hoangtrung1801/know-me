@@ -99,7 +99,7 @@ func TestDocRoutesRestoreCreatesFollowUpRevision(t *testing.T) {
 
 func setupDocRouteHistoryStore(t *testing.T, path string) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("doc-route-history-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

@@ -1,6 +1,6 @@
 # Platforms
 
-Know-Me can generate and sync different artifacts for different AI platforms via `knowns setup <target> --global` for user-level setup, or `knowns setup <target>` for repo-local setup.
+Know-Me can generate and sync different artifacts for different AI platforms via `knownme setup <target> --global` for user-level setup, or `knownme setup <target>` for repo-local setup.
 
 ## Platform IDs
 
@@ -32,25 +32,25 @@ Know-Me can generate and sync different artifacts for different AI platforms via
 
 ## Setup
 
-`knowns init` creates lightweight project shims so agents can route to MCP `initial`/`help` immediately. For normal personal assistant setup, generate AI integration artifacts at user scope:
+`knownme init` creates lightweight project shims so agents can route to MCP `initial`/`help` immediately. For normal personal assistant setup, generate AI integration artifacts at user scope:
 
 ```bash
-knowns setup claude --global      # Claude user-level MCP/skills/hooks
-knowns setup opencode --global    # OpenCode user-level MCP/skills/hooks
-knowns setup codex --global       # Codex user-level MCP/skills/hooks
-knowns setup kiro --global        # Kiro user-level MCP/skills/hooks
-knowns setup hermes --global      # Hermes user-level MCP/skills config
-knowns setup antigravity --global # Antigravity/Gemini global MCP config
-knowns setup cursor --global      # Cursor user-level MCP config
-knowns setup gemini --global      # Gemini global MCP config
-knowns setup all --global         # All supported platforms at user scope
-knowns setup agents               # Lightweight repo-local agent shims only
+knownme setup claude --global      # Claude user-level MCP/skills/hooks
+knownme setup opencode --global    # OpenCode user-level MCP/skills/hooks
+knownme setup codex --global       # Codex user-level MCP/skills/hooks
+knownme setup kiro --global        # Kiro user-level MCP/skills/hooks
+knownme setup hermes --global      # Hermes user-level MCP/skills config
+knownme setup antigravity --global # Antigravity/Gemini global MCP config
+knownme setup cursor --global      # Cursor user-level MCP config
+knownme setup gemini --global      # Gemini global MCP config
+knownme setup all --global         # All supported platforms at user scope
+knownme setup agents               # Lightweight repo-local agent shims only
 ```
 
 ## Notes
 
 - `.agents/skills` is the primary path for agent-compatible platforms
 - Hermes-specific setup details are in [Hermes Agent](./hermes.md)
-- `knowns init` creates selected lightweight instruction shims by default, such as `CLAUDE.md` and `AGENTS.md`
-- use `knowns setup <target> --global` for normal personal assistant setup across repositories
-- use `knowns setup <target>` only when you intentionally want project-level MCP/config files, skills, and runtime hooks
+- `knownme init` creates selected lightweight instruction shims by default, such as `CLAUDE.md` and `AGENTS.md`
+- use `knownme setup <target> --global` for normal personal assistant setup across repositories
+- use `knownme setup <target>` only when you intentionally want project-level MCP/config files, skills, and runtime hooks

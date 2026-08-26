@@ -90,7 +90,7 @@ func runImportAdd(cmd *cobra.Command, args []string) error {
 			},
 		)
 		if syncErr != nil {
-			fmt.Println(RenderHint("You can retry with: " + RenderCmd("knowns import sync")))
+			fmt.Println(RenderHint("You can retry with: " + RenderCmd("knownme import sync")))
 			return nil
 		}
 		// Update lastSync and commitHash.
@@ -382,7 +382,7 @@ func cliGitLsRemoteHead(source, ref string) string {
 // errUpToDate is returned when the remote commit hash matches the cached hash.
 var errUpToDate = fmt.Errorf("already up to date")
 
-// cliGitSync clones a git repo and copies .knowns/docs and .knowns/templates into importDir.
+// cliGitSync clones a git repo and copies .known-me/docs and .known-me/templates into importDir.
 // If cachedHash is non-empty and matches the remote HEAD, returns errUpToDate without cloning.
 // Returns the remote commit hash so callers can persist it.
 func cliGitSync(source, ref, importDir, name, cachedHash string, force bool) (added, updated, skipped int, commitHash string, err error) {
@@ -417,15 +417,15 @@ func cliGitSync(source, ref, importDir, name, cachedHash string, force bool) (ad
 				"Options:\n"+
 				"  1. Use SSH URL:      git@host:owner/repo.git\n"+
 				"  2. Set token:        export KNOWNS_GIT_TOKEN=<your-token>\n"+
-				"  3. Set config token: knowns config set git.token <your-token>", source)
+				"  3. Set config token: knownme config set git.token <your-token>", source)
 		}
 		return 0, 0, 0, "", fmt.Errorf("git clone failed: %s", errMsg)
 	}
 
-	// Check for .knowns/ directory.
-	knownsDir := filepath.Join(tmpDir, ".knowns")
+	// Check for .known-me/ directory.
+	knownsDir := filepath.Join(tmpDir, ".known-me")
 	if _, err := os.Stat(knownsDir); os.IsNotExist(err) {
-		return 0, 0, 0, "", fmt.Errorf("no .knowns directory found in %s", source)
+		return 0, 0, 0, "", fmt.Errorf("no .known-me directory found in %s", source)
 	}
 
 	for _, sub := range []string{"docs", "templates"} {

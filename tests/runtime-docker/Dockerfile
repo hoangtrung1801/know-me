@@ -54,7 +54,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/root/.bun/install/cache \
   make all VERSION=${VERSION} \
-  && cp bin/knowns /out/knowns \
+  && cp bin/knownme /out/knownme \
   && go test -c -o /out/lspfixtures.test ./tests/lspfixtures
 
 RUN set -eux; \
@@ -115,14 +115,14 @@ RUN for attempt in 1 2 3 4 5; do \
   dotnet tool install --tool-path /opt/knowns/bin csharp-ls-vs --version 1.2.5 \
   && ln -sf /opt/knowns/bin/csharp-ls-vs /opt/knowns/bin/csharp-ls
 
-COPY --from=builder /out/knowns /opt/knowns/bin/knowns
+COPY --from=builder /out/knownme /opt/knowns/bin/knownme
 COPY --from=builder /out/gopls /opt/knowns/bin/gopls
 COPY --from=builder /out/libonnxruntime.so /opt/knowns/bin/libonnxruntime.so
 COPY tests/runtime-docker/smoke.zsh /opt/knowns/smoke.zsh
 COPY tests/runtime-docker/project_stress.zsh /opt/knowns/project_stress.zsh
 COPY tests/runtime-docker/mcp_stress.py /opt/knowns/mcp_stress.py
 
-RUN chmod +x /opt/knowns/bin/knowns /opt/knowns/bin/gopls /opt/knowns/smoke.zsh /opt/knowns/project_stress.zsh /opt/knowns/mcp_stress.py \
+RUN chmod +x /opt/knowns/bin/knownme /opt/knowns/bin/gopls /opt/knowns/smoke.zsh /opt/knowns/project_stress.zsh /opt/knowns/mcp_stress.py \
   && printf 'export PATH=/opt/knowns/bin:$PATH\n' > /home/knowns/.zprofile \
   && chown knowns:knowns /home/knowns/.zprofile
 
@@ -145,9 +145,9 @@ COPY --chown=knowns:knowns tests/runtime-docker/lsp_fixtures.zsh /opt/knowns/lsp
 
 RUN chmod +x /opt/knowns/bin/lspfixtures.test /opt/knowns/lsp_fixtures.zsh \
   && for language in markdown bash json terraform yaml; do \
-    /opt/knowns/bin/knowns lsp install "${language}"; \
+    /opt/knowns/bin/knownme lsp install "${language}"; \
   done \
-  && /opt/knowns/bin/knowns lsp list --json >/tmp/knowns-lsp-status.json \
+  && /opt/knowns/bin/knownme lsp list --json >/tmp/knowns-lsp-status.json \
   && jq -e '\
     [.[] | select(.id == "markdown" or .id == "bash" or .id == "json" or .id == "terraform" or .id == "yaml")] as $rows \
     | ($rows | length) == 5 \

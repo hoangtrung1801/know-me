@@ -6,11 +6,11 @@ Use `knowns <command> --help` for the exact syntax accepted by the current binar
 
 - Use `--plain` when an AI or script needs text output that is easy to parse.
 - Use `--json` when you want structured output.
-- Use `knowns sync` when you want generated files and platform artifacts to match the current config.
+- Use `knownme sync` when you want generated files and platform artifacts to match the current config.
 
 ## Initialize and sync
 
-### `knowns init`
+### `knownme init`
 
 Registers the current workspace as a project, saves its canonical local path,
 selects it, initializes the shared Know-Me store, and writes `.known-me.json`
@@ -20,41 +20,41 @@ name is provided, the current directory name is used. Projects created through
 the project-management API may remain pathless until a workspace is linked.
 
 ```bash
-knowns init
-knowns init my-project --no-wizard
-knowns init --force
+knownme init
+knownme init my-project --no-wizard
+knownme init --force
 ```
 
-### `knowns setup`
+### `knownme setup`
 
 Configures AI tool integrations for an initialized project.
 
 ```bash
-knowns setup --global        # Interactive user-level platform selector
-knowns setup claude --global # Claude user-level MCP/skills/hooks
-knowns setup codex --global  # Codex user-level MCP/skills/hooks
-knowns setup hermes --global # Hermes user-level MCP/skills config
-knowns setup all --global    # All supported platforms at user scope
-knowns setup agents          # Lightweight repo-local agent shims only
-knowns setup                 # Interactive project-level platform selector
-knowns setup claude          # Project-level Claude files
-knowns setup codex           # Project-level Codex files
-knowns setup hermes          # Project-linked Hermes config and AGENTS.md
+knownme setup --global        # Interactive user-level platform selector
+knownme setup claude --global # Claude user-level MCP/skills/hooks
+knownme setup codex --global  # Codex user-level MCP/skills/hooks
+knownme setup hermes --global # Hermes user-level MCP/skills config
+knownme setup all --global    # All supported platforms at user scope
+knownme setup agents          # Lightweight repo-local agent shims only
+knownme setup                 # Interactive project-level platform selector
+knownme setup claude          # Project-level Claude files
+knownme setup codex           # Project-level Codex files
+knownme setup hermes          # Project-linked Hermes config and AGENTS.md
 ```
 
 Use `--global` for normal personal assistant setup. It updates user-level MCP config, skills, and runtime hooks, so the integration follows you across repositories. Use project-level setup only when you intentionally want repo-local platform artifacts.
 
-### `knowns sync`
+### `knownme sync`
 
-Re-applies `.knowns/config.json` to the current machine.
+Re-applies `.known-me/config.json` to the current machine.
 
 ```bash
-knowns sync
-knowns sync --skills
-knowns sync --instructions
-knowns sync --model
-knowns sync --instructions --platform claude
-knowns sync --instructions --platform cursor
+knownme sync
+knownme sync --skills
+knownme sync --instructions
+knownme sync --model
+knownme sync --instructions --platform claude
+knownme sync --instructions --platform cursor
 ```
 
 Typical uses:
@@ -64,33 +64,33 @@ Typical uses:
 - after changing selected platforms
 - after changing local generated artifacts manually and wanting to restore them
 
-### `knowns update`
+### `knownme update`
 
 Updates the CLI and syncs project artifacts afterward.
 
 ```bash
-knowns update
-knowns update --check
+knownme update
+knownme update --check
 ```
 
-### `knowns settings`
+### `knownme settings`
 
 Opens the interactive project settings center.
 
 ```bash
-knowns settings
-knowns settings --global
+knownme settings
+knownme settings --global
 ```
 
-Use `knowns settings` for human-friendly project edits: project name, git tracking, AI platforms, search, code intelligence, Browser/Chat UI, and maintenance guidance. In Search settings, Local ONNX models are listed with downloaded/not downloaded status; selecting a missing model can download it before saving. Use `knowns settings --global` for defaults reused by future `knowns init` runs. Use `knowns config get/set/list/reset` when you need scriptable config access.
+Use `knownme settings` for human-friendly project edits: project name, git tracking, AI platforms, search, code intelligence, Browser/Chat UI, and maintenance guidance. In Search settings, Local ONNX models are listed with downloaded/not downloaded status; selecting a missing model can download it before saving. Use `knownme settings --global` for defaults reused by future `knownme init` runs. Use `knownme config get/set/list/reset` when you need scriptable config access.
 
 ## Tasks
 
 ### Create
 
 ```bash
-knowns task create "Title" -d "Description"
-knowns task create "Add auth" \
+knownme task create "Title" -d "Description"
+knownme task create "Add auth" \
   --ac "User can login" \
   --ac "JWT token returned" \
   --priority high \
@@ -109,19 +109,19 @@ Common options:
 ### View and list
 
 ```bash
-knowns task list --plain
-knowns task list --status in-progress --assignee @me
-knowns task <id> --plain
-knowns task view <id> --plain
+knownme task list --plain
+knownme task list --status in-progress --assignee @me
+knownme task <id> --plain
+knownme task view <id> --plain
 ```
 
 ### Edit
 
 ```bash
-knowns task edit <id> -s in-progress
-knowns task edit <id> --check-ac 1
-knowns task edit <id> --append-notes "Completed middleware"
-knowns task edit <id> --plan $'1. Research\n2. Implement\n3. Test'
+knownme task edit <id> -s in-progress
+knownme task edit <id> --check-ac 1
+knownme task edit <id> --append-notes "Completed middleware"
+knownme task edit <id> --plan $'1. Research\n2. Implement\n3. Test'
 ```
 
 Common edit operations:
@@ -137,26 +137,26 @@ Common edit operations:
 ### Create
 
 ```bash
-knowns doc create "Architecture" -d "System overview" -f architecture
-knowns doc create "Auth Pattern" -d "JWT auth pattern" -f patterns -t auth -t security
+knownme doc create "Architecture" -d "System overview" -f architecture
+knownme doc create "Auth Pattern" -d "JWT auth pattern" -f patterns -t auth -t security
 ```
 
 ### View and list
 
 ```bash
-knowns doc list --plain
-knowns doc "architecture/auth" --plain
-knowns doc "architecture/auth" --info --plain
-knowns doc "architecture/auth" --toc --plain
-knowns doc "architecture/auth" --section "2" --plain
+knownme doc list --plain
+knownme doc "architecture/auth" --plain
+knownme doc "architecture/auth" --info --plain
+knownme doc "architecture/auth" --toc --plain
+knownme doc "architecture/auth" --section "2" --plain
 ```
 
 ### Edit
 
 ```bash
-knowns doc edit "architecture/auth" -a "\n\n## Notes\n..."
-knowns doc edit "architecture/auth" -c "# New content"
-knowns doc edit "architecture/auth" --section "2" -c "## 2. Updated section"
+knownme doc edit "architecture/auth" -a "\n\n## Notes\n..."
+knownme doc edit "architecture/auth" -c "# New content"
+knownme doc edit "architecture/auth" --section "2" -c "## 2. Updated section"
 ```
 
 ## Search, retrieve, and resolve
@@ -164,11 +164,11 @@ knowns doc edit "architecture/auth" --section "2" -c "## 2. Updated section"
 ### Search
 
 ```bash
-knowns search "authentication" --plain
-knowns search "jwt" --type doc --plain
-knowns search "jwt" --keyword --plain
-knowns search --status-check
-knowns search --reindex
+knownme search "authentication" --plain
+knownme search "jwt" --type doc --plain
+knownme search "jwt" --keyword --plain
+knownme search --status-check
+knownme search --reindex
 ```
 
 Modes:
@@ -179,8 +179,8 @@ Modes:
 ### Retrieve
 
 ```bash
-knowns retrieve "how auth works" --json
-knowns retrieve "auth flow" --source-types doc,task --json
+knownme retrieve "how auth works" --json
+knownme retrieve "auth flow" --source-types doc,task --json
 ```
 
 Use retrieve when you want a ranked context pack rather than a flat result list.
@@ -197,10 +197,10 @@ Use resolve to traverse structural relationships between docs, tasks, and other 
 ## Memory
 
 ```bash
-knowns memory add "We use repository pattern" --category pattern
-knowns memory list --plain
-knowns memory <id> --plain
-knowns memory edit <id> --append "More detail"
+knownme memory add "We use repository pattern" --category pattern
+knownme memory list --plain
+knownme memory <id> --plain
+knownme memory edit <id> --append "More detail"
 ```
 
 Memory is useful for persistent project-level or global patterns, conventions, preferences, and failures that AI should recall later. The `decision` category is legacy and rejected for new writes.
@@ -208,17 +208,17 @@ Memory is useful for persistent project-level or global patterns, conventions, p
 ## Decisions
 
 ```bash
-knowns decision create "Use Postgres for metadata"
-knowns decision list --plain
-knowns decision get <id> --plain
-knowns decision link <id> --source @doc/architecture/storage --task <done-task-id>
-knowns decision accept <id>
-knowns decision resolve create_draft "Use Postgres for metadata"
-knowns decision supersede <old-id> <new-id>
+knownme decision create "Use Postgres for metadata"
+knownme decision list --plain
+knownme decision get <id> --plain
+knownme decision link <id> --source @doc/architecture/storage --task <done-task-id>
+knownme decision accept <id>
+knownme decision resolve create_draft "Use Postgres for metadata"
+knownme decision supersede <old-id> <new-id>
 
-knowns decision migrate preview --plain
-knowns decision migrate apply --memory <memory-id> --resolution create_decision
-knowns decision migrate rollback <memory-id>
+knownme decision migrate preview --plain
+knownme decision migrate apply --memory <memory-id> --resolution create_decision
+knownme decision migrate rollback <memory-id>
 ```
 
 Spec Decisions are locked `D1`, `D2`, … implementation rules in an approved spec. The commands above manage System Decisions: durable project choices that start as drafts, require readable sources plus completed task evidence before acceptance, and may later be superseded rather than edited in place.
@@ -228,10 +228,10 @@ Legacy Decision Memory migration is preview-first, explicit per record, journale
 ## Templates
 
 ```bash
-knowns template list
-knowns template get <name>
-knowns template run <name>
-knowns template create <name>
+knownme template list
+knownme template get <name>
+knownme template run <name>
+knownme template create <name>
 ```
 
 Use templates for repeatable scaffolding and standardized output.
@@ -241,12 +241,12 @@ Use templates for repeatable scaffolding and standardized output.
 ### LSP management
 
 ```bash
-knowns lsp list                    # Show supported languages and their status
-knowns lsp install <language>      # Download and install an LSP server
-knowns lsp cleanup                 # Remove old LSP server versions
+knownme lsp list                    # Show supported languages and their status
+knownme lsp install <language>      # Download and install an LSP server
+knownme lsp cleanup                 # Remove old LSP server versions
 ```
 
-Know-Me auto-detects project languages and checks for LSP binaries. If a binary is missing, `knowns lsp list` shows install guidance.
+Know-Me auto-detects project languages and checks for LSP binaries. If a binary is missing, `knownme lsp list` shows install guidance.
 
 ### Code operations (via MCP)
 
@@ -267,9 +267,9 @@ Code intelligence is LSP-based and accessed through the MCP `code` tool:
 ### Code index inspection (CLI)
 
 ```bash
-knowns code symbols --plain
-knowns code search "AuthService" --plain
-knowns code deps --plain
+knownme code symbols --plain
+knownme code search "AuthService" --plain
+knownme code deps --plain
 ```
 
 Use CLI code commands for inspecting indexed symbol/dependency data. Use the MCP `code` tool for structured navigation and edits.
@@ -277,10 +277,10 @@ Use CLI code commands for inspecting indexed symbol/dependency data. Use the MCP
 ## Validation
 
 ```bash
-knowns validate --plain
-knowns validate --scope docs --plain
-knowns validate --scope sdd --plain
-knowns validate --strict --plain
+knownme validate --plain
+knownme validate --scope docs --plain
+knownme validate --scope sdd --plain
+knownme validate --strict --plain
 ```
 
 Use validation before considering documentation or workflow changes complete.
@@ -288,24 +288,24 @@ Use validation before considering documentation or workflow changes complete.
 ## Time tracking
 
 ```bash
-knowns time start <task-id>
-knowns time stop
-knowns time add <task-id> 1h30m -n "Pair programming"
-knowns time report
+knownme time start <task-id>
+knownme time stop
+knownme time add <task-id> 1h30m -n "Pair programming"
+knownme time report
 ```
 
 ## Browser UI
 
 ```bash
-knowns browser
-knowns browser --open
-knowns browser --port 6421
+knownme browser
+knownme browser --open
+knownme browser --port 6421
 ```
 
 ## Project status and audit
 
 ```bash
-knowns status
+knownme status
 knowns audit recent
 knowns audit stats
 ```
@@ -315,48 +315,48 @@ Use `status` for project readiness and `audit` to inspect recent MCP tool calls.
 ## Agent and guidance files
 
 ```bash
-knowns setup
-knowns sync --skills
-knowns sync --instructions
+knownme setup
+knownme sync --skills
+knownme sync --instructions
 ```
 
-Use `knowns setup` to generate AI integration files, or `knowns sync` to refresh them.
+Use `knownme setup` to generate AI integration files, or `knownme sync` to refresh them.
 
 ## Model management
 
 ```bash
-knowns model add <model-name>
-knowns model list
-knowns model download multilingual-e5-small
-knowns model set multilingual-e5-small
-knowns model status
-knowns model remove <id>
+knownme model add <model-name>
+knownme model list
+knownme model download multilingual-e5-small
+knownme model set multilingual-e5-small
+knownme model status
+knownme model remove <id>
 ```
 
 ## Providers and runtime adapters
 
 ```bash
-knowns provider list
-knowns provider add --id openai --name "OpenAI" --api-base https://api.openai.com/v1 --api-key <key>
-knowns provider test <id>
-knowns provider remove <id>
+knownme provider list
+knownme provider add --id openai --name "OpenAI" --api-base https://api.openai.com/v1 --api-key <key>
+knownme provider test <id>
+knownme provider remove <id>
 
-knowns runtime status
-knowns runtime install codex
-knowns runtime ps
-knowns runtime logs
-knowns runtime stop
-knowns runtime uninstall codex
+knownme runtime status
+knownme runtime install codex
+knownme runtime ps
+knownme runtime logs
+knownme runtime stop
+knownme runtime uninstall codex
 
-knowns runtime-memory hook
-knowns runtime-memory hook --json
+knownme runtime-memory hook
+knownme runtime-memory hook --json
 ```
 
 Use providers for API-backed embedding providers. Use runtime commands to install and inspect runtime memory adapters and the shared runtime.
 
 The default hook output is plain prompt context for runtime adapters. Each injected memory includes inline score/trust metadata, for example `score=0.92; trust=active`, so the assistant can weigh supplemental context.
 
-Use `knowns runtime-memory hook --json` when a caller needs structured metadata instead of prompt text. JSON output includes retrieval item scores and capture trust metadata such as `capture.score`, `capture.threshold`, `capture.trusted`, and review `capture.matches` when review is required.
+Use `knownme runtime-memory hook --json` when a caller needs structured metadata instead of prompt text. JSON output includes retrieval item scores and capture trust metadata such as `capture.score`, `capture.threshold`, `capture.trusted`, and review `capture.matches` when review is required.
 
 ## Tunnels
 
@@ -370,9 +370,9 @@ Use tunnel commands to inspect or stop Cloudflare Quick Tunnels created for loca
 ## Imports
 
 ```bash
-knowns import add <name> <source>
-knowns import sync
-knowns import list
+knownme import add <name> <source>
+knownme import sync
+knownme import list
 ```
 
 Use imports when you want to bring in docs or templates from git, local, or package sources.

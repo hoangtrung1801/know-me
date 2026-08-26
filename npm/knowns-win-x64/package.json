@@ -8,9 +8,9 @@
   "cpu": [
     "x64"
   ],
-  "main": "knowns",
+  "main": "knownme",
   "files": [
-    "knowns.exe",
+    "knownme.exe",
     "*.dll"
   ],
   "license": "MIT",

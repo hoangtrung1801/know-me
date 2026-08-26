@@ -9,10 +9,10 @@ Optimize your context usage to work more efficiently within token limits.
 
 ```bash
 # Verbose output
-knowns task 42 --json
+knownme task 42 --json
 
 # Compact output (always use --plain)
-knowns task 42 --plain
+knownme task 42 --plain
 ```
 
 ---
@@ -24,12 +24,12 @@ knowns task 42 --plain
 ### CLI
 ```bash
 # DON'T: Read all docs hoping to find info
-knowns doc "doc1" --plain
-knowns doc "doc2" --plain
+knownme doc "doc1" --plain
+knownme doc "doc2" --plain
 
 # DO: Search first, then read only relevant docs
-knowns search "authentication" --type doc --plain
-knowns doc "security-patterns" --plain
+knownme search "authentication" --type doc --plain
+knownme doc "security-patterns" --plain
 ```
 {{/if}}
 {{#if mcp}}
@@ -72,15 +72,15 @@ mcp__knowns__list_tasks({
 
 ```bash
 # DON'T: Read without --smart
-knowns doc readme --plain
+knownme doc readme --plain
 
 # DO: Always use --smart
-knowns doc readme --plain --smart
+knownme doc readme --plain --smart
 # Small doc → full content
 # Large doc → stats + TOC
 
 # If large, read specific section:
-knowns doc readme --plain --section 3
+knownme doc readme --plain --section 3
 ```
 {{/if}}
 {{#if mcp}}
@@ -111,10 +111,10 @@ mcp__knowns__get_doc({ "path": "readme", "section": "3" })
 
 ```bash
 # DON'T: Verbose notes
-knowns task edit 42 --append-notes "I have successfully completed the implementation..."
+knownme task edit 42 --append-notes "I have successfully completed the implementation..."
 
 # DO: Compact notes
-knowns task edit 42 --append-notes "Done: Auth middleware + JWT validation"
+knownme task edit 42 --append-notes "Done: Auth middleware + JWT validation"
 ```
 
 ---

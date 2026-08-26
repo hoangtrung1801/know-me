@@ -3,12 +3,13 @@ bin/
 **/obj/
 tmp/
 *.exe
+/knownme
 /knowns
 /knowns-embed
 
 # npm platform binaries
-npm/knowns-*/knowns
-npm/knowns-*/knowns.exe
+npm/knowns-*/knownme
+npm/knowns-*/knownme.exe
 
 # OS
 .DS_Store
@@ -30,4 +31,4 @@ playwright-report/
 test-results/
 
 .claude
-.knowns
+.known-me

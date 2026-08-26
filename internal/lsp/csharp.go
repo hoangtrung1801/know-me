@@ -171,7 +171,7 @@ func CSharpBackendUnavailableError(root string, cmd ServerCommand) *RuntimeError
 		Language:    CSharpLanguageID,
 		Backend:     backend,
 		Message:     "No C# LSP backend is available",
-		Remediation: "Run `knowns lsp install csharp` for managed Roslyn LS, install .NET SDK 10+, or configure backend/path overrides.",
+		Remediation: "Run `knownme lsp install csharp` for managed Roslyn LS, install .NET SDK 10+, or configure backend/path overrides.",
 		LogPath:     CSharpLogPath(root, backend),
 		Attempts:    cmd.Attempts,
 	}
@@ -194,7 +194,7 @@ func resolveManagedRoslyn(ctx context.Context, root string, cfg Config, opts CSh
 				serverPath = path
 			}
 		} else {
-			installReason = "managed Roslyn LS is not installed; run: knowns lsp install csharp"
+			installReason = "managed Roslyn LS is not installed; run: knownme lsp install csharp"
 		}
 	}
 	if serverPath != "" {
@@ -370,7 +370,7 @@ func csharpProjectKind(path string) string {
 
 func isCSharpIgnoredDir(name string) bool {
 	switch name {
-	case ".git", ".knowns", "bin", "obj", ".vs", "packages", "node_modules", "vendor", "target", "dist", "build":
+	case ".git", ".known-me", "bin", "obj", ".vs", "packages", "node_modules", "vendor", "target", "dist", "build":
 		return true
 	default:
 		return false

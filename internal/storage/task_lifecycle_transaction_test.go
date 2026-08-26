@@ -10,7 +10,7 @@ import (
 )
 
 func TestTaskLifecycleLockUsesIgnoredSearchRuntimeDirectory(t *testing.T) {
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if err := store.Init("lock-location"); err != nil {
 		t.Fatalf("Init: %v", err)
@@ -24,7 +24,7 @@ func TestTaskLifecycleLockUsesIgnoredSearchRuntimeDirectory(t *testing.T) {
 }
 
 func TestTaskLifecycleTransactionSerializesStoresAndHonorsContext(t *testing.T) {
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	storeA := NewStore(root)
 	if err := storeA.Init("cross-store-lock"); err != nil {
 		t.Fatalf("Init: %v", err)

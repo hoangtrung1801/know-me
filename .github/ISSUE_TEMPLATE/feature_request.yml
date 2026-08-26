@@ -42,7 +42,7 @@ body:
         You can include CLI commands, code snippets, or references to similar features in other tools.
       placeholder: |
         ```bash
-        knowns task list --new-option
+        knownme task list --new-option
         ```
 
   - type: dropdown

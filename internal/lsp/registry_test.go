@@ -182,19 +182,19 @@ func TestRegistryDetectionSpecificMatcherPreservesExplicitRouting(t *testing.T) 
 	}
 }
 
-func TestRegistryKnownsPathIsAlwaysExcluded(t *testing.T) {
+func TestRegistryKnownMePathIsAlwaysExcluded(t *testing.T) {
 	registry := NewRegistry([]Language{{ID: "markdown", Name: "Markdown", Extensions: []string{".md"}}})
 	for _, path := range []string{
-		".knowns/docs/readme.md",
-		"/repo/.knowns/docs/readme.md",
-		`C:\repo\.knowns\docs\readme.md`,
-		`C:\repo\.KNOWNS\docs\readme.md`,
+		".known-me/docs/readme.md",
+		"/repo/.known-me/docs/readme.md",
+		`C:\repo\.known-me\docs\readme.md`,
+		`C:\repo\.KNOWN-ME\docs\readme.md`,
 	} {
 		if got, ok := registry.ForPath(path); ok {
-			t.Fatalf("ForPath(%q) = %#v, true; .knowns must be excluded", path, got)
+			t.Fatalf("ForPath(%q) = %#v, true; .known-me must be excluded", path, got)
 		}
 		if got, ok := registry.ForDetection(path); ok {
-			t.Fatalf("ForDetection(%q) = %#v, true; .knowns must be excluded", path, got)
+			t.Fatalf("ForDetection(%q) = %#v, true; .known-me must be excluded", path, got)
 		}
 	}
 }

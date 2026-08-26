@@ -1190,7 +1190,7 @@ func TestEventDeliveryFailureIsNonBlockingWarning(t *testing.T) {
 
 func newLifecycleStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("lifecycle-test"); err != nil {
 		t.Fatalf("Init: %v", err)
 	}

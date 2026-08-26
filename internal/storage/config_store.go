@@ -10,7 +10,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
-// ConfigStore reads and writes .knowns/config.json.
+// ConfigStore reads and writes .known-me/config.json.
 type ConfigStore struct {
 	root string
 }

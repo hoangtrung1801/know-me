@@ -46,7 +46,7 @@ dump_memory() {
 dump_summary() {
   local label="${1:-state}"
   echo "=== ${label}: runtime summary ==="
-  knowns runtime ps --json 2>/tmp/knowns-runtime-ps.err \
+  knownme runtime ps --json 2>/tmp/knowns-runtime-ps.err \
     | jq '{running:.status.running,pid:.status.pid,version:.status.version,clients:(.status.clients // [] | length),projects:(.status.projects // [])}' \
     || { cat /tmp/knowns-runtime-ps.err || true; true; }
 
@@ -60,7 +60,7 @@ dump_summary() {
 dump_state() {
   local label="${1:-state}"
   echo "=== ${label}: knowns runtime ps --json ==="
-  knowns runtime ps --json 2>/tmp/knowns-runtime-ps.err || {
+  knownme runtime ps --json 2>/tmp/knowns-runtime-ps.err || {
     cat /tmp/knowns-runtime-ps.err || true
     true
   }
@@ -74,8 +74,8 @@ dump_state() {
   dump_memory "$label"
 
   echo "=== ${label}: knowns logs ==="
-  find "$HOME/.knowns" -maxdepth 4 -type f 2>/dev/null | sort || true
-  for log in "$HOME/.knowns/logs/runtime.log" "$HOME/.knowns/logs/mcp.log"; do
+  find "$HOME/.known-me" -maxdepth 4 -type f 2>/dev/null | sort || true
+  for log in "$HOME/.known-me/logs/runtime.log" "$HOME/.known-me/logs/mcp.log"; do
     if [[ -f "$log" ]]; then
       echo "--- tail ${log} ---"
       tail -120 "$log" || true
@@ -96,7 +96,7 @@ OOM_BEFORE="$(memory_event_value oom_kill)"
 OOM_BEFORE="${OOM_BEFORE:-0}"
 
 echo "=== zsh PATH check ==="
-zsh -lc 'echo "shell=$SHELL"; echo "path=$PATH"; which knowns; knowns --version'
+zsh -lc 'echo "shell=$SHELL"; echo "path=$PATH"; which knownme; knownme --version'
 
 echo "=== create smoke project ==="
 rm -rf "$PROJECT"
@@ -126,16 +126,16 @@ func main() {
 }
 EOF
 
-knowns init docker-smoke --no-wizard --no-open --git-tracked
-knowns task create "Runtime smoke task" \
+knownme init docker-smoke --no-wizard --no-open --git-tracked
+knownme task create "Runtime smoke task" \
   --description "Exercise shared Knowns runtime queue and MCP clients in Docker." \
   --label runtime-smoke
-knowns doc create "Runtime Smoke Guide" \
+knownme doc create "Runtime Smoke Guide" \
   --content "# Runtime Smoke Guide\n\nShared daemon runtime smoke test content."
 
 echo "=== start runtime and LSP status surfaces ==="
-knowns search "runtime smoke" --keyword --plain >/tmp/knowns-keyword-search.txt
-knowns lsp list --json >/tmp/knowns-lsp-list.json
+knownme search "runtime smoke" --keyword --plain >/tmp/knowns-keyword-search.txt
+knownme lsp list --json >/tmp/knowns-lsp-list.json
 if is_verbose; then
   cat /tmp/knowns-lsp-list.json
 else
@@ -165,5 +165,5 @@ if (( OOM_AFTER > OOM_BEFORE )); then
   exit 1
 fi
 
-knowns runtime stop || true
+knownme runtime stop || true
 echo "runtime docker smoke passed"

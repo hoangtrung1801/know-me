@@ -15,7 +15,7 @@ import (
 
 func TestValidateSDDIncludesDecisionContractStats(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	if err := store.Init("validate-route-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

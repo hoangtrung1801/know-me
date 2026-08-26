@@ -35,7 +35,7 @@ test("macOS Intel package contains only the CLI binary", () => {
 
   expect(pkg.os).toEqual(["darwin"]);
   expect(pkg.cpu).toEqual(["x64"]);
-  expect(pkg.files).toEqual(["knowns"]);
+  expect(pkg.files).toEqual(["knownme"]);
 });
 
 test("Windows platform packages use npm's win32 os identifier", () => {

@@ -11,7 +11,7 @@ function uniq(values) {
 }
 
 function resolveFromPackageDir(pkgDir, ext) {
-  for (const name of [`knowns${ext}`, "knowns"]) {
+  for (const name of [`knownme${ext}`, "knownme"]) {
     const candidate = path.join(pkgDir, name);
     if (fs.existsSync(candidate)) {
       return candidate;
@@ -44,7 +44,7 @@ function getWindowsRuntimeCacheRoot() {
   if (process.env.LOCALAPPDATA) {
     return path.join(process.env.LOCALAPPDATA, "Know-Me", "npm-runtime");
   }
-  return path.join(os.homedir(), ".knowns", "cache", "npm-runtime");
+  return path.join(os.homedir(), ".known-me", "cache", "npm-runtime");
 }
 
 function stageWindowsBinary(binary, options = {}) {
@@ -152,7 +152,7 @@ function getBinaryPath() {
   } catch {}
 
   console.error(
-    `Could not find knowns binary for ${platform}-${arch}.\n` +
+    `Could not find knownme binary for ${platform}-${arch}.\n` +
       `Expected package: ${pkgName}\n` +
       `Try reinstalling:\n${getInstallHint(pkgName)}`
   );

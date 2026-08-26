@@ -7,9 +7,9 @@ Chạy các command này từ repository bạn muốn Know-Me quản lý.
 ## 1. Init project
 
 ```bash
-knowns init
+knownme init
 # hoặc không cài global:
-npx knowns init
+npx knownme init
 ```
 
 Init wizard cho phép cấu hình:
@@ -20,12 +20,12 @@ Init wizard cho phép cấu hình:
 - semantic search
 - embedding model
 
-`knowns init` tạo local Know-Me project store và lightweight compatibility shims. Runtime-critical AI guidance nằm trong MCP `initial` và on-demand `help`, nên các file này nên nhỏ gọn. AI platform integrations như MCP configs, skills, runtime hooks được cấu hình riêng bằng `knowns setup <target> --global` cho user-level setup, hoặc `knowns setup <target>` khi bạn chủ ý muốn repo-local integration files.
+`knownme init` tạo local Know-Me project store và lightweight compatibility shims. Runtime-critical AI guidance nằm trong MCP `initial` và on-demand `help`, nên các file này nên nhỏ gọn. AI platform integrations như MCP configs, skills, runtime hooks được cấu hình riêng bằng `knownme setup <target> --global` cho user-level setup, hoặc `knownme setup <target>` khi bạn chủ ý muốn repo-local integration files.
 
 ## 2. Tạo task
 
 ```bash
-knowns task create "Setup project" -d "Init project với Know-Me"
+knownme task create "Setup project" -d "Init project với Know-Me"
 ```
 
 Task là đơn vị work chính. Nó cho cả người và AI assistant một mục tiêu cụ thể.
@@ -33,7 +33,7 @@ Task là đơn vị work chính. Nó cho cả người và AI assistant một m�
 ## 3. Tạo doc
 
 ```bash
-knowns doc create "Architecture" -d "Tổng quan hệ thống" -f architecture
+knownme doc create "Architecture" -d "Tổng quan hệ thống" -f architecture
 ```
 
 Doc lưu project knowledge bền vững. Doc tốt hơn việc phải lặp lại cùng context trong từng AI chat.
@@ -41,8 +41,8 @@ Doc lưu project knowledge bền vững. Doc tốt hơn việc phải lặp lạ
 ## 4. Kiểm tra project
 
 ```bash
-knowns search "architecture" --plain
-knowns validate --plain
+knownme search "architecture" --plain
+knownme validate --plain
 ```
 
 Search xác nhận retrieval tìm được project context. Validate kiểm tra cấu trúc Know-Me project trước khi bạn xây workflow nhiều hơn lên trên nó.
@@ -50,7 +50,7 @@ Search xác nhận retrieval tìm được project context. Validate kiểm tra 
 ## 5. Mở Web UI
 
 ```bash
-knowns browser --open
+knownme browser --open
 ```
 
 Web UI hiển thị cùng project state với CLI, gồm task, doc, graph views, config, và chat workflows.
@@ -60,12 +60,12 @@ Web UI hiển thị cùng project state với CLI, gồm task, doc, graph views,
 Dùng setup cho platform bạn thật sự dùng:
 
 ```bash
-knowns setup codex --global
-knowns setup claude --global
-knowns setup agents
+knownme setup codex --global
+knownme setup claude --global
+knownme setup agents
 ```
 
-Dùng `--global` cho personal assistant setup thông thường để Know-Me update user-level MCP config, skills, và runtime hooks trên nhiều repository. Dùng `knowns setup agents` khi chỉ cần repo-local compatibility shims như `AGENTS.md`.
+Dùng `--global` cho personal assistant setup thông thường để Know-Me update user-level MCP config, skills, và runtime hooks trên nhiều repository. Dùng `knownme setup agents` khi chỉ cần repo-local compatibility shims như `AGENTS.md`.
 
 Sau setup, agent workflows có thể dùng lightweight shim files, MCP config, và skill cho platform đó. Claude dùng skill command dạng `/kn-*`; Codex dùng skill command dạng `$kn-*`.
 
@@ -74,16 +74,16 @@ Xem [Platforms](../integrations/platforms.md) để biết các setup target đ�
 ## 7. Sync khi cần
 
 ```bash
-knowns sync
-knowns update
+knownme sync
+knownme update
 ```
 
-Chạy `knowns sync` sau khi clone repo, đổi selected platforms, hoặc update CLI. Dùng `knowns update` khi muốn Know-Me refresh generated project artifacts theo behavior hiện tại của CLI.
+Chạy `knownme sync` sau khi clone repo, đổi selected platforms, hoặc update CLI. Dùng `knownme update` khi muốn Know-Me refresh generated project artifacts theo behavior hiện tại của CLI.
 
 ## 8. Mở lại Web UI
 
 ```bash
-knowns browser --open
+knownme browser --open
 ```
 
 ## Bây giờ bạn đã có gì?

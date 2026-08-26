@@ -5,8 +5,8 @@ Know-Me includes a browser UI for people who prefer to inspect project context v
 ## Open it
 
 ```bash
-knowns browser
-knowns browser --open
+knownme browser
+knownme browser --open
 ```
 
 Run the command from a Know-Me project. Use `--open` when you want Know-Me to start the local server and open your default browser automatically.

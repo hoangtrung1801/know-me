@@ -1,6 +1,6 @@
 # Installation
 
-Install the `knowns` CLI first. Installation only makes the command available; you still need to run `knowns init` inside each repository where you want Know-Me-managed project context.
+Install the `knowns` CLI first. Installation only makes the command available; you still need to run `knownme init` inside each repository where you want Know-Me-managed project context.
 
 ## Requirements
 
@@ -53,7 +53,7 @@ irm https://knowns.sh/script/install.ps1 | iex
 ## Build from source
 
 ```bash
-go build -o ./bin/knowns ./cmd/knowns
+go build -o ./bin/knownme ./cmd/knownme
 ```
 
 Best option when developing Know-Me itself.
@@ -71,7 +71,7 @@ PLATFORM=linux-x64 # darwin-arm64, darwin-x64, or linux-arm64
 ARCHIVE="knowns-${PLATFORM}.tar.gz"
 BASE_URL="https://github.com/hoangtrung1801/known-me/releases/download/${VERSION}"
 
-mkdir -p "$HOME/.knowns/bin"
+mkdir -p "$HOME/.known-me/bin"
 curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
   -o "/tmp/$ARCHIVE" "$BASE_URL/$ARCHIVE"
 curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
@@ -79,29 +79,29 @@ curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
 
 echo "$(awk '{print $1}' "/tmp/$ARCHIVE.sha256")  /tmp/$ARCHIVE" \
   | shasum -a 256 -c -
-tar -xzf "/tmp/$ARCHIVE" -C "$HOME/.knowns/bin"
-chmod +x "$HOME/.knowns/bin/knowns"
-ln -sf "$HOME/.knowns/bin/knowns" "$HOME/.knowns/bin/kn"
+tar -xzf "/tmp/$ARCHIVE" -C "$HOME/.known-me/bin"
+chmod +x "$HOME/.known-me/bin/knownme"
+ln -sf "$HOME/.known-me/bin/knownme" "$HOME/.known-me/bin/kn"
 
-export PATH="$HOME/.knowns/bin:$PATH"
-knowns --version
+export PATH="$HOME/.known-me/bin:$PATH"
+knownme --version
 ```
 
 For a binary already extracted, copy it directly:
 
 ```bash
-mkdir -p "$HOME/.knowns/bin"
-cp ./knowns "$HOME/.knowns/bin/knowns"
-chmod +x "$HOME/.knowns/bin/knowns"
-ln -sf "$HOME/.knowns/bin/knowns" "$HOME/.knowns/bin/kn"
-export PATH="$HOME/.knowns/bin:$PATH"
-knowns --version
+mkdir -p "$HOME/.known-me/bin"
+cp ./knownme "$HOME/.known-me/bin/knownme"
+chmod +x "$HOME/.known-me/bin/knownme"
+ln -sf "$HOME/.known-me/bin/knownme" "$HOME/.known-me/bin/kn"
+export PATH="$HOME/.known-me/bin:$PATH"
+knownme --version
 ```
 
 ## Verify
 
 ```bash
-knowns --version
+knownme --version
 ```
 
 If the command prints a version, the CLI is installed. Next, move into the repository you want to manage and run the quick start.
@@ -111,7 +111,7 @@ If the command prints a version, the CLI is installed. Next, move into the repos
 If you do not want a global install, you can still run Know-Me through npm:
 
 ```bash
-npx knowns init
+npx knownme init
 ```
 
 ## Next step

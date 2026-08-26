@@ -3,13 +3,13 @@
 #   irm https://raw.githubusercontent.com/knowns-dev/knowns/main/install/uninstall.ps1 | iex
 #
 # Options (via env vars):
-#   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.knowns\bin)
+#   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.known-me\bin)
 
 $ErrorActionPreference = "Stop"
 
-$Binary = "knowns.exe"
+$Binary = "knownme.exe"
 $AliasBinary = "kn.exe"
-$DefaultInstallDir = Join-Path $env:USERPROFILE ".knowns\bin"
+$DefaultInstallDir = Join-Path $env:USERPROFILE ".known-me\bin"
 $InstallDir = if ($env:KNOWNS_INSTALL_DIR) { $env:KNOWNS_INSTALL_DIR } else { $DefaultInstallDir }
 
 function Remove-UserPathEntry {
@@ -57,5 +57,5 @@ if (-not $removed) {
 
 Write-Host ""
 Write-Host "  Know-Me CLI uninstall complete" -ForegroundColor Green
-Write-Host "  Project folders and .knowns data were left untouched" -ForegroundColor DarkGray
+Write-Host "  Project folders and .known-me data were left untouched" -ForegroundColor DarkGray
 Write-Host ""

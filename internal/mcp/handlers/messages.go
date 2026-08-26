@@ -11,7 +11,7 @@ const (
 	ErrNoProject   = "No project set. Call set_project with the project root path."
 	ErrTaskIDReq   = "taskId is required"
 	ErrPathReq     = "path is required"
-	ErrNoKnownsDir = "No .knowns/ directory found at %s"
+	ErrNoKnownsDir = "No .known-me/ directory found at %s"
 	ErrLoadConfig  = "Failed to load project config: %s"
 
 	// Format patterns used by errNotFound / errFailed.

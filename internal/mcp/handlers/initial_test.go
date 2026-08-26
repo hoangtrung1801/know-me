@@ -81,7 +81,7 @@ func TestSemanticRuntimeLineIncludesStatus(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	search.DefaultSemanticRuntime().Close()
 	t.Cleanup(search.DefaultSemanticRuntime().Close)
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".knowns"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
 	project := &models.Project{
 		Name: "initial-test",
 		ID:   "initial-test",
@@ -114,7 +114,7 @@ func TestLspWarningsLineWithMissing(t *testing.T) {
 		binaries: []lsp.BinaryCandidate{{Name: "pylsp"}},
 		guide: lsp.InstallGuide{
 			Command:   "pip install python-lsp-server",
-			KnownsCmd: "knowns lsp install python",
+			KnownsCmd: "knownme lsp install python",
 			URL:       "https://github.com/python-lsp/python-lsp-server",
 		},
 	})
@@ -124,7 +124,7 @@ func TestLspWarningsLineWithMissing(t *testing.T) {
 		binaries: []lsp.BinaryCandidate{{Name: "rust-analyzer"}},
 		guide: lsp.InstallGuide{
 			Command:   "rustup component add rust-analyzer",
-			KnownsCmd: "knowns lsp install rust",
+			KnownsCmd: "knownme lsp install rust",
 			URL:       "https://rust-analyzer.github.io/",
 		},
 	})
@@ -178,7 +178,7 @@ func TestLspWarningsLineIncludesCSharpRuntimeState(t *testing.T) {
 		id:       lsp.CSharpLanguageID,
 		name:     "C#",
 		binaries: []lsp.BinaryCandidate{{Name: "roslyn-ls"}, {Name: "csharp-ls"}, {Name: "omnisharp"}},
-		guide:    lsp.InstallGuide{KnownsCmd: "knowns lsp install csharp"},
+		guide:    lsp.InstallGuide{KnownsCmd: "knownme lsp install csharp"},
 	})
 	manager.SetDetector(&lsp.Detector{
 		Registry: lsp.NewRegistry([]lsp.Language{{ID: lsp.CSharpLanguageID, Extensions: []string{".cs"}, Binaries: []lsp.Binary{{Name: "csharp-ls"}}}}),

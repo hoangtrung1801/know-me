@@ -9,7 +9,7 @@ import (
 )
 
 func TestManagerGetStore(t *testing.T) {
-	root := filepath.Join(t.TempDir(), ".knowns")
+	root := filepath.Join(t.TempDir(), ".known-me")
 	store := NewStore(root)
 	if got := NewManager(store, nil).GetStore(); got != store {
 		t.Fatal("GetStore should return initial store")
@@ -30,10 +30,10 @@ func TestManagerRegistry(t *testing.T) {
 
 func TestManagerActiveProjectRoot(t *testing.T) {
 	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, ".knowns"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".known-me"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	m := NewManager(NewStore(filepath.Join(root, ".knowns")), nil)
+	m := NewManager(NewStore(filepath.Join(root, ".known-me")), nil)
 	if got := m.ActiveProjectRoot(); got != root {
 		t.Fatalf("root = %q, want %q", got, root)
 	}
@@ -41,7 +41,7 @@ func TestManagerActiveProjectRoot(t *testing.T) {
 
 func TestManagerProjectStoreUsesRegisteredRepositoryPath(t *testing.T) {
 	home := t.TempDir()
-	globalRoot := filepath.Join(home, ".knowns")
+	globalRoot := filepath.Join(home, ".known-me")
 	repositoryRoot := t.TempDir()
 	r := registry.NewRegistryWithPath(filepath.Join(globalRoot, "registry.json"))
 	if err := r.Load(); err != nil {
@@ -71,7 +71,7 @@ func TestManagerProjectStoreUsesRegisteredRepositoryPath(t *testing.T) {
 
 func TestManagerProjectStorePrefersRegisteredPathOverStaleActiveStore(t *testing.T) {
 	home := t.TempDir()
-	globalRoot := filepath.Join(home, ".knowns")
+	globalRoot := filepath.Join(home, ".known-me")
 	registeredRoot, staleRoot := t.TempDir(), t.TempDir()
 	r := registry.NewRegistryWithPath(filepath.Join(globalRoot, "registry.json"))
 	if err := r.Load(); err != nil {
