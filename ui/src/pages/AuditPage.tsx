@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useCallback, useEffect, useId, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useId, useRef, useState } from "react";
 import { auditApi, type AuditEvent, type AuditStats } from "@/ui/api/client";
 import {
 	AlertCircle,
@@ -23,6 +23,7 @@ import {
 	PageLoading,
 	PageShell,
 } from "@/ui/components/templates/PageShell";
+import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
 type Tab = "recent" | "stats";
 
@@ -53,15 +54,22 @@ const classColors: Record<string, string> = {
 };
 
 export default function AuditPage() {
-	const [tab, setTab] = useState<Tab>("recent");
+	const { activationId, isActive, isHydrated } = usePageLifecycle("audit");
+	const [tab, setTab] = usePersistentPageState<Tab>("audit", "tab", "recent", {
+		encode: (value) => value,
+		decode: (value) => value === "recent" || value === "stats" ? value : undefined,
+	});
 	const [events, setEvents] = useState<AuditEvent[]>([]);
 	const [stats, setStats] = useState<AuditStats | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [toolFilter, setToolFilter] = useState("");
-	const [resultFilter, setResultFilter] = useState("");
+	const [toolFilter, setToolFilter] = usePersistentPageState("audit", "toolFilter", "");
+	const [resultFilter, setResultFilter] = usePersistentPageState("audit", "resultFilter", "");
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 
 	const fetchRecent = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		setLoading(true);
 		setError(null);
 		try {
@@ -69,41 +77,45 @@ export default function AuditPage() {
 			if (toolFilter) opts.tool = toolFilter;
 			if (resultFilter) opts.result = resultFilter;
 			const data = await auditApi.recent(opts);
-			setEvents(data.events || []);
+			if (isActiveRef.current) setEvents(data.events || []);
 		} catch (caught) {
-			setEvents([]);
-			setError(
-				caught instanceof Error
-					? caught.message
-					: "The audit events could not be loaded.",
-			);
+			if (isActiveRef.current) {
+				setError(
+					caught instanceof Error
+						? caught.message
+						: "The audit events could not be loaded.",
+				);
+			}
 		} finally {
-			setLoading(false);
+			if (isActiveRef.current) setLoading(false);
 		}
 	}, [toolFilter, resultFilter]);
 
 	const fetchStats = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		setLoading(true);
 		setError(null);
 		try {
 			const data = await auditApi.stats();
-			setStats(data);
+			if (isActiveRef.current) setStats(data);
 		} catch (caught) {
-			setStats(null);
-			setError(
-				caught instanceof Error
-					? caught.message
-					: "The audit statistics could not be loaded.",
-			);
+			if (isActiveRef.current) {
+				setError(
+					caught instanceof Error
+						? caught.message
+						: "The audit statistics could not be loaded.",
+				);
+			}
 		} finally {
-			setLoading(false);
+			if (isActiveRef.current) setLoading(false);
 		}
 	}, []);
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		if (tab === "recent") fetchRecent();
 		else fetchStats();
-	}, [tab, fetchRecent, fetchStats]);
+	}, [activationId, fetchRecent, fetchStats, isHydrated, tab]);
 
 	const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
 		let nextTab: Tab | null = null;

@@ -1,32 +1,41 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Clock, FolderOpen, Loader2, Plus, Trash2 } from "lucide-react";
 import { workspaceApi, type WorkspaceProject } from "@/ui/api/client";
 import { PageContent, PageHeader, PageLoading, PageShell } from "@/ui/components/templates/PageShell";
 import { Button } from "@/ui/components/ui/button";
 import { Input } from "@/ui/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/ui/components/ui/dialog";
+import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
 export default function ProjectsPage() {
+	const { activationId, isActive, isHydrated } = usePageLifecycle("projects");
 	const [projects, setProjects] = useState<WorkspaceProject[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [createOpen, setCreateOpen] = useState(false);
-	const [projectName, setProjectName] = useState("");
+	const [createOpen, setCreateOpen] = usePersistentPageState("projects", "createOpen", false);
+	const [projectName, setProjectName] = usePersistentPageState("projects", "projectName", "");
 	const [removing, setRemoving] = useState<WorkspaceProject | null>(null);
 	const [busy, setBusy] = useState(false);
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 
 	const loadProjects = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		setError(null);
 		try {
-			setProjects(await workspaceApi.list());
+			const nextProjects = await workspaceApi.list();
+			if (isActiveRef.current) setProjects(nextProjects);
 		} catch {
-			setError("Projects could not be loaded.");
+			if (isActiveRef.current) setError("Projects could not be loaded.");
 		} finally {
-			setLoading(false);
+			if (isActiveRef.current) setLoading(false);
 		}
 	}, []);
 
-	useEffect(() => { void loadProjects(); }, [loadProjects]);
+	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
+		void loadProjects();
+	}, [activationId, isHydrated, loadProjects]);
 
 	const createProject = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();

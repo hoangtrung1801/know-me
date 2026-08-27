@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Archive, ChevronDown, FolderKanban, ListTodo, RefreshCw, X } from "lucide-react";
 import type { Task } from "@/ui/models/task";
 import { Board } from "../components/organisms";
@@ -24,6 +24,7 @@ import { TaskLifecycleDialog } from "../components/organisms/TaskLifecycleDialog
 import { toast } from "../components/ui/sonner";
 import { useIsMobile } from "../hooks/useMobile";
 import { useWorkspaceProjects } from "../hooks/useWorkspaceProjects";
+import { usePageLifecycle, usePersistentPageState } from "../contexts/PageWorkspaceContext";
 import {
 	PageContent,
 	PageError,
@@ -52,9 +53,10 @@ interface KanbanPageProps {
 }
 
 export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpdate, onNewTask }: KanbanPageProps) {
+	const { activationId, isActive, isHydrated } = usePageLifecycle("kanban");
 	const isMobile = useIsMobile();
 	const projects = useWorkspaceProjects();
-	const [projectScope, setProjectScope] = useState("all");
+	const [projectScope, setProjectScope] = usePersistentPageState("kanban", "projectScope", "all");
 	const isProjectFiltered = projectScope !== "all";
 	const visibleTasks = projectScope === "all"
 		? tasks
@@ -70,14 +72,24 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 	const [archiveRequest, setArchiveRequest] = useState<{ generation: number; minimumAgeMs: number; label: string; ids?: readonly string[] } | null>(null);
 	const archiveGenerationRef = useRef(0);
 	const archiveInFlightRef = useRef(false);
+	const isActiveRef = useRef(isActive);
+	const onRetryRef = useRef(onRetry);
+	isActiveRef.current = isActive;
+	onRetryRef.current = onRetry;
+
+	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current || activationId === 0) return;
+		onRetryRef.current?.();
+	}, [activationId, isHydrated]);
 
 	const reconcileTasks = async () => {
+		if (!isActiveRef.current) return;
 		const current = await api.getTasks();
-		onTasksUpdate(current);
+		if (isActiveRef.current) onTasksUpdate(current);
 	};
 
 	const handleRefresh = async () => {
-		if (refreshing) return;
+		if (!isActiveRef.current || refreshing) return;
 		setRefreshing(true);
 		try {
 			await reconcileTasks();

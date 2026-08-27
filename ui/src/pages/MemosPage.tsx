@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, Hash, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { memoApi, type Memo } from "@/ui/api/client";
 import { MDRender } from "@/ui/components/editor";
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/ui/components/ui/input";
 import { Textarea } from "@/ui/components/ui/textarea";
 import { useDebouncedValue } from "@/ui/hooks/useDebouncedValue";
+import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
 function dayKey(date: Date) {
 	return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
@@ -41,31 +42,44 @@ function groupMemos(items: Memo[]) {
 }
 
 export default function MemosPage() {
+	const { activationId, isActive, isHydrated } = usePageLifecycle("memos");
 	const [memos, setMemos] = useState<Memo[]>([]);
-	const [query, setQuery] = useState("");
-	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [query, setQuery] = usePersistentPageState("memos", "query", "");
+	const [selectedTags, setSelectedTags] = usePersistentPageState<string[]>("memos", "selectedTags", [], {
+		encode: (value) => value,
+		decode: (value) => Array.isArray(value) && value.every((tag) => typeof tag === "string") ? value : undefined,
+	});
 	const debouncedQuery = useDebouncedValue(query, 250);
-	const [newContent, setNewContent] = useState("");
-	const [editingID, setEditingID] = useState<string | null>(null);
-	const [editContent, setEditContent] = useState("");
+	const [newContent, setNewContent] = usePersistentPageState("memos", "newContent", "");
+	const [editingID, setEditingID] = usePersistentPageState<string | null>("memos", "editingID", null);
+	const [editContent, setEditContent] = usePersistentPageState("memos", "editContent", "");
 	const [deleteTarget, setDeleteTarget] = useState<Memo | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const isActiveRef = useRef(isActive);
+	const memosRef = useRef(memos);
+	isActiveRef.current = isActive;
+	memosRef.current = memos;
 
 	const load = useCallback(async (search: string) => {
-		setLoading(true);
+		if (!isActiveRef.current) return;
+		if (memosRef.current.length === 0) setLoading(true);
 		setError(null);
 		try {
-			setMemos(await memoApi.list(search));
+			const nextMemos = await memoApi.list(search);
+			if (isActiveRef.current) setMemos(nextMemos);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Memos could not be loaded.");
+			if (isActiveRef.current) setError(err instanceof Error ? err.message : "Memos could not be loaded.");
 		} finally {
-			setLoading(false);
+			if (isActiveRef.current) setLoading(false);
 		}
 	}, []);
 
-	useEffect(() => { void load(debouncedQuery); }, [debouncedQuery, load]);
+	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
+		void load(debouncedQuery);
+	}, [activationId, debouncedQuery, isHydrated, load]);
 
 	const availableTags = useMemo(() => [...new Set(memos.flatMap((memo) => memoTags(memo.content)))].sort(), [memos]);
 	const visibleMemos = useMemo(() => selectedTags.length === 0 ? memos : memos.filter((memo) => memoTags(memo.content).some((tag) => selectedTags.includes(tag))), [memos, selectedTags]);

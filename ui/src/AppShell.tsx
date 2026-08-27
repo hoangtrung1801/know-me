@@ -13,6 +13,8 @@ import { AppBreadcrumb } from "./components/molecules/AppBreadcrumb";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { Separator } from "./components/ui/separator";
 import { Toaster } from "./components/ui/sonner";
+import { PageWorkspace, type PageWorkspaceSlot } from "./components/templates/PageWorkspace";
+import { pageIdFromPath, usePageLifecycle } from "./contexts/PageWorkspaceContext";
 import { useConfig } from "./contexts/ConfigContext";
 import { useGlobalTask } from "./contexts/GlobalTaskContext";
 import { Loader2 } from "lucide-react";
@@ -62,25 +64,6 @@ function PageLoading() {
 	);
 }
 
-function getCurrentPage(pathname: string) {
-	if (pathname.startsWith("/dashboard")) return "dashboard";
-	if (pathname.startsWith("/projects")) return "projects";
-	if (pathname.startsWith("/tasks")) return "tasks";
-	if (pathname.startsWith("/docs")) return "docs";
-	if (pathname.startsWith("/imports")) return "imports";
-	if (pathname.startsWith("/graph")) return "graph";
-	if (pathname.startsWith("/memory")) return "memory";
-	if (pathname.startsWith("/links")) return "links";
-	if (pathname.startsWith("/memos")) return "memos";
-	if (pathname.startsWith("/decisions")) return "decisions";
-	if (pathname.startsWith("/audit")) return "audit";
-	if (pathname.startsWith("/chat")) return "chat";
-	if (pathname.startsWith("/config")) return "config";
-	if (pathname.startsWith("/kanban")) return "kanban";
-	if (pathname === "/" || pathname === "") return "dashboard";
-	return "dashboard";
-}
-
 function getTaskIdFromLocation(pathname: string, searchStr: string, page?: string): string | null {
 	const prefix = page || "(?:kanban|tasks)";
 	const match =
@@ -94,6 +77,8 @@ export default function AppShell() {
 	const { currentTaskId, closeTask } = useGlobalTask();
 	const navigate = useNavigate();
 	const location = useRouterState({ select: (state) => state.location });
+	const tasksLifecycle = usePageLifecycle("tasks");
+	const kanbanLifecycle = usePageLifecycle("kanban");
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [directTask, setDirectTask] = useState<Task | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -115,7 +100,7 @@ export default function AppShell() {
 		return false;
 	});
 
-	const currentPage = getCurrentPage(location.pathname);
+	const currentPage = pageIdFromPath(location.pathname);
 	const globalPageWithoutProject = currentPage === "memos";
 	const isChatPage = currentPage === "chat";
 	const currentTasks = tasks;
@@ -210,6 +195,16 @@ export default function AppShell() {
 		void loadCurrentTasks(true);
 		return () => currentRequestRef.current.controller?.abort();
 	}, [loadCurrentTasks]);
+
+	useEffect(() => {
+		if (!tasksLifecycle.isHydrated || currentPage !== "tasks" || tasksLifecycle.activationId === 0) return;
+		void loadCurrentTasks();
+	}, [currentPage, loadCurrentTasks, tasksLifecycle.activationId, tasksLifecycle.isHydrated]);
+
+	useEffect(() => {
+		if (!kanbanLifecycle.isHydrated || currentPage !== "kanban" || kanbanLifecycle.activationId === 0) return;
+		void loadCurrentTasks();
+	}, [currentPage, kanbanLifecycle.activationId, kanbanLifecycle.isHydrated, loadCurrentTasks]);
 
 	useEffect(() => {
 		directRequestRef.current.controller?.abort();
@@ -323,67 +318,50 @@ export default function AppShell() {
 		}
 	};
 
-	const renderPage = () => {
-		switch (currentPage) {
-			case "dashboard":
-				return <DashboardPage tasks={currentTasks} loading={loading} />;
-			case "projects":
-				return <ProjectsPage />;
-			case "kanban":
-				return (
-					<KanbanPage
-						tasks={currentTasks}
-						loading={loading}
-						error={taskLoadError}
-						onRetry={() => void loadCurrentTasks(true)}
-						onTasksUpdate={handleTasksUpdate}
-						onNewTask={() => setShowCreateForm(true)}
-					/>
-				);
-			case "tasks": {
-				const selectedTask = routeTaskId
-					? tasks.find((task) => task.id === routeTaskId) || (directTask?.id === routeTaskId ? directTask : null)
-					: null;
+	const selectedTask = routeTaskId
+		? tasks.find((task) => task.id === routeTaskId) || (directTask?.id === routeTaskId ? directTask : null)
+		: null;
 
-				return (
-					<TasksPage
-					tasks={currentTasks}
-						loading={loading}
-						error={taskLoadError}
-						onRetry={() => void loadCurrentTasks(true)}
-						onTasksUpdate={handleTaskCreated}
-						selectedTask={selectedTask}
-						onTaskClose={() => {
-							navigate({ to: "/tasks" });
-						}}
-						onNewTask={() => setShowCreateForm(true)}
-					/>
-				);
-			}
-			case "docs":
-				return <DocsPage />;
-			case "graph":
-				return <GraphPage />;
-			case "memory":
-				return <MemoryPage />;
-			case "links":
-				return <LinksPage />;
-			case "memos":
-				return <MemosPage />;
-			case "decisions":
-				return <DecisionPage />;
-			case "audit":
-				return <AuditPage />;
-			case "imports":
-				return <ImportsPage />;
-			case "chat":
-				return <ChatPage />;
-			case "config":
-				return <ConfigPage />;
-			default:
-				return <DashboardPage tasks={currentTasks} loading={loading} />;
-		}
-	};
+	const pageSlots: PageWorkspaceSlot[] = [
+		{ id: "dashboard", component: DashboardPage, props: { tasks: currentTasks, loading } },
+		{ id: "projects", component: ProjectsPage },
+		{
+			id: "kanban",
+			component: KanbanPage,
+			props: {
+				tasks: currentTasks,
+				loading,
+				error: taskLoadError,
+				onRetry: () => void loadCurrentTasks(true),
+				onTasksUpdate: handleTasksUpdate,
+				onNewTask: () => setShowCreateForm(true),
+			},
+		},
+		{
+			id: "tasks",
+			component: TasksPage,
+			props: {
+				tasks: currentTasks,
+				loading,
+				error: taskLoadError,
+				onRetry: () => void loadCurrentTasks(true),
+				onTasksUpdate: handleTaskCreated,
+				selectedTask,
+				onTaskClose: () => navigate({ to: "/tasks" }),
+				onNewTask: () => setShowCreateForm(true),
+			},
+		},
+		{ id: "docs", component: DocsPage },
+		{ id: "graph", component: GraphPage },
+		{ id: "memory", component: MemoryPage },
+		{ id: "links", component: LinksPage },
+		{ id: "memos", component: MemosPage },
+		{ id: "decisions", component: DecisionPage },
+		{ id: "audit", component: AuditPage },
+		{ id: "imports", component: ImportsPage },
+		{ id: "chat", component: ChatPage },
+		{ id: "config", component: ConfigPage },
+	];
 
 	return (
 		<ThemeContext.Provider value={{ isDark, toggle: toggleTheme }}>
@@ -443,13 +421,8 @@ export default function AppShell() {
 						>
 							<ErrorBoundary>
 								<Suspense fallback={<PageLoading />}>
-									<div
-										key={currentPage}
-										className="animate-page-in flex-1 flex flex-col min-h-0"
-									>
-										{renderPage()}
-									</div>
-							</Suspense>
+									<PageWorkspace slots={pageSlots} />
+								</Suspense>
 						</ErrorBoundary>
 					</div>
 						<RuntimeMonitorPanel />

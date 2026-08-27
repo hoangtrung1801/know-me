@@ -60,6 +60,7 @@ import {
 	DialogTitle,
 } from "@/ui/components/ui/dialog";
 import { cn } from "@/ui/lib/utils";
+import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
 type MemoryView = "trusted" | "review" | "history";
 type MemoryReviewState = "needs_evidence" | "needs_resolution" | "needs_reverification" | "ready_for_review";
@@ -157,22 +158,32 @@ export default function MemoryPage() {
 	const navigate = useNavigate();
 	const pathname = useRouterState({ select: (state) => state.location.pathname });
 	const view = viewFromPath(pathname);
+	const { activationId, isActive, isHydrated } = usePageLifecycle("memory");
 	const [memories, setMemories] = useState<MemoryEntry[]>([]);
 	const [inbox, setInbox] = useState<MemoryReviewInboxResponse>(emptyInbox);
 	const [reviewAvailable, setReviewAvailable] = useState(true);
-	const [selectedID, setSelectedID] = useState<string | null>(null);
-	const [selectedIDs, setSelectedIDs] = useState<Set<string>>(() => new Set());
-	const [query, setQuery] = useState("");
+	const [selectedID, setSelectedID] = usePersistentPageState<string | null>("memory", "selectedID", null);
+	const [selectedIDs, setSelectedIDs] = usePersistentPageState<Set<string>>("memory", "selectedIDs", new Set<string>(), {
+		encode: (value) => Array.from(value),
+		decode: (value) => Array.isArray(value) && value.every((id) => typeof id === "string") ? new Set(value) : undefined,
+	});
+	const [query, setQuery] = usePersistentPageState("memory", "query", "");
 	const [loading, setLoading] = useState(true);
 	const [actionBusy, setActionBusy] = useState(false);
-	const [createOpen, setCreateOpen] = useState(false);
+	const [createOpen, setCreateOpen] = usePersistentPageState("memory", "createOpen", false);
 	const [bulkAction, setBulkAction] = useState<MemoryBulkAction | null>(null);
 	const [errorMessage, setErrorMessage] = useState("");
 	const [notice, setNotice] = useState("");
 	const [dataWarning, setDataWarning] = useState("");
 	const lastOpenedMemoryID = useRef<string | null>(null);
+	const isActiveRef = useRef(isActive);
+	const memoriesRef = useRef(memories);
+	isActiveRef.current = isActive;
+	memoriesRef.current = memories;
 
 	const loadMemories = useCallback(async (): Promise<LoadResult> => {
+		if (!isActiveRef.current) return { memories: memoriesRef.current, inbox: emptyInbox, reviewAvailable: false };
+		if (memoriesRef.current.length === 0) setLoading(true);
 		setErrorMessage("");
 		const [listResult, reviewResult] = await Promise.allSettled([
 			memoryApi.list(),
@@ -202,11 +213,11 @@ export default function MemoryPage() {
 			warnings.push("Review metadata is unavailable; Trusted and History remain readable.");
 		}
 
+		if (!isActiveRef.current) return { memories: memoriesRef.current, inbox: emptyInbox, reviewAvailable: false };
 		setMemories(mergeMemorySets(nextMemories, nextInbox.memories));
 		setInbox(nextInbox);
 		setReviewAvailable(nextReviewAvailable);
 		setDataWarning(warnings.join(" "));
-		setSelectedIDs(new Set());
 		return {
 			memories: mergeMemorySets(nextMemories, nextInbox.memories),
 			inbox: nextInbox,
@@ -216,26 +227,20 @@ export default function MemoryPage() {
 
 	useEffect(() => {
 		let cancelled = false;
-		setLoading(true);
+		if (!isHydrated || !isActiveRef.current) return;
 		loadMemories()
 			.catch((error: unknown) => {
-				if (!cancelled) {
+				if (!cancelled && isActiveRef.current) {
 					setErrorMessage(error instanceof Error ? error.message : "Failed to load Memories");
 				}
 			})
 			.finally(() => {
-				if (!cancelled) setLoading(false);
+				if (!cancelled && isActiveRef.current) setLoading(false);
 			});
 		return () => {
 			cancelled = true;
 		};
-	}, [loadMemories]);
-
-	useEffect(() => {
-		setSelectedID(null);
-		setSelectedIDs(new Set());
-		setQuery("");
-	}, [view]);
+	}, [activationId, isHydrated, loadMemories, view]);
 
 	const itemByID = useMemo(() => {
 		const result = new Map<string, MemoryReviewItem>();

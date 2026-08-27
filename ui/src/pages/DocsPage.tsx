@@ -33,6 +33,7 @@ import { AnnotationProvider, useAnnotationContext } from "../contexts/Annotation
 import { AnnotationSelectionToolbar } from "../components/annotations/AnnotationSelectionToolbar";
 import { AnnotationHighlighter } from "../components/annotations/AnnotationHighlighter";
 import { AnnotationBubble } from "../components/annotations/AnnotationBubble";
+import { usePersistentPageState } from "../contexts/PageWorkspaceContext";
 
 const DOC_AUTOSAVE_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -66,18 +67,54 @@ function DocsPageInner() {
 	} = docsContext;
 
 	const [saving, setSaving] = useState(false);
-	const [showCreateView, setShowCreateView] = useState(false);
+	const [showCreateView, setShowCreateView] = usePersistentPageState("docs", "showCreateView", false);
 	const [pathCopied, setPathCopied] = useState(false);
 	const [previewTaskId, setPreviewTaskId] = useState<string | null>(null);
-	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-	const [docSearchQuery, setDocSearchQuery] = useState("");
+	const [mobileSidebarOpen, setMobileSidebarOpen] = usePersistentPageState("docs", "mobileSidebarOpen", false);
+	const [docSearchQuery, setDocSearchQuery] = usePersistentPageState("docs", "docSearchQuery", "");
 	const [lineHighlight, setLineHighlight] = useState<{ start: number; end: number } | null>(null);
-	const [wideMode, setWideMode] = useState(() => localStorage.getItem("docs-wide-mode") === "true");
-	const [historyOpen, setHistoryOpen] = useState(false);
+	const [legacyWideMode] = useState(() => {
+		try {
+			return typeof window !== "undefined" && window.localStorage.getItem("docs-wide-mode") === "true";
+		} catch {
+			return false;
+		}
+	});
+	const [wideMode, setWideMode] = usePersistentPageState("docs", "wideMode", legacyWideMode);
+	const [historyOpen, setHistoryOpen] = usePersistentPageState("docs", "historyOpen", false);
 	const [metaTitle, setMetaTitle] = useState("");
 	const [metaDescription, setMetaDescription] = useState("");
 	const [metaTags, setMetaTags] = useState("");
 	const [saveError, setSaveError] = useState<string | null>(null);
+	const [metadataDrafts, setMetadataDrafts] = usePersistentPageState<Record<string, {
+		title: string;
+		description: string;
+		tags: string;
+	}>>("docs", "metadataDrafts", {}, {
+		encode: (value) => value,
+		decode: (value) => {
+			if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+			const result: Record<string, { title: string; description: string; tags: string }> = {};
+			for (const [path, draft] of Object.entries(value)) {
+				if (!draft || typeof draft !== "object" || Array.isArray(draft)) continue;
+				const candidate = draft as Record<string, unknown>;
+				if (typeof candidate.title !== "string" || typeof candidate.description !== "string" || typeof candidate.tags !== "string") continue;
+				result[path] = { title: candidate.title, description: candidate.description, tags: candidate.tags };
+			}
+			return result;
+		},
+	});
+	const [scrollPositionsByPath, setScrollPositionsByPath] = usePersistentPageState<Record<string, number>>("docs", "scrollPositions", {}, {
+		encode: (value) => value,
+		decode: (value) => {
+			if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+			const result: Record<string, number> = {};
+			for (const [path, position] of Object.entries(value)) {
+				if (typeof position === "number" && Number.isFinite(position) && position >= 0) result[path] = position;
+			}
+			return result;
+		},
+	});
 
 	const markdownPreviewRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -92,6 +129,9 @@ function DocsPageInner() {
 	const previousDraftRef = useRef(editedContent);
 	selectedDocRef.current = selectedDoc;
 	draftRef.current = editedContent;
+	useEffect(() => {
+		scrollPositions.current = new Map(Object.entries(scrollPositionsByPath));
+	}, [scrollPositionsByPath]);
 
 	// Annotation context
 	const annotationCtx = useAnnotationContext();
@@ -150,16 +190,14 @@ function DocsPageInner() {
 		if (scrollToHeading(headingId, behavior)) updateSectionHash(headingId);
 	}, [scrollToHeading, updateSectionHash]);
 
-	// --- Effects ---
-	useEffect(() => { localStorage.setItem("docs-wide-mode", String(wideMode)); }, [wideMode]);
-
 	useEffect(() => {
 		if (selectedDoc) {
-			setMetaTitle(selectedDoc.metadata.title || "");
-			setMetaDescription(selectedDoc.metadata.description || "");
-			setMetaTags(selectedDoc.metadata.tags?.join(", ") || "");
+			const draft = metadataDrafts[selectedDoc.path];
+			setMetaTitle(draft?.title ?? selectedDoc.metadata.title ?? "");
+			setMetaDescription(draft?.description ?? selectedDoc.metadata.description ?? "");
+			setMetaTags(draft?.tags ?? selectedDoc.metadata.tags?.join(", ") ?? "");
 		}
-	}, [selectedDoc?.path]);
+	}, [metadataDrafts, selectedDoc]);
 
 	const handleSaveMetadata = async (field: "title" | "description" | "tags") => {
 		if (!selectedDoc || selectedDoc.isImported) return;
@@ -232,10 +270,10 @@ function DocsPageInner() {
 			const rawSearch = String(location.searchStr || "");
 			const params = new URLSearchParams(rawSearch.startsWith("?") ? rawSearch : `?${rawSearch}`);
 			if (activeHash || params.has("L")) return;
-			const saved = scrollPositions.current.get(selectedDoc.path) || 0;
+			const saved = scrollPositionsByPath[selectedDoc.path] ?? scrollPositions.current.get(selectedDoc.path) ?? 0;
 			requestAnimationFrame(() => { if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = saved; });
 		}
-	}, [location.searchStr, selectedDoc?.path]);
+	}, [location.searchStr, scrollPositionsByPath, selectedDoc?.path]);
 
 	useEffect(() => {
 		if (!selectedDoc) return;
@@ -342,6 +380,13 @@ function DocsPageInner() {
 		setSelectedDoc(doc);
 	}, [flushDraft, setSelectedDoc]);
 
+	const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+		const path = selectedDocRef.current?.path;
+		if (!path) return;
+		const position = event.currentTarget.scrollTop;
+		setScrollPositionsByPath((current) => current[path] === position ? current : { ...current, [path]: position });
+	}, [setScrollPositionsByPath]);
+
 	const handleNavigateToFolder = useCallback((folder: string | null) => {
 		flushDraft();
 		navigateToFolder(folder);
@@ -400,12 +445,38 @@ function DocsPageInner() {
 	const currentDocAnnotations = selectedDoc ? annotationCtx.getByDoc(currentDocPath) : [];
 	const isDraftDirty = Boolean(selectedDoc && editedContent !== (selectedDoc.content || ""));
 	const saveState = saving ? "saving" : saveError ? "error" : isDraftDirty ? "dirty" : "saved";
+	const updateMetadataDraft = useCallback((field: "title" | "description" | "tags", value: string) => {
+		if (!selectedDoc) return;
+		setMetadataDrafts((current) => {
+			const existing = current[selectedDoc.path] || {
+				title: selectedDoc.metadata.title || "",
+				description: selectedDoc.metadata.description || "",
+				tags: selectedDoc.metadata.tags?.join(", ") || "",
+			};
+			return {
+				...current,
+				[selectedDoc.path]: { ...existing, [field]: value },
+			};
+		});
+	}, [selectedDoc, setMetadataDrafts]);
+	const handleMetaTitleChange = useCallback((value: string) => {
+		setMetaTitle(value);
+		updateMetadataDraft("title", value);
+	}, [updateMetadataDraft]);
+	const handleMetaDescriptionChange = useCallback((value: string) => {
+		setMetaDescription(value);
+		updateMetadataDraft("description", value);
+	}, [updateMetadataDraft]);
+	const handleMetaTagsChange = useCallback((value: string) => {
+		setMetaTags(value);
+		updateMetadataDraft("tags", value);
+	}, [updateMetadataDraft]);
 	const docHeader = selectedDoc ? (
 		<DocsDocHeader
 			selectedDoc={selectedDoc}
-			metaTitle={metaTitle} setMetaTitle={setMetaTitle}
-			metaDescription={metaDescription} setMetaDescription={setMetaDescription}
-			metaTags={metaTags} setMetaTags={setMetaTags}
+			metaTitle={metaTitle} setMetaTitle={handleMetaTitleChange}
+			metaDescription={metaDescription} setMetaDescription={handleMetaDescriptionChange}
+			metaTags={metaTags} setMetaTags={handleMetaTagsChange}
 			handleSaveMetadata={handleSaveMetadata}
 			handleProjectChange={handleProjectChange}
 			linkedTasks={linkedTasks}
@@ -508,7 +579,7 @@ function DocsPageInner() {
 								</div>
 							</div>
 						) : (
-							<div className="flex-1 overflow-y-auto relative" ref={scrollContainerRef}>
+							<div className="flex-1 overflow-y-auto relative" ref={scrollContainerRef} onScroll={handleScroll}>
 								<div ref={docViewerRef} className="flex justify-center relative">
 									<article data-document-surface="doc" key={selectedDoc.path} className={`w-full px-6 sm:px-8 py-10 sm:py-12 transition-[max-width] duration-300 ease-in-out animate-doc-in ${wideMode ? "max-w-[1040px]" : "max-w-[880px]"}`}>
 										{docHeader}

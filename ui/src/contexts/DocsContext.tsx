@@ -4,6 +4,7 @@ import type { Task } from "@/ui/models/task";
 import { getDocs, getTasksBySpec } from "../api/client";
 import { navigateTo } from "../lib/navigation";
 import { useSSEEvent } from "./SSEContext";
+import { usePageLifecycle, usePersistentPageState } from "./PageWorkspaceContext";
 import { normalizePath, toDisplayPath, isSpec, getSpecStatusOrder, type Doc } from "../lib/utils";
 
 interface DocsContextType {
@@ -31,19 +32,30 @@ const DocsContext = createContext<DocsContextType | null>(null);
 
 export function DocsProvider({ children }: { children: React.ReactNode }) {
 	const location = useRouterState({ select: (state) => state.location });
+	const { activationId, isActive, isHydrated } = usePageLifecycle("docs");
 	const [docs, setDocs] = useState<Doc[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [selectedDoc, setSelectedDocState] = useState<Doc | null>(null);
-	const [isEditing, setIsEditing] = useState(false);
-	const [editedContent, setEditedContent] = useState("");
-	const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
-	const [linkedTasksExpanded, setLinkedTasksExpanded] = useState(false);
-	const [showSpecsOnly, setShowSpecsOnlyState] = useState(() => {
-		const saved = localStorage.getItem("docs-specs-only");
-		return saved === "true";
+	const [isEditing, setIsEditing] = usePersistentPageState("docs", "isEditing", false);
+	const [editedContentByPath, setEditedContentByPath] = usePersistentPageState<Record<string, string>>("docs", "editedContentByPath", {}, {
+		encode: (value) => value,
+		decode: (value) => {
+			if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+			const result: Record<string, string> = {};
+			for (const [path, content] of Object.entries(value)) {
+				if (typeof content === "string") result[path] = content;
+			}
+			return result;
+		},
 	});
+	const [editedContent, setEditedContentState] = useState("");
+	const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
+	const [linkedTasksExpanded, setLinkedTasksExpanded] = usePersistentPageState("docs", "linkedTasksExpanded", false);
+	const [showSpecsOnly, setShowSpecsOnlyState] = usePersistentPageState("docs", "showSpecsOnly", false);
 	const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 	const docsRef = useRef<Doc[]>([]);
 	const selectedDocRef = useRef<Doc | null>(null);
 
@@ -56,62 +68,85 @@ export function DocsProvider({ children }: { children: React.ReactNode }) {
 		selectedDocRef.current = selectedDoc;
 	}, [selectedDoc]);
 
-	// Persist filter state
 	useEffect(() => {
-		localStorage.setItem("docs-specs-only", String(showSpecsOnly));
-	}, [showSpecsOnly]);
+		if (!selectedDoc) {
+			setEditedContentState("");
+			return;
+		}
+		setEditedContentState(editedContentByPath[selectedDoc.path] ?? selectedDoc.content ?? "");
+	}, [editedContentByPath, selectedDoc?.content, selectedDoc?.path]);
+
+	const setEditedContent = useCallback((content: string) => {
+		setEditedContentState(content);
+		const path = selectedDocRef.current?.path;
+		if (!path) return;
+		const baseline = selectedDocRef.current?.content ?? "";
+		setEditedContentByPath((current) => {
+			if (content === baseline) {
+				if (!(path in current)) return current;
+				const next = { ...current };
+				delete next[path];
+				return next;
+			}
+			return current[path] === content ? current : { ...current, [path]: content };
+		});
+	}, [setEditedContentByPath]);
 
 	const setShowSpecsOnly = useCallback((show: boolean) => {
 		setShowSpecsOnlyState(show);
 	}, []);
 
 	const loadDocs = useCallback(() => {
+		if (!isActiveRef.current) return;
 		setError(null);
 		getDocs()
 			.then((data) => {
+				if (!isActiveRef.current) return;
 				setDocs(data as unknown as Doc[]);
 				setLoading(false);
 			})
 			.catch((err) => {
+				if (!isActiveRef.current) return;
 				console.error("Failed to load docs:", err);
 				setError(err instanceof Error ? err.message : "Failed to load documentation");
 				setLoading(false);
 			});
 	}, []);
 
-	// Initial load
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		loadDocs();
-	}, [loadDocs]);
+	}, [activationId, isHydrated, loadDocs]);
 
 	// Fetch linked tasks when a spec is selected
 	const refreshLinkedTasks = useCallback(() => {
+		if (!isActiveRef.current) return;
 		const doc = selectedDocRef.current;
 		if (doc && isSpec(doc)) {
 			const specPath = toDisplayPath(doc.path).replace(/\.md$/, "");
 			getTasksBySpec(specPath)
-				.then((tasks) => setLinkedTasks(tasks))
-				.catch(() => setLinkedTasks([]));
+				.then((tasks) => { if (isActiveRef.current) setLinkedTasks(tasks); })
+				.catch(() => { if (isActiveRef.current) setLinkedTasks([]); });
 		} else {
-			setLinkedTasks([]);
+			if (isActiveRef.current) setLinkedTasks([]);
 		}
 	}, []);
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		refreshLinkedTasks();
-	}, [selectedDoc, refreshLinkedTasks]);
+	}, [activationId, isHydrated, refreshLinkedTasks, selectedDoc]);
 
 	// SSE updates
-	useSSEEvent("docs:updated", () => loadDocs());
-	useSSEEvent("docs:refresh", () => loadDocs());
-	useSSEEvent("tasks:updated", () => refreshLinkedTasks());
-	useSSEEvent("tasks:refresh", () => refreshLinkedTasks());
+	useSSEEvent("docs:updated", () => { if (isActiveRef.current) loadDocs(); });
+	useSSEEvent("docs:refresh", () => { if (isActiveRef.current) loadDocs(); });
+	useSSEEvent("tasks:updated", () => { if (isActiveRef.current) refreshLinkedTasks(); });
+	useSSEEvent("tasks:refresh", () => { if (isActiveRef.current) refreshLinkedTasks(); });
 
 	const setSelectedDoc = useCallback((doc: Doc | null) => {
 		const changedDoc = doc?.path !== selectedDocRef.current?.path;
 		setSelectedDocState(doc);
 		if (changedDoc) {
-			setEditedContent(doc?.content ?? "");
 			setLinkedTasksExpanded(false);
 		}
 		setIsEditing(Boolean(doc));
@@ -161,7 +196,6 @@ export function DocsProvider({ children }: { children: React.ReactNode }) {
 		setCurrentFolder(folder);
 		setSelectedDocState(null);
 		setIsEditing(false);
-		setEditedContent("");
 		navigateTo(folder ? `/docs/${folder}` : "/docs");
 	}, []);
 

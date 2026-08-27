@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Plus,
 	RefreshCw,
@@ -25,6 +25,7 @@ import { Switch } from "../components/ui/switch";
 import { TreeView, type TreeDataItem } from "../components/ui/TreeView";
 import { importApi, type Import, type ImportDetail, type ImportResult } from "../api/client";
 import { useSSEEvent } from "../contexts/SSEContext";
+import { usePageLifecycle, usePersistentPageState } from "../contexts/PageWorkspaceContext";
 import { toast } from "../components/ui/sonner";
 
 // Helper to format date
@@ -169,20 +170,24 @@ function buildPreviewTreeData(changes: Array<{ action: string; path: string }>):
 }
 
 export default function ImportsPage() {
+	const { activationId, isActive, isHydrated } = usePageLifecycle("imports");
 	const [imports, setImports] = useState<Import[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [selectedImport, setSelectedImport] = useState<ImportDetail | null>(null);
-	const [selectedName, setSelectedName] = useState<string | null>(null);
+	const [selectedName, setSelectedName] = usePersistentPageState<string | null>("imports", "selectedName", null, {
+		encode: (value) => value,
+		decode: (value) => typeof value === "string" || value === null ? value : undefined,
+	});
 	const [loadingDetail, setLoadingDetail] = useState(false);
 
 	// Add import state
-	const [showAddModal, setShowAddModal] = useState(false);
-	const [addSource, setAddSource] = useState("");
-	const [addName, setAddName] = useState("");
-	const [addType, setAddType] = useState<string>("");
-	const [addRef, setAddRef] = useState("");
-	const [addLink, setAddLink] = useState(false);
-	const [addDryRun, setAddDryRun] = useState(true);
+	const [showAddModal, setShowAddModal] = usePersistentPageState("imports", "showAddModal", false);
+	const [addSource, setAddSource] = usePersistentPageState("imports", "addSource", "");
+	const [addName, setAddName] = usePersistentPageState("imports", "addName", "");
+	const [addType, setAddType] = usePersistentPageState("imports", "addType", "");
+	const [addRef, setAddRef] = usePersistentPageState("imports", "addRef", "");
+	const [addLink, setAddLink] = usePersistentPageState("imports", "addLink", false);
+	const [addDryRun, setAddDryRun] = usePersistentPageState("imports", "addDryRun", true);
 	const [adding, setAdding] = useState(false);
 	const [addResult, setAddResult] = useState<ImportResult | null>(null);
 	const [addError, setAddError] = useState<string | null>(null);
@@ -196,51 +201,65 @@ export default function ImportsPage() {
 	const [removing, setRemoving] = useState<string | null>(null);
 	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 	const [removeDeleteFiles, setRemoveDeleteFiles] = useState(false);
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
+	const selectedNameRef = useRef(selectedName);
+	selectedNameRef.current = selectedName;
 
 	// Load imports
 	const loadImports = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		try {
 			const data = await importApi.list();
-			setImports(data.imports);
+			if (isActiveRef.current) setImports(data.imports);
 		} catch (err) {
-			console.error("Failed to load imports:", err);
+			if (isActiveRef.current) console.error("Failed to load imports:", err);
 		} finally {
-			setLoading(false);
+			if (isActiveRef.current) setLoading(false);
 		}
 	}, []);
 
-	// Initial load
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		loadImports();
-	}, [loadImports]);
+	}, [activationId, isHydrated, loadImports]);
 
 	// SSE events
-	useSSEEvent("imports:added", () => loadImports());
-	useSSEEvent("imports:synced", () => loadImports());
+	useSSEEvent("imports:added", () => { if (isActiveRef.current) loadImports(); });
+	useSSEEvent("imports:synced", () => { if (isActiveRef.current) loadImports(); });
 	useSSEEvent("imports:removed", () => {
+		if (!isActiveRef.current) return;
 		loadImports();
-		if (selectedName) {
+		if (selectedNameRef.current) {
 			setSelectedImport(null);
 			setSelectedName(null);
 		}
 	});
 
 	// Load import detail
-	const loadImportDetail = async (name: string) => {
+	const loadImportDetail = useCallback(async (name: string) => {
+		if (!isActiveRef.current) return;
 		setLoadingDetail(true);
 		setSelectedName(name);
 		setSyncResult(null);
 
 		try {
 			const data = await importApi.get(name);
-			setSelectedImport(data.import);
+			if (isActiveRef.current) setSelectedImport(data.import);
 		} catch (err) {
-			console.error("Failed to load import:", err);
-			setSelectedImport(null);
+			if (isActiveRef.current) {
+				console.error("Failed to load import:", err);
+				setSelectedImport(null);
+			}
 		} finally {
-			setLoadingDetail(false);
+			if (isActiveRef.current) setLoadingDetail(false);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current || !selectedName) return;
+		void loadImportDetail(selectedName);
+	}, [activationId, isHydrated, loadImportDetail, selectedName]);
 
 	// Back to list
 	const handleBack = useCallback(() => {

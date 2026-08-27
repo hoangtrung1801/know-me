@@ -17,13 +17,14 @@ import { TaskPreviewDialog } from "../components/organisms/TaskDetail/TaskPrevie
 import { DocPreviewDialog } from "../components/organisms/DocsPreview/DocPreviewDialog";
 import { useChatPage } from "./chat/useChatPage";
 import { SubSessionsContext } from "../contexts/SubSessionsContext";
+import { usePersistentPageState } from "../contexts/PageWorkspaceContext";
 import type { ChatSession } from "../models/chat";
 
 export default function ChatPage() {
 	const previousActiveIdRef = useRef<string | null>(null);
-	const [timelineOpen, setTimelineOpen] = useState(false);
-	const [focusedMessageId, setFocusedMessageId] = useState<string | null>(null);
-	const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+	const [timelineOpen, setTimelineOpen] = usePersistentPageState("chat", "timelineOpen", false);
+	const [focusedMessageId, setFocusedMessageId] = usePersistentPageState<string | null>("chat", "focusedMessageId", null);
+	const [rightSidebarOpen, setRightSidebarOpen] = usePersistentPageState("chat", "rightSidebarOpen", false);
 	const [subagentModalSession, setSubagentModalSession] = useState<ChatSession | null>(null);
 	const prevSubSessionCountRef = useRef<Record<string, number>>({});
 	const {

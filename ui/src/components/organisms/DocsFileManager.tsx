@@ -20,6 +20,7 @@ import { Input } from "../ui/input";
 import { navigateTo } from "../../lib/navigation";
 import { cn, toDisplayPath, isSpec, parseACProgress, type Doc } from "../../lib/utils";
 import { importApi, type Import } from "../../api/client";
+import { usePageLifecycle } from "../../contexts/PageWorkspaceContext";
 
 interface FolderEntry {
 	type: "folder";
@@ -123,6 +124,7 @@ export function DocsFileManager({
 	onItemSelect,
 	className,
 }: DocsFileManagerProps) {
+	const { activationId, isActive, isHydrated } = usePageLifecycle("docs");
 	const normalizedQuery = searchQuery.trim().toLowerCase();
 	const isSearching = normalizedQuery.length > 0;
 
@@ -258,16 +260,20 @@ export function DocsFileManager({
 	// Cache imports metadata (source URL, type, etc.)
 	const [importsMap, setImportsMap] = useState<Map<string, Import>>(new Map());
 	
-	// Fetch imports metadata on mount
+	// Refresh import metadata whenever the retained Docs page becomes active.
 	useEffect(() => {
+		if (!isHydrated || !isActive) return;
+		let cancelled = false;
 		importApi.list().then(({ imports }) => {
+			if (cancelled) return;
 			const map = new Map<string, Import>();
 			imports.forEach((imp) => map.set(imp.name, imp));
 			setImportsMap(map);
 		}).catch((err) => {
-			console.error("Failed to fetch imports:", err);
+			if (!cancelled) console.error("Failed to fetch imports:", err);
 		});
-	}, []);
+		return () => { cancelled = true; };
+	}, [activationId, isActive, isHydrated]);
 
 	// Auto-sync viewingImportSource when viewing an imported doc
 	useEffect(() => {

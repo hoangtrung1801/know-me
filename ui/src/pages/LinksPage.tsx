@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Link2, Loader2, Pencil, Plus, RefreshCw } from "lucide-react";
 import { linkApi, type SavedLink } from "@/ui/api/client";
 import { PageContent, PageHeader, PageLoading, PageShell } from "@/ui/components/templates/PageShell";
@@ -6,36 +6,59 @@ import { Button } from "@/ui/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/ui/components/ui/dialog";
 import { Input } from "@/ui/components/ui/input";
 import { Textarea } from "@/ui/components/ui/textarea";
+import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
 export default function LinksPage() {
+	const { activationId, isActive, isHydrated } = usePageLifecycle("links");
 	const [links, setLinks] = useState<SavedLink[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [selectedLink, setSelectedLink] = useState<SavedLink | null>(null);
 	const [editing, setEditing] = useState<SavedLink | null>(null);
-	const [adding, setAdding] = useState(false);
-	const [url, setURL] = useState("");
-	const [addNote, setAddNote] = useState("");
+	const [selectedLinkId, setSelectedLinkId] = usePersistentPageState<string | null>("links", "selectedLinkId", null);
+	const [editingLinkId, setEditingLinkId] = usePersistentPageState<string | null>("links", "editingLinkId", null);
+	const [adding, setAdding] = usePersistentPageState("links", "adding", false);
+	const [url, setURL] = usePersistentPageState("links", "url", "");
+	const [addNote, setAddNote] = usePersistentPageState("links", "addNote", "");
 	const [addImage, setAddImage] = useState<File | undefined>();
-	const [title, setTitle] = useState("");
-	const [description, setDescription] = useState("");
-	const [note, setNote] = useState("");
+	const [title, setTitle] = usePersistentPageState("links", "title", "");
+	const [description, setDescription] = usePersistentPageState("links", "description", "");
+	const [note, setNote] = usePersistentPageState("links", "note", "");
 	const [image, setImage] = useState<File | undefined>();
 	const [busy, setBusy] = useState(false);
-	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [selectedTags, setSelectedTags] = usePersistentPageState<string[]>("links", "selectedTags", [], {
+		encode: (value) => value,
+		decode: (value) => Array.isArray(value) && value.every((tag) => typeof tag === "string") ? value : undefined,
+	});
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 	const availableTags = useMemo(() => [...new Set(links.flatMap((link) => link.tags ?? []))].sort(), [links]);
 	const visibleLinks = useMemo(() => selectedTags.length === 0 ? links : links.filter((link) => (link.tags ?? []).some((tag) => selectedTags.includes(tag))), [links, selectedTags]);
 
 	const load = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		setError(null);
-		try { setLinks(await linkApi.list()); } catch { setError("Saved links could not be loaded."); } finally { setLoading(false); }
+		try {
+			const nextLinks = await linkApi.list();
+			if (isActiveRef.current) setLinks(nextLinks);
+		} catch { if (isActiveRef.current) setError("Saved links could not be loaded."); }
+		finally { if (isActiveRef.current) setLoading(false); }
 	}, []);
-	useEffect(() => { void load(); }, [load]);
+	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
+		void load();
+	}, [activationId, isHydrated, load]);
+
+	useEffect(() => {
+		if (!isActive) return;
+		setSelectedLink(selectedLinkId ? links.find((link) => link.id === selectedLinkId) || null : null);
+		setEditing(editingLinkId ? links.find((link) => link.id === editingLinkId) || null : null);
+	}, [editingLinkId, isActive, links, selectedLinkId]);
 
 	const openEditor = (link: SavedLink) => {
-		setEditing(link); setTitle(link.title); setDescription(link.description); setNote(link.note ?? ""); setImage(undefined);
+		setEditing(link); setEditingLinkId(link.id); setTitle(link.title); setDescription(link.description); setNote(link.note ?? ""); setImage(undefined);
 	};
-	const openDetails = (link: SavedLink) => setSelectedLink(link);
+	const openDetails = (link: SavedLink) => { setSelectedLink(link); setSelectedLinkId(link.id); };
 	const handleCardClick = (event: React.MouseEvent<HTMLElement>, link: SavedLink) => {
 		if ((event.target as HTMLElement).closest("button, a")) return;
 		openDetails(link);
@@ -54,7 +77,7 @@ export default function LinksPage() {
 		try {
 			const updated = await linkApi.update(editing.id, { title, description, note, image });
 			setLinks((items) => items.map((item) => item.id === updated.id ? updated : item));
-			setEditing(null);
+			setEditing(null); setEditingLinkId(null);
 		} catch (err) { setError(err instanceof Error ? err.message : "Link could not be updated."); } finally { setBusy(false); }
 	};
 	const add = async (event: React.FormEvent) => {
@@ -87,8 +110,8 @@ export default function LinksPage() {
 			</div>}
 			{error && links.length > 0 && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
 		</PageContent>
-		<Dialog open={Boolean(selectedLink)} onOpenChange={(open) => !open && setSelectedLink(null)}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{selectedLink?.title || selectedLink?.url}</DialogTitle><DialogDescription>{selectedLink?.description || "Saved link details"}</DialogDescription></DialogHeader>{selectedLink && <div className="space-y-5">{imageSrc(selectedLink) ? <img src={imageSrc(selectedLink)} alt="" className="max-h-72 w-full rounded-md object-cover" /> : <div className="flex h-48 items-center justify-center rounded-md bg-muted/40"><Link2 className="h-10 w-10 text-muted-foreground/50" /></div>}{selectedLink.note && <div><h3 className="text-sm font-medium">Note</h3><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-foreground/80">{selectedLink.note}</p></div>}{selectedLink.tags?.length ? <div><h3 className="text-sm font-medium">Tags</h3><div className="mt-2 flex flex-wrap gap-1.5">{selectedLink.tags.map((tag) => <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-xs">{tag}</span>)}</div></div> : null}{selectedLink.url && <a href={selectedLink.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 break-all text-sm text-primary hover:underline" title={selectedLink.url}>{selectedLink.url}<ExternalLink className="h-3.5 w-3.5 shrink-0" /></a>}</div>}<DialogFooter><Button type="button" variant="outline" onClick={() => { if (!selectedLink) return; const link = selectedLink; setSelectedLink(null); openEditor(link); }}>Edit link</Button>{selectedLink && <Button asChild><a href={selectedLink.url} target="_blank" rel="noreferrer">Open link<ExternalLink className="ml-2 h-4 w-4" /></a></Button>}</DialogFooter></DialogContent></Dialog>
+		<Dialog open={Boolean(selectedLink)} onOpenChange={(open) => { if (!open) { setSelectedLink(null); setSelectedLinkId(null); } }}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{selectedLink?.title || selectedLink?.url}</DialogTitle><DialogDescription>{selectedLink?.description || "Saved link details"}</DialogDescription></DialogHeader>{selectedLink && <div className="space-y-5">{imageSrc(selectedLink) ? <img src={imageSrc(selectedLink)} alt="" className="max-h-72 w-full rounded-md object-cover" /> : <div className="flex h-48 items-center justify-center rounded-md bg-muted/40"><Link2 className="h-10 w-10 text-muted-foreground/50" /></div>}{selectedLink.note && <div><h3 className="text-sm font-medium">Note</h3><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-foreground/80">{selectedLink.note}</p></div>}{selectedLink.tags?.length ? <div><h3 className="text-sm font-medium">Tags</h3><div className="mt-2 flex flex-wrap gap-1.5">{selectedLink.tags.map((tag) => <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-xs">{tag}</span>)}</div></div> : null}{selectedLink.url && <a href={selectedLink.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 break-all text-sm text-primary hover:underline" title={selectedLink.url}>{selectedLink.url}<ExternalLink className="h-3.5 w-3.5 shrink-0" /></a>}</div>}<DialogFooter><Button type="button" variant="outline" onClick={() => { if (!selectedLink) return; const link = selectedLink; setSelectedLink(null); setSelectedLinkId(null); openEditor(link); }}>Edit link</Button>{selectedLink && <Button asChild><a href={selectedLink.url} target="_blank" rel="noreferrer">Open link<ExternalLink className="ml-2 h-4 w-4" /></a></Button>}</DialogFooter></DialogContent></Dialog>
 		<Dialog open={adding} onOpenChange={(open) => !busy && setAdding(open)}><DialogContent><DialogHeader><DialogTitle>Add Link</DialogTitle><DialogDescription>Save a URL now. Its title, description, and image are fetched automatically.</DialogDescription></DialogHeader><form onSubmit={add} className="space-y-4"><Input aria-label="URL" type="url" required autoFocus value={url} onChange={(event) => setURL(event.target.value)} placeholder="https://example.com/article" /><Textarea aria-label="Note" value={addNote} onChange={(event) => setAddNote(event.target.value)} rows={3} placeholder="Why is this link useful?" /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setAddImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => setAdding(false)}>Cancel</Button><Button type="submit" disabled={busy || !url.trim()}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save link</Button></DialogFooter></form></DialogContent></Dialog>
-		<Dialog open={Boolean(editing)} onOpenChange={(open) => !busy && !open && setEditing(null)}><DialogContent><DialogHeader><DialogTitle>Edit saved link</DialogTitle><DialogDescription>Update the title, description, note, or local image. The URL stays unchanged.</DialogDescription></DialogHeader><form onSubmit={save} className="space-y-4"><Input aria-label="Title" value={title} onChange={(event) => setTitle(event.target.value)} /><Textarea aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={5} /><Textarea aria-label="Note" value={note} onChange={(event) => setNote(event.target.value)} rows={3} placeholder="Why is this link useful?" /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => setEditing(null)}>Cancel</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes</Button></DialogFooter></form></DialogContent></Dialog>
+		<Dialog open={Boolean(editing)} onOpenChange={(open) => !busy && !open && (setEditing(null), setEditingLinkId(null))}><DialogContent><DialogHeader><DialogTitle>Edit saved link</DialogTitle><DialogDescription>Update the title, description, note, or local image. The URL stays unchanged.</DialogDescription></DialogHeader><form onSubmit={save} className="space-y-4"><Input aria-label="Title" value={title} onChange={(event) => setTitle(event.target.value)} /><Textarea aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={5} /><Textarea aria-label="Note" value={note} onChange={(event) => setNote(event.target.value)} rows={3} placeholder="Why is this link useful?" /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => { setEditing(null); setEditingLinkId(null); }}>Cancel</Button><Button type="submit" disabled={busy}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes</Button></DialogFooter></form></DialogContent></Dialog>
 	</PageShell>;
 }
