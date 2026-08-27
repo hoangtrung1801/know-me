@@ -7,6 +7,7 @@ import { getGraph, type GraphData, type GraphEdge, type GraphNode } from "@/ui/a
 import { DocPreviewDialog } from "@/ui/components/organisms/DocsPreview/DocPreviewDialog";
 import { TaskPreviewDialog } from "@/ui/components/organisms/TaskDetail/TaskPreviewDialog";
 import { useSSEEvent } from "@/ui/contexts/SSEContext";
+import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
 import { GraphDetailPanel } from "./GraphDetailPanel";
 import { GraphLegend } from "./graph/GraphLegend";
@@ -39,6 +40,12 @@ type ForceLink = GraphEdge & {
 	dashed?: boolean;
 	muted?: boolean;
 };
+
+interface GraphViewport {
+	k: number;
+	x: number;
+	y: number;
+}
 
 const EMPTY_FORCE_DATA = { nodes: [], links: [], matches: 0 };
 
@@ -211,6 +218,7 @@ function sameLinkIds(a: ForceLink[], b: ForceLink[]): boolean {
 }
 
 export default function GraphPage() {
+	const { activationId, isActive, isHydrated } = usePageLifecycle("graph");
 	const graphContainerRef = useRef<HTMLDivElement>(null);
 	const graphRef = useRef<ForceGraphMethods<ForceNode, ForceLink> | undefined>(undefined);
 	const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -221,34 +229,77 @@ export default function GraphPage() {
 	const [data, setData] = useState<GraphData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [filters, setFilters] = useState<FilterState>(KNOWLEDGE_FILTERS);
+	const [filters, setFilters] = usePersistentPageState<FilterState>("graph", "filters", KNOWLEDGE_FILTERS, {
+		encode: (value) => value,
+		decode: (value) => {
+			if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+			const candidate = value as Record<string, unknown>;
+			return Object.keys(KNOWLEDGE_FILTERS).every((key) => typeof candidate[key] === "boolean")
+				? candidate as unknown as FilterState
+				: undefined;
+		},
+	});
 	const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+	const [selectedNodeId, setSelectedNodeId] = usePersistentPageState<string | null>("graph", "selectedNodeId", null);
 	const [previewTaskId, setPreviewTaskId] = useState<string | null>(null);
 	const [previewDocPath, setPreviewDocPath] = useState<string | null>(null);
 	const [isFullscreen, setIsFullscreen] = useState(false);
-	const [searchQuery, setSearchQuery] = useState("");
+	const [searchQuery, setSearchQuery] = usePersistentPageState("graph", "searchQuery", "");
 	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-	const [impactNodeId, setImpactNodeId] = useState<string | null>(null);
+	const [impactNodeId, setImpactNodeId] = usePersistentPageState<string | null>("graph", "impactNodeId", null);
+	const [viewport, setViewport] = usePersistentPageState<GraphViewport | null>("graph", "viewport", null, {
+		encode: (value) => value,
+		decode: (value) => {
+			if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+			const candidate = value as Record<string, unknown>;
+			return typeof candidate.k === "number" && Number.isFinite(candidate.k) && candidate.k > 0 &&
+				typeof candidate.x === "number" && Number.isFinite(candidate.x) &&
+				typeof candidate.y === "number" && Number.isFinite(candidate.y)
+				? { k: candidate.k, x: candidate.x, y: candidate.y }
+				: undefined;
+		},
+	});
 	const [engineRunning, setEngineRunning] = useState(false);
 	const hoverNodeIdRef = useRef<string | null>(null);
+	const restoredViewportActivationRef = useRef<number | null>(null);
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 
 	const fetchGraph = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		setLoading(true);
 		try {
 			const graphData = await getGraph();
-			setData(graphData);
-			setError(null);
+			if (isActiveRef.current) {
+				setData(graphData);
+				setError(null);
+			}
 		} catch (err) {
-			setError("Failed to load graph data");
-			console.error(err);
+			if (isActiveRef.current) {
+				setError("Failed to load graph data");
+				console.error(err);
+			}
 		} finally {
-			setLoading(false);
+			if (isActiveRef.current) setLoading(false);
 		}
 	}, []);
 
 	useEffect(() => {
-		fetchGraph();
-	}, [fetchGraph]);
+		if (!isHydrated || !isActiveRef.current) return;
+		void fetchGraph();
+	}, [activationId, fetchGraph, isHydrated]);
+
+	useEffect(() => {
+		if (!isActive || !data) return;
+		const restoredNode = selectedNodeId ? data.nodes.find((node) => node.id === selectedNodeId) || null : null;
+		setSelectedNode(restoredNode);
+		if (selectedNodeId && !restoredNode) setSelectedNodeId(null);
+	}, [data, isActive, selectedNodeId]);
+
+	useEffect(() => {
+		if (isActive) graphRef.current?.resumeAnimation();
+		else graphRef.current?.pauseAnimation();
+	}, [isActive]);
 
 	useSSEEvent("tasks:updated", fetchGraph);
 	useSSEEvent("tasks:refresh", fetchGraph);
@@ -256,11 +307,25 @@ export default function GraphPage() {
 
 	useEffect(() => {
 		if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-		searchTimerRef.current = setTimeout(() => setDebouncedSearchQuery(searchQuery), 200);
+		if (!isActiveRef.current) return;
+		searchTimerRef.current = setTimeout(() => {
+			if (isActiveRef.current) setDebouncedSearchQuery(searchQuery);
+		}, 200);
 		return () => {
 			if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
 		};
 	}, [searchQuery]);
+
+	useEffect(() => {
+		if (!isActive || !viewport || restoredViewportActivationRef.current === activationId) return;
+		const frame = window.requestAnimationFrame(() => {
+			if (!isActiveRef.current || !graphRef.current) return;
+			graphRef.current.centerAt(viewport.x, viewport.y, 0);
+			graphRef.current.zoom(viewport.k, 0);
+			restoredViewportActivationRef.current = activationId;
+		});
+		return () => window.cancelAnimationFrame(frame);
+	}, [activationId, data, height, isActive, viewport, width]);
 
 	const filteredData = useMemo(() => (data ? filterGraphData(data, filters) : null), [data, filters]);
 	const impactNeighborhood = useMemo(() => {
@@ -315,8 +380,9 @@ export default function GraphPage() {
 
 	const clearSelection = useCallback(() => {
 		setSelectedNode(null);
+		setSelectedNodeId(null);
 		setImpactNodeId(null);
-	}, []);
+	}, [setImpactNodeId, setSelectedNodeId]);
 
 	const toggleFullscreen = useCallback(() => {
 		if (!document.fullscreenElement) {
@@ -390,7 +456,10 @@ export default function GraphPage() {
 							cooldownTime={4000}
 							onEngineStop={() => {
 								lockForceNodes(stableForceDataRef.current.nodes);
-								setEngineRunning(false);
+								if (isActiveRef.current) setEngineRunning(false);
+							}}
+							onZoomEnd={(transform) => {
+								if (isActiveRef.current) setViewport({ k: transform.k, x: transform.x, y: transform.y });
 							}}
 							nodeLabel={() => ""}
 							nodeColor={(node) => (node as ForceNode).color}
@@ -408,8 +477,9 @@ export default function GraphPage() {
 						onNodeClick={(node) => {
 							const gn = { id: node.id, label: node.label || String(node.id), type: (node as ForceNode).type, data: (node as ForceNode).data };
 							lockForceNodes(stableForceDataRef.current.nodes);
-							setSelectedNode(gn);
-							setImpactNodeId(node.id);
+								setSelectedNode(gn);
+								setSelectedNodeId(node.id);
+								setImpactNodeId(node.id);
 						}}
 							onNodeHover={(node) => {
 								hoverNodeIdRef.current = node ? node.id : null;
@@ -485,6 +555,7 @@ export default function GraphPage() {
 									const next = filteredData?.nodes.find((n) => n.id === id) || null;
 									lockForceNodes(stableForceDataRef.current.nodes);
 									setSelectedNode(next);
+									setSelectedNodeId(next?.id ?? null);
 									setImpactNodeId(next?.id ?? null);
 								}}
 							impactActive={!!impactNodeId}

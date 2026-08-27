@@ -11,6 +11,7 @@ import type { TaskLifecycleResponse } from "../models/taskLifecycle";
 import { TaskLifecycleDialog } from "../components/organisms/TaskLifecycleDialog";
 import { toast } from "../components/ui/sonner";
 import { useSSEEvent } from "../contexts/SSEContext";
+import { usePageLifecycle, usePersistentPageState } from "../contexts/PageWorkspaceContext";
 import { useWorkspaceProjects } from "../hooks/useWorkspaceProjects";
 import {
 	PageContent,
@@ -43,11 +44,18 @@ export default function TasksPage({
 	onTaskClose,
 	onNewTask,
 }: TasksPageProps) {
-	const [viewMode, setViewMode] = useState<ViewMode>("table");
+	const { activationId, isActive, isHydrated } = usePageLifecycle("tasks");
+	const [viewMode, setViewMode] = usePersistentPageState<ViewMode>("tasks", "viewMode", "table", {
+		encode: (value) => value,
+		decode: (value) => value === "table" || value === "grouped" ? value : undefined,
+	});
 	const projects = useWorkspaceProjects();
-	const [projectScope, setProjectScope] = useState("all");
+	const [projectScope, setProjectScope] = usePersistentPageState("tasks", "projectScope", "all");
 	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-	const [lifecycleFilter, setLifecycleFilter] = useState<"current" | "active" | "done" | "archived" | "all">("current");
+	const [lifecycleFilter, setLifecycleFilter] = usePersistentPageState<"current" | "active" | "done" | "archived" | "all">("tasks", "lifecycleFilter", "current", {
+		encode: (value) => value,
+		decode: (value) => value === "current" || value === "active" || value === "done" || value === "archived" || value === "all" ? value : undefined,
+	});
 	const [restoreOpen, setRestoreOpen] = useState(false);
 	const [restoreResponse, setRestoreResponse] = useState<TaskLifecycleResponse | null>(null);
 	const [restoreError, setRestoreError] = useState<string | null>(null);
@@ -57,10 +65,13 @@ export default function TasksPage({
 	const historicalRequestRef = useRef<{ generation: number; controller?: AbortController }>({ generation: 0 });
 	const restoreGenerationRef = useRef(0);
 	const restoreInFlightRef = useRef(false);
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 	const [restoreScope, setRestoreScope] = useState<{ generation: number; ids: readonly string[] } | null>(null);
 	const historicalMode = lifecycleFilter === "archived" || lifecycleFilter === "all";
 
 	const loadHistorical = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		historicalRequestRef.current.controller?.abort();
 		const controller = new AbortController();
 		const generation = historicalRequestRef.current.generation + 1;
@@ -68,17 +79,18 @@ export default function TasksPage({
 		setHistoricalLoading(true);
 		try {
 			const data = await api.getTasks({ includeHistorical: true, signal: controller.signal });
-			if (historicalRequestRef.current.generation === generation) setHistoricalTasks(data);
+			if (isActiveRef.current && historicalRequestRef.current.generation === generation) setHistoricalTasks(data);
 		} catch (error) {
 			if (!(error instanceof DOMException && error.name === "AbortError")) {
 				toast.error(error instanceof Error ? error.message : "Failed to load historical Tasks");
 			}
 		} finally {
-			if (historicalRequestRef.current.generation === generation) setHistoricalLoading(false);
+			if (isActiveRef.current && historicalRequestRef.current.generation === generation) setHistoricalLoading(false);
 		}
 	}, []);
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		if (historicalMode) {
 			void loadHistorical();
 			return () => historicalRequestRef.current.controller?.abort();
@@ -87,10 +99,10 @@ export default function TasksPage({
 		historicalRequestRef.current = { generation: historicalRequestRef.current.generation + 1 };
 		setHistoricalTasks(null);
 		setHistoricalLoading(false);
-	}, [historicalMode, loadHistorical]);
+	}, [activationId, historicalMode, isHydrated, loadHistorical]);
 
 	const invalidateHistorical = useCallback(() => {
-		if (historicalMode) void loadHistorical();
+		if (isActiveRef.current && historicalMode) void loadHistorical();
 	}, [historicalMode, loadHistorical]);
 
 	useSSEEvent("tasks:refresh", invalidateHistorical, [invalidateHistorical]);
@@ -98,6 +110,12 @@ export default function TasksPage({
 	useSSEEvent("tasks:archived", invalidateHistorical, [invalidateHistorical]);
 	useSSEEvent("tasks:unarchived", invalidateHistorical, [invalidateHistorical]);
 	useSSEEvent("tasks:batch-archived", invalidateHistorical, [invalidateHistorical]);
+
+	useEffect(() => {
+		if (isActive) return;
+		historicalRequestRef.current.controller?.abort();
+		historicalRequestRef.current = { generation: historicalRequestRef.current.generation + 1 };
+	}, [isActive]);
 
 	const taskSource = historicalMode ? historicalTasks || [] : tasks;
 
@@ -178,8 +196,9 @@ export default function TasksPage({
 
 	// Handle external selected task from search
 	useEffect(() => {
+		if (!isActiveRef.current) return;
 		setSelectedTask(externalSelectedTask || null);
-	}, [externalSelectedTask]);
+	}, [externalSelectedTask, isActive]);
 
 	const handleTaskClick = (task: Task) => {
 		navigateTo(`/tasks/${task.id}`);

@@ -10,6 +10,7 @@ import { useChatNotifications } from "../../hooks/useChatNotifications";
 import { playNotificationSound } from "../../lib/notifications";
 import { opencodeApi, saveUserPreferences, type OpenCodePendingPermission } from "../../api/client";
 import { toast } from "../../components/ui/sonner";
+import { usePageLifecycle, usePersistentPageState } from "../../contexts/PageWorkspaceContext";
 import type { ChatComposerFile, ChatSession } from "../../models/chat";
 import {
 	buildAutoModelLabel,
@@ -89,18 +90,19 @@ function appendSessionErrorMessage(session: ChatSession, errorMessage: string): 
 }
 
 export function useChatPage() {
-	const { sessions, loading } = useChat();
+	const { sessions, loading, refreshSessions } = useChat();
 	const { config, updateConfig } = useConfig();
 	const { status: opencodeStatus, statusLoading: opencodeStatusLoading, providerResponse, lastLoadedAt, refreshAll, refreshStatus } = useOpenCode();
 	const { subscribe: subscribeToOpenCodeEvents } = useOpenCodeEvent();
+	const { activationId, isActive, isHydrated } = usePageLifecycle("chat");
 
-	const [activeId, setActiveId] = useState<string | null>(null);
+	const [activeId, setActiveId] = usePersistentPageState<string | null>("chat", "activeSessionId", null);
 	const [localSessions, setLocalSessions] = useState<ChatSession[]>([]);
 	const [previewTaskId, setPreviewTaskId] = useState<string | null>(null);
 	const [previewDocPath, setPreviewDocPath] = useState<string | null>(null);
 	const [sessionParentMap, setSessionParentMap] = useState<Record<string, string | undefined>>({});
 	const [queueCount, setQueueCount] = useState<Record<string, number>>({});
-	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+	const [mobileSidebarOpen, setMobileSidebarOpen] = usePersistentPageState("chat", "mobileSidebarOpen", false);
 	const [messagesLoading, setMessagesLoading] = useState(false);
 	const [inputRestoreValue, setInputRestoreValue] = useState<string | null>(null);
 	const [pendingPermissions, setPendingPermissions] = useState<OpenCodePendingPermission[]>([]);
@@ -117,6 +119,8 @@ export function useChatPage() {
 	const knownSessionIdsRef = useRef<Set<string>>(new Set());
 	const idleTransitionTimersRef = useRef<Record<string, number>>({});
 	const streamingWatchdogTimersRef = useRef<Record<string, number>>({});
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 
 	// ─── Refresh helpers ───────────────────────────────────────────────────────
 
@@ -133,6 +137,14 @@ export function useChatPage() {
 		},
 		[refreshStatus, refreshAll],
 	);
+
+	// The global providers perform the initial load. Refresh the chat-specific
+	// session/status data only when a retained chat page becomes active again.
+	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current || activationId === 0) return;
+		void refreshSessions();
+		void refreshOpenCodeStatus({ silent: true });
+	}, [activationId, isHydrated, refreshOpenCodeStatus, refreshSessions]);
 
 	// ─── Sync sessions from context ────────────────────────────────────────────
 
@@ -174,7 +186,7 @@ export function useChatPage() {
 	}, []);
 
 	const scheduleIdleTransition = useCallback((sessionId?: string) => {
-		if (!sessionId) return;
+		if (!sessionId || !isActiveRef.current) return;
 		clearIdleTransition(sessionId);
 		setLocalSessions((prev) =>
 			upsertLocalSession(prev, sessionId, (session) => ({
@@ -196,11 +208,13 @@ export function useChatPage() {
 	}, []);
 
 	const reconcileStreamingSession = useCallback(async (sessionId: string) => {
+		if (!isActiveRef.current) return;
 		try {
 			const [sessionInfo, rawMessages] = await Promise.all([
 				opencodeApi.getSession(sessionId),
 				opencodeApi.getMessages(sessionId),
 			]);
+			if (!isActiveRef.current) return;
 			const normalizedMessages = mergePersistedPendingQuestions(
 				rawMessages.map(normalizeOpenCodeMessage),
 				readPersistedPendingQuestions(sessionId),
@@ -230,24 +244,36 @@ export function useChatPage() {
 				return;
 			}
 
-			streamingWatchdogTimersRef.current[sessionId] = window.setTimeout(() => {
-				void reconcileStreamingSession(sessionId);
-			}, 8000);
+			if (isActiveRef.current) {
+				streamingWatchdogTimersRef.current[sessionId] = window.setTimeout(() => {
+					if (isActiveRef.current) void reconcileStreamingSession(sessionId);
+				}, 8000);
+			}
 		} catch (error) {
 			console.error("Failed to reconcile streaming session:", error);
-			streamingWatchdogTimersRef.current[sessionId] = window.setTimeout(() => {
-				void reconcileStreamingSession(sessionId);
-			}, 8000);
+			if (isActiveRef.current) {
+				streamingWatchdogTimersRef.current[sessionId] = window.setTimeout(() => {
+					if (isActiveRef.current) void reconcileStreamingSession(sessionId);
+				}, 8000);
+			}
 		}
 	}, [clearIdleTransition, clearStreamingWatchdog]);
 
 	const scheduleStreamingWatchdog = useCallback((sessionId?: string) => {
-		if (!sessionId) return;
+		if (!sessionId || !isActiveRef.current) return;
 		clearStreamingWatchdog(sessionId);
 		streamingWatchdogTimersRef.current[sessionId] = window.setTimeout(() => {
-			void reconcileStreamingSession(sessionId);
+			if (isActiveRef.current) void reconcileStreamingSession(sessionId);
 		}, 8000);
 	}, [clearStreamingWatchdog, reconcileStreamingSession]);
+
+	useEffect(() => {
+		if (isActive) return;
+		Object.values(idleTransitionTimersRef.current).forEach((timer) => window.clearTimeout(timer));
+		idleTransitionTimersRef.current = {};
+		Object.values(streamingWatchdogTimersRef.current).forEach((timer) => window.clearTimeout(timer));
+		streamingWatchdogTimersRef.current = {};
+	}, [isActive]);
 
 	useEffect(() => {
 		return () => {
@@ -322,9 +348,10 @@ export function useChatPage() {
 	// ─── Active session selection ──────────────────────────────────────────────
 
 	useEffect(() => {
+		if (!isActiveRef.current || loading) return;
 		const fromHash = getSessionIdFromHash();
-		if (!activeId && fromHash && rootSessions.some((s) => s.id === fromHash)) {
-			setActiveId(fromHash);
+		if (fromHash && rootSessions.some((s) => s.id === fromHash)) {
+			if (activeId !== fromHash) setActiveId(fromHash);
 			return;
 		}
 		if (!activeId && rootSessions.length > 0) {
@@ -334,10 +361,11 @@ export function useChatPage() {
 		if (activeId && !rootSessions.some((s) => s.id === activeId)) {
 			setActiveId(rootSessions[0]?.id || null);
 		}
-	}, [rootSessions, activeId]);
+	}, [activeId, isActive, loading, rootSessions]);
 
 	useEffect(() => {
 		const syncSessionFromLocation = () => {
+			if (!isActiveRef.current) return;
 			const nextId = getSessionIdFromHash();
 			if (nextId && rootSessions.some((s) => s.id === nextId)) {
 				setActiveId(nextId);
@@ -352,13 +380,14 @@ export function useChatPage() {
 	}, [rootSessions]);
 
 	useEffect(() => {
-		if (activeId) updateSessionHash(activeId);
-	}, [activeId]);
+		if (isActiveRef.current && activeId) updateSessionHash(activeId);
+	}, [activeId, isActive]);
 
 	// ─── Load messages on session switch ──────────────────────────────────────
 
 	useEffect(() => {
-		if (!activeId || !opencodeStatus?.available) return;
+		let cancelled = false;
+		if (!isHydrated || !isActiveRef.current || !activeId || !opencodeStatus?.available) return;
 		partKindsRef.current = {};
 		pendingPartDeltasRef.current = {};
 		setMessagesLoading(true);
@@ -388,6 +417,7 @@ export function useChatPage() {
 			try {
 				const sessionIds = [activeId, ...activeSubSessionIds.split(",").filter(Boolean)];
 				const loaded = await Promise.all(sessionIds.map((id) => loadMessagesForSession(id)));
+				if (cancelled || !isActiveRef.current) return;
 				setLocalSessions((prev) =>
 					prev.map((session) => {
 						const match = loaded.find((item) => item.sessionId === session.id);
@@ -403,21 +433,24 @@ export function useChatPage() {
 				const allPermissions = loaded.flatMap((item) => item.permissions || []);
 				setPendingPermissions(allPermissions);
 			} catch (error) {
-				console.error("Failed to load OpenCode messages:", error);
+				if (!cancelled && isActiveRef.current) console.error("Failed to load OpenCode messages:", error);
 			} finally {
-				setMessagesLoading(false);
+				if (!cancelled && isActiveRef.current) setMessagesLoading(false);
 			}
 		};
 
 		void loadMessages();
-	}, [activeId, activeSubSessionIds, opencodeStatus?.available]);
+		return () => {
+			cancelled = true;
+		};
+	}, [activeId, activeSubSessionIds, isHydrated, opencodeStatus?.available]);
 
 	// ─── SSE event stream ──────────────────────────────────────────────────────
 	// Uses the shared OpenCodeEventContext singleton instead of a per-component
 	// EventSource, so no additional SSE connection is opened here.
 
 	useEffect(() => {
-		if (!opencodeStatus?.available) return;
+		if (!isHydrated || !isActive || !opencodeStatus?.available) return;
 
 		const shouldTrackSessionId = (sessionId?: string) => {
 			if (!sessionId) return false;
@@ -427,6 +460,7 @@ export function useChatPage() {
 		};
 
 		const unsubscribe = subscribeToOpenCodeEvents((rawEvent: unknown) => {
+			if (!isActiveRef.current) return;
 			try {
 				const data = rawEvent as Record<string, any>;
 						const sessionID = getEventSessionId(data);
@@ -549,6 +583,7 @@ export function useChatPage() {
 							// If this is a pending question tool call, fetch the proper que_... ID outside setState
 							if (part.type === "tool" && isQuestionToolName(part.tool || "tool") && getToolCallStatus(part.state) !== "success") {
 								void opencodeApi.listPendingQuestions().then((pendingQuestions) => {
+									if (!isActiveRef.current) return;
 									const sessionQuestions = pendingQuestions.filter((pq) => pq.sessionID === part.sessionID);
 									if (sessionQuestions.length === 0) return;
 									setLocalSessions((prev) =>
@@ -815,7 +850,7 @@ export function useChatPage() {
 			});
 
 		return unsubscribe;
-	}, [clearIdleTransition, clearStreamingWatchdog, opencodeStatus?.available, scheduleIdleTransition, scheduleStreamingWatchdog, subscribeToOpenCodeEvents]);
+	}, [activationId, clearIdleTransition, clearStreamingWatchdog, isActive, isHydrated, opencodeStatus?.available, scheduleIdleTransition, scheduleStreamingWatchdog, subscribeToOpenCodeEvents]);
 
 	// ─── Derived state ─────────────────────────────────────────────────────────
 
@@ -856,6 +891,7 @@ export function useChatPage() {
 	const chatDisabled = opencodeStatusLoading || Boolean(opencodeBlockedReason);
 
 	useEffect(() => {
+		if (!isActiveRef.current) return;
 		document.title = activeSession ? `${activeSession.title || "New Chat"} - Know-Me` : "Know-Me";
 	}, [activeSession]);
 
@@ -873,6 +909,7 @@ export function useChatPage() {
 				: activeSession?.status === "idle"
 					? "done"
 					: "idle",
+		enabled: isActive,
 	});
 
 	// ─── Handlers ──────────────────────────────────────────────────────────────

@@ -24,6 +24,8 @@ interface UseChatNotificationsOptions {
 	isStreaming: boolean;
 	/** Chat session status */
 	status?: "idle" | "streaming" | "done" | "error";
+	/** Only the visible retained chat page should own title/badge/notification effects. */
+	enabled?: boolean;
 }
 
 export function useChatNotifications({
@@ -32,6 +34,7 @@ export function useChatNotifications({
 	pendingPermissions,
 	isStreaming,
 	status,
+	enabled = true,
 }: UseChatNotificationsOptions) {
 	const prevStreamingRef = useRef(isStreaming);
 	const prevPendingQuestionsRef = useRef(pendingQuestions);
@@ -41,14 +44,19 @@ export function useChatNotifications({
 
 	// Update page title
 	useEffect(() => {
+		if (!enabled) return;
 		const title = sessionTitle ? `${sessionTitle} - Know-Me` : "Know-Me";
 		setOriginalTitle(title);
-	}, [sessionTitle]);
+	}, [enabled, sessionTitle]);
 
 	// Handle streaming state changes
 	useEffect(() => {
 		const wasStreaming = prevStreamingRef.current;
 		const nowStreaming = isStreaming;
+		if (!enabled) {
+			prevStreamingRef.current = nowStreaming;
+			return;
+		}
 
 		// Just finished streaming
 		if (wasStreaming && !nowStreaming && status === "done") {
@@ -70,12 +78,17 @@ export function useChatNotifications({
 		}
 
 		prevStreamingRef.current = nowStreaming;
-	}, [isStreaming, status, pendingQuestions, pendingPermissions]);
+	}, [enabled, isStreaming, status, pendingQuestions, pendingPermissions]);
 
 	// Handle pending questions/permissions
 	useEffect(() => {
 		const totalPending = pendingQuestions + pendingPermissions;
 		const prevTotalPending = prevPendingQuestionsRef.current + prevPendingPermissionsRef.current;
+		if (!enabled) {
+			prevPendingQuestionsRef.current = pendingQuestions;
+			prevPendingPermissionsRef.current = pendingPermissions;
+			return;
+		}
 
 		// New pending item appeared
 		if (totalPending > prevTotalPending && !hasPlayedAttentionSoundRef.current) {
@@ -108,10 +121,11 @@ export function useChatNotifications({
 
 		prevPendingQuestionsRef.current = pendingQuestions;
 		prevPendingPermissionsRef.current = pendingPermissions;
-	}, [pendingQuestions, pendingPermissions]);
+	}, [enabled, pendingQuestions, pendingPermissions]);
 
 	// Clear badge when page becomes visible
 	useEffect(() => {
+		if (!enabled) return;
 		const cleanup = onVisibilityChange((visible) => {
 			if (visible) {
 				// Page is now visible, clear badge if no pending items
@@ -126,7 +140,7 @@ export function useChatNotifications({
 		});
 
 		return cleanup;
-	}, [pendingQuestions, pendingPermissions]);
+	}, [enabled, pendingQuestions, pendingPermissions]);
 
 	// Cleanup on unmount
 	useEffect(() => {

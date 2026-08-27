@@ -44,6 +44,7 @@ import { useConfig, type Config, type ConfigPatch } from "../contexts/ConfigCont
 import { useAuth } from "../contexts/AuthContext";
 import { useOpenCode } from "../contexts/OpenCodeContext";
 import { useOpenCodeModelManager } from "../hooks/useOpencodeModelManager";
+import { usePageLifecycle, usePersistentPageState } from "../contexts/PageWorkspaceContext";
 import { OpenCodeModelManager } from "../components/organisms/OpenCodeModelManager";
 import DecisionMigrationTool from "../components/organisms/DecisionMigrationTool";
 import { toast } from "../components/ui/sonner";
@@ -276,76 +277,87 @@ function LinkClassifierSettings() {
 // ── Main component ────────────────────────────────────────────────
 
 export default function ConfigPage() {
-	const { config: globalConfig, loading, updateConfig, chatUIEnabled } = useConfig();
+	const { config: globalConfig, loading, updateConfig, refetch, chatUIEnabled } = useConfig();
+	const { activationId, isActive, isHydrated } = usePageLifecycle("config");
 	const [config, setConfig] = useState<Config>({});
 	const semanticProvider = effectiveSemanticProvider(config);
-	const [activeCategory, setActiveCategory] = useState<Category>("general");
+	const [activeCategory, setActiveCategory] = usePersistentPageState<Category>("config", "activeCategory", "general", {
+		encode: (value) => value,
+		decode: (value) => ALL_CATEGORIES.some((category) => category.id === value) ? value as Category : undefined,
+	});
 	const [initialized, setInitialized] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [jsonText, setJsonText] = useState("");
 	const [jsonError, setJsonError] = useState<string | null>(null);
-	const [newStatus, setNewStatus] = useState("");
+	const [newStatus, setNewStatus] = usePersistentPageState("config", "newStatus", "");
 	const { status: openCodeStatus, statusLoading: openCodeStatusLoading, providerResponse, providersLoading, lastLoadedAt, refreshAll } =
 		useOpenCode();
 	const [codexStatus, setCodexStatus] = useState<CodexStatus | null>(null);
 	const [codexStatusLoading, setCodexStatusLoading] = useState(true);
 	const [codexStatusError, setCodexStatusError] = useState<string | null>(null);
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 	const loadCodexStatus = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		setCodexStatusLoading(true);
 		setCodexStatusError(null);
 		try {
-			setCodexStatus(await codexAgentApi.status());
+			const status = await codexAgentApi.status();
+			if (isActiveRef.current) setCodexStatus(status);
 		} catch (error) {
-			setCodexStatusError(error instanceof Error ? error.message : "Could not check Codex status");
+			if (isActiveRef.current) setCodexStatusError(error instanceof Error ? error.message : "Could not check Codex status");
 		} finally {
-			setCodexStatusLoading(false);
+			if (isActiveRef.current) setCodexStatusLoading(false);
 		}
 	}, []);
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		void loadCodexStatus();
-	}, [loadCodexStatus]);
+	}, [activationId, isHydrated, loadCodexStatus]);
 
 	// Imports state
 	const [imports, setImports] = useState<Import[]>([]);
 	const [importsLoading, setImportsLoading] = useState(true);
 	const [selectedImport, setSelectedImport] = useState<ImportDetail | null>(null);
-	const [showAddModal, setShowAddModal] = useState(false);
+	const [showAddModal, setShowAddModal] = usePersistentPageState("config", "showAddModal", false);
 	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 	const [syncingImport, setSyncingImport] = useState<string | null>(null);
 	const [removingImport, setRemovingImport] = useState<string | null>(null);
 	const [removeDeleteFiles, setRemoveDeleteFiles] = useState(false);
 
 	// Add import form state
-	const [addSource, setAddSource] = useState("");
-	const [addName, setAddName] = useState("");
-	const [addType, setAddType] = useState("");
-	const [addRef, setAddRef] = useState("");
-	const [addLink, setAddLink] = useState(false);
-	const [addDryRun, setAddDryRun] = useState(true);
+	const [addSource, setAddSource] = usePersistentPageState("config", "addSource", "");
+	const [addName, setAddName] = usePersistentPageState("config", "addName", "");
+	const [addType, setAddType] = usePersistentPageState("config", "addType", "");
+	const [addRef, setAddRef] = usePersistentPageState("config", "addRef", "");
+	const [addLink, setAddLink] = usePersistentPageState("config", "addLink", false);
+	const [addDryRun, setAddDryRun] = usePersistentPageState("config", "addDryRun", true);
 	const [adding, setAdding] = useState(false);
 	const [addResult, setAddResult] = useState<ImportResult | null>(null);
 	const [addError, setAddError] = useState<string | null>(null);
 
 	// Load imports
 	const loadImports = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		try {
 			const data = await importApi.list();
-			setImports(data.imports);
+			if (isActiveRef.current) setImports(data.imports);
 		} catch (err) {
-			console.error("Failed to load imports:", err);
+			if (isActiveRef.current) console.error("Failed to load imports:", err);
 		} finally {
-			setImportsLoading(false);
+			if (isActiveRef.current) setImportsLoading(false);
 		}
 	}, []);
 
 	// Load import detail
 	const loadImportDetail = async (name: string) => {
+		if (!isActiveRef.current) return;
 		try {
 			const data = await importApi.get(name);
-			setSelectedImport(data.import);
+			if (isActiveRef.current) setSelectedImport(data.import);
 		} catch (err) {
-			console.error("Failed to load import:", err);
+			if (isActiveRef.current) console.error("Failed to load import:", err);
 		}
 	};
 
@@ -429,8 +441,9 @@ export default function ConfigPage() {
 	};
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		loadImports();
-	}, [loadImports]);
+	}, [activationId, isHydrated, loadImports]);
 
 	const autoSave = useAutoSave(updateConfig);
 
@@ -449,6 +462,12 @@ export default function ConfigPage() {
 			void refreshAll({ silent: true });
 		}
 	}, [initialized, refreshAll]);
+
+	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current || activationId === 0) return;
+		void refetch();
+		void refreshAll({ silent: true });
+	}, [activationId, isHydrated, refetch, refreshAll]);
 
 	// Update helper — updates local state + triggers auto-save
 	const update = useCallback(
@@ -558,8 +577,10 @@ export default function ConfigPage() {
 	}, [showAddDropdown]);
 
 	const refreshLspLanguages = useCallback(async () => {
+		if (!isActiveRef.current) return [];
 		const data = await lspApi.getLanguages();
 		const languages = data.languages || [];
+		if (!isActiveRef.current) return languages;
 		setAvailableLangs(languages);
 		setLspTraceEnabled((prev) => {
 			const next = { ...prev };
@@ -573,8 +594,9 @@ export default function ConfigPage() {
 
 	// Load available LSP languages
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		refreshLspLanguages().catch(() => {});
-	}, [refreshLspLanguages]);
+	}, [activationId, isHydrated, refreshLspLanguages]);
 
 	// API endpoint test state
 	const [apiBase, setApiBase] = useState("");
@@ -584,39 +606,43 @@ export default function ConfigPage() {
 	const [testResult, setTestResult] = useState<EmbeddingModelTestResult | null>(null);
 
 	const loadRuntimeServices = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		try {
 			setServicesLoading(true);
 			const data = await getRuntimeServices();
-			setServices(data.services);
+			if (isActiveRef.current) setServices(data.services);
 		} catch {
-			setServices([]);
+			if (isActiveRef.current) setServices([]);
 		} finally {
-			setServicesLoading(false);
+			if (isActiveRef.current) setServicesLoading(false);
 		}
 	}, []);
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		if (activeCategory === "runtime") {
 			void loadRuntimeServices();
 		}
-	}, [activeCategory, loadRuntimeServices]);
+	}, [activationId, activeCategory, isHydrated, loadRuntimeServices]);
 
 	// Load embedding models on mount and when provider changes
 	const loadEmbeddingModels = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		try {
 			setModelsLoading(true);
 			const data = await getEmbeddingModels();
-			setEmbeddingModels(data);
+			if (isActiveRef.current) setEmbeddingModels(data);
 		} catch (err) {
-			console.error("Failed to load embedding models:", err);
+			if (isActiveRef.current) console.error("Failed to load embedding models:", err);
 		} finally {
-			setModelsLoading(false);
+			if (isActiveRef.current) setModelsLoading(false);
 		}
 	}, []);
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		void loadEmbeddingModels();
-	}, [loadEmbeddingModels]);
+	}, [activationId, isHydrated, loadEmbeddingModels]);
 
 	useEffect(() => {
 		if (!initialized || semanticProvider !== "api") return;
@@ -688,6 +714,9 @@ export default function ConfigPage() {
 	// ── Filter categories based on chatUI visibility ──────────────
 
 	const categories = ALL_CATEGORIES.filter((cat) => cat.id !== "ai" || chatUIEnabled);
+	useEffect(() => {
+		if (!categories.some((category) => category.id === activeCategory)) setActiveCategory("general");
+	}, [activeCategory, chatUIEnabled]);
 	const handleCategoryKeyDown = (
 		event: KeyboardEvent<HTMLButtonElement>,
 		categoryIndex: number,
@@ -1917,8 +1946,11 @@ export default function ConfigPage() {
 	const [tunnelError, setTunnelError] = useState<string | null>(null);
 
 	useEffect(() => {
-		tunnelApi.getStatus().then(setTunnelStatus).catch(() => {});
-	}, []);
+		if (!isHydrated || !isActiveRef.current) return;
+		tunnelApi.getStatus().then((status) => {
+			if (isActiveRef.current) setTunnelStatus(status);
+		}).catch(() => {});
+	}, [activationId, isHydrated]);
 
 	const handleTunnelStart = async () => {
 		setTunnelLoading(true);

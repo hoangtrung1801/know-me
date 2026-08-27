@@ -1,14 +1,17 @@
 import { createBrowserHistory, createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
 import AppShell from "./AppShell";
 import { DocsProvider } from "./contexts/DocsContext";
+import { PageWorkspaceProvider } from "./contexts/PageWorkspaceContext";
 
 const EmptyRoute = () => null;
 
 const rootRoute = createRootRoute({
 	component: () => (
-		<DocsProvider>
-			<AppShell />
-		</DocsProvider>
+		<PageWorkspaceProvider>
+			<DocsProvider>
+				<AppShell />
+			</DocsProvider>
+		</PageWorkspaceProvider>
 	),
 });
 

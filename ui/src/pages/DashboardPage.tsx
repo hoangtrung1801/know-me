@@ -18,7 +18,7 @@ import {
 	Timer,
 	TriangleAlert,
 } from "lucide-react";
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
 	auditApi,
 	decisionApi,
@@ -44,6 +44,7 @@ import {
 } from "../components/ui/select";
 import { Skeleton } from "../components/ui/skeleton";
 import { useConfig } from "../contexts/ConfigContext";
+import { usePageLifecycle, usePersistentPageState } from "../contexts/PageWorkspaceContext";
 import { useTimeTracker } from "../contexts/TimeTrackerContext";
 import { cn } from "../lib/utils";
 import type { Task } from "@/ui/models/task";
@@ -112,6 +113,11 @@ const EMPTY_REMOTE_DATA: RemoteData = {
 	auditErrors: null,
 	services: null,
 	errors: [],
+};
+
+const dashboardPeriodCodec = {
+	encode: (value: number) => value,
+	decode: (value: unknown) => typeof value === "number" && PERIOD_OPTIONS.includes(value as (typeof PERIOD_OPTIONS)[number]) ? value : undefined,
 };
 
 function formatDuration(seconds: number): string {
@@ -671,20 +677,26 @@ function FilterBar({
 export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 	const { config } = useConfig();
 	const { activeTimers, getElapsedForTask } = useTimeTracker();
-	const [period, setPeriod] = useState<number>(30);
-	const [assignee, setAssignee] = useState(ALL_ASSIGNEES);
-	const [label, setLabel] = useState(ALL_LABELS);
+	const { isActive, activationId, isHydrated } = usePageLifecycle("dashboard");
+	const [period, setPeriod] = usePersistentPageState("dashboard", "period", 30, dashboardPeriodCodec);
+	const [assignee, setAssignee] = usePersistentPageState("dashboard", "assignee", ALL_ASSIGNEES);
+	const [label, setLabel] = usePersistentPageState("dashboard", "label", ALL_LABELS);
 	const [remote, setRemote] = useState<RemoteData>(EMPTY_REMOTE_DATA);
+	const isActiveRef = useRef(isActive);
+	isActiveRef.current = isActive;
 
 	const loadRemoteData = useCallback(async () => {
+		if (!isActiveRef.current) return;
 		setRemote((current) => ({ ...current, loading: true, errors: [] }));
 		const markError = (label: string) => {
+			if (!isActiveRef.current) return;
 			setRemote((current) => ({
 				...current,
 				errors: current.errors.includes(label) ? current.errors : [...current.errors, label],
 			}));
 		};
 		const markFresh = <K extends keyof RemoteData>(key: K, value: RemoteData[K]) => {
+			if (!isActiveRef.current) return;
 			setRemote((current) => ({ ...current, [key]: value, refreshedAt: new Date() }));
 		};
 		const requests = [
@@ -701,6 +713,7 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 				.catch(() => markError("Runtime services")),
 		];
 		await Promise.all(requests);
+		if (!isActiveRef.current) return;
 		setRemote((current) => ({
 			...current,
 			loading: false,
@@ -709,8 +722,9 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 	}, []);
 
 	useEffect(() => {
+		if (!isHydrated || !isActiveRef.current) return;
 		void loadRemoteData();
-	}, [loadRemoteData]);
+	}, [activationId, isHydrated, loadRemoteData]);
 
 	const assignees = useMemo(
 		() => [...new Set(tasks.map((task) => task.assignee).filter((value): value is string => Boolean(value)))].sort(),

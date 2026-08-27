@@ -39,6 +39,7 @@ import {
 } from "@/ui/components/ui/tooltip";
 import { useIsMobile } from "@/ui/hooks/useMobile";
 import { useConfig } from "@/ui/contexts/ConfigContext";
+import { usePageNavigation, type PageId } from "@/ui/contexts/PageWorkspaceContext";
 
 interface AppSidebarProps {
 	currentPage: string;
@@ -132,6 +133,7 @@ export function AppSidebar({
 	const isMobile = useIsMobile();
 	const isExpanded = state === "expanded";
 	const { config, chatUIEnabled } = useConfig();
+	const { navigateToPage } = usePageNavigation();
 	const visibleNavItems = topNavItems.filter(
 		(item) => item.id !== "chat" || chatUIEnabled
 	);
@@ -139,6 +141,18 @@ export function AppSidebar({
 		...visibleNavItems,
 		{ id: "config", label: "Settings", icon: Settings, to: "/config" },
 	];
+	const handlePageNavigation = (event: React.MouseEvent<HTMLAnchorElement>, pageId: string) => {
+		if (
+			event.defaultPrevented ||
+			event.button !== 0 ||
+			event.metaKey ||
+			event.ctrlKey ||
+			event.shiftKey ||
+			event.altKey
+		) return;
+		event.preventDefault();
+		navigateToPage(pageId as PageId);
+	};
 
 	if (!isMobile) {
 		return (
@@ -154,6 +168,7 @@ export function AppSidebar({
 							<TooltipTrigger asChild>
 								<Link
 									to={item.to}
+									onClick={(event) => handlePageNavigation(event, item.id)}
 									aria-label={item.label}
 									aria-current={isActive ? "page" : undefined}
 									className={`flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-[background-color,color,transform] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95 ${isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
@@ -232,7 +247,7 @@ export function AppSidebar({
 											isActive={isActive}
 											tooltip={item.label}
 										>
-											<Link to={item.to}>
+											<Link to={item.to} onClick={(event) => handlePageNavigation(event, item.id)}>
 												<item.icon />
 												<span>{item.label}</span>
 											</Link>
@@ -254,7 +269,7 @@ export function AppSidebar({
 							isActive={currentPage === "config"}
 							tooltip="Settings"
 						>
-							<Link to="/config">
+							<Link to="/config" onClick={(event) => handlePageNavigation(event, "config")}>
 								<Settings />
 								<span>Settings</span>
 							</Link>

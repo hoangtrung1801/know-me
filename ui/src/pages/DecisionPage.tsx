@@ -38,6 +38,7 @@ import {
 	DialogTitle,
 } from "@/ui/components/ui/dialog";
 import { cn } from "@/ui/lib/utils";
+import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
 type DecisionView = "current" | "review" | "history";
 
@@ -114,25 +115,33 @@ export default function DecisionPage() {
 	const navigate = useNavigate();
 	const pathname = useRouterState({ select: (state) => state.location.pathname });
 	const view = viewFromPath(pathname);
+	const { activationId, isActive, isHydrated } = usePageLifecycle("decisions");
 	const [currentDecisions, setCurrentDecisions] = useState<DecisionEntry[]>([]);
 	const [allDecisions, setAllDecisions] = useState<DecisionEntry[]>([]);
 	const [reviewCandidates, setReviewCandidates] = useState<DecisionEntry[]>([]);
-	const [selectedID, setSelectedID] = useState<string | null>(null);
-	const [query, setQuery] = useState("");
+	const [selectedID, setSelectedID] = usePersistentPageState<string | null>("decisions", "selectedID", null);
+	const [query, setQuery] = usePersistentPageState("decisions", "query", "");
 	const [loading, setLoading] = useState(true);
 	const [actionBusy, setActionBusy] = useState(false);
-	const [createOpen, setCreateOpen] = useState(false);
+	const [createOpen, setCreateOpen] = usePersistentPageState("decisions", "createOpen", false);
 	const [errorMessage, setErrorMessage] = useState("");
 	const [notice, setNotice] = useState("");
 	const lastOpenedDecisionID = useRef<string | null>(null);
+	const isActiveRef = useRef(isActive);
+	const hasDataRef = useRef(false);
+	isActiveRef.current = isActive;
+	hasDataRef.current = currentDecisions.length > 0 || allDecisions.length > 0 || reviewCandidates.length > 0;
 
 	const loadDecisions = useCallback(async () => {
+		if (!isActiveRef.current) return { current: [], all: [], inbox: [] };
+		if (!hasDataRef.current) setLoading(true);
 		setErrorMessage("");
 		const [current, all, inbox] = await Promise.all([
 			decisionApi.list(),
 			decisionApi.list({ includeAll: true }),
 			decisionApi.reviewInbox(),
 		]);
+		if (!isActiveRef.current) return { current: [], all: [], inbox: [] };
 		setCurrentDecisions(current);
 		setAllDecisions(mergeDecisionSets(current, all, inbox));
 		setReviewCandidates(inbox);
@@ -141,23 +150,18 @@ export default function DecisionPage() {
 
 	useEffect(() => {
 		let cancelled = false;
-		setLoading(true);
+		if (!isHydrated || !isActiveRef.current) return;
 		loadDecisions()
 			.catch((error: unknown) => {
-				if (!cancelled) setErrorMessage(error instanceof Error ? error.message : "Failed to load Decisions");
+				if (!cancelled && isActiveRef.current) setErrorMessage(error instanceof Error ? error.message : "Failed to load Decisions");
 			})
 			.finally(() => {
-				if (!cancelled) setLoading(false);
+				if (!cancelled && isActiveRef.current) setLoading(false);
 			});
 		return () => {
 			cancelled = true;
 		};
-	}, [loadDecisions]);
-
-	useEffect(() => {
-		setSelectedID(null);
-		setQuery("");
-	}, [view]);
+	}, [activationId, isHydrated, loadDecisions, view]);
 
 	const historyDecisions = useMemo(
 		() =>
@@ -207,6 +211,10 @@ export default function DecisionPage() {
 	}, [allDecisions, reviewCandidates]);
 
 	const selectedDecision = selectedID ? decisionByID.get(selectedID) || null : null;
+
+	useEffect(() => {
+		if (isActive && !loading && selectedID && !decisionByID.has(selectedID)) setSelectedID(null);
+	}, [decisionByID, isActive, loading, selectedID, setSelectedID]);
 
 	const destinationCounts: Record<DecisionView, number> = {
 		current: currentDecisions.length,
