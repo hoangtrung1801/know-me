@@ -75,13 +75,23 @@ test("uses a compact sidebar and exposes page width semantics", async ({ page })
 test("uses the reading rhythm for docs and memos", async ({ page }) => {
   await page.goto(`${server.baseURL}/docs`);
   await page.getByText("Quiet Paper Doc").first().click();
-  await expect(page.locator('[data-document-surface="doc"]')).toHaveCSS("max-width", "880px");
+  await expect(page.locator(".docs-editor-frame")).toHaveCSS("max-width", "820px");
   await page.goto(`${server.baseURL}/memos`);
   await expect(page.locator('[data-page-header][data-page-size="reading"]')).toBeVisible();
   await expect(page.locator('[data-document-surface="memos"]')).toHaveCSS("max-width", "880px");
   await expect(page.getByText("Quiet Paper memo")).toBeVisible();
 });
+test("organizes docs into a stable workbench", async ({ page }) => {
+  await page.goto(`${server.baseURL}/docs`);
+  await page.getByText("Quiet Paper Doc").first().click();
 
+  const workbench = page.locator("[data-docs-workbench]");
+  await expect(workbench).toBeVisible();
+  await expect(workbench.locator("[data-docs-sidebar]")).toBeVisible();
+  await expect(workbench.locator("[data-docs-toolbar]")).toBeVisible();
+  await expect(workbench.locator("[data-docs-canvas]")).toBeVisible();
+  await expect(workbench.locator("[data-docs-editor-stage]")).toBeVisible();
+});
 test("keeps task detail content in the document reading column", async ({ page }) => {
   await page.goto(`${server.baseURL}/kanban`);
   await page.getByText("Quiet Paper Task").first().click();
