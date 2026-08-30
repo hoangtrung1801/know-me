@@ -53,6 +53,17 @@ function getImportSource(doc: Doc): string {
 	
 	return "unknown";
 }
+function getEditedTimestamp(doc: Doc): number {
+	const timestamp = Date.parse(doc.metadata.updatedAt);
+	return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function compareDocsByEditedDate(a: Doc, b: Doc): number {
+	const dateDifference = getEditedTimestamp(b) - getEditedTimestamp(a);
+	if (dateDifference !== 0) return dateDifference;
+	return a.metadata.title.localeCompare(b.metadata.title) || a.path.localeCompare(b.path);
+}
+
 
 /**
  * Detect import source type from source string
@@ -149,14 +160,7 @@ export function DocsFileManager({
 				.filter((d) => !d.isImported)
 				.filter((d) => (showSpecsOnly ? isSpec(d) : true))
 				.filter(matchesSearch)
-				.sort((a, b) => {
-					const orderA = a.metadata.order;
-					const orderB = b.metadata.order;
-					if (orderA !== undefined && orderB !== undefined) return orderA - orderB;
-					if (orderA !== undefined) return -1;
-					if (orderB !== undefined) return 1;
-					return a.path.localeCompare(b.path);
-				});
+				.sort(compareDocsByEditedDate);
 
 			return filteredDocs.map((doc) => ({ type: "file", doc }) as Entry);
 		}
@@ -238,14 +242,7 @@ export function DocsFileManager({
 		});
 
 		// Add file entries after folders
-		const sortedFiles = [...files].sort((a, b) => {
-			const orderA = a.metadata.order;
-			const orderB = b.metadata.order;
-			if (orderA !== undefined && orderB !== undefined) return orderA - orderB;
-			if (orderA !== undefined) return -1;
-			if (orderB !== undefined) return 1;
-			return a.metadata.title.localeCompare(b.metadata.title);
-		});
+		const sortedFiles = [...files].sort(compareDocsByEditedDate);
 
 		for (const doc of sortedFiles) {
 			result.push({ type: "file", doc });
@@ -310,7 +307,7 @@ export function DocsFileManager({
 		for (const [source, sourceDocs] of map) {
 			groups.push({
 				source,
-				docs: sourceDocs.sort((a, b) => a.metadata.title.localeCompare(b.metadata.title)),
+				docs: sourceDocs.sort(compareDocsByEditedDate),
 			});
 		}
 		return groups.sort((a, b) => a.source.localeCompare(b.source));
@@ -371,15 +368,19 @@ export function DocsFileManager({
 					</span>
 				</button>
 			)}
+			<div className="docs-library-heading flex items-center justify-between px-1 pb-2">
+				<span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">Library</span>
+				<span className="text-[10px] text-muted-foreground/55">{docs.length} docs</span>
+			</div>
 
-			<div className="mb-3">
+			<div className="docs-library-search mb-4">
 				<div className="relative">
 					<Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70" />
 					<Input
 						value={searchQuery}
 						onChange={(e) => onSearchQueryChange(e.target.value)}
 						placeholder="Search docs, paths, tags..."
-						className="pl-9 pr-9 h-9 rounded-xl border-border/50 bg-background/70 shadow-none focus-visible:ring-1"
+						className="pl-9 pr-9 h-10 rounded-lg border-border/60 bg-background/85 shadow-none focus-visible:ring-1"
 					/>
 					{searchQuery && (
 						<button
@@ -395,7 +396,7 @@ export function DocsFileManager({
 			</div>
 
 			{/* Toolbar */}
-			<div className="flex items-center gap-2 mb-4">
+			<div className="docs-library-toolbar flex items-center gap-2 mb-5">
 				<Button
 					variant={showSpecsOnly ? "default" : "outline"}
 					size="sm"
@@ -423,8 +424,8 @@ export function DocsFileManager({
 			</div>
 
 			{/* Entries list */}
-			<div className="overflow-y-auto min-h-0 pr-1">
-			<div key={`${currentFolder ?? "root"}__${viewingImportSource ?? ""}`} className="space-y-0.5 animate-list-in">
+			<div data-docs-entries className="docs-entries-list overflow-y-auto min-h-0 pr-1">
+			<div key={`${currentFolder ?? "root"}__${viewingImportSource ?? ""}`} className="space-y-1 animate-list-in">
 				{/* If viewing an import source, show only its docs */}
 				{viewingImportSource && importSourceDocs ? (
 					<>

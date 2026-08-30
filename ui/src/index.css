@@ -645,6 +645,104 @@ h6 {
   0%, 100% { opacity: 0.45; transform: scale(0.85); }
   50% { opacity: 1; transform: scale(1); }
 }
+/* ===== Docs workbench layout ===== */
+.docs-workbench {
+  --docs-surface: color-mix(in srgb, var(--background) 82%, var(--muted));
+}
+
+.docs-toolbar {
+  min-height: 48px;
+}
+
+.docs-canvas {
+  background: var(--docs-surface);
+}
+
+.docs-reader-canvas {
+  background: color-mix(in srgb, var(--muted) 24%, var(--background));
+  scrollbar-gutter: stable;
+}
+
+.docs-document-layout {
+  align-items: flex-start;
+  gap: 20px;
+  min-height: 100%;
+  padding: 32px clamp(24px, 4vw, 56px) 80px;
+}
+
+.docs-document-surface {
+  flex: 1 1 auto;
+  min-height: min(760px, calc(100svh - 170px));
+  margin-inline: auto;
+  border: 1px solid color-mix(in srgb, var(--border) 86%, var(--foreground));
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 18px 44px -38px color-mix(in srgb, var(--foreground) 48%, transparent);
+}
+
+.docs-document-surface > .docs-doc-header,
+.docs-document-surface > .prose-neutral {
+  width: 100%;
+  max-width: 72ch;
+  margin-inline: auto;
+}
+
+.docs-side-rail {
+  align-self: stretch;
+  color: var(--muted-foreground);
+}
+
+.docs-side-rail > div {
+  min-height: 100%;
+  border-left: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  padding-left: 16px;
+}
+
+
+.docs-entries-list button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+@media (max-width: 1279px) {
+  .docs-document-layout {
+    padding-inline: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .docs-toolbar {
+    padding-inline: 12px;
+  }
+
+  .docs-document-layout {
+    gap: 0;
+    padding: 20px 0 72px;
+  }
+
+  .docs-document-surface {
+    max-width: none !important;
+    min-height: calc(100svh - 140px);
+    border-inline: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding-inline: 20px;
+  }
+
+  .docs-document-surface > .docs-doc-header,
+  .docs-document-surface > .prose-neutral {
+    max-width: none;
+  }
+
+  .docs-editor-stage {
+    padding-inline: 0 !important;
+  }
+
+  .docs-editor-frame {
+    border-inline: 0;
+    border-radius: 0;
+  }
+}
 
 @media (max-width: 640px) {
   .milkdown-editor-wrapper .milkdown .ProseMirror,

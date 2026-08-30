@@ -44,10 +44,10 @@ export function DocsDocHeader({
 	const projects = useWorkspaceProjects();
 
   return (
-    <header className="mb-8">
+    <header data-doc-header className="docs-doc-header mb-8 border-b border-border/45 pb-7">
       {/* Title */}
       {selectedDoc.isImported ? (
-        <h1 className="text-4xl font-semibold tracking-tight mb-2 text-balance">
+        <h1 className="text-[clamp(2rem,4vw,3rem)] leading-[1.05] font-semibold tracking-[-0.04em] mb-3 text-balance">
           {selectedDoc.metadata.title}
         </h1>
       ) : (
@@ -57,7 +57,7 @@ export function DocsDocHeader({
           onChange={(e) => setMetaTitle(e.target.value)}
           onBlur={() => handleSaveMetadata("title")}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          className="text-4xl font-semibold tracking-tight bg-transparent w-full outline-none border-none p-0 mb-2 placeholder:text-muted-foreground/35"
+          className="text-[clamp(2rem,4vw,3rem)] leading-[1.05] font-semibold tracking-[-0.04em] bg-transparent w-full outline-none border-none p-0 mb-3 placeholder:text-muted-foreground/35"
           placeholder="Untitled"
         />
       )}
@@ -65,7 +65,7 @@ export function DocsDocHeader({
       {/* Description */}
       {selectedDoc.isImported ? (
         selectedDoc.metadata.description && (
-          <p className="text-[15px] leading-7 text-muted-foreground mb-4 max-w-2xl">
+          <p className="text-[15px] leading-6 text-muted-foreground mb-5 max-w-2xl">
             {selectedDoc.metadata.description}
           </p>
         )
@@ -76,13 +76,13 @@ export function DocsDocHeader({
           onChange={(e) => setMetaDescription(e.target.value)}
           onBlur={() => handleSaveMetadata("description")}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          className="text-[15px] leading-7 text-muted-foreground bg-transparent w-full outline-none border-none p-0 mb-4 placeholder:text-muted-foreground/35 max-w-2xl"
+          className="text-[15px] leading-6 text-muted-foreground bg-transparent w-full outline-none border-none p-0 mb-5 placeholder:text-muted-foreground/35 max-w-2xl"
           placeholder="Add a description..."
         />
       )}
 
       {/* Tags */}
-      <div className="mb-4 space-y-2">
+      <div className="mb-5 space-y-3">
         {!selectedDoc.isImported ? (
           <input
             type="text"
@@ -105,7 +105,7 @@ export function DocsDocHeader({
             </div>
           )
         )}
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground/75">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground/75">
           <span>Project</span>
           <Select value={selectedDoc.projectId || "global"} onValueChange={handleProjectChange} disabled={selectedDoc.isImported}>
             <SelectTrigger className="h-7 w-40 text-xs"><SelectValue /></SelectTrigger>
@@ -115,13 +115,13 @@ export function DocsDocHeader({
             </SelectContent>
           </Select>
         </div>
-        <div className="text-[11px] font-mono text-muted-foreground/65 break-all">
+        <div className="mt-1 text-[11px] font-mono text-muted-foreground/65 break-all">
           @doc/{toDisplayPath(selectedDoc.path).replace(/\.md$/, "")}
         </div>
       </div>
 
       {/* Metadata row */}
-      <div className="flex items-center gap-2.5 flex-wrap text-[11px] text-muted-foreground/85">
+      <div className="flex items-center gap-2.5 flex-wrap border-t border-border/40 pt-4 text-[11px] text-muted-foreground/85">
         {isSpec(selectedDoc) && (
           <span className="px-2 py-0.5 text-[10px] font-medium bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200 rounded-full">
             SPEC
@@ -156,7 +156,7 @@ export function DocsDocHeader({
         (() => {
           const acProgress = parseACProgress(selectedDoc.content);
           return acProgress.total > 0 ? (
-            <div className="flex items-center gap-2 mt-4 rounded-2xl bg-muted/35 px-3 py-2 w-fit">
+            <div className="flex items-center gap-2 mt-5 rounded-xl bg-muted/35 px-3 py-2 w-fit">
               <ListChecks className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <Progress
                 value={Math.round((acProgress.completed / acProgress.total) * 100)}
@@ -171,7 +171,7 @@ export function DocsDocHeader({
 
       {/* Linked tasks */}
       {isSpec(selectedDoc) && (
-        <div className="mt-4 rounded-2xl bg-muted/25 px-3 py-2.5">
+        <div className="mt-5 rounded-xl bg-muted/25 px-3 py-2.5">
           <button
             type="button"
             onClick={() => setLinkedTasksExpanded(!linkedTasksExpanded)}

@@ -514,12 +514,12 @@ function DocsPageInner() {
 	);
 
 	return (
-		<div className="h-full flex overflow-hidden bg-background">
-			<aside className="hidden lg:flex w-[300px] xl:w-[320px] shrink-0 bg-[#fafaf8] dark:bg-muted/10 border-r border-border/40">
-				<div className="h-full w-full px-3 py-5">{sidebarContent}</div>
+		<div data-docs-workbench className="docs-workbench h-full flex overflow-hidden bg-background">
+			<aside data-docs-sidebar className="hidden lg:flex w-[288px] xl:w-[304px] shrink-0 bg-sidebar/80 dark:bg-muted/10 border-r border-border/60">
+				<div className="h-full w-full px-4 py-4">{sidebarContent}</div>
 			</aside>
 
-			<div className="min-w-0 flex-1 flex flex-col overflow-hidden">
+			<div data-docs-main className="min-w-0 flex-1 flex flex-col overflow-hidden">
 				<Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
 					<SheetContent side="left" className="w-[92vw] max-w-none p-0 sm:max-w-md">
 						<div className="flex h-full flex-col">
@@ -529,10 +529,11 @@ function DocsPageInner() {
 					</SheetContent>
 				</Sheet>
 
+				<div data-docs-canvas className="docs-canvas flex min-h-0 flex-1 flex-col relative overflow-hidden">
 				{selectedDoc ? (
 					<>
 						{/* Toolbar */}
-						<div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 border-b border-border/40 shrink-0 bg-background/90 backdrop-blur-sm">
+						<div data-docs-toolbar className="docs-toolbar flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 border-b border-border/50 shrink-0 bg-background/95 backdrop-blur-sm">
 							<Button variant="ghost" size="sm" onClick={() => setMobileSidebarOpen(true)} className="h-7 px-2 text-muted-foreground hover:text-foreground lg:hidden">
 								<Menu className="w-3.5 h-3.5" />
 							</Button>
@@ -572,16 +573,16 @@ function DocsPageInner() {
 						</div>
 
 						{isEditing ? (
-							<div className="docs-editor-stage flex-1 min-h-0 overflow-hidden p-3 sm:p-5 lg:p-6">
-								<div className={`docs-editor-frame h-full min-h-0 w-full mx-auto overflow-y-auto ${wideMode ? "max-w-[1040px]" : "max-w-[880px]"}`}>
-									<div className={`docs-editor-header mx-auto w-full px-5 pt-8 sm:px-10 sm:pt-12 ${wideMode ? "max-w-[96ch]" : "max-w-[78ch]"}`}>{docHeader}</div>
+							<div data-docs-editor-stage className="docs-editor-stage flex-1 min-h-0 overflow-hidden p-3 sm:p-5 lg:p-6">
+								<div className={`docs-editor-frame h-full min-h-0 w-full mx-auto overflow-y-auto ${wideMode ? "max-w-[920px]" : "max-w-[820px]"}`}>
+									<div className={`docs-editor-header mx-auto w-full px-5 pt-8 sm:px-10 sm:pt-12 ${wideMode ? "max-w-[72ch]" : "max-w-[68ch]"}`}>{docHeader}</div>
 									<MDEditor markdown={editedContent} onChange={setEditedContent} placeholder="Start writing…" readOnly={selectedDoc.isImported} height="auto" className={`docs-live-editor ${wideMode ? "docs-live-editor-wide" : ""}`} />
 								</div>
 							</div>
 						) : (
-							<div className="flex-1 overflow-y-auto relative" ref={scrollContainerRef} onScroll={handleScroll}>
-								<div ref={docViewerRef} className="flex justify-center relative">
-									<article data-document-surface="doc" key={selectedDoc.path} className={`w-full px-6 sm:px-8 py-10 sm:py-12 transition-[max-width] duration-300 ease-in-out animate-doc-in ${wideMode ? "max-w-[1040px]" : "max-w-[880px]"}`}>
+							<div data-docs-reader className="docs-reader-canvas flex-1 overflow-y-auto relative" ref={scrollContainerRef} onScroll={handleScroll}>
+								<div ref={docViewerRef} className="docs-document-layout flex justify-center relative">
+									<article data-document-surface="doc" key={selectedDoc.path} className={`docs-document-surface w-full px-6 sm:px-8 py-8 sm:py-10 transition-[max-width] duration-300 ease-in-out animate-doc-in ${wideMode ? "max-w-[920px]" : "max-w-[820px]"}`}>
 										{docHeader}
 										<div ref={markdownPreviewRef} className="prose-neutral dark:prose-invert relative">
 											<MDRenderWithHighlight
@@ -615,7 +616,7 @@ function DocsPageInner() {
 										</div>
 									</article>
 									{!isEditing && (
-										<div className="w-56 shrink-0 hidden xl:block pt-12 pr-6">
+										<div data-docs-rail className="docs-side-rail w-52 shrink-0 hidden xl:block pt-10 pr-5">
 											<div className="sticky top-8">
 												<DocMiniGraph docPath={selectedDoc.path} />
 												<DocsTOC markdown={selectedDoc.content || ""} scrollContainerRef={scrollContainerRef} onHeadingSelect={navigateToHeading} />
@@ -641,6 +642,7 @@ function DocsPageInner() {
 				) : (
 					<DocsEmptyState currentFolder={currentFolder} onCreateDoc={openCreateView} onOpenMobileSidebar={() => setMobileSidebarOpen(true)} />
 				)}
+				</div>
 			</div>
 			{selectedDoc && (
 				<DocHistorySheet

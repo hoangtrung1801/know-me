@@ -75,4 +75,22 @@ test.describe("Documentation Page", () => {
 			await expect(page.getByText("Setup Guide")).toBeVisible();
 		});
 	});
+	test("sorts documents by most recently edited", async ({ page }) => {
+		server.cli('doc create "Zeta Edited Doc" -d "Edited later"');
+		server.cli('doc create "Alpha Older Doc" -d "Created later but not edited"');
+		await page.waitForTimeout(1100);
+		server.cli('doc edit "zeta-edited-doc" -c "# Updated content"');
+
+		await page.goto(`${server.baseURL}/docs`);
+		await expect(page.getByPlaceholder("Search docs, paths, tags...")).toBeVisible();
+
+		const rows = page.locator("[data-docs-entries] > div > button");
+		const titles = await rows.allTextContents();
+		const editedIndex = titles.findIndex((text) => text.includes("Zeta Edited Doc"));
+		const olderIndex = titles.findIndex((text) => text.includes("Alpha Older Doc"));
+
+		expect(editedIndex).toBeGreaterThanOrEqual(0);
+		expect(olderIndex).toBeGreaterThanOrEqual(0);
+		expect(editedIndex).toBeLessThan(olderIndex);
+	});
 });
