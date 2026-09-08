@@ -13,6 +13,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/term"
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
 	"github.com/hoangtrung1801/known-me/internal/search"
 	"github.com/hoangtrung1801/known-me/internal/services"
@@ -622,7 +623,7 @@ func shortenTarget(s string, max int) string {
 
 func projectDisplayName(root string) string {
 	base := filepath.Base(root)
-	if base == ".known-me" {
+	if base == paths.StoreDirName || base == ".know-me" || base == ".known-me" {
 		return filepath.Base(filepath.Dir(root))
 	}
 	return base

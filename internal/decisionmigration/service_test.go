@@ -380,7 +380,7 @@ func TestRollbackRejectsPostMigrationMemoryDrift(t *testing.T) {
 func setupMigrationStore(t *testing.T) *storage.Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	root := filepath.Join(t.TempDir(), ".known-me")
+	root := filepath.Join(t.TempDir(), ".know-me")
 	store := storage.NewStore(root)
 	if err := store.Init("decision-migration-test"); err != nil {
 		t.Fatalf("Init: %v", err)

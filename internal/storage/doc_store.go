@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// DocStore reads and writes doc files from .known-me/docs/ (and .known-me/imports/).
+// DocStore reads and writes doc files from .know-me/docs/ (and .know-me/imports/).
 type DocStore struct {
 	root      string
 	projectID string
@@ -50,7 +50,7 @@ type docFrontmatter struct {
 	Order       *int     `yaml:"order,omitempty"`
 }
 
-// List returns all docs from .known-me/docs/ and .known-me/imports/*/docs/.
+// List returns all docs from .know-me/docs/ and .know-me/imports/*/docs/.
 func (ds *DocStore) List(projectID ...string) ([]*models.Doc, error) {
 	var docs []*models.Doc
 	filter := firstProjectID(projectID, ds.projectID)
@@ -71,7 +71,7 @@ func (ds *DocStore) List(projectID ...string) ([]*models.Doc, error) {
 	return docs, nil
 }
 
-// listImported scans .known-me/imports/*/docs/ for additional docs.
+// listImported scans .know-me/imports/*/docs/ for additional docs.
 func (ds *DocStore) listImported(filter string) ([]*models.Doc, error) {
 	entries, err := os.ReadDir(ds.importsDir())
 	if os.IsNotExist(err) {
@@ -174,7 +174,7 @@ func (ds *DocStore) Get(path string) (*models.Doc, error) {
 	return nil, fmt.Errorf("doc %q not found", path)
 }
 
-// Create writes a new doc to .known-me/docs/{path}.md.
+// Create writes a new doc to .know-me/docs/{path}.md.
 // doc.Path must be set (relative, without .md).
 func (ds *DocStore) Create(doc *models.Doc) error {
 	if doc != nil && doc.ProjectID == "" {

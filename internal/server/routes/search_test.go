@@ -97,7 +97,7 @@ func TestRetrieveRoute_ReturnsCandidatesAndContextPack(t *testing.T) {
 
 func newSearchRouteTestStore(t *testing.T) *storage.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), ".known-me")
+	root := filepath.Join(t.TempDir(), ".know-me")
 	store := storage.NewStore(root)
 	if err := store.Init("search-route-test"); err != nil {
 		t.Fatalf("Init store: %v", err)

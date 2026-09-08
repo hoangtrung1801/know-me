@@ -69,7 +69,7 @@ No guessing. No hallucinated context.
 
 Know-Me works fully offline.
 
-The local `.known-me/` directory is always the source of truth.
+The local `.know-me/` directory is always the source of truth.
 
 When teams need visibility, Know-Me can optionally sync to a self-hosted server that:
 

@@ -32,8 +32,8 @@ RESTORE_CONFIG=0
 mkdir -p "$HOME"
 
 restore_project_config() {
-  if (( RESTORE_CONFIG == 1 )) && [[ -f "$CONFIG_BACKUP" && -d "$PROJECT/.known-me" ]]; then
-    cp "$CONFIG_BACKUP" "$PROJECT/.known-me/config.json" || true
+  if (( RESTORE_CONFIG == 1 )) && [[ -f "$CONFIG_BACKUP" && -d "$PROJECT/.know-me" ]]; then
+    cp "$CONFIG_BACKUP" "$PROJECT/.know-me/config.json" || true
   fi
 }
 
@@ -109,15 +109,15 @@ dump_state() {
   dump_memory "$label"
 
   echo "=== ${label}: knowns logs ==="
-  find "$HOME/.known-me" -maxdepth 4 -type f 2>/dev/null | sort || true
-  for log in "$HOME/.known-me/logs/runtime.log" "$HOME/.known-me/logs/mcp.log"; do
+  find "$HOME/.know-me" -maxdepth 4 -type f 2>/dev/null | sort || true
+  for log in "$HOME/.know-me/logs/runtime.log" "$HOME/.know-me/logs/mcp.log"; do
     if [[ -f "$log" ]]; then
       echo "--- tail ${log} ---"
       tail -120 "$log" || true
     fi
   done
-  if [[ -d "$PROJECT/.known-me/logs/lsp" ]]; then
-    for log in "$PROJECT"/.known-me/logs/lsp/*.log(N); do
+  if [[ -d "$PROJECT/.know-me/logs/lsp" ]]; then
+    for log in "$PROJECT"/.know-me/logs/lsp/*.log(N); do
       echo "--- tail ${log} ---"
       tail -80 "$log" || true
     done
@@ -148,19 +148,19 @@ fi
 
 cd "$PROJECT"
 
-if [[ ! -d .known-me ]]; then
+if [[ ! -d .know-me ]]; then
   echo "mounted project is not a Knowns project: $PROJECT" >&2
   exit 1
 fi
 
-if [[ ! -w .known-me ]]; then
-  echo "mounted project .known-me is not writable; Docker bind mount must allow writes for runtime state" >&2
+if [[ ! -w .know-me ]]; then
+  echo "mounted project .know-me is not writable; Docker bind mount must allow writes for runtime state" >&2
   exit 1
 fi
 
 if [[ "$USE_ONNX" == "1" ]]; then
   echo "=== configure local ONNX semantic search ==="
-  cp .known-me/config.json "$CONFIG_BACKUP"
+  cp .know-me/config.json "$CONFIG_BACKUP"
   RESTORE_CONFIG=1
   knownme model download "$ONNX_MODEL"
   knownme model set "$ONNX_MODEL"

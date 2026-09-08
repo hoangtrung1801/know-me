@@ -11,7 +11,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/permissions"
 )
 
-// Project is the root configuration stored in .known-me/config.json.
+// Project is the root configuration stored in .know-me/config.json.
 type Project struct {
 	Name      string          `json:"name"`
 	ID        string          `json:"id"`
@@ -91,7 +91,7 @@ type ProjectSettings struct {
 	// Editor is the preferred editor command (e.g., "code", "vim", "nano").
 	Editor string `json:"editor,omitempty"`
 
-	// GitTrackingMode controls whether .known-me/ files are git-tracked.
+	// GitTrackingMode controls whether .know-me/ files are git-tracked.
 	// Allowed values: "git-tracked", "git-ignored", "none".
 	GitTrackingMode string `json:"gitTrackingMode,omitempty"`
 
@@ -316,7 +316,7 @@ type SemanticSearchSettings struct {
 
 	// Provider selects the embedding backend: "local" (default, ONNX),
 	// "ollama", or "api" (OpenAI-compatible endpoint configured in
-	// ~/.known-me/settings.json).
+	// ~/.know-me/settings.json).
 	Provider string `json:"provider,omitempty"`
 
 	// HuggingFaceID is the full HuggingFace model identifier

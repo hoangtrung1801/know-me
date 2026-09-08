@@ -27,7 +27,7 @@ func getFreePort(t *testing.T) int {
 
 func TestPortFileWrittenAfterBind(t *testing.T) {
 	tmpDir := t.TempDir()
-	knDir := filepath.Join(tmpDir, ".known-me")
+	knDir := filepath.Join(tmpDir, ".know-me")
 	os.MkdirAll(knDir, 0755)
 
 	store := storage.NewStore(knDir)
@@ -86,7 +86,7 @@ func TestPortFileWrittenAfterBind(t *testing.T) {
 
 func TestPortFileNotWrittenOnBindFailure(t *testing.T) {
 	tmpDir := t.TempDir()
-	knDir := filepath.Join(tmpDir, ".known-me")
+	knDir := filepath.Join(tmpDir, ".know-me")
 	os.MkdirAll(knDir, 0755)
 
 	store := storage.NewStore(knDir)

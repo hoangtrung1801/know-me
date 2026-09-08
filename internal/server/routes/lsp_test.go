@@ -233,7 +233,7 @@ func TestLSPRoutesInstallAndCleanupUseManagerLifecycle(t *testing.T) {
 
 func setupLSPRouteStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("lsp-route-test"); err != nil {
 		t.Fatalf("Init: %v", err)
 	}

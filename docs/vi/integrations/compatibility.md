@@ -51,7 +51,7 @@ Tạo AI platform artifacts như skills, MCP configs, platform-specific configs,
 
 ### `knownme sync`
 
-Re-apply `.known-me/config.json` lên máy hiện tại.
+Re-apply `.know-me/config.json` lên máy hiện tại.
 
 Dùng sau khi:
 

@@ -44,7 +44,7 @@ function getWindowsRuntimeCacheRoot() {
   if (process.env.LOCALAPPDATA) {
     return path.join(process.env.LOCALAPPDATA, "Know-Me", "npm-runtime");
   }
-  return path.join(os.homedir(), ".known-me", "cache", "npm-runtime");
+  return path.join(os.homedir(), ".know-me", "cache", "npm-runtime");
 }
 
 function stageWindowsBinary(binary, options = {}) {

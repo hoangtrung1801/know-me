@@ -46,7 +46,7 @@ Use `--global` for normal personal assistant setup. It updates user-level MCP co
 
 ### `knownme sync`
 
-Re-applies `.known-me/config.json` to the current machine.
+Re-applies `.know-me/config.json` to the current machine.
 
 ```bash
 knownme sync

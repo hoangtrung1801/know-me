@@ -75,7 +75,7 @@ main() {
 
     printf "\n"
     success "Know-Me CLI uninstall complete"
-    info "Project folders and .known-me data were left untouched"
+    info "Project folders and .know-me data were left untouched"
     printf "\n"
 }
 

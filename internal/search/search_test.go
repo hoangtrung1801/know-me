@@ -817,7 +817,7 @@ func TestEngineRetrieve_PreservesRequestedSemanticModeWhenAvailable(t *testing.T
 
 func newRetrievalTestStore(t *testing.T) *storage.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), ".known-me")
+	root := filepath.Join(t.TempDir(), ".know-me")
 	store := storage.NewStore(root)
 	if err := store.Init("retrieval-test"); err != nil {
 		t.Fatalf("Init store: %v", err)

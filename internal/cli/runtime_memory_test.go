@@ -248,7 +248,7 @@ func TestRuntimeMemoryHookHighConfidenceDoesNotInferProjectDecision(t *testing.T
 func setupRuntimeMemoryHookStore(t *testing.T) (string, *storage.Store) {
 	t.Helper()
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

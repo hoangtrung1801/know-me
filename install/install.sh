@@ -5,7 +5,7 @@
 #   wget -qO- https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 #
 # Options (via env vars):
-#   KNOWNS_INSTALL_DIR  — install directory (default: ~/.known-me/bin)
+#   KNOWNS_INSTALL_DIR  — install directory (default: ~/.know-me/bin)
 #   KNOWNS_VERSION      — specific version (default: latest)
 #   KNOWNS_NO_SYMLINK   — set to 1 to skip creating 'kn' symlink
 #   GITHUB_PAT          — optional GitHub PAT (helps avoid API rate limits)
@@ -15,9 +15,9 @@ set -e
 
 REPO="hoangtrung1801/know-me"
 BINARY="knownme"
-DEFAULT_INSTALL_DIR="${HOME}/.known-me/bin"
+DEFAULT_INSTALL_DIR="${HOME}/.know-me/bin"
 INSTALL_DIR="${KNOWNS_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
-KNOWN_DIR="${HOME}/.known-me"
+KNOWN_DIR="${HOME}/.know-me"
 
 # ─── Colors ───────────────────────────────────────────────────────────
 

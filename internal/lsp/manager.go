@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // MissingServer describes a language detected in the project but without an available binary.
@@ -1246,5 +1247,5 @@ func LanguageTraceLogPath(root, languageID string) string {
 	if root == "" || languageID == "" {
 		return ""
 	}
-	return filepath.Join(root, ".known-me", "logs", "lsp", languageID+".trace.log")
+	return filepath.Join(root, paths.StoreDirName, "logs", "lsp", languageID+".trace.log")
 }

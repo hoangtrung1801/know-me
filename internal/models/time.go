@@ -8,7 +8,7 @@ import (
 )
 
 // TimeEntry records a single interval of work logged against a task.
-// Entries are stored in .known-me/time-entries.json, keyed by task ID.
+// Entries are stored in .know-me/time-entries.json, keyed by task ID.
 //
 // The ID format is "te-{unix-ms}-{taskId}" (e.g., "te-1700000000000-abc123").
 type TimeEntry struct {
@@ -24,7 +24,7 @@ type TimeEntry struct {
 }
 
 // ActiveTimer represents a running (or paused) timer stored in
-// .known-me/time.json.  Multiple concurrent timers are supported – one per task.
+// .know-me/time.json.  Multiple concurrent timers are supported – one per task.
 //
 // Timestamps are stored as ISO-8601 strings to match the TypeScript
 // representation.  PausedAt uses a pointer so that it serialises to JSON null
@@ -44,7 +44,7 @@ type ActiveTimer struct {
 	TotalPausedMs int64 `json:"totalPausedMs"`
 }
 
-// TimeState is the root object persisted to .known-me/time.json.
+// TimeState is the root object persisted to .know-me/time.json.
 type TimeState struct {
 	Active []ActiveTimer `json:"active"`
 }

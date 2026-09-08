@@ -35,7 +35,7 @@ search indexes and runs optional local or external runtimes around that data.
                          +--------+--------+
                          |                 |
                   project/global data   derived services
-                  .known-me + ~/.known-me   search, refs, runtimes
+                  .know-me + ~/.know-me   search, refs, runtimes
 ```
 
 The main dependency direction is inward:
@@ -142,7 +142,7 @@ new package. Prefer an existing package when the responsibility already fits.
 
 ### Store and project scope
 
-`storage.Store` is the top-level coordinator for the `.known-me` data format. It
+`storage.Store` is the top-level coordinator for the `.know-me` data format. It
 owns sub-stores for tasks, docs, config, time, templates, versions,
 workspaces, chats, memory, decisions, and agent state.
 
@@ -158,11 +158,11 @@ search across projects.
 
 ### Durable files
 
-A normal project store is rooted at the repository's `.known-me/` directory.
+A normal project store is rooted at the repository's `.know-me/` directory.
 The exact set grows with enabled features, but the important ownership is:
 
 ```text
-.known-me/
+.know-me/
 ├── config.json                 project settings and feature flags
 ├── tasks/*.md                  active tasks with YAML frontmatter
 ├── archive/*.md                archived tasks
@@ -180,7 +180,7 @@ The exact set grows with enabled features, but the important ownership is:
 └── runtime/                    runtime logs and process-specific state
 ```
 
-The machine-level `~/.known-me/` store holds global data such as the project
+The machine-level `~/.know-me/` store holds global data such as the project
 registry, global memory, saved links, memos, embedding models/settings, and
 logs. Some project metadata also lives there when the global multi-project
 store is active.
@@ -227,7 +227,7 @@ knownme task edit ...
   Cobra command and project resolver
         |
         v
-  storage.Store -> domain sub-store -> .known-me file(s)
+  storage.Store -> domain sub-store -> .know-me file(s)
         |
         +-> version history / lifecycle event / derived index when applicable
 ```
@@ -431,7 +431,7 @@ not be treated as required for the core local workspace:
 - multi-project registry and workspace switching.
 
 There is no central sync service in the current architecture. Local project
-files and the global `~/.known-me` store remain the source of truth; any future
+files and the global `~/.know-me` store remain the source of truth; any future
 network synchronization would be a separate design.
 
 ## Technology summary
@@ -444,7 +444,7 @@ network synchronization would be a separate design.
 | Browser UI | React, TypeScript, Vite, Tailwind CSS, Playwright E2E |
 | Real-time browser events | Server-Sent Events; WebSocket for chat transport |
 | AI tools | MCP over stdio via `mcp-go` |
-| Durable project data | Markdown/YAML frontmatter and JSON under `.known-me/` |
+| Durable project data | Markdown/YAML frontmatter and JSON under `.know-me/` |
 | Search | BM25/keyword, semantic embeddings, hybrid retrieval, derived vector/index stores |
 | Agent runtimes | Codex ACP and optional OpenCode daemon/server |
 | Code intelligence | LSP adapters with a project-scoped LSP daemon |

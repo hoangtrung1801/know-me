@@ -18,7 +18,7 @@ import (
 var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync project from config.json (skills, instructions, model, search index)",
-	Long: `Apply project configuration from .known-me/config.json.
+	Long: `Apply project configuration from .know-me/config.json.
 
 This is the recommended command after cloning a repo with Know-Me:
   git clone <repo>
@@ -296,14 +296,14 @@ func runSyncModelAPI(cfg *models.Project) error {
 
 	model, err := settings.GetModel(ss.Model)
 	if err != nil {
-		fmt.Printf("%s Embedding model %q not found in ~/.known-me/settings.json\n", StyleWarning.Render("⚠"), ss.Model)
+		fmt.Printf("%s Embedding model %q not found in ~/.know-me/settings.json\n", StyleWarning.Render("⚠"), ss.Model)
 		fmt.Println(StyleDim.Render("  Configure it: knownme model add --provider <id> <model-name>"))
 		return nil
 	}
 
 	provider, err := settings.GetProvider(model.Provider)
 	if err != nil {
-		fmt.Printf("%s Provider %q not found in ~/.known-me/settings.json\n", StyleWarning.Render("⚠"), model.Provider)
+		fmt.Printf("%s Provider %q not found in ~/.know-me/settings.json\n", StyleWarning.Render("⚠"), model.Provider)
 		fmt.Println(StyleDim.Render("  Configure it: knownme provider add"))
 		return nil
 	}

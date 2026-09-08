@@ -144,7 +144,7 @@ func TestDetectedLanguagesIgnoresGeneratedAndFixtureTrees(t *testing.T) {
 		"generated/network.tf.json",
 		"vendor/config.json",
 		"build/generated.yaml",
-		".known-me/docs/README.md",
+		".know-me/docs/README.md",
 	}
 	for _, relative := range paths {
 		path := filepath.Join(root, filepath.FromSlash(relative))
@@ -178,7 +178,7 @@ func TestDetectedLanguagesIgnoresGeneratedAndFixtureTrees(t *testing.T) {
 	}
 	knownsPath := filepath.Join(root, filepath.FromSlash(paths[len(paths)-1]))
 	if got, ok := registry.ForPath(knownsPath); ok {
-		t.Fatalf("explicit .known-me route = %#v, true; want hard exclusion", got)
+		t.Fatalf("explicit .know-me route = %#v, true; want hard exclusion", got)
 	}
 }
 

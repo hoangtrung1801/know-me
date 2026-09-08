@@ -137,7 +137,7 @@ func TestTerraformLSAdapterRoutingPrecedesJSON(t *testing.T) {
 			t.Errorf("ForPath(%q) = %q, %v; want json", path, language.ID, ok)
 		}
 	}
-	for _, path := range []string{"module.hcl", "main.tf.json.backup", ".known-me/main.tf", `C:\repo\.known-me\main.tfvars.json`} {
+	for _, path := range []string{"module.hcl", "main.tf.json.backup", ".know-me/main.tf", `C:\repo\.know-me\main.tfvars.json`} {
 		if language, ok := registry.ForPath(path); ok {
 			t.Errorf("ForPath(%q) = %q, true; want no route", path, language.ID)
 		}

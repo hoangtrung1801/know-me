@@ -400,7 +400,7 @@ func detectCloudflared(cleanupStale bool) []ServiceStatus {
 		return []ServiceStatus{ss}
 	}
 
-	// Look for PID files matching cloudflared-*.pid in ~/.known-me/.
+	// Look for PID files matching cloudflared-*.pid in ~/.know-me/.
 	stateDir := storage.GlobalRootPath()
 
 	entries, err := os.ReadDir(stateDir)

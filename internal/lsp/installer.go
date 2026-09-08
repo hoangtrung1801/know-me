@@ -29,7 +29,7 @@ func CurrentPlatformID() string {
 
 // Installer handles downloading, extracting, and verifying LSP server binaries.
 type Installer struct {
-	baseDir                string // ~/.known-me/lsp-servers/
+	baseDir                string // ~/.know-me/lsp-servers/
 	mu                     sync.Mutex
 	installing             map[string]chan struct{} // prevent concurrent installs of same language
 	runCommand             func(context.Context, string, ...string) ([]byte, error)

@@ -370,7 +370,7 @@ func csharpProjectKind(path string) string {
 
 func isCSharpIgnoredDir(name string) bool {
 	switch name {
-	case ".git", ".known-me", "bin", "obj", ".vs", "packages", "node_modules", "vendor", "target", "dist", "build":
+	case ".git", ".know-me", ".known-me", "bin", "obj", ".vs", "packages", "node_modules", "vendor", "target", "dist", "build":
 		return true
 	default:
 		return false

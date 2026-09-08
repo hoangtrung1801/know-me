@@ -1,12 +1,12 @@
 # Sync
 
-`knownme sync` re-apply `.known-me/config.json` lên máy hiện tại.
+`knownme sync` re-apply `.know-me/config.json` lên máy hiện tại.
 
 ## Khi nào dùng
 
 Chạy `knownme sync` sau khi:
 
-- clone repo có sẵn `.known-me/`
+- clone repo có sẵn `.know-me/`
 - upgrade CLI
 - muốn generated files khớp lại với config
 

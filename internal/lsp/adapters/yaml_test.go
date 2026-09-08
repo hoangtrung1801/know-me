@@ -65,7 +65,7 @@ func TestYAMLAdapterRouting(t *testing.T) {
 		})
 	}
 
-	for _, path := range []string{".known-me/config.yaml", `C:\repo\.known-me\config.yml`} {
+	for _, path := range []string{".know-me/config.yaml", `C:\repo\.know-me\config.yml`} {
 		t.Run(path+" hard excluded", func(t *testing.T) {
 			if lang, ok := registry.ForPath(path); ok {
 				t.Fatalf("ForPath(%q) = %q, want no route", path, lang.ID)

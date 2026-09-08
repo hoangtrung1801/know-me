@@ -71,7 +71,7 @@ func TestInstallClaudeWindowsQuotesExecutableForBashHooks(t *testing.T) {
 		t.Fatalf("seed settings: %v", err)
 	}
 
-	exePath := `C:\Users\Admin\.known-me\bin\knownme.exe`
+	exePath := `C:\Users\Admin\.know-me\bin\knownme.exe`
 	opts := Options{
 		HomeDir:        home,
 		ExecutablePath: exePath,
@@ -111,7 +111,7 @@ func TestInstallClaudeWindowsWritesExactPromptSubmitHookJSON(t *testing.T) {
 		t.Fatalf("seed settings: %v", err)
 	}
 
-	exePath := `C:\Users\Admin\.known-me\bin\knownme.exe`
+	exePath := `C:\Users\Admin\.know-me\bin\knownme.exe`
 	opts := Options{
 		HomeDir:        home,
 		ExecutablePath: exePath,

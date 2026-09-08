@@ -26,7 +26,7 @@ type updateCache struct {
 
 // CheckForUpdate checks npm registry for a newer version and returns
 // a notification string if one is available (empty string if up to date).
-// It caches the result for 1 hour at ~/.known-me/cli-cache.json.
+// It caches the result for 1 hour at ~/.know-me/cli-cache.json.
 //
 // This is silent on any error — it should never interfere with normal CLI operation.
 func CheckForUpdate() string {
@@ -220,7 +220,7 @@ func DetectInstallMethod() (InstallMethod, string) {
 			return InstallMethodNPM, "npm i -g knowns"
 		}
 
-		// Script install: binary in ~/.known-me/bin/
+		// Script install: binary in ~/.know-me/bin/
 		if globalRoot != "" {
 			defaultDir := filepath.ToSlash(filepath.Join(globalRoot, "bin"))
 			if strings.HasPrefix(pathLower, strings.ToLower(defaultDir)+"/") ||

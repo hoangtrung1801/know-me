@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// DecisionStore reads and writes decision files from .known-me/decisions/.
+// DecisionStore reads and writes decision files from .know-me/decisions/.
 type DecisionStore struct {
 	root          string
 	lifecycleLock *decisionLifecycleLock

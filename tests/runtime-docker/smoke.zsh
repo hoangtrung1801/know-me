@@ -74,8 +74,8 @@ dump_state() {
   dump_memory "$label"
 
   echo "=== ${label}: knowns logs ==="
-  find "$HOME/.known-me" -maxdepth 4 -type f 2>/dev/null | sort || true
-  for log in "$HOME/.known-me/logs/runtime.log" "$HOME/.known-me/logs/mcp.log"; do
+  find "$HOME/.know-me" -maxdepth 4 -type f 2>/dev/null | sort || true
+  for log in "$HOME/.know-me/logs/runtime.log" "$HOME/.know-me/logs/mcp.log"; do
     if [[ -f "$log" ]]; then
       echo "--- tail ${log} ---"
       tail -120 "$log" || true

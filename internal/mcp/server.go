@@ -229,7 +229,7 @@ func (s *MCPServer) getHelpRegistry() map[string]handlers.HelpEntry {
 // NewMCPServer creates and configures a new MCPServer with all registered tools.
 // projectHint is an optional project root path. Detection order:
 //  1. projectHint (from --project flag or KNOWNS_PROJECT env)
-//  2. Walk up from cwd looking for .known-me/
+//  2. Walk up from cwd looking for .know-me/
 //
 // If a project is found, it is automatically set so callers don't need to call
 // set_project first. set_project can still be used to switch projects at runtime.
@@ -315,7 +315,7 @@ func NewMCPServer(projectHint string) *MCPServer {
 		return nil
 	}
 
-	// Create global audit store at ~/.known-me/audit.jsonl.
+	// Create global audit store at ~/.know-me/audit.jsonl.
 	auditStore := storage.NewGlobalAuditStore()
 
 	// Build permission guard config loader.

@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TemplateStore reads templates from .known-me/templates/ and .known-me/imports/*/templates/.
+// TemplateStore reads templates from .know-me/templates/ and .know-me/imports/*/templates/.
 type TemplateStore struct {
 	root string
 }

@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// Task represents a task in the .known-me/ system.
+// Task represents a task in the .know-me/ system.
 // The ID uses a 6-character base36 format (e.g., "abc123").
 // Legacy sequential integer IDs are also supported for backward compatibility.
 type Task struct {

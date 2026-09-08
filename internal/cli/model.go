@@ -809,7 +809,7 @@ func runModelStatus(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	// Current project section.
-	projectRoot := strings.TrimSuffix(store.Root, "/.known-me")
+	projectRoot := strings.TrimSuffix(strings.TrimSuffix(store.Root, "/"+paths.StoreDirName), "/.know-me")
 	fmt.Println(StyleBold.Render("Current Project"))
 	fmt.Println(RenderField("Path", projectRoot))
 	if cfg != nil && cfg.Settings.SemanticSearch != nil {

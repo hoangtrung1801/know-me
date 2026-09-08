@@ -2105,7 +2105,7 @@ export default function ConfigPage() {
 
 	const renderAdvanced = () => (
 		<div>
-			<SectionHeader icon={Wrench} title="Git Tracking" description="Control how the .known-me directory interacts with git" />
+			<SectionHeader icon={Wrench} title="Git Tracking" description="Control how the .know-me directory interacts with git" />
 
 			<FieldRow label="Mode">
 				<select

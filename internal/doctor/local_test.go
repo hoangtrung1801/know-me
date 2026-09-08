@@ -296,7 +296,7 @@ func TestInspectLocalONNXModelDetectsMissingIncompleteAndAvailable(t *testing.T)
 		Model:         "gte-small",
 		HuggingFaceID: "Xenova/gte-small",
 	}
-	modelDir := filepath.Join(home, ".known-me", "models", "Xenova", "gte-small")
+	modelDir := filepath.Join(home, ".know-me", "models", "Xenova", "gte-small")
 
 	status := inspectLocalONNXModel(settings)
 	if status.State != localONNXModelMissing {
@@ -604,7 +604,7 @@ func TestDefaultLocalChecksDoNotMutateProject(t *testing.T) {
 
 func newDoctorStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("doctor-local-test"); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}

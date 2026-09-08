@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hoangtrung1801/known-me/internal/runtimememory"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/spf13/cobra"
 )
@@ -52,7 +53,7 @@ func runRuntimeMemoryHook(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, paths.StoreDirName))
 	settings := runtimememory.NormalizeSettings(nil)
 	if project, err := store.Config.Load(); err == nil {
 		settings = runtimememory.NormalizeSettings(project.Settings.RuntimeMemory)

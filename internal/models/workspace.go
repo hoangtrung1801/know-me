@@ -1,7 +1,7 @@
 package models
 
 // Workspace represents an AI-agent execution context tied to a git worktree.
-// It is persisted in .known-me/workspaces/<id>.json.
+// It is persisted in .know-me/workspaces/<id>.json.
 //
 // Status values: "creating", "idle", "running", "stopped", "error".
 type Workspace struct {

@@ -29,7 +29,7 @@ func DiscoverDartProject(root string) DartProjectSelection {
 		}
 		if entry.IsDir() {
 			switch entry.Name() {
-			case ".git", ".known-me", ".dart_tool", "build", "node_modules", "vendor":
+			case ".git", ".know-me", ".known-me", ".dart_tool", "build", "node_modules", "vendor":
 				if path != rootAbs {
 					return filepath.SkipDir
 				}

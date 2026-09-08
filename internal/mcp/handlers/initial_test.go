@@ -81,7 +81,7 @@ func TestSemanticRuntimeLineIncludesStatus(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	search.DefaultSemanticRuntime().Close()
 	t.Cleanup(search.DefaultSemanticRuntime().Close)
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	project := &models.Project{
 		Name: "initial-test",
 		ID:   "initial-test",

@@ -16,7 +16,7 @@ var (
 	ErrChatConflict = errors.New("chat session conflict")
 )
 
-// ChatStore reads and writes .known-me/chats.json.
+// ChatStore reads and writes .know-me/chats.json.
 type ChatStore struct {
 	root      string
 	projectID string

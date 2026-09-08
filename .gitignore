@@ -31,7 +31,7 @@ playwright-report/
 test-results/
 
 # Agent local state & generated files
-.known-me/
+.know-me/
 .claude/
 .codex/config.toml
 *.local.json

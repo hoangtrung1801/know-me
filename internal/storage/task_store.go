@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TaskStore reads and writes task files from .known-me/tasks/ and .known-me/archive/.
+// TaskStore reads and writes task files from .know-me/tasks/ and .know-me/archive/.
 type TaskStore struct {
 	root          string
 	projectID     string
@@ -49,12 +49,12 @@ type taskFrontmatter struct {
 	Order       *int     `yaml:"order,omitempty"`
 }
 
-// List returns all tasks from .known-me/tasks/.
+// List returns all tasks from .know-me/tasks/.
 func (ts *TaskStore) List(projectID ...string) ([]*models.Task, error) {
 	return ts.listDir(ts.tasksDir(), firstProjectID(projectID, ts.projectID))
 }
 
-// ListArchived returns all tasks from .known-me/archive/.
+// ListArchived returns all tasks from .know-me/archive/.
 func (ts *TaskStore) ListArchived(projectID ...string) ([]*models.Task, error) {
 	return ts.listDir(ts.archiveDir(), firstProjectID(projectID, ts.projectID))
 }
@@ -237,7 +237,7 @@ func (ts *TaskStore) taskFilenameKeys(id string) []string {
 	return []string{projectID + "--" + localID, localID}
 }
 
-// Create writes a new task file to .known-me/tasks/.
+// Create writes a new task file to .know-me/tasks/.
 func (ts *TaskStore) Create(task *models.Task) error {
 	if task != nil && task.ProjectID == "" {
 		task.ProjectID = ts.projectID

@@ -1,12 +1,12 @@
 # Sync
 
-`knownme sync` re-applies `.known-me/config.json` to the current machine.
+`knownme sync` re-applies `.know-me/config.json` to the current machine.
 
 ## When to use it
 
 Use `knownme sync` after:
 
-- cloning a repository with existing `.known-me/`
+- cloning a repository with existing `.know-me/`
 - upgrading the CLI
 - wanting generated files to match config again
 

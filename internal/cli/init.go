@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/registry"
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
 	"github.com/hoangtrung1801/known-me/internal/storage"
@@ -900,14 +901,14 @@ const (
 	knownsGitignoreEnd   = "# <<< KNOWNS <<<"
 )
 
-// writeKnownsGitignore creates .known-me/.gitignore with ignore rules based on
+// writeKnownsGitignore creates .know-me/.gitignore with ignore rules based on
 // the git tracking mode and per-section toggles. Also removes any legacy marker
 // block from root .gitignore.
 func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error {
 	// Remove legacy marker block from root .gitignore if present.
 	removeLegacyGitignoreBlock(dir)
 
-	knownsDir := filepath.Join(dir, ".known-me")
+	knownsDir := filepath.Join(dir, paths.StoreDirName)
 	gitignorePath := filepath.Join(knownsDir, ".gitignore")
 
 	switch mode {
@@ -957,7 +958,7 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 
 	switch mode {
 	case "git-tracked":
-		// Track all .known-me/ content; only ignore runtime/cache files and
+		// Track all .know-me/ content; only ignore runtime/cache files and
 		// sections explicitly disabled.
 		var buf strings.Builder
 		buf.WriteString("# Managed by Know-Me CLI — do not edit manually.\n")
@@ -1024,7 +1025,7 @@ func writeKnownsGitignore(dir, mode string, tracking *models.GitTracking) error 
 		return os.WriteFile(gitignorePath, []byte(buf.String()), 0644)
 
 	case "none":
-		// Remove .known-me/.gitignore if it exists.
+		// Remove .know-me/.gitignore if it exists.
 		_ = os.Remove(gitignorePath)
 		return nil
 	}
@@ -1076,8 +1077,8 @@ func removeLegacyGitignoreBlock(dir string) {
 }
 
 func init() {
-	initCmd.Flags().Bool("git-tracked", false, "Track .known-me/ files in git")
-	initCmd.Flags().Bool("git-ignored", false, "Add .known-me/ to .gitignore")
+	initCmd.Flags().Bool("git-tracked", false, "Track .know-me/ files in git")
+	initCmd.Flags().Bool("git-ignored", false, "Add .know-me/ to .gitignore")
 	initCmd.Flags().Bool("wizard", false, "Run interactive setup wizard")
 	initCmd.Flags().Bool("no-wizard", false, "Skip interactive prompts, use defaults")
 	initCmd.Flags().BoolP("force", "f", false, "Force reinitialize even if already initialized")

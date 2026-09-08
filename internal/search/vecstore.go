@@ -55,7 +55,7 @@ type atomicTaskVectorStore interface {
 // FileVectorStore stores embeddings in a flat binary file with a JSON index.
 // Deprecated: Use SQLiteVectorStore instead.
 //
-// Layout in .known-me/.search/:
+// Layout in .know-me/.search/:
 //   - embeddings.bin  – contiguous float32 vectors
 //   - index.json      – chunk metadata with byte offsets into the bin file
 //   - version.json    – model info, dimension count, timestamp

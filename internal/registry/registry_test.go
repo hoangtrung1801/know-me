@@ -13,7 +13,7 @@ func TestNewRegistryUsesKnowMeGlobalRoot(t *testing.T) {
 	t.Setenv("HOME", home)
 
 	registry := NewRegistry()
-	want := filepath.Join(home, ".known-me", "registry.json")
+	want := filepath.Join(home, ".know-me", "registry.json")
 	if registry.filePath != want {
 		t.Fatalf("registry path = %q, want %q", registry.filePath, want)
 	}

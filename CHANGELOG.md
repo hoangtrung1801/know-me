@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-08
+
+### Changed
+- Migrated default project and global storage directory from `.known-me` to `.know-me`.
+- Updated all internal path resolvers, CLI commands, LSP routing, MCP servers, and tests to use `.know-me`.
+- Updated installer scripts and environment defaults.
+
 ## [1.6.2] - 2026-09-08
 
 ### Added
@@ -25,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.6.0] - 2026-08-28
 
 ### Added
-- Rebranded CLI entry point to `knownme` and local repository storage to `.known-me/`.
+- Rebranded CLI entry point to `knownme` and local repository storage to `.know-me/`.
 - Cross-platform agent integration for Claude Code, Codex, and generic agents.
 - Full local Web UI workspace with task board, document viewer, and knowledge graph.
 

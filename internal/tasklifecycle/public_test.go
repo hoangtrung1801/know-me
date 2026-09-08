@@ -236,7 +236,7 @@ func TestUpdateTaskSerializesWithLifecycleTransitionsAndHooksOutsideLock(t *test
 
 func newPublicLifecycleStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("test"); err != nil {
 		t.Fatal(err)
 	}

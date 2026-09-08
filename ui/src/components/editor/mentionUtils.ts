@@ -5,7 +5,7 @@ const MEMORY_MENTION_REGEX = /@(memory[-/][a-zA-Z0-9-]+(?:\{[a-z-]+\})?)/g;
 const DECISION_MENTION_REGEX = /@(decision\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\{[a-z-]+\})?)/g;
 const TEMPLATE_MENTION_REGEX = /@(template\/[a-zA-Z0-9_./-]+(?:\{[a-z-]+\})?)/g;
 const DOC_MENTION_REGEX = /@docs?\/([^\s,;!?"'(){}]+(?:\{[a-z-]+\})?)/g;
-const KNOWNS_DOC_PATH_REGEX = /(^|[\s(])(\.known-me\/docs\/[^\s,;!?"'()]+\.md)\b/g;
+const KNOWNS_DOC_PATH_REGEX = /(^|[\s(])(\.know(?:n)?-me\/docs\/[^\s,;!?"'()]+\.md)\b/g;
 const SEMANTIC_LINK_PREFIX = "knowns-ref:";
 
 function stripDocExtension(path: string): string {
@@ -51,6 +51,10 @@ export function toDocPath(path: string): string {
     normalized = normalized.slice(5);
   } else if (normalized.startsWith("@docs/")) {
     normalized = normalized.slice(6);
+  } else if (normalized.startsWith(".know-me/docs/")) {
+    normalized = normalized.slice(".know-me/docs/".length);
+  } else if (normalized.startsWith("/.know-me/docs/")) {
+    normalized = normalized.slice("/.know-me/docs/".length);
   } else if (normalized.startsWith(".known-me/docs/")) {
     normalized = normalized.slice(".known-me/docs/".length);
   } else if (normalized.startsWith("/.known-me/docs/")) {
@@ -91,6 +95,10 @@ export function normalizeSemanticDocTarget(rawTarget: string): string {
     normalized = normalized.slice(5);
   } else if (normalized.startsWith("@docs/")) {
     normalized = normalized.slice(6);
+  } else if (normalized.startsWith(".know-me/docs/")) {
+    normalized = normalized.slice(".know-me/docs/".length);
+  } else if (normalized.startsWith("/.know-me/docs/")) {
+    normalized = normalized.slice("/.know-me/docs/".length);
   } else if (normalized.startsWith(".known-me/docs/")) {
     normalized = normalized.slice(".known-me/docs/".length);
   } else if (normalized.startsWith("/.known-me/docs/")) {
@@ -154,7 +162,7 @@ export function canonicalizeSemanticReference(raw: string): string | null {
     return `@doc/${normalizeSemanticDocTarget(value)}`;
   }
 
-  if (value.startsWith(".known-me/docs/") || value.startsWith("/.known-me/docs/")) {
+  if (value.startsWith(".know-me/docs/") || value.startsWith("/.know-me/docs/") || value.startsWith(".known-me/docs/") || value.startsWith("/.known-me/docs/")) {
     return `@doc/${normalizeSemanticDocTarget(value)}`;
   }
 

@@ -27,7 +27,7 @@ func TestLSPStatusFromRuntimeIncludesRuntimeFields(t *testing.T) {
 		BackendSource:          lsp.RuntimeSourceAuto,
 		ProjectPath:            "/repo/App.sln",
 		ProjectKind:            "sln",
-		LogPath:                "/repo/.known-me/logs/lsp/csharp-csharp-ls.log",
+		LogPath:                "/repo/.know-me/logs/lsp/csharp-csharp-ls.log",
 		Attempts:               []lsp.BackendAttempt{{Backend: lsp.CSharpBackendCSharp, Status: lsp.BackendAttemptChosen}},
 		Owner:                  "daemon",
 		DaemonState:            "running",
@@ -91,7 +91,7 @@ func TestSemanticModelInstalledDoesNotRequireONNXForRemoteProviders(t *testing.T
 
 func TestBuildReadinessIncludesDecisionCountsAndCapabilities(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("readiness-decisions"); err != nil {
 		t.Fatal(err)
 	}

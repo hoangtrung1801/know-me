@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hoangtrung1801/known-me/internal/codegen"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 	"github.com/hoangtrung1801/known-me/internal/util"
 )
@@ -106,7 +107,7 @@ func maybeWarnSkillsOutOfSync() {
 	if err != nil {
 		return
 	}
-	root := filepath.Join(cwd, ".known-me")
+	root := filepath.Join(cwd, paths.StoreDirName)
 	if _, err := os.Stat(root); err != nil {
 		return
 	}
@@ -123,7 +124,7 @@ func maybeAutoSetup() {
 	if err != nil {
 		return
 	}
-	root := filepath.Join(cwd, ".known-me")
+	root := filepath.Join(cwd, paths.StoreDirName)
 	if _, err := os.Stat(root); err != nil {
 		return // not a knownme project
 	}

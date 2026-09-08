@@ -321,7 +321,7 @@ func createDecisionViaRoute(t *testing.T, r http.Handler, body map[string]any) m
 func setupDecisionRouteStore(t *testing.T) *storage.Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("decision-route-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

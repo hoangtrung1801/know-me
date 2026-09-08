@@ -80,7 +80,7 @@ func TestRunInitCreatesGlobalDefaultConfig(t *testing.T) {
 		_ = os.Setenv("USERPROFILE", oldUserProfile)
 	})
 
-	settingsPath := filepath.Join(home, ".known-me", "settings.json")
+	settingsPath := filepath.Join(home, ".know-me", "settings.json")
 	if err := os.MkdirAll(filepath.Dir(settingsPath), 0755); err != nil {
 		t.Fatalf("mkdir settings dir: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestRunInitRegistersNamedProject(t *testing.T) {
 		t.Fatalf("runInit returned error: %v", err)
 	}
 
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".know-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatalf("load registry: %v", err)
 	}
@@ -172,14 +172,14 @@ func TestRunInitWritesWorkspaceProjectLink(t *testing.T) {
 	}
 
 	link := readJSONFile(t, filepath.Join(projectRoot, ".known-me.json"))
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".know-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}
 	if len(reg.Projects) != 1 || link["projectId"] != reg.Projects[0].ID {
 		t.Fatalf("link = %#v, projects = %#v", link, reg.Projects)
 	}
-	projectStore := storage.NewProjectStore(filepath.Join(home, ".known-me"), reg.Projects[0].ID, projectRoot)
+	projectStore := storage.NewProjectStore(filepath.Join(home, ".know-me"), reg.Projects[0].ID, projectRoot)
 	if _, err := projectStore.Config.Load(); err != nil {
 		t.Fatalf("project config: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestRunInitDefaultsProjectNameToDirectory(t *testing.T) {
 		t.Fatalf("runInit returned error: %v", err)
 	}
 
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".know-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatalf("load registry: %v", err)
 	}
@@ -215,7 +215,7 @@ func TestRunInitRejectsExplicitBlankProjectName(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "project name is required") {
 		t.Fatalf("runInit error = %v, want project name validation", err)
 	}
-	if _, statErr := os.Stat(filepath.Join(home, ".known-me", "registry.json")); !os.IsNotExist(statErr) {
+	if _, statErr := os.Stat(filepath.Join(home, ".know-me", "registry.json")); !os.IsNotExist(statErr) {
 		t.Fatalf("registry exists after rejected name, stat error = %v", statErr)
 	}
 }
@@ -879,8 +879,8 @@ func TestWriteKnownsGitignoreGitIgnoredTracksKnowledgeSections(t *testing.T) {
 		t.Fatalf("root .gitignore modified unexpectedly:\n%s", rootContent)
 	}
 
-	// .known-me/.gitignore should ignore everything except tracked dirs.
-	knownsGitignore := filepath.Join(dir, ".known-me", ".gitignore")
+	// .know-me/.gitignore should ignore everything except tracked dirs.
+	knownsGitignore := filepath.Join(dir, ".know-me", ".gitignore")
 	content := readTextFile(t, knownsGitignore)
 	assertContains(t, content, "*")
 	assertContains(t, content, "!docs/")
@@ -904,8 +904,8 @@ func TestWriteKnownsGitignoreGitTrackedRemovesManagedBlock(t *testing.T) {
 	seed := strings.Join([]string{
 		"bin/",
 		knownsGitignoreBegin,
-		".known-me/*",
-		"!.known-me/docs/**",
+		".know-me/*",
+		"!.know-me/docs/**",
 		knownsGitignoreEnd,
 		"tmp/",
 	}, "\n") + "\n"
@@ -924,8 +924,8 @@ func TestWriteKnownsGitignoreGitTrackedRemovesManagedBlock(t *testing.T) {
 		t.Fatalf("unexpected root .gitignore content:\nwant:\n%s\n got:\n%s", want, rootContent)
 	}
 
-	// .known-me/.gitignore should contain runtime/cache ignores.
-	knownsGitignore := filepath.Join(dir, ".known-me", ".gitignore")
+	// .know-me/.gitignore should contain runtime/cache ignores.
+	knownsGitignore := filepath.Join(dir, ".know-me", ".gitignore")
 	content := readTextFile(t, knownsGitignore)
 	assertContains(t, content, ".search/")
 	assertContains(t, content, "runtime/")
@@ -938,8 +938,8 @@ func TestWriteKnownsGitignoreNoneLeavesGitignoreUnmanaged(t *testing.T) {
 	seed := strings.Join([]string{
 		"bin/",
 		knownsGitignoreBegin,
-		".known-me/*",
-		"!.known-me/docs/**",
+		".know-me/*",
+		"!.know-me/docs/**",
 		knownsGitignoreEnd,
 	}, "\n") + "\n"
 
@@ -1048,7 +1048,7 @@ func TestWriteKnownsGitignoreTrackedWithExplicitDisabled(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".know-me", ".gitignore"))
 
 	assertContains(t, content, "docs/")
 	assertContains(t, content, "decisions/")
@@ -1069,7 +1069,7 @@ func TestWriteKnownsGitignoreIgnoredWithDisabledDocs(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".know-me", ".gitignore"))
 
 	assertNotContains(t, content, "!docs/")
 	assertContains(t, content, "!tasks/")
@@ -1085,7 +1085,7 @@ func TestWriteKnownsGitignoreTaskToggleControlsTaskTombstones(t *testing.T) {
 	if err := writeKnownsGitignore(dir, "git-ignored", tracking); err != nil {
 		t.Fatalf("writeKnownsGitignore git-ignored: %v", err)
 	}
-	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".know-me", ".gitignore"))
 	assertNotContains(t, content, "!tasks/")
 	assertNotContains(t, content, "!tombstones/")
 	assertNotContains(t, content, "!tombstones/tasks/")
@@ -1093,7 +1093,7 @@ func TestWriteKnownsGitignoreTaskToggleControlsTaskTombstones(t *testing.T) {
 	if err := writeKnownsGitignore(dir, "git-tracked", tracking); err != nil {
 		t.Fatalf("writeKnownsGitignore git-tracked: %v", err)
 	}
-	content = readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
+	content = readTextFile(t, filepath.Join(dir, ".know-me", ".gitignore"))
 	assertContains(t, content, "tasks/")
 	assertContains(t, content, "tombstones/tasks/")
 }
@@ -1110,7 +1110,7 @@ func TestWriteKnownsGitignoreIgnoredWithDisabledDecisions(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".know-me", ".gitignore"))
 
 	assertNotContains(t, content, "!decisions/")
 	assertContains(t, content, "!tasks/")
@@ -1125,7 +1125,7 @@ func TestWriteKnownsGitignoreTrackedMemoriesDisabledByDefault(t *testing.T) {
 		t.Fatalf("writeKnownsGitignore returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".know-me", ".gitignore"))
 
 	assertContains(t, content, "memories/")
 	assertNotContains(t, content, "decisions/")
@@ -1152,7 +1152,7 @@ func TestSyncGitIntegrationPreservesSectionToggles(t *testing.T) {
 		t.Fatalf("syncGitIntegration returned error: %v", err)
 	}
 
-	content := readTextFile(t, filepath.Join(dir, ".known-me", ".gitignore"))
+	content := readTextFile(t, filepath.Join(dir, ".know-me", ".gitignore"))
 
 	assertNotContains(t, content, "!decisions/")
 	assertContains(t, content, "!memories/")

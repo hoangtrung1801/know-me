@@ -3,6 +3,8 @@ package lsp
 import (
 	"fmt"
 	"path/filepath"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 // RuntimeError is an actionable LSP runtime failure suitable for MCP/CLI output.
@@ -82,5 +84,5 @@ func CSharpLogPath(root, backend string) string {
 	if backend == "" {
 		backend = CSharpLanguageID
 	}
-	return filepath.Join(root, ".known-me", "logs", "lsp", CSharpLanguageID+"-"+backend+".log")
+	return filepath.Join(root, paths.StoreDirName, "logs", "lsp", CSharpLanguageID+"-"+backend+".log")
 }

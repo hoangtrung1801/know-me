@@ -12,6 +12,7 @@ import (
 var autoDetectionIgnoredDirs = map[string]struct{}{
 	".git":         {},
 	".hg":          {},
+	".know-me":     {},
 	".known-me":    {},
 	".svn":         {},
 	"build":        {},

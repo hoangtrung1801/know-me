@@ -17,7 +17,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
-// VersionStore reads and writes task version histories from .known-me/versions/.
+// VersionStore reads and writes task version histories from .know-me/versions/.
 type VersionStore struct {
 	root          string
 	projectID     string

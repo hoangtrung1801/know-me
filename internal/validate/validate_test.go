@@ -453,7 +453,7 @@ func TestValidateMemory_DecisionSourceRefs(t *testing.T) {
 func newValidateTestStore(t *testing.T) *storage.Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("validate-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

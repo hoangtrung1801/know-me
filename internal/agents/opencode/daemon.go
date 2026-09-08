@@ -17,7 +17,7 @@ import (
 
 // Daemon manages a shared OpenCode server process that persists across
 // Know-Me server restarts. Only one daemon runs at a time, identified by
-// a PID file under ~/.known-me scoped to the target host/port.
+// a PID file under ~/.know-me scoped to the target host/port.
 type Daemon struct {
 	Host    string
 	Port    int
@@ -39,7 +39,7 @@ func defaultPIDFile(host string, port int) string {
 }
 
 // NewDaemon creates a Daemon targeting the given host:port.
-// The PID file defaults to ~/.known-me/opencode-<host>-<port>.pid.
+// The PID file defaults to ~/.know-me/opencode-<host>-<port>.pid.
 func NewDaemon(host string, port int) *Daemon {
 	return &Daemon{
 		Host:    host,

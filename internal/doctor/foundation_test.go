@@ -14,7 +14,7 @@ import (
 )
 
 func TestFoundationCheckersReportAggregateValidationWithoutWriting(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("doctor-test"); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}

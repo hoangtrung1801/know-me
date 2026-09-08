@@ -220,7 +220,7 @@ func ensureORTEnvironment() error {
 			if archMismatch {
 				fmt.Fprintf(os.Stderr, "warning: %s found but has wrong CPU architecture (expected %s); reinstall knownme for the correct platform or set KNOWNS_ORT_LIB\n", libName, runtime.GOARCH)
 			} else {
-				fmt.Fprintf(os.Stderr, "warning: bundled %s not found next to executable, sibling lib dirs, or ~/.known-me/bin; falling back to system search which may load an incompatible version\n", libName)
+				fmt.Fprintf(os.Stderr, "warning: bundled %s not found next to executable, sibling lib dirs, or ~/.know-me/bin; falling back to system search which may load an incompatible version\n", libName)
 			}
 		}
 		if err := ort.InitializeEnvironment(); err != nil {

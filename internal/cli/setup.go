@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/hoangtrung1801/known-me/internal/codegen"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +42,7 @@ Global MCP uses 'knownme mcp --stdio' without --project flag.`,
 func runSetupCmd(cmd *cobra.Command, args []string) error {
 	force, _ := cmd.Flags().GetBool("force")
 
-	// Check --global first, before .known-me check
+	// Check --global first, before .know-me check
 	global, _ := cmd.Flags().GetBool("global")
 	if global {
 		return runGlobalSetup(cmd, args, force)
@@ -52,7 +53,7 @@ func runSetupCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot determine working directory: %w", err)
 	}
 
-	root := filepath.Join(cwd, ".known-me")
+	root := filepath.Join(cwd, paths.StoreDirName)
 	if _, err := os.Stat(root); err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("project is not initialized; run 'knownme init' first")

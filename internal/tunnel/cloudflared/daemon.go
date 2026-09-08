@@ -18,7 +18,7 @@ import (
 )
 
 // Daemon manages a shared `cloudflared tunnel --url` process keyed by the
-// local port being tunneled. State lives in `~/.known-me/cloudflared-<port>.{pid,url,log}`.
+// local port being tunneled. State lives in `~/.know-me/cloudflared-<port>.{pid,url,log}`.
 type Daemon struct {
 	LocalPort int
 	PIDFile   string

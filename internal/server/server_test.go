@@ -374,7 +374,7 @@ func TestProxyOpenCodePreservesExistingDirectoryHeader(t *testing.T) {
 func TestProxyOpenCodeInjectsRuntimeMemoryInAutoMode(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -457,7 +457,7 @@ func TestProxyOpenCodeInjectsRuntimeMemoryInAutoMode(t *testing.T) {
 func TestProxyOpenCodeSkipsInjectionWhenNoRelevantMemoryExists(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -510,7 +510,7 @@ func TestProxyOpenCodeSkipsInjectionWhenNoRelevantMemoryExists(t *testing.T) {
 func TestProxyOpenCodeSupportsManualAndDebugModes(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -582,7 +582,7 @@ func TestProxyOpenCodeSupportsManualAndDebugModes(t *testing.T) {
 func TestProxyOpenCodeAutoCapturesStableMemoryPreference(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

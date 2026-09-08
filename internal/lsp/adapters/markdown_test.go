@@ -66,7 +66,7 @@ func TestMarksmanAdapterMarkdownRouting(t *testing.T) {
 			t.Errorf("ForPath(%q) = %#v, %v; want markdown", path, language, ok)
 		}
 	}
-	for _, path := range []string{"component.mdx", "docs/readme.txt", ".known-me/docs/readme.md", `project\.known-me\docs\readme.md`} {
+	for _, path := range []string{"component.mdx", "docs/readme.txt", ".know-me/docs/readme.md", `project\.know-me\docs\readme.md`} {
 		if language, ok := registry.ForPath(path); ok {
 			t.Errorf("ForPath(%q) = %#v, true; want no route", path, language)
 		}

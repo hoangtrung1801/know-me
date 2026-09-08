@@ -45,7 +45,7 @@ func TestAgentRoutesReturnSnapshotAndLog(t *testing.T) {
 
 func TestAgentRoutesUseRegisteredRepositoryPath(t *testing.T) {
 	home, repositoryRoot := t.TempDir(), t.TempDir()
-	globalRoot := filepath.Join(home, ".known-me")
+	globalRoot := filepath.Join(home, ".know-me")
 	registryStore := registry.NewRegistryWithPath(filepath.Join(globalRoot, "registry.json"))
 	if err := registryStore.Load(); err != nil {
 		t.Fatal(err)

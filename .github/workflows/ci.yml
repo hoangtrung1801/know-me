@@ -191,7 +191,7 @@ jobs:
             echo "$sync_output"
             echo "$sync_output" | grep -q "keyword/BM25 search remains active"
 
-            bun -e 'const fs = require("fs"); const p = ".known-me/config.json"; const c = JSON.parse(fs.readFileSync(p, "utf8")); c.settings.semanticSearch = { enabled: true, provider: "local", model: "gte-small", huggingFaceId: "Xenova/gte-small", dimensions: 384, maxTokens: 512 }; fs.writeFileSync(p, JSON.stringify(c, null, 2) + "\n");'
+            bun -e 'const fs = require("fs"); const p = ".know-me/config.json"; const c = JSON.parse(fs.readFileSync(p, "utf8")); c.settings.semanticSearch = { enabled: true, provider: "local", model: "gte-small", huggingFaceId: "Xenova/gte-small", dimensions: 384, maxTokens: 512 }; fs.writeFileSync(p, JSON.stringify(c, null, 2) + "\n");'
             export KNOWN_RUNTIME_INLINE=1
             status_output=$("$GITHUB_WORKSPACE/bin/knownme" search --status-check 2>&1)
             echo "$status_output" | grep -q "ONNX runtime: unavailable on macOS Intel"
@@ -438,7 +438,7 @@ jobs:
       - name: Cache semantic models
         uses: actions/cache@v4
         with:
-          path: ~/.known-me/models
+          path: ~/.know-me/models
           key: semantic-models-${{ runner.os }}-all-MiniLM-L6-v2-v1
 
       - name: Install llvm-mingw toolchain

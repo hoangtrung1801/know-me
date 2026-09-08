@@ -379,7 +379,7 @@ func TestSemanticReviewUsesRuntimeSearchPath(t *testing.T) {
 func newDecisionReviewTestStore(t *testing.T) *storage.Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("decision-review-test"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

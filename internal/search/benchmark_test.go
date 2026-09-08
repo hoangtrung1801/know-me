@@ -29,7 +29,7 @@ func TestLoadKeywordBenchmarkCases(t *testing.T) {
 }
 
 func TestKeywordBenchmarkFixtureIsIsolatedFromSearchDocs(t *testing.T) {
-	if strings.Contains(KeywordBenchmarkFixturePath, ".known-me/docs") {
+	if strings.Contains(KeywordBenchmarkFixturePath, ".know-me/docs") {
 		t.Fatalf("fixture path %q must stay outside searchable docs", KeywordBenchmarkFixturePath)
 	}
 	if !strings.HasPrefix(KeywordBenchmarkFixturePath, "internal/search/testdata/") {

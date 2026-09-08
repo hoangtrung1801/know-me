@@ -21,9 +21,9 @@ const (
 )
 
 // AuditStore provides append-only storage for MCP audit events.
-// Events are stored as JSON-lines in ~/.known-me/audit.jsonl (global).
+// Events are stored as JSON-lines in ~/.know-me/audit.jsonl (global).
 type AuditStore struct {
-	dir string // directory containing audit.jsonl (e.g. ~/.known-me)
+	dir string // directory containing audit.jsonl (e.g. ~/.know-me)
 	mu  sync.Mutex
 }
 
@@ -32,7 +32,7 @@ func NewAuditStore(dir string) *AuditStore {
 	return &AuditStore{dir: dir}
 }
 
-// NewGlobalAuditStore creates an AuditStore at the global ~/.known-me/ path.
+// NewGlobalAuditStore creates an AuditStore at the global ~/.know-me/ path.
 func NewGlobalAuditStore() *AuditStore {
 	return NewAuditStore(GlobalRootPath())
 }

@@ -1,4 +1,4 @@
-// Package storage provides read/write access to the .known-me/ directory format.
+// Package storage provides read/write access to the .know-me/ directory format.
 // It is fully backward-compatible with the TypeScript Know-Me CLI.
 package storage
 
@@ -17,9 +17,9 @@ import (
 
 const globalSemanticStoreDir = "global"
 
-// Store is the top-level coordinator for all .known-me/ sub-stores.
+// Store is the top-level coordinator for all .know-me/ sub-stores.
 type Store struct {
-	// Root is the absolute path to the .known-me/ directory.
+	// Root is the absolute path to the .know-me/ directory.
 	Root        string
 	ProjectID   string
 	ProjectRoot string
@@ -39,7 +39,7 @@ type Store struct {
 	decisionMigrationLock *decisionMemoryMigrationLock
 }
 
-// NewStore creates a Store rooted at the given .known-me/ directory path.
+// NewStore creates a Store rooted at the given .know-me/ directory path.
 // The directory does not need to exist yet; call Init to create it.
 func NewStore(root string) *Store {
 	return newStore(root, "", "")
@@ -80,7 +80,7 @@ func newStore(root, projectID, projectRoot string) *Store {
 }
 
 // RepositoryRoot returns the active repository path, or derives it for legacy
-// stores rooted at a repository-local .known-me directory.
+// stores rooted at a repository-local .know-me directory.
 func (s *Store) RepositoryRoot() string {
 	if s == nil {
 		return ""
@@ -125,7 +125,7 @@ func (s *Store) WithTaskLifecycleTransaction(ctx context.Context, fn func(*TaskL
 	})
 }
 
-// GlobalRootPath returns the machine-level Know-Me root (~/.known-me).
+// GlobalRootPath returns the machine-level Know-Me root (~/.know-me).
 func GlobalRootPath() string {
 	return paths.GlobalStoreRoot()
 }
@@ -137,7 +137,7 @@ func GlobalSemanticStoreRoot() string {
 }
 
 // NewGlobalSemanticStore creates a store used for global semantic config and
-// indices while continuing to read global memories from ~/.known-me/memory.
+// indices while continuing to read global memories from ~/.know-me/memory.
 func NewGlobalSemanticStore() *Store {
 	return NewStore(GlobalSemanticStoreRoot())
 }
@@ -181,9 +181,9 @@ func (s *Store) CodeRefExists(docPath, symbol string) bool {
 	return false
 }
 
-// FindProjectRoot walks up from startDir looking for a .known-me/ directory
+// FindProjectRoot walks up from startDir looking for a .know-me/ directory
 // that contains a config.json (i.e. a properly initialized project).
-// Returns the absolute path to the .known-me/ directory, or an error if not found.
+// Returns the absolute path to the .know-me/ directory, or an error if not found.
 func FindProjectRoot(startDir string) (string, error) {
 	dir := startDir
 	for {
@@ -202,7 +202,7 @@ func FindProjectRoot(startDir string) (string, error) {
 	return "", fmt.Errorf("no %s/ directory found (started from %s)", paths.StoreDirName, startDir)
 }
 
-// Init creates the .known-me/ directory structure for a new project.
+// Init creates the .know-me/ directory structure for a new project.
 func (s *Store) Init(name string) error {
 	dirs := []string{
 		s.Root,

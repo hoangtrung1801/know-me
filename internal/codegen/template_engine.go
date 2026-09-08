@@ -17,7 +17,7 @@ import (
 
 // Engine executes Know-Me code-generation templates.
 type Engine struct {
-	// ProjectRoot is the absolute path to the project root (not the .known-me
+	// ProjectRoot is the absolute path to the project root (not the .know-me
 	// directory — one level above it).
 	ProjectRoot string
 }

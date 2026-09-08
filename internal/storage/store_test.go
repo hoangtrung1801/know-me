@@ -11,7 +11,7 @@ func TestGlobalRootPathPrefersHOMEOverride(t *testing.T) {
 	t.Setenv("HOME", home)
 
 	got := GlobalRootPath()
-	want := filepath.Join(home, ".known-me")
+	want := filepath.Join(home, ".know-me")
 	if got != want {
 		t.Fatalf("GlobalRootPath() = %q, want %q", got, want)
 	}
@@ -19,7 +19,7 @@ func TestGlobalRootPathPrefersHOMEOverride(t *testing.T) {
 
 func TestFindProjectRootUsesKnownMeDirectory(t *testing.T) {
 	repo := t.TempDir()
-	storeRoot := filepath.Join(repo, ".known-me")
+	storeRoot := filepath.Join(repo, ".know-me")
 	if err := os.MkdirAll(storeRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestFindProjectRootRejectsLegacyKnownsDirectory(t *testing.T) {
 }
 
 func TestSemanticDBWritableOpensExistingIndex(t *testing.T) {
-	root := filepath.Join(t.TempDir(), ".known-me")
+	root := filepath.Join(t.TempDir(), ".know-me")
 	if err := os.MkdirAll(filepath.Join(root, ".search"), 0o755); err != nil {
 		t.Fatalf("mkdir search dir: %v", err)
 	}

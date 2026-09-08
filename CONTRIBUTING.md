@@ -20,10 +20,10 @@ Know-Me is intentionally minimal. Before adding a feature, ask:
 
 ### 2. Files are the source of truth
 
-Any new feature must respect that `.known-me/` files are the source of truth.
+Any new feature must respect that `.know-me/` files are the source of truth.
 
 - Don't introduce hidden remote state
-- Human-readable Markdown and JSON in `.known-me/` are the canonical format
+- Human-readable Markdown and JSON in `.know-me/` are the canonical format
 - Make sure data survives without Know-Me
 
 ### 3. CLI-first & Agent-native
@@ -73,7 +73,7 @@ known-me/
 │   ├── cli/              # Cobra commands and flags
 │   ├── mcp/              # Model Context Protocol server and tools
 │   ├── models/           # Core domain models (tasks, docs, memories, decisions)
-│   ├── storage/          # Local file-based storage (.known-me/)
+│   ├── storage/          # Local file-based storage (.know-me/)
 │   ├── server/           # Local HTTP server and API routes
 │   ├── search/           # Keyword, hybrid, and semantic search
 │   └── lsp/              # Code intelligence & LSP daemon

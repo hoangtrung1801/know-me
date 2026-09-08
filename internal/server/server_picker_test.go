@@ -54,10 +54,10 @@ func newActiveServer(t *testing.T) (*Server, string) {
 	t.Helper()
 	tmpDir := t.TempDir()
 	projDir := filepath.Join(tmpDir, "my-project")
-	os.MkdirAll(filepath.Join(projDir, ".known-me"), 0755)
-	os.WriteFile(filepath.Join(projDir, ".known-me", "config.json"), []byte(`{"name":"my-project"}`), 0644)
+	os.MkdirAll(filepath.Join(projDir, ".know-me"), 0755)
+	os.WriteFile(filepath.Join(projDir, ".know-me", "config.json"), []byte(`{"name":"my-project"}`), 0644)
 
-	store := storage.NewStore(filepath.Join(projDir, ".known-me"))
+	store := storage.NewStore(filepath.Join(projDir, ".know-me"))
 	reg := registry.NewRegistry()
 	s := &Server{
 		store:       store,

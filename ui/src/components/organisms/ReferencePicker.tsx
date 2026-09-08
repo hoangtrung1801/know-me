@@ -351,7 +351,7 @@ function normalizeDocPath(path: string) {
 	return path
 		.trim()
 		.replace(/^@doc\//, "")
-		.replace(/^\.known-me\/docs\//, "")
+		.replace(/^\.know(?:n)?-me\/docs\//, "")
 		.replace(/\.md$/, "");
 }
 

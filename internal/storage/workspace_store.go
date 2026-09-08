@@ -9,7 +9,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
-// WorkspaceStore reads and writes .known-me/workspaces.json.
+// WorkspaceStore reads and writes .know-me/workspaces.json.
 type WorkspaceStore struct {
 	root string
 }

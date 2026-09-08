@@ -11,7 +11,7 @@ import (
 	"github.com/hoangtrung1801/known-me/internal/models"
 )
 
-// TimeStore reads and writes .known-me/time.json and .known-me/time-entries.json.
+// TimeStore reads and writes .know-me/time.json and .know-me/time-entries.json.
 type TimeStore struct {
 	root          string
 	lifecycleLock *taskLifecycleLock

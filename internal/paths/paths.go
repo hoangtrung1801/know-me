@@ -7,7 +7,7 @@ import (
 
 const (
 	CLIName      = "knownme"
-	StoreDirName = ".known-me"
+	StoreDirName = ".know-me"
 )
 
 func GlobalStoreRoot() string {

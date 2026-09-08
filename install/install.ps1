@@ -3,7 +3,7 @@
 #   irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.ps1 | iex
 #
 # Options (via env vars):
-#   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.known-me\bin)
+#   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.know-me\bin)
 #   $env:KNOWNS_VERSION      — specific version (default: latest)
 
 $ErrorActionPreference = "Stop"
@@ -11,8 +11,8 @@ $ErrorActionPreference = "Stop"
 $Repo = "hoangtrung1801/know-me"
 $Binary = "knownme.exe"
 $AliasBinary = "kn.exe"
-$DefaultInstallDir = Join-Path $env:USERPROFILE ".known-me\bin"
-$KnownsHome = Join-Path $env:USERPROFILE ".known-me"
+$DefaultInstallDir = Join-Path $env:USERPROFILE ".know-me\bin"
+$KnownsHome = Join-Path $env:USERPROFILE ".know-me"
 $InstallDir = if ($env:KNOWNS_INSTALL_DIR) { $env:KNOWNS_INSTALL_DIR } else { $DefaultInstallDir }
 
 # ─── Platform detection ───────────────────────────────────────────────

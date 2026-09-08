@@ -17,6 +17,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
 	"github.com/hoangtrung1801/known-me/internal/util"
 	"github.com/spf13/cobra"
@@ -486,7 +487,7 @@ func runScriptManagedUpgrade(meta *util.InstallMetadata) error {
 		binaryPath = exe
 	}
 	if !isUserWritable(binaryPath) {
-		return fmt.Errorf("script-managed install at %s is not writable by the current user; reinstall to ~/.known-me/bin or set KNOWNS_INSTALL_DIR to a user-writable path", binaryPath)
+		return fmt.Errorf("script-managed install at %s is not writable by the current user; reinstall to ~/.know-me/bin or set KNOWNS_INSTALL_DIR to a user-writable path", binaryPath)
 	}
 	version := util.NormalizeVersionTag(util.FetchLatestVersion())
 	if version == "" {
@@ -529,7 +530,7 @@ func inferScriptInstallMetadata() *util.InstallMetadata {
 	if err != nil || home == "" {
 		return nil
 	}
-	defaultDir := filepath.Join(home, ".known-me", "bin")
+	defaultDir := filepath.Join(home, paths.StoreDirName, "bin")
 	exeDir := filepath.Dir(exe)
 	if !samePath(exeDir, defaultDir) {
 		return nil
@@ -555,7 +556,7 @@ func samePath(a, b string) bool {
 
 func isUserWritable(path string) bool {
 	dir := filepath.Dir(path)
-	probe := filepath.Join(dir, ".known-me-write-test")
+	probe := filepath.Join(dir, ".know-me-write-test")
 	if err := os.WriteFile(probe, []byte("ok"), 0644); err != nil {
 		return false
 	}
@@ -779,7 +780,7 @@ func syncMCPConfigs() error {
 	projectRoot := ""
 	dir := cwd
 	for {
-		if _, err := os.Stat(filepath.Join(dir, ".known-me")); err == nil {
+		if _, err := os.Stat(filepath.Join(dir, paths.StoreDirName)); err == nil {
 			projectRoot = dir
 			break
 		}

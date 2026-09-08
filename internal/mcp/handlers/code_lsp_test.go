@@ -177,13 +177,13 @@ func TestLSPPathRequestRequiresPath(t *testing.T) {
 
 func TestCodeSymbolsUsesRuntimeBoundaryPreservingOutputShape(t *testing.T) {
 	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, ".known-me"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".know-me"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte("package main\n\nfunc main() {}\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	store := storage.NewStore(filepath.Join(root, ".known-me"))
+	store := storage.NewStore(filepath.Join(root, ".know-me"))
 	runtime := &fakeCodeRuntime{
 		session: fakeCodeSession{symbols: []lsp.DocumentSymbol{{
 			Name: "main",
@@ -228,7 +228,7 @@ func TestCodeSymbolsUsesRuntimeBoundaryPreservingOutputShape(t *testing.T) {
 func TestCodeFindDirectoryUsesLSPSymbolsForKeywordSearch(t *testing.T) {
 	root := t.TempDir()
 	srcDir := filepath.Join(root, "src")
-	if err := os.MkdirAll(filepath.Join(root, ".known-me"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".know-me"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(srcDir, 0755); err != nil {
@@ -243,7 +243,7 @@ func main() {
 `), 0644); err != nil {
 		t.Fatal(err)
 	}
-	store := storage.NewStore(filepath.Join(root, ".known-me"))
+	store := storage.NewStore(filepath.Join(root, ".know-me"))
 	runtime := &fakeCodeRuntime{
 		session: fakeCodeSession{symbols: []lsp.DocumentSymbol{{
 			Name: "main",
@@ -304,7 +304,7 @@ func main() {
 func TestCodeFindReportsNoLSPSymbolsWhenSymbolsMissing(t *testing.T) {
 	root := t.TempDir()
 	srcDir := filepath.Join(root, "src")
-	if err := os.MkdirAll(filepath.Join(root, ".known-me"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".know-me"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(srcDir, 0755); err != nil {
@@ -313,7 +313,7 @@ func TestCodeFindReportsNoLSPSymbolsWhenSymbolsMissing(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(srcDir, "main.go"), []byte("package main\n\nfunc main() {}\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	store := storage.NewStore(filepath.Join(root, ".known-me"))
+	store := storage.NewStore(filepath.Join(root, ".know-me"))
 	runtime := &fakeCodeRuntime{session: fakeCodeSession{}}
 	req := mcp.CallToolRequest{Params: mcp.CallToolParams{Arguments: map[string]any{
 		"query": "main",
@@ -355,13 +355,13 @@ func TestCodeFindReportsNoLSPSymbolsWhenSymbolsMissing(t *testing.T) {
 
 func TestCodeSymbolsCSharpStartupFailureReturnsStructuredRuntimeError(t *testing.T) {
 	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, ".known-me"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".know-me"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(root, "Program.cs"), []byte("class Program {}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	store := storage.NewStore(filepath.Join(root, ".known-me"))
+	store := storage.NewStore(filepath.Join(root, ".know-me"))
 	mgr := lsp.NewManager(root, lsp.Config{Languages: map[string]lsp.LanguageConfig{
 		lsp.CSharpLanguageID: {Backend: lsp.CSharpBackendRoslyn},
 	}})
@@ -402,13 +402,13 @@ func TestCodeSymbolsCSharpStartupFailureReturnsStructuredRuntimeError(t *testing
 
 func TestLSPBackedCodeActionsPreserveUnsupportedCapabilityPayload(t *testing.T) {
 	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, ".known-me"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".know-me"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte("package main\n\nfunc Target() {}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	store := storage.NewStore(filepath.Join(root, ".known-me"))
+	store := storage.NewStore(filepath.Join(root, ".know-me"))
 	runtimeErr := &lsp.RuntimeError{
 		Code:                   "unsupported_capability",
 		Language:               "go",

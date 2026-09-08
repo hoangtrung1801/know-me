@@ -541,7 +541,7 @@ func TestApplyDocHistoryRetentionMaxAge(t *testing.T) {
 func newVersionTestStore(t *testing.T) *Store {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	root := filepath.Join(t.TempDir(), ".known-me")
+	root := filepath.Join(t.TempDir(), ".know-me")
 	return NewStore(root)
 }
 

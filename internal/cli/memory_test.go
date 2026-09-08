@@ -189,7 +189,7 @@ func setupMemoryCLIStore(t *testing.T, name string) (string, *storage.Store) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	projectRoot := t.TempDir()
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".know-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatalf("load registry: %v", err)
 	}

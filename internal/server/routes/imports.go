@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/hoangtrung1801/known-me/internal/storage"
 )
 
@@ -55,7 +56,7 @@ type ImportEntry struct {
 	Files      []string `json:"files,omitempty"`
 }
 
-// importsDir returns the path to .known-me/imports/.
+// importsDir returns the path to .know-me/imports/.
 func (ir *ImportRoutes) importsDir() string {
 	return filepath.Join(ir.getStore().Root, "imports")
 }
@@ -111,7 +112,7 @@ func (ir *ImportRoutes) buildEntry(name string, includeFiles bool) ImportEntry {
 	return entry
 }
 
-// list returns all registered imports by scanning .known-me/imports/.
+// list returns all registered imports by scanning .know-me/imports/.
 //
 // GET /api/imports
 func (ir *ImportRoutes) list(w http.ResponseWriter, r *http.Request) {
@@ -329,8 +330,8 @@ func (ir *ImportRoutes) gitLsRemoteHead(source, ref string) string {
 	return ""
 }
 
-// gitCloneImport clones a git repo, copies .known-me/docs/ and .known-me/templates/
-// into .known-me/imports/{name}/, and returns the list of changes.
+// gitCloneImport clones a git repo, copies .know-me/docs/ and .know-me/templates/
+// into .know-me/imports/{name}/, and returns the list of changes.
 // If cachedHash matches the remote HEAD, returns nil changes and upToDate=true.
 func (ir *ImportRoutes) gitCloneImport(source, name, ref, cachedHash string, dryRun bool) ([]importChange, []string, string, bool, error) {
 	// Check remote commit hash before cloning.
@@ -367,10 +368,10 @@ func (ir *ImportRoutes) gitCloneImport(source, name, ref, cachedHash string, dry
 		return nil, nil, "", false, fmt.Errorf("git clone failed: %s", errMsg)
 	}
 
-	// Check for .known-me/ directory.
-	knownsDir := filepath.Join(tmpDir, ".known-me")
+	// Check for .know-me/ directory.
+	knownsDir := filepath.Join(tmpDir, paths.StoreDirName)
 	if _, err := os.Stat(knownsDir); os.IsNotExist(err) {
-		return nil, []string{"no .known-me directory found in " + source}, remoteHash, false, nil
+		return nil, []string{"no " + paths.StoreDirName + " directory found in " + source}, remoteHash, false, nil
 	}
 
 	// Collect files from docs/ and templates/ subdirectories.
@@ -532,7 +533,7 @@ func (ir *ImportRoutes) add(w http.ResponseWriter, r *http.Request) {
 		name = nameFromSource(req.Source)
 	}
 
-	// Git URL: clone and copy .known-me/docs + templates.
+	// Git URL: clone and copy .know-me/docs + templates.
 	if isGitURL(req.Source) {
 		changes, warnings, _, _, err := ir.gitCloneImport(req.Source, name, req.Ref, "", req.DryRun)
 		if err != nil {

@@ -1,6 +1,6 @@
 # Configuration
 
-Know-Me stores project configuration in `.known-me/config.json`.
+Know-Me stores project configuration in `.know-me/config.json`.
 
 This file describes what the project wants Know-Me to manage locally, including platform integrations, semantic search settings, and generated artifact behavior.
 
@@ -59,13 +59,13 @@ Supported values:
 
 Behavior:
 
-- `git-tracked`: keep `.known-me/` content tracked in Git
+- `git-tracked`: keep `.know-me/` content tracked in Git
 - `git-ignored`: keep config/docs/templates tracked while leaving some local data out of Git depending on generated ignore rules
 - `none`: do not let Know-Me manage `.gitignore`
 
 ### `settings.gitTracking`
 
-Per-section git tracking toggles. Controls which `.known-me/` subdirectories are included or excluded in `.gitignore`.
+Per-section git tracking toggles. Controls which `.know-me/` subdirectories are included or excluded in `.gitignore`.
 
 | Field | Default | Description |
 |-------|---------|-------------|
@@ -138,7 +138,7 @@ Controls whether generated artifacts should be refreshed after upgrading the CLI
 
 ### When to edit config manually
 
-You can edit `.known-me/config.json` directly if you know what you are doing, but the normal path is:
+You can edit `.know-me/config.json` directly if you know what you are doing, but the normal path is:
 
 - `knownme init` for first-time setup (project structure + git tracking)
 - `knownme init` also creates selected lightweight project instruction shims such as `CLAUDE.md` and `AGENTS.md`
@@ -187,7 +187,7 @@ Interactive `knownme init` needs a terminal at least 90 columns wide. If the ter
 
 Use `knownme sync` after:
 
-- cloning a repo with existing `.known-me/`
+- cloning a repo with existing `.know-me/`
 - updating the CLI
 - wanting to restore generated artifacts to match config
 

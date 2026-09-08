@@ -12,7 +12,7 @@ import (
 func TestStoreResolveRawReference(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 
-	root := filepath.Join(t.TempDir(), ".known-me")
+	root := filepath.Join(t.TempDir(), ".know-me")
 	store := NewStore(root)
 	if err := store.Init("resolve-test"); err != nil {
 		t.Fatalf("init store: %v", err)
@@ -157,7 +157,7 @@ func TestStoreResolveRawReference(t *testing.T) {
 }
 
 func TestStoreResolveRawReferenceInvalid(t *testing.T) {
-	store := NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if _, err := store.ResolveRawReference("not-a-ref"); err == nil {
 		t.Fatal("expected invalid ref error")
 	}

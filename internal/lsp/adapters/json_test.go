@@ -108,7 +108,7 @@ func TestJSONAdapterRouting(t *testing.T) {
 		})
 	}
 
-	for _, path := range []string{".known-me/config.json", `C:\repo\.known-me\config.json`} {
+	for _, path := range []string{".know-me/config.json", `C:\repo\.know-me\config.json`} {
 		t.Run(path+" hard excluded", func(t *testing.T) {
 			if lang, ok := registry.ForPath(path); ok {
 				t.Fatalf("ForPath(%q) = %q, want no route", path, lang.ID)

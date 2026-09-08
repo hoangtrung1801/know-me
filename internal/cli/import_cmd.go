@@ -13,6 +13,7 @@ import (
 
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"github.com/hoangtrung1801/known-me/internal/paths"
 	"github.com/spf13/cobra"
 )
 
@@ -382,7 +383,7 @@ func cliGitLsRemoteHead(source, ref string) string {
 // errUpToDate is returned when the remote commit hash matches the cached hash.
 var errUpToDate = fmt.Errorf("already up to date")
 
-// cliGitSync clones a git repo and copies .known-me/docs and .known-me/templates into importDir.
+// cliGitSync clones a git repo and copies .know-me/docs and .know-me/templates into importDir.
 // If cachedHash is non-empty and matches the remote HEAD, returns errUpToDate without cloning.
 // Returns the remote commit hash so callers can persist it.
 func cliGitSync(source, ref, importDir, name, cachedHash string, force bool) (added, updated, skipped int, commitHash string, err error) {
@@ -422,10 +423,10 @@ func cliGitSync(source, ref, importDir, name, cachedHash string, force bool) (ad
 		return 0, 0, 0, "", fmt.Errorf("git clone failed: %s", errMsg)
 	}
 
-	// Check for .known-me/ directory.
-	knownsDir := filepath.Join(tmpDir, ".known-me")
+	// Check for .know-me/ directory.
+	knownsDir := filepath.Join(tmpDir, paths.StoreDirName)
 	if _, err := os.Stat(knownsDir); os.IsNotExist(err) {
-		return 0, 0, 0, "", fmt.Errorf("no .known-me directory found in %s", source)
+		return 0, 0, 0, "", fmt.Errorf("no %s directory found in %s", paths.StoreDirName, source)
 	}
 
 	for _, sub := range []string{"docs", "templates"} {

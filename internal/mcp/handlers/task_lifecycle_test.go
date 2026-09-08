@@ -15,7 +15,7 @@ import (
 )
 
 func TestTaskLifecycleMCPContractAndTrustedPermission(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("mcp"); err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestTaskLifecycleMCPContractAndTrustedPermission(t *testing.T) {
 }
 
 func TestRegisteredTaskLifecycleMCPMiddlewarePreservesSharedResponse(t *testing.T) {
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("registered-mcp"); err != nil {
 		t.Fatal(err)
 	}

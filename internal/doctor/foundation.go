@@ -89,7 +89,7 @@ func projectConfigChecker(store *storage.Store) Checker {
 						"errorCode": "config_invalid",
 					},
 					Remediation: &Remediation{
-						Description: "Repair .known-me/config.json or restore it from version control.",
+						Description: "Repair .know-me/config.json or restore it from version control.",
 					},
 				}, nil
 			}
@@ -123,7 +123,7 @@ func projectStorageChecker(store *storage.Store) Checker {
 						"errorCode": "storage_root_unavailable",
 					},
 					Remediation: &Remediation{
-						Description: "Restore the .known-me directory or initialize the project again.",
+						Description: "Restore the .know-me directory or initialize the project again.",
 						Command:     "knownme init",
 					},
 				}, nil
@@ -138,7 +138,7 @@ func projectStorageChecker(store *storage.Store) Checker {
 						"errorCode": "storage_root_unreadable",
 					},
 					Remediation: &Remediation{
-						Description: "Restore read permissions for the .known-me directory.",
+						Description: "Restore read permissions for the .know-me directory.",
 					},
 				}, nil
 			}

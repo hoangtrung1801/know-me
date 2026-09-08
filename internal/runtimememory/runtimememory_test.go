@@ -13,7 +13,7 @@ import (
 func TestBuildSelectsRelevantProjectAndGlobalMemories(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestBuildSelectsRelevantProjectAndGlobalMemories(t *testing.T) {
 func TestBuildReturnsNoneWhenNoRelevantMemoryExists(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestBuildReturnsNoneWhenNoRelevantMemoryExists(t *testing.T) {
 func TestBuildExcludesNonActiveMemoryByDefault(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestBuildExcludesNonActiveMemoryByDefault(t *testing.T) {
 func TestBuildSkipsLowSignalPrompts(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -236,7 +236,7 @@ func TestBuildSkipsLowSignalPrompts(t *testing.T) {
 func TestBuildSkipsWeakSingleCandidate(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -267,7 +267,7 @@ func TestBuildSkipsWeakSingleCandidate(t *testing.T) {
 func TestBuildModeOffSuppressesInjectionAndCapture(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -351,7 +351,7 @@ func TestNormalizeSettingsIncludesIndependentCaptureControl(t *testing.T) {
 func TestCaptureDisabledStillAllowsInjection(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -404,7 +404,7 @@ func TestCaptureDisabledStillAllowsInjection(t *testing.T) {
 func TestHighConfidenceCaptureDoesNotInferProjectDecision(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -437,7 +437,7 @@ func TestHighConfidenceCaptureDoesNotInferProjectDecision(t *testing.T) {
 func TestBuildDebugIsInspectOnly(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -508,7 +508,7 @@ func TestSerializePrefixAddsSilentInstructionForOpenCode(t *testing.T) {
 func TestBuildSessionBaselineIncludesProjectGuidance(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -535,7 +535,7 @@ func TestBuildSessionBaselineIncludesProjectGuidance(t *testing.T) {
 func TestBuildHonorsItemAndByteLimits(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -632,7 +632,7 @@ func TestBuildSerializesMemoryFactsInDeterministicOrder(t *testing.T) {
 	}
 
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -700,7 +700,7 @@ func TestBuildUsesHybridCandidatesWhenAvailable(t *testing.T) {
 	}
 
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -745,7 +745,7 @@ func TestBuildFallsBackWhenHybridUnavailable(t *testing.T) {
 	}
 
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -807,7 +807,7 @@ func TestBuildKeepsEmptyPackCleanWhenHybridReturnsNoUsableCandidates(t *testing.
 	}
 
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -837,7 +837,7 @@ func TestBuildKeepsEmptyPackCleanWhenHybridReturnsNoUsableCandidates(t *testing.
 func TestCaptureStoresStableGlobalPreference(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -891,7 +891,7 @@ func TestCaptureStoresStableGlobalPreference(t *testing.T) {
 func TestCaptureDoesNotInferProjectDecisionFromPrompt(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}
@@ -915,7 +915,7 @@ func TestCaptureDoesNotInferProjectDecisionFromPrompt(t *testing.T) {
 func TestCaptureStoresWorkingContextForTemporaryInstruction(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	projectRoot := t.TempDir()
-	store := storage.NewStore(filepath.Join(projectRoot, ".known-me"))
+	store := storage.NewStore(filepath.Join(projectRoot, ".know-me"))
 	if err := store.Init("runtime-memory"); err != nil {
 		t.Fatalf("init store: %v", err)
 	}

@@ -314,7 +314,7 @@ function seedArchivedDecision(body: { title: string; tags: string[]; context: st
 	const id = `20260724-1200-${slug}`;
 	const timestamp = "2026-07-24T12:00:00Z";
 	writeFileSync(
-		join(server.projectDir, ".known-me", "decisions", `${id}.md`),
+		join(server.projectDir, ".know-me", "decisions", `${id}.md`),
 		`---\nid: ${id}\ntitle: ${body.title}\nstatus: archived\nsupersedes: []\nsupersededBy: []\ntags:\n${body.tags.map((tag) => `  - ${tag}`).join("\n")}\nsources: []\nrelatedDocs: []\nrelatedTasks: []\nverification: []\ncreatedAt: '${timestamp}'\nupdatedAt: '${timestamp}'\n---\n\n## Context\n\n${body.context}\n\n## Decision\n\n${body.decision}\n\n## Alternatives Considered\n\n\n\n## Consequences\n\n`,
 	);
 	return { id, title: body.title };
@@ -323,7 +323,7 @@ function seedArchivedDecision(body: { title: string; tags: string[]; context: st
 function seedLegacyDecisionMemory(id: string, title: string) {
 	const timestamp = "2026-07-24T12:00:00Z";
 	writeFileSync(
-		join(server.projectDir, ".known-me", "memory", `memory-${id}.md`),
+		join(server.projectDir, ".know-me", "memory", `memory-${id}.md`),
 		`---\nid: ${id}\ntitle: ${title}\nlayer: project\ncategory: decision\nstatus: active\nsources: []\ntags: []\ncreatedAt: '${timestamp}'\nupdatedAt: '${timestamp}'\n---\n\nThis legacy record should remain readable until explicitly migrated.\n`,
 	);
 }

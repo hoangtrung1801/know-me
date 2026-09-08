@@ -15,7 +15,7 @@ import (
 // an SSE event. This is used by MCP handlers (which run in a separate process)
 // to notify the Web UI of data changes.
 //
-// It reads the server port from .known-me/.server-port and POSTs to the
+// It reads the server port from .know-me/.server-port and POSTs to the
 // /api/notify/* endpoints. Failures are silently ignored since the server
 // may not be running.
 func notifyServer(store *storage.Store, path string) {
@@ -39,7 +39,7 @@ func notifyServer(store *storage.Store, path string) {
 	resp.Body.Close()
 }
 
-// readServerPort reads the server port from .known-me/.server-port.
+// readServerPort reads the server port from .know-me/.server-port.
 func readServerPort(store *storage.Store) string {
 	portFile := filepath.Join(store.Root, ".server-port")
 	data, err := os.ReadFile(portFile)

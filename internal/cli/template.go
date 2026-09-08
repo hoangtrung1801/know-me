@@ -211,7 +211,7 @@ func runTemplateRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Determine the project root (one level up from .known-me/).
+	// Determine the project root (one level up from .know-me/).
 	projectRoot := store.RepositoryRoot()
 	engine := codegen.NewEngine(projectRoot)
 
@@ -300,7 +300,7 @@ func runTemplateCreate(cmd *cobra.Command, args []string) error {
 	if doc != "" {
 		fmt.Println(RenderKeyValue("Linked doc", doc))
 	}
-	fmt.Printf("%s .known-me/templates/%s/\n", StyleDim.Render("Edit the template at:"), name)
+	fmt.Printf("%s .know-me/templates/%s/\n", StyleDim.Render("Edit the template at:"), name)
 	return nil
 }
 

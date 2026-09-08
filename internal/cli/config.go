@@ -1168,7 +1168,7 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 		_ = store.Config.Set("settings.semanticSearch.model", model)
 		*embeddingEnabled = true
 
-		// Register model in ~/.known-me/settings.json so sync can find it
+		// Register model in ~/.know-me/settings.json so sync can find it
 		embStore := storage.NewEmbeddingSettingsStore()
 		embSettings, _ := embStore.Load()
 		// Find dimensions from the selected model
@@ -1272,7 +1272,7 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 			continue
 		}
 
-		// Save API key to ~/.known-me/settings.json (never in project config)
+		// Save API key to ~/.know-me/settings.json (never in project config)
 		embSettings.Providers["api"] = storage.EmbeddingProvider{
 			Name:    "API Provider",
 			APIBase: apiBase,

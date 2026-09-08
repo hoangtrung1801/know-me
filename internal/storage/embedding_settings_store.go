@@ -1,5 +1,5 @@
 // Package storage — EmbeddingSettingsStore manages global embedding provider
-// and model configuration at ~/.known-me/settings.json.
+// and model configuration at ~/.know-me/settings.json.
 // API keys and provider credentials live here (never in project config).
 package storage
 
@@ -51,12 +51,12 @@ type ProjectDefaults struct {
 	Settings    models.ProjectSettings `json:"settings,omitempty"`
 }
 
-// EmbeddingSettingsStore reads and writes ~/.known-me/settings.json.
+// EmbeddingSettingsStore reads and writes ~/.know-me/settings.json.
 type EmbeddingSettingsStore struct {
 	filePath string
 }
 
-// NewEmbeddingSettingsStore creates a store with the default path (~/.known-me/settings.json).
+// NewEmbeddingSettingsStore creates a store with the default path (~/.know-me/settings.json).
 func NewEmbeddingSettingsStore() *EmbeddingSettingsStore {
 	return &EmbeddingSettingsStore{
 		filePath: filepath.Join(paths.GlobalStoreRoot(), "settings.json"),

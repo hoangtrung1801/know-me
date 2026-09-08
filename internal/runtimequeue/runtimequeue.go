@@ -257,7 +257,7 @@ func queuePath(storeRoot string) string {
 // keeping the filename human-readable.
 func sanitizeProjectKey(storeRoot string) string {
 	clean := filepath.Clean(storeRoot)
-	base := filepath.Base(filepath.Dir(clean)) // parent of .known-me
+	base := filepath.Base(filepath.Dir(clean)) // parent of .know-me
 	if base == "" || base == "." || base == string(filepath.Separator) {
 		base = "default"
 	}

@@ -51,7 +51,7 @@ Generates AI platform artifacts such as skills, MCP configs, platform-specific c
 
 ### `knownme sync`
 
-Re-applies `.known-me/config.json` to the current machine.
+Re-applies `.know-me/config.json` to the current machine.
 
 Use it after:
 

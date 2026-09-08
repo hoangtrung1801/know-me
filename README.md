@@ -77,8 +77,8 @@ One Go application, three entry points over the same storage and domain services
 
 Storage layout:
 
-- `<repo>/.known-me/` — project database: tasks, docs, decisions, memories (Markdown + JSON, Git-friendly).
-- `~/.known-me/` — personal database: project registry, saved links, memos, global memory.
+- `<repo>/.know-me/` — project database: tasks, docs, decisions, memories (Markdown + JSON, Git-friendly).
+- `~/.know-me/` — personal database: project registry, saved links, memos, global memory.
 - Search indexes are derived and rebuildable; delete them any time.
 
 ## Quick start

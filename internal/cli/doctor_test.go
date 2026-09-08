@@ -375,7 +375,7 @@ func doctorTestChecker(id string, scope doctor.Scope, result doctor.CheckResult)
 
 func newDoctorCLIStore(t *testing.T) *storage.Store {
 	t.Helper()
-	store := storage.NewStore(filepath.Join(t.TempDir(), ".known-me"))
+	store := storage.NewStore(filepath.Join(t.TempDir(), ".know-me"))
 	if err := store.Init("doctor-cli-test"); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}

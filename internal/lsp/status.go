@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/hoangtrung1801/known-me/internal/paths"
 )
 
 const (
@@ -543,5 +545,5 @@ func LanguageLogPath(root, languageID string) string {
 	if root == "" || languageID == "" {
 		return ""
 	}
-	return filepath.Join(root, ".known-me", "logs", "lsp", languageID+".log")
+	return filepath.Join(root, paths.StoreDirName, "logs", "lsp", languageID+".log")
 }

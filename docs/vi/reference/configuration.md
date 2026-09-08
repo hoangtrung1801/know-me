@@ -1,6 +1,6 @@
 # Cấu hình
 
-Know-Me lưu project config trong `.known-me/config.json`.
+Know-Me lưu project config trong `.know-me/config.json`.
 
 File này khai báo những gì Know-Me cần quản lý locally: platform integrations, semantic search, generated artifacts.
 
@@ -49,13 +49,13 @@ Tên project hiển thị trong Know-Me.
 
 ### `settings.gitTrackingMode`
 
-- `git-tracked` — `.known-me/` content tracked trong Git
+- `git-tracked` — `.know-me/` content tracked trong Git
 - `git-ignored` — config/docs/templates tracked, local data thì không
 - `none` — Know-Me không quản lý `.gitignore`
 
 ### `settings.gitTracking`
 
-Per-section git tracking toggles. Kiểm soát subdirectories nào trong `.known-me/` được include/exclude trong `.gitignore`.
+Per-section git tracking toggles. Kiểm soát subdirectories nào trong `.know-me/` được include/exclude trong `.gitignore`.
 
 | Field | Default | Mô tả |
 |-------|---------|-------|
@@ -93,7 +93,7 @@ Supported: `claude-code`, `opencode`, `codex`, `kiro`, `antigravity`, `cursor`, 
 
 ## Khi nào edit config trực tiếp?
 
-Có thể edit `.known-me/config.json` trực tiếp, nhưng flow thường là:
+Có thể edit `.know-me/config.json` trực tiếp, nhưng flow thường là:
 
 - `knownme init` cho lần đầu (project structure + git tracking)
 - `knownme init` cũng tạo selected lightweight project instruction shims như `CLAUDE.md` và `AGENTS.md`

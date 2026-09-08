@@ -22,7 +22,7 @@ func TestResolveProjectUsesWorkspaceLink(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	t.Chdir(repo)
-	reg := registry.NewRegistryWithPath(filepath.Join(home, ".known-me", "registry.json"))
+	reg := registry.NewRegistryWithPath(filepath.Join(home, ".know-me", "registry.json"))
 	if err := reg.Load(); err != nil {
 		t.Fatal(err)
 	}

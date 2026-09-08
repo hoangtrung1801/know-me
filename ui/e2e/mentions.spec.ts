@@ -223,7 +223,7 @@ test.describe("Semantic Reference Badges", () => {
 			server.cli('memory create "Canonical Memory" --layer project --category pattern -c "Remember canonical refs"');
 			server.cli('doc create "Decision Source" -d "Decision source" -t "decision"');
 			decisionId = "20260618-1024-use-canonical-slash-refs";
-		const decisionsDir = join(server.projectDir, ".known-me", "decisions");
+		const decisionsDir = join(server.projectDir, ".know-me", "decisions");
 			mkdirSync(decisionsDir, { recursive: true });
 			writeFileSync(
 				join(decisionsDir, `${decisionId}.md`),

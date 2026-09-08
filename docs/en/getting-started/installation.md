@@ -71,7 +71,7 @@ PLATFORM=linux-x64 # darwin-arm64, darwin-x64, or linux-arm64
 ARCHIVE="knowns-${PLATFORM}.tar.gz"
 BASE_URL="https://github.com/hoangtrung1801/know-me/releases/download/${VERSION}"
 
-mkdir -p "$HOME/.known-me/bin"
+mkdir -p "$HOME/.know-me/bin"
 curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
   -o "/tmp/$ARCHIVE" "$BASE_URL/$ARCHIVE"
 curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
@@ -79,22 +79,22 @@ curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
 
 echo "$(awk '{print $1}' "/tmp/$ARCHIVE.sha256")  /tmp/$ARCHIVE" \
   | shasum -a 256 -c -
-tar -xzf "/tmp/$ARCHIVE" -C "$HOME/.known-me/bin"
-chmod +x "$HOME/.known-me/bin/knownme"
-ln -sf "$HOME/.known-me/bin/knownme" "$HOME/.known-me/bin/kn"
+tar -xzf "/tmp/$ARCHIVE" -C "$HOME/.know-me/bin"
+chmod +x "$HOME/.know-me/bin/knownme"
+ln -sf "$HOME/.know-me/bin/knownme" "$HOME/.know-me/bin/kn"
 
-export PATH="$HOME/.known-me/bin:$PATH"
+export PATH="$HOME/.know-me/bin:$PATH"
 knownme --version
 ```
 
 For a binary already extracted, copy it directly:
 
 ```bash
-mkdir -p "$HOME/.known-me/bin"
-cp ./knownme "$HOME/.known-me/bin/knownme"
-chmod +x "$HOME/.known-me/bin/knownme"
-ln -sf "$HOME/.known-me/bin/knownme" "$HOME/.known-me/bin/kn"
-export PATH="$HOME/.known-me/bin:$PATH"
+mkdir -p "$HOME/.know-me/bin"
+cp ./knownme "$HOME/.know-me/bin/knownme"
+chmod +x "$HOME/.know-me/bin/knownme"
+ln -sf "$HOME/.know-me/bin/knownme" "$HOME/.know-me/bin/kn"
+export PATH="$HOME/.know-me/bin:$PATH"
 knownme --version
 ```
 
