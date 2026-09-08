@@ -5,11 +5,11 @@
 <h1 align="center">Know-Me</h1>
 
 <p align="center">
-  <strong>The memory layer for AI-native software development.</strong>
+  <strong>Your personal database for everything you collect.</strong>
 </p>
 
 <p align="center">
-  <sub>Local-first · File-based · Built for developers and AI agents</sub>
+  <sub>Local-first · File-based · Tasks · Docs · Memos · Links · AI-searchable</sub>
 </p>
 
 <p align="center">
@@ -29,9 +29,10 @@
 
 ---
 
-Know-Me gives a project one durable context layer for humans and AI. Keep
-tasks, docs, decisions, memories, templates, and references close to the code,
-then find them through the CLI, Web UI, or MCP.
+Know-Me is a personal database for everything you have and collect. Tasks,
+project docs, quick memos, saved links, decisions, and memories live in one
+centralized, local-first place — then AI helps you collect, search, and add
+context to what's around them.
 
 The product is called **Know-Me**. The command-line interface is `knownme`.
 The npm package keeps the name `knowns` for distribution compatibility.
@@ -40,35 +41,44 @@ The npm package keeps the name `knowns` for distribution compatibility.
   <img src="./images/how-knowns-works.png" alt="Know-Me workspace" width="100%">
 </p>
 
-## Why Know-Me?
+## What you keep in Know-Me
 
-AI works better when project context is explicit instead of trapped in chat
-history. Know-Me makes that context readable, searchable, versionable, and
-available to every interface:
-
-| Capability | What it provides |
+| Database | What it holds |
 |---|---|
-| **Project context** | Tasks, docs, decisions, memory, templates, and references |
-| **Local-first storage** | Human-readable data in `.known-me/`, commits cleanly with Git |
-| **Search and retrieval** | Keyword, hybrid, semantic, and reference-aware lookup |
-| **Code intelligence** | Indexed symbols, dependencies, references, and code search |
-| **AI integration** | MCP server, platform setup, skills, and runtime workflows |
-| **Workspace** | Project registry, boards, graphs, chat, links, memos, time tracking |
+| **Projects** | Centralized home per project; every task, doc, and decision links back to one |
+| **Tasks & Kanban** | Planned work with status, acceptance criteria, notes; `board` renders the Kanban view |
+| **Documents** | Durable project knowledge — specs, architecture, onboarding, journals |
+| **Memos** | Fast global notes and captures, no project required |
+| **Links** | Saved URLs with metadata for reading later or referencing from tasks/docs |
+| **Memory & Decisions** | Reusable conventions plus recorded system decisions with evidence |
 
-See [Philosophy](./PHILOSOPHY.md) for the design principles behind this.
+Everything is human-readable on disk (Markdown + JSON), versionable with Git,
+and searchable from any interface. See [Philosophy](./PHILOSOPHY.md) for why.
+
+## Collect with AI, search with context
+
+AI is a collection and recall assistant, not a black box:
+
+- **Collect** — capture a memo, link, task, or doc from the CLI, Web UI, or an agent; Know-Me files it in the right database.
+- **Search** — keyword, hybrid, semantic, and reference-aware lookup across tasks, docs, memories, and decisions.
+- **Enrich** — `retrieve` pulls ranked context for the thing you're working on, so agents and humans see surrounding decisions, docs, and code references instead of guessing.
+
+Nothing important lives only in chat history. If it's worth keeping, it goes
+in the database with a reference (`@doc/<path>`, `@task/<id>`) that resolves
+to the exact source every time.
 
 ## How it works
 
 One Go application, three entry points over the same storage and domain services:
 
-- **CLI** — scriptable commands for managing project context.
-- **Web UI** — local browser workspace for boards, docs, graphs, and chat.
-- **MCP server** — structured tools for AI agents (`initial` + `help` entry points).
+- **CLI** — scriptable capture and management (`task`, `doc`, `memo`, `link`, `board`, `search`).
+- **Web UI** — local browser workspace for Kanban boards, docs, graphs, and chat workflows.
+- **MCP server + skills** — agents connect straight to your personal database via structured MCP tools and skills (see below).
 
 Storage layout:
 
-- `<repo>/.known-me/` — project data: tasks, docs, decisions, memories (Markdown + JSON, Git-friendly).
-- `~/.known-me/` — global data: project registry, saved links, memos, global memory.
+- `<repo>/.known-me/` — project database: tasks, docs, decisions, memories (Markdown + JSON, Git-friendly).
+- `~/.known-me/` — personal database: project registry, saved links, memos, global memory.
 - Search indexes are derived and rebuildable; delete them any time.
 
 ## Quick start
@@ -79,22 +89,30 @@ knownme init
 ```
 
 ```bash
-# Plan work
+# Capture fleeting notes and links — no project ceremony needed
+knownme memo add "Idea: weekly review every Friday"
+knownme link add https://example.com/article
+
+# Manage a project: tasks on a Kanban board
 knownme task create "Set up the release" -d "Prepare the first release checklist"
+knownme board
 
 # Record durable knowledge
 knownme doc create "Architecture" -d "System overview" -f architecture
 
-# Find and validate context
-knownme search "architecture" --plain
+# Search everything, then validate the database
+knownme search "release" --plain
 knownme retrieve "release" --json
 knownme validate --plain
 
-# Open the local workspace
+# Open the visual workspace
 knownme browser --open
 ```
 
 ## Connect an AI agent
+
+Agents read and write the same personal database you use — via MCP tools and
+skills, not copy-pasted chat logs:
 
 ```bash
 # User-level setup for a platform
@@ -156,7 +174,10 @@ knownme --version
 |---|---|
 | `knownme init` | Initialize or register a project |
 | `knownme task ...` | Create and manage planned work |
+| `knownme board` | Show the Kanban board |
 | `knownme doc ...` | Create and manage project documentation |
+| `knownme memo ...` | Capture and list fast global notes |
+| `knownme link ...` | Save and list links for later |
 | `knownme memory ...` | Store reusable project or global context |
 | `knownme decision ...` | Record and review system decisions |
 | `knownme search ...` | Search tasks, docs, memories, and decisions |
