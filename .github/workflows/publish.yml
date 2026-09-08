@@ -1,4 +1,4 @@
-name: Build Release Binaries
+name: Build & Publish Know-Me Release Binaries
 
 on:
   release:
@@ -464,6 +464,9 @@ jobs:
               -exec cp -R {} "$staging/" \;
             tar -czvf "${pkg}.tar.gz" -C "$staging" .
             shasum -a 256 "${pkg}.tar.gz" > "${pkg}.tar.gz.sha256"
+            alias_pkg=$(echo "$pkg" | sed 's/^knowns-/knownme-/')
+            cp "${pkg}.tar.gz" "${alias_pkg}.tar.gz"
+            shasum -a 256 "${alias_pkg}.tar.gz" > "${alias_pkg}.tar.gz.sha256"
             rm -rf "$staging"
           done
 
@@ -471,12 +474,12 @@ jobs:
         run: |
           for archive in \
             knowns-darwin-arm64.tar.gz; do
-            tar -tzf "$archive" | grep -Fx "./knownme" >/dev/null || { echo "$archive missing knowns"; exit 1; }
+            tar -tzf "$archive" | grep -Fx "./knownme" >/dev/null || { echo "$archive missing knownme"; exit 1; }
             tar -tzf "$archive" | grep -E "^\./libonnxruntime.*\.dylib$" >/dev/null || { echo "$archive missing libonnxruntime dylib"; exit 1; }
           done
 
           tar -tzf knowns-darwin-x64.tar.gz | grep -Fx "./knownme" >/dev/null || {
-            echo "knowns-darwin-x64.tar.gz missing knowns"
+            echo "knowns-darwin-x64.tar.gz missing knownme"
             exit 1
           }
           if tar -tzf knowns-darwin-x64.tar.gz | grep -i "onnxruntime" >/dev/null; then
@@ -487,7 +490,7 @@ jobs:
           for archive in \
             knowns-linux-arm64.tar.gz \
             knowns-linux-x64.tar.gz; do
-            tar -tzf "$archive" | grep -Fx "./knownme" >/dev/null || { echo "$archive missing knowns"; exit 1; }
+            tar -tzf "$archive" | grep -Fx "./knownme" >/dev/null || { echo "$archive missing knownme"; exit 1; }
             tar -tzf "$archive" | grep -E "^\./libonnxruntime\.so" >/dev/null || { echo "$archive missing libonnxruntime.so"; exit 1; }
           done
 
