@@ -49,7 +49,7 @@ requestInfoReplyComment: |
   Please update your issue with the following details:
 
   **For bug reports:**
-  - Know-Me CLI version (`knowns --version`)
+  - Know-Me CLI version (`knownme --version`)
   - Operating system and version
   - Node.js version (`node --version`)
   - Steps to reproduce the issue
@@ -111,7 +111,7 @@ addAssignees: true
 
 # Reviewers list (GitHub usernames)
 reviewers:
-  - knowns-dev
+  - hoangtrung1801
   # Add more reviewers here
 
 # Assignees list (use 'author' to assign PR author)

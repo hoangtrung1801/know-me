@@ -49,7 +49,7 @@ body:
     id: version
     attributes:
       label: Know-Me CLI Version
-      description: Run `knowns --version`
+      description: Run `knownme --version`
       placeholder: "0.6.0"
     validations:
       required: true

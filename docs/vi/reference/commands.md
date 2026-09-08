@@ -87,8 +87,8 @@ knownme search --reindex
 knownme retrieve "how auth works" --json
 knownme retrieve "auth flow" --source-types doc,task --json
 
-knowns resolve "@doc/specs/auth{implements}" --plain
-knowns resolve "@doc/specs/auth{depends}" --direction inbound --depth 2 --plain
+knownme resolve "@doc/specs/auth{implements}" --plain
+knownme resolve "@doc/specs/auth{depends}" --direction inbound --depth 2 --plain
 ```
 
 ## Memory
@@ -197,8 +197,8 @@ knownme browser --port 6421
 
 ```bash
 knownme status
-knowns audit recent
-knowns audit stats
+knownme audit recent
+knownme audit stats
 ```
 
 Dùng `status` để xem project readiness, và `audit` để inspect MCP tool calls gần đây.
@@ -250,8 +250,8 @@ Dùng `knownme runtime-memory hook --json` khi caller cần structured metadata 
 ## Tunnel
 
 ```bash
-knowns tunnel status
-knowns tunnel stop
+knownme tunnel status
+knownme tunnel stop
 ```
 
 Dùng tunnel commands để inspect hoặc stop Cloudflare Quick Tunnels cho local server sharing.

@@ -188,8 +188,8 @@ Use retrieve when you want a ranked context pack rather than a flat result list.
 ### Resolve
 
 ```bash
-knowns resolve "@doc/specs/auth{implements}" --plain
-knowns resolve "@doc/specs/auth{depends}" --direction inbound --depth 2 --plain
+knownme resolve "@doc/specs/auth{implements}" --plain
+knownme resolve "@doc/specs/auth{depends}" --direction inbound --depth 2 --plain
 ```
 
 Use resolve to traverse structural relationships between docs, tasks, and other entities.
@@ -306,8 +306,8 @@ knownme browser --port 6421
 
 ```bash
 knownme status
-knowns audit recent
-knowns audit stats
+knownme audit recent
+knownme audit stats
 ```
 
 Use `status` for project readiness and `audit` to inspect recent MCP tool calls.
@@ -361,8 +361,8 @@ Use `knownme runtime-memory hook --json` when a caller needs structured metadata
 ## Tunnels
 
 ```bash
-knowns tunnel status
-knowns tunnel stop
+knownme tunnel status
+knownme tunnel stop
 ```
 
 Use tunnel commands to inspect or stop Cloudflare Quick Tunnels created for local server sharing.

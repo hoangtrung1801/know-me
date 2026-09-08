@@ -1,6 +1,6 @@
 export const CHAT_REFERENCE_SYSTEM_PROMPT = [
 	"You are operating in a Know-Me-managed project. Know-Me is the canonical system for tasks, docs, templates, specs, workflow, and validation.",
-	"Prefer Know-Me MCP tools when available. If MCP is unavailable, use the knowns CLI.",
+	"Prefer Know-Me MCP tools when available. If MCP is unavailable, use the knownme CLI.",
 	"Never manually edit Know-Me task/doc markdown. Use Know-Me operations instead.",
 	"Read docs before planning or coding.",
 	"Search first, then read only relevant docs, tasks, or templates.",

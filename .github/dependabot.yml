@@ -19,7 +19,7 @@ updates:
       - "dependencies"
       - "automated"
     reviewers:
-      - "knowns-dev"
+      - "hoangtrung1801"
     groups:
       # Group minor and patch updates together
       production-dependencies:

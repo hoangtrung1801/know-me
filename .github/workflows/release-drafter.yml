@@ -25,7 +25,8 @@ jobs:
     name: Update Release Draft
     runs-on: ubuntu-latest
     # Only run on main branch pushes, not PRs from forks
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    if: false  # TEMPORARILY DISABLED (was: push-or-own-PR guard) — re-enable by restoring the guard below
+    # if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     permissions:
       contents: write
       pull-requests: write

@@ -11,7 +11,7 @@ explicitly. For product principles, see [PHILOSOPHY.md](./PHILOSOPHY.md).
 Know-Me is a local-first Go application distributed as one executable. The
 same core storage and domain models are exposed through three entry points:
 
-- the Cobra CLI (`knowns`);
+- the Cobra CLI (`knownme`);
 - the local browser server and embedded React UI; and
 - the stdio MCP server used by AI agents.
 

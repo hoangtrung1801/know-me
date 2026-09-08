@@ -1,19 +1,14 @@
 #!/bin/sh
 # Know-Me CLI installer
 # Usage:
-#   export GITHUB_PAT=ghp_...
-#   curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
-#     https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh \
-#     | GITHUB_PAT="$GITHUB_PAT" sh
-#   wget -qO- --header="Authorization: Bearer $GITHUB_PAT" \
-#     https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh \
-#     | GITHUB_PAT="$GITHUB_PAT" sh
+#   curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
+#   wget -qO- https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 #
 # Options (via env vars):
 #   KNOWNS_INSTALL_DIR  — install directory (default: ~/.known-me/bin)
 #   KNOWNS_VERSION      — specific version (default: latest)
 #   KNOWNS_NO_SYMLINK   — set to 1 to skip creating 'kn' symlink
-#   GITHUB_PAT          — GitHub PAT; prompted for when not set
+#   GITHUB_PAT          — optional GitHub PAT (helps avoid API rate limits)
 #   KNOWNS_GITHUB_TOKEN — alias for GITHUB_PAT
 
 set -e
@@ -41,23 +36,12 @@ info()    { printf "  ${DIM}%s${RESET}\n" "$1"; }
 success() { printf "  ${GREEN}✓${RESET} %s\n" "$1"; }
 error()   { printf "  ${RED}✗${RESET} %s\n" "$1" >&2; exit 1; }
 
-require_github_token() {
+setup_auth_header() {
     GITHUB_TOKEN="${GITHUB_PAT:-${KNOWNS_GITHUB_TOKEN:-}}"
+    AUTH_HEADER=""
     if [ -n "$GITHUB_TOKEN" ]; then
-        return
+        AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
     fi
-
-    if [ ! -r /dev/tty ]; then
-        error "GITHUB_PAT is required when stdin is not interactive"
-    fi
-
-    printf "  GitHub PAT: " >/dev/tty
-    stty -echo </dev/tty
-    IFS= read -r GITHUB_TOKEN </dev/tty
-    stty echo </dev/tty
-    printf "\n" >/dev/tty
-
-    [ -n "$GITHUB_TOKEN" ] || error "GitHub PAT is required"
 }
 
 # ─── Platform detection ───────────────────────────────────────────────
@@ -97,13 +81,25 @@ resolve_version() {
 
     # Fetch latest release tag
     if command -v curl >/dev/null 2>&1; then
-        VERSION=$(curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            "https://api.github.com/repos/${REPO}/releases/latest" \
-            | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+        if [ -n "$AUTH_HEADER" ]; then
+            VERSION=$(curl -fsSL -H "$AUTH_HEADER" \
+                "https://api.github.com/repos/${REPO}/releases/latest" \
+                | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+        else
+            VERSION=$(curl -fsSL \
+                "https://api.github.com/repos/${REPO}/releases/latest" \
+                | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+        fi
     elif command -v wget >/dev/null 2>&1; then
-        VERSION=$(wget -qO- --header="Authorization: Bearer ${GITHUB_TOKEN}" \
-            "https://api.github.com/repos/${REPO}/releases/latest" \
-            | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+        if [ -n "$AUTH_HEADER" ]; then
+            VERSION=$(wget -qO- --header="$AUTH_HEADER" \
+                "https://api.github.com/repos/${REPO}/releases/latest" \
+                | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+        else
+            VERSION=$(wget -qO- \
+                "https://api.github.com/repos/${REPO}/releases/latest" \
+                | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+        fi
     else
         error "curl or wget is required"
     fi
@@ -119,9 +115,17 @@ download() {
     url="$1"
     dest="$2"
     if command -v curl >/dev/null 2>&1; then
-        curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -o "$dest" "$url"
+        if [ -n "$AUTH_HEADER" ]; then
+            curl -fsSL -H "$AUTH_HEADER" -o "$dest" "$url"
+        else
+            curl -fsSL -o "$dest" "$url"
+        fi
     elif command -v wget >/dev/null 2>&1; then
-        wget -qO "$dest" --header="Authorization: Bearer ${GITHUB_TOKEN}" "$url"
+        if [ -n "$AUTH_HEADER" ]; then
+            wget -qO "$dest" --header="$AUTH_HEADER" "$url"
+        else
+            wget -qO "$dest" "$url"
+        fi
     else
         error "curl or wget is required"
     fi
@@ -171,7 +175,7 @@ verify_checksum() {
 main() {
     printf "\n  ${BOLD}${CYAN}Know-Me CLI Installer${RESET}\n\n"
 
-    require_github_token
+    setup_auth_header
     detect_platform
     resolve_version
 
