@@ -22,7 +22,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     name: Lint & Test (${{ matrix.os }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26'
@@ -132,7 +132,7 @@ jobs:
     timeout-minutes: 20
     name: macOS Intel CLI Smoke
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26'
@@ -214,7 +214,7 @@ jobs:
       ORT_VERSION: '1.25.0'
     name: Retrieval Evaluation (Pinned Semantic Runtime)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26'
@@ -280,7 +280,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     name: LSP Fixture Smoke (${{ matrix.os }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26'
@@ -426,7 +426,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     name: Build & E2E (${{ matrix.os }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26'
