@@ -1,6 +1,6 @@
 MODULE := github.com/hoangtrung1801/known-me
 BINARY := knownme
-VERSION ?= $(shell git describe --tags 2>/dev/null || node -p "require('../knowns/package.json').version" 2>/dev/null || echo "dev")
+VERSION ?= $(shell git describe --tags 2>/dev/null || node -p "require('./ui/package.json').version" 2>/dev/null || echo "dev")
 LDFLAGS := -s -w -X $(MODULE)/internal/util.Version=$(VERSION)
 BUILD_DIR := bin
 RUNTIME_DOCKER_IMAGE ?= knowns-runtime-smoke

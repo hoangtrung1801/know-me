@@ -1,8 +1,8 @@
 #!/bin/sh
 # Know-Me CLI uninstaller
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/knowns-dev/knowns/main/install/uninstall.sh | sh
-#   wget -qO- https://raw.githubusercontent.com/knowns-dev/knowns/main/install/uninstall.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/uninstall.sh | sh
+#   wget -qO- https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/uninstall.sh | sh
 #
 # Options (via env vars):
 #   KNOWNS_INSTALL_DIR  — install directory (default: /usr/local/bin)

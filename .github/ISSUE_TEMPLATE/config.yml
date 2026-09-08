@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Question / Discussion
-    url: https://github.com/knowns-dev/knowns/discussions
+    url: https://github.com/hoangtrung1801/know-me/discussions
     about: Ask questions or start a discussion
   - name: Documentation
-    url: https://github.com/knowns-dev/knowns#readme
+    url: https://github.com/hoangtrung1801/know-me#readme
     about: Check the documentation first

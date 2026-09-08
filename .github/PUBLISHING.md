@@ -184,5 +184,5 @@ After first publish, configure your package on npm:
 ## Links
 
 - [NPM Package](https://www.npmjs.com/package/knowns)
-- [GitHub Repository](https://github.com/knowns-dev/knowns)
-- [GitHub Actions](https://github.com/knowns-dev/knowns/actions)
+- [GitHub Repository](https://github.com/hoangtrung1801/know-me)
+- [GitHub Actions](https://github.com/hoangtrung1801/know-me/actions)

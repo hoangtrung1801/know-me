@@ -237,7 +237,7 @@ function writeDownloadedPackageMetadata(dest, platformPackage, version) {
         homepage: "https://knowns.sh",
         repository: {
           type: "git",
-          url: "git+https://github.com/knowns-dev/knowns.git",
+          url: "git+https://github.com/hoangtrung1801/know-me.git",
         },
       },
       null,
@@ -247,7 +247,7 @@ function writeDownloadedPackageMetadata(dest, platformPackage, version) {
 }
 
 async function downloadPackageFromGitHubRelease(packageRoot, platformPackage, version) {
-  const baseUrl = `https://github.com/knowns-dev/knowns/releases/download/v${version}/${platformPackage.asset}.tar.gz`;
+  const baseUrl = `https://github.com/hoangtrung1801/know-me/releases/download/v${version}/${platformPackage.asset}.tar.gz`;
   const checksumUrl = `${baseUrl}.sha256`;
 
   const [archive, checksumFile] = await Promise.all([fetchBuffer(baseUrl), fetchBuffer(checksumUrl)]);

@@ -569,7 +569,7 @@ func releaseArtifactURL(version string) (string, error) {
 		return "", err
 	}
 	archive := fmt.Sprintf("knowns-%s.tar.gz", platform)
-	return fmt.Sprintf("https://github.com/knowns-dev/knowns/releases/download/%s/%s", version, archive), nil
+	return fmt.Sprintf("https://github.com/hoangtrung1801/know-me/releases/download/%s/%s", version, archive), nil
 }
 
 func releasePlatform() (string, error) {

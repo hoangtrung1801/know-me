@@ -1,6 +1,6 @@
 # Know-Me CLI installer for Windows
 # Usage:
-#   irm https://raw.githubusercontent.com/knowns-dev/knowns/main/install/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.ps1 | iex
 #
 # Options (via env vars):
 #   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.known-me\bin)
@@ -8,7 +8,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$Repo = "knowns-dev/knowns"
+$Repo = "hoangtrung1801/know-me"
 $Binary = "knownme.exe"
 $AliasBinary = "kn.exe"
 $DefaultInstallDir = Join-Path $env:USERPROFILE ".known-me\bin"

@@ -189,6 +189,6 @@ make ui
 
 - [主页](https://knowns.sh)
 - [npm](https://www.npmjs.com/package/knowns)
-- [GitHub](https://github.com/knowns-dev/knowns)
+- [GitHub](https://github.com/hoangtrung1801/know-me)
 - [Discord](https://discord.knowns.dev)
-- [发布版本](https://github.com/knowns-dev/knowns/releases)
+- [发布版本](https://github.com/hoangtrung1801/know-me/releases)

@@ -371,7 +371,7 @@ jobs:
           const fs = require('fs');
           const path = require('path');
           const version = process.env.VERSION;
-          const repo = { type: 'git', url: 'git+https://github.com/knowns-dev/knowns.git' };
+          const repo = { type: 'git', url: 'git+https://github.com/hoangtrung1801/know-me.git' };
           for (const dir of fs.readdirSync('npm')) {
             const pkgPath = path.join('npm', dir, 'package.json');
             if (!fs.existsSync(pkgPath)) continue;

@@ -1,6 +1,6 @@
 # Know-Me CLI uninstaller for Windows
 # Usage:
-#   irm https://raw.githubusercontent.com/knowns-dev/knowns/main/install/uninstall.ps1 | iex
+#   irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/uninstall.ps1 | iex
 #
 # Options (via env vars):
 #   $env:KNOWNS_INSTALL_DIR  — install directory (default: ~\.known-me\bin)

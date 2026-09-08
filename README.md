@@ -222,7 +222,7 @@ For contributor conventions and the deeper system design, start with the
 ## Links
 
 - [Homepage](https://knowns.sh)
-- [GitHub](https://github.com/hoangtrung1801/known-me)
+- [GitHub](https://github.com/hoangtrung1801/know-me)
 - [npm](https://www.npmjs.com/package/knowns)
 - [Discord](https://discord.knowns.dev)
-- [Releases](https://github.com/hoangtrung1801/known-me/releases)
+- [Releases](https://github.com/hoangtrung1801/know-me/releases)

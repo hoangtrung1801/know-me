@@ -2,7 +2,7 @@
 
 Thank you for considering contributing to Know-Me!
 
-Before you start, please read our [Philosophy](./PHILOSOPHY.md) to understand the principles that guide this project.
+Before you start, please read our [Philosophy](./PHILOSOPHY.md) and [Architecture](./ARCHITECTURE.md) to understand the principles and structure that guide this project.
 
 ---
 
@@ -13,7 +13,7 @@ Before you start, please read our [Philosophy](./PHILOSOPHY.md) to understand th
 Know-Me is intentionally minimal. Before adding a feature, ask:
 
 - Does this align with the [philosophy](./PHILOSOPHY.md)?
-- Can this be achieved with existing primitives (tasks, docs, refs)?
+- Can this be achieved with existing primitives (tasks, docs, decisions, memories, refs)?
 - Will this add complexity for all users, or just some?
 
 **We'd rather have fewer features that work well than many features that complicate.**
@@ -22,27 +22,20 @@ Know-Me is intentionally minimal. Before adding a feature, ask:
 
 Any new feature must respect that `.known-me/` files are the source of truth.
 
-- Don't introduce hidden state
-- Don't require a database
+- Don't introduce hidden remote state
+- Human-readable Markdown and JSON in `.known-me/` are the canonical format
 - Make sure data survives without Know-Me
 
-### 3. CLI-first
+### 3. CLI-first & Agent-native
 
-The CLI is the primary interface. New features should:
+The CLI and MCP server are primary interfaces:
 
-- Work fully from CLI
-- Have `--plain` output for AI consumption
-- Be scriptable and composable
+- Work fully from the CLI (`knownme`)
+- Provide `--plain` output for human and AI consumption
+- Support `--json` for programmatic integration
+- Maintain clean MCP tools in `internal/mcp/`
 
-Web UI can visualize, but shouldn't be required.
-
-### 4. AI-readable
-
-Output should be optimized for AI agents:
-
-- Structured, predictable format
-- References that resolve to real files
-- `--plain` flag for machine consumption
+The Web UI visualizes and coordinates, but core flows must be fully functional from the CLI.
 
 ---
 
@@ -50,215 +43,100 @@ Output should be optimized for AI agents:
 
 ### Prerequisites
 
-- Node.js >= 18
-- Bun (for development)
+- **Go** >= 1.24.2
+- **Bun** (for UI building and Playwright tests)
+- **golangci-lint** (for Go linting)
+- **Make**
 
 ### Setup
 
 ```bash
-# Clone the repo
-git clone https://github.com/knowns-dev/knowns.git
-cd knowns
+# Clone the repository
+git clone https://github.com/hoangtrung1801/know-me.git
+cd know-me
 
-# Install dependencies
-npm install
+# Build UI and CLI binary
+make all
 
-# Run in development mode
-npm run dev
-
-# Run tests
-npm run test
-
-# Lint
-npm run lint
+# Verify the build
+./bin/knownme --version
 ```
 
 ### Project Structure
 
 ```
-src/
-├── commands/     # CLI commands
-├── models/       # Domain models
-├── storage/      # File operations
-├── server/       # Express server
-├── mcp/          # MCP server
-├── ui/           # React frontend
-└── utils/        # Shared utilities
+known-me/
+├── cmd/
+│   ├── knownme/          # Main CLI entry point
+│   └── knowns/           # Distribution alias entry point
+├── internal/
+│   ├── cli/              # Cobra commands and flags
+│   ├── mcp/              # Model Context Protocol server and tools
+│   ├── models/           # Core domain models (tasks, docs, memories, decisions)
+│   ├── storage/          # Local file-based storage (.known-me/)
+│   ├── server/           # Local HTTP server and API routes
+│   ├── search/           # Keyword, hybrid, and semantic search
+│   └── lsp/              # Code intelligence & LSP daemon
+├── ui/                   # React + Vite + TypeScript local workspace UI
+├── install/              # Install and uninstall scripts
+└── tests/                # CLI, MCP, and structural E2E tests
 ```
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed documentation.
 
 ---
 
-## Making Changes
+## Development Workflow
 
-### 1. Create a branch
+### Useful Make Targets
 
 ```bash
-git checkout -b feature/my-feature
-# or
-git checkout -b fix/my-fix
+make all             # Build both UI and CLI
+make build           # Build Go CLI binary (bin/knownme)
+make test            # Run Go unit and race tests
+make lint            # Run golangci-lint
+make test-e2e        # Run CLI and MCP E2E tests
+make test-e2e-ui     # Run Playwright UI E2E tests
+make dev-go          # Run Go server with hot reload (requires air)
+make dev-ui          # Run Vite UI dev server
+make dev-all         # Run both Go and UI dev servers concurrently
 ```
 
-### 2. Make your changes
+### Making Changes
 
-- Write clear, minimal code
-- Follow existing patterns
-- Add tests for new functionality
-- Update documentation if needed
+1. **Create a branch**:
+   ```bash
+   git checkout -b feature/my-feature
+   # or
+   git checkout -b fix/my-fix
+   ```
 
-### 3. Test your changes
+2. **Make your changes**:
+   - Write clear, idiomatic Go and TypeScript
+   - Keep functions focused and packages cohesive
+   - Add tests for new behavior or bug fixes
+   - Keep changes minimal and focused
 
-```bash
-npm run test
-npm run lint
-```
+3. **Verify locally**:
+   ```bash
+   make test
+   make lint
+   ```
 
-### 4. Commit
+4. **Commit with clear Conventional Commits messages**:
+   ```bash
+   git commit -m "feat(cli): add --filter flag to task list"
+   ```
 
-Write clear commit messages:
-
-```
-feat: add time tracking pause/resume
-
-- Add pause and resume subcommands
-- Store pause state in .timer file
-- Update time report to handle paused sessions
-```
-
-### 5. Open a Pull Request
-
-- Describe what you changed and why
-- Reference any related issues
-- Be open to feedback
-
----
-
-## What We're Looking For
-
-### Good contributions
-
-- Bug fixes with tests
-- Documentation improvements
-- Performance optimizations
-- Accessibility improvements
-- CLI usability enhancements
-
-### Contributions that need discussion first
-
-- New commands or major features
-- Changes to file format
-- New dependencies
-- Architectural changes
-
-Please open an issue to discuss before starting work on these.
-
-### What we'll likely decline
-
-- Features that add significant complexity
-- SaaS-style features (user accounts, cloud storage)
-- Heavy dependencies for marginal benefit
-- Changes that break file-first philosophy
+5. **Open a Pull Request**:
+   - Describe what changed and why
+   - Reference any relevant issues
+   - Ensure all CI checks pass
 
 ---
 
-## Code Style
+## Community & Code of Conduct
 
-We use [Biome](https://biomejs.dev/) for linting and formatting.
-
-```bash
-# Check
-npm run lint
-
-# Auto-fix
-npm run lint:fix
-```
-
-### Guidelines
-
-- Use TypeScript strictly
-- Prefer functions over classes
-- Keep files focused and small
-- Use meaningful names
-- Write self-documenting code
-- Add comments only when logic isn't obvious
-
----
-
-## Testing
-
-We use [Vitest](https://vitest.dev/) for testing.
-
-```bash
-# Run all tests
-npm run test
-
-# Run specific test
-npm run test -- src/models/task.test.ts
-
-# Watch mode
-npm run test -- --watch
-```
-
-### What to test
-
-- Domain logic (models)
-- Storage operations
-- Command behavior
-- Edge cases
-
-### What not to test
-
-- UI components (for now)
-- Third-party libraries
-- Trivial code
-
----
-
-## Documentation
-
-### When to update docs
-
-- New commands → update `docs/commands.md`
-- New concepts → update relevant doc
-- Breaking changes → update README + CHANGELOG
-
-### Doc style
-
-- Be concise
-- Use examples
-- Show, don't just tell
-- Keep AI-readability in mind
-
----
-
-## Release Process
-
-Maintainers handle releases. The process:
-
-1. Update version in `package.json`
-2. Update `CHANGELOG.md`
-3. Create git tag
-4. Push to npm
-
----
-
-## Community
-
-- **Issues:** Report bugs, suggest features
-- **Discussions:** Ask questions, share ideas
-- **Pull Requests:** Contribute code
-
-Please be respectful and constructive.
-
----
+This project is governed by the [Contributor Covenant Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you agree to uphold this code.
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
-
----
-
-## Questions?
-
-Open an issue or start a discussion. We're happy to help!
+By contributing, you agree that your contributions will be licensed under the [MIT License](./LICENSE).

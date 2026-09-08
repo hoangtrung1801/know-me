@@ -282,7 +282,7 @@ export function AppSidebar({
 					<div className="px-3 py-2 text-xs text-sidebar-foreground/50">
 						<div className="flex items-center justify-between">
 							<a
-								href="https://github.com/knowns-dev/knowns"
+								href="https://github.com/hoangtrung1801/know-me"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="hover:text-sidebar-foreground transition-colors flex items-center gap-1"

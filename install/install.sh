@@ -3,10 +3,10 @@
 # Usage:
 #   export GITHUB_PAT=ghp_...
 #   curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
-#     https://raw.githubusercontent.com/hoangtrung1801/known-me/main/install/install.sh \
+#     https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh \
 #     | GITHUB_PAT="$GITHUB_PAT" sh
 #   wget -qO- --header="Authorization: Bearer $GITHUB_PAT" \
-#     https://raw.githubusercontent.com/hoangtrung1801/known-me/main/install/install.sh \
+#     https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh \
 #     | GITHUB_PAT="$GITHUB_PAT" sh
 #
 # Options (via env vars):
@@ -18,7 +18,7 @@
 
 set -e
 
-REPO="hoangtrung1801/known-me"
+REPO="hoangtrung1801/know-me"
 BINARY="knownme"
 DEFAULT_INSTALL_DIR="${HOME}/.known-me/bin"
 INSTALL_DIR="${KNOWNS_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"

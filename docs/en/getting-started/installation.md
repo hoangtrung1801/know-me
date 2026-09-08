@@ -69,7 +69,7 @@ export GITHUB_PAT=ghp_...
 VERSION=v1.0.1
 PLATFORM=linux-x64 # darwin-arm64, darwin-x64, or linux-arm64
 ARCHIVE="knowns-${PLATFORM}.tar.gz"
-BASE_URL="https://github.com/hoangtrung1801/known-me/releases/download/${VERSION}"
+BASE_URL="https://github.com/hoangtrung1801/know-me/releases/download/${VERSION}"
 
 mkdir -p "$HOME/.known-me/bin"
 curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \

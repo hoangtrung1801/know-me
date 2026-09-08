@@ -30,7 +30,13 @@ ui/test-results/
 playwright-report/
 test-results/
 
-.claude
-.known-me
-.codex
-.agents
+# Agent local state & generated files
+.known-me/
+.claude/
+.codex/config.toml
+*.local.json
+
+# Local tooling & dev artifacts
+.superpowers/
+.dsh-vision-toolkit/
+.impeccable/
