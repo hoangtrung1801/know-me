@@ -32,3 +32,5 @@ test-results/
 
 .claude
 .known-me
+.codex
+.agents
