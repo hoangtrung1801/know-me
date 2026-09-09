@@ -40,6 +40,7 @@ The npm package keeps the name `knowns` for distribution compatibility.
 <p align="center">
   <img src="./images/screenshot-dashboard.png" alt="Know-Me Workspace Dashboard" width="100%">
 </p>
+
 ## What you keep in Know-Me
 
 | Database               | What it holds                                                                         |
