@@ -490,6 +490,7 @@ jobs:
           for archive in knowme-win-x64.tar.gz; do
             tar -tzf "$archive" | grep -Fx "./knowme.exe" >/dev/null || { echo "$archive missing knowme.exe"; exit 1; }
             tar -tzf "$archive" | grep -Fx "./onnxruntime.dll" >/dev/null || { echo "$archive missing onnxruntime.dll"; exit 1; }
+          done
 
           # Verify ELF architecture matches package platform.
           # e_machine at ELF offset 18: 0x3E = x86_64, 0xB7 = aarch64.
