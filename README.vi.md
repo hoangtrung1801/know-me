@@ -171,7 +171,7 @@ go install github.com/hoangtrung1801/known-me/cmd/knowme@latest
 | [Tham chiếu lệnh](./docs/vi/reference/commands.md) | Các lệnh CLI và ví dụ |
 | [Web UI](./docs/vi/guides/web-ui.md) | Không gian làm việc, bảng việc, link và memo |
 | [Cấu hình](./docs/vi/reference/configuration.md) | Thiết lập và tùy chọn dự án |
-| [Hướng dẫn phát triển](./docs/vi/contributing/developer-guide.md) | Đóng góp cho Know-Me |
+| [Đóng góp](./CONTRIBUTING.md) | Đóng góp cho Know-Me |
 
 ## Phát triển
 

@@ -22,17 +22,16 @@ Use these docs if you want to:
 
 1. [Installation](./getting-started/installation.md)
 2. [Quick start](./getting-started/quick-start.md)
-3. [First project](./getting-started/first-project.md)
-4. [Why Know-Me exists](./guides/why-knowns.md)
-5. [User guide](./guides/user-guide.md)
-6. [Task Management](./guides/task-management.md)
-7. [AI Agent Guide](./guides/ai-agent-guide.md)
-8. [AI Workflow](./guides/ai-workflow.md)
+3. [User guide](./guides/user-guide.md)
+4. [Task Management](./guides/task-management.md)
+5. [AI Workflow](./guides/ai-workflow.md)
+6. [MCP integration](./guides/mcp-integration.md)
+7. [Commands](./reference/commands.md)
 
 ## Which page should I read first?
 
 - New user: start with [Installation](./getting-started/installation.md), then [Quick start](./getting-started/quick-start.md).
-- Existing project owner: read [First project](./getting-started/first-project.md), then [Workflow](./guides/workflow.md).
+- Existing project owner: read [Quick start](./getting-started/quick-start.md), then [Workflow](./guides/workflow.md).
 - AI assistant user: read [AI Workflow](./guides/ai-workflow.md), [MCP integration](./guides/mcp-integration.md), and [Skills](./integrations/skills.md).
 - CLI reference lookup: go directly to [Commands](./reference/commands.md).
 
@@ -45,9 +44,7 @@ Use these docs if you want to:
 - `reference/`
   - command and config reference
 - `integrations/`
-  - platform, MCP, skills, templates, sync, and compatibility
-- `contributing/`
-  - contributor-oriented notes
+  - platform, MCP, and skills configuration
 
 ## Index
 
@@ -55,14 +52,11 @@ Use these docs if you want to:
 
 - [Installation](./getting-started/installation.md)
 - [Quick start](./getting-started/quick-start.md)
-- [First project](./getting-started/first-project.md)
 
 ### Guides
 
-- [Why Know-Me exists](./guides/why-knowns.md)
 - [User guide](./guides/user-guide.md)
 - [Task Management](./guides/task-management.md)
-- [AI Agent Guide](./guides/ai-agent-guide.md)
 - [AI Workflow](./guides/ai-workflow.md)
 - [Memory System](./guides/memory-system.md)
 - [Workflow](./guides/workflow.md)
@@ -74,21 +68,14 @@ Use these docs if you want to:
 - [Commands](./reference/commands.md)
 - [Configuration](./reference/configuration.md)
 - [Sync](./reference/sync.md)
-- [Validate](./reference/validate.md)
-- [Model Management](./reference/model-management.md)
 - [Reference system](./reference/reference-system.md)
-- [Semantic search](./reference/semantic-search.md)
 
 ### Integrations
 
 - [Platforms](./integrations/platforms.md)
 - [Hermes Agent](./integrations/hermes.md)
 - [Skills](./integrations/skills.md)
-- [Templates](./integrations/templates.md)
-- [Auto sync](./integrations/auto-sync.md)
-- [Compatibility](./integrations/compatibility.md)
-- [Guidance files](./integrations/guidance-files.md)
 
 ### Contributing
 
-- [Developer guide](./contributing/developer-guide.md)
+- [Contributing Guide](../../CONTRIBUTING.md)

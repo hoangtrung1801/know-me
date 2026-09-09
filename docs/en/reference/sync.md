@@ -36,5 +36,4 @@ knowme sync --instructions --platform cursor
 ## Related
 
 - [Configuration](./configuration.md)
-- [Compatibility](../integrations/compatibility.md)
-- [Auto Sync](../integrations/auto-sync.md)
+- [Commands](./commands.md)

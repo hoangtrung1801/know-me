@@ -127,8 +127,7 @@ At the start of an AI session, the MCP server exposes `initial` for project
 operating context. Use `help` when an agent needs detailed tool schemas. Run
 `knowme sync` after changing platform configuration or updating the CLI.
 
-See the [AI Agent Guide](./docs/en/guides/ai-agent-guide.md),
-[AI Workflow](./docs/en/guides/ai-workflow.md), and
+See the [AI Workflow](./docs/en/guides/ai-workflow.md) and
 [MCP integration guide](./docs/en/guides/mcp-integration.md).
 
 ## Installation
@@ -202,15 +201,13 @@ Full reference: [Commands](./docs/en/reference/commands.md).
 - [User guide](./docs/en/guides/user-guide.md)
 - [Task management](./docs/en/guides/task-management.md)
 - [Web UI](./docs/en/guides/web-ui.md)
-- [AI Agent Guide](./docs/en/guides/ai-agent-guide.md)
 - [MCP integration](./docs/en/guides/mcp-integration.md)
 - [Command reference](./docs/en/reference/commands.md)
 - [Configuration](./docs/en/reference/configuration.md)
-- [Semantic search](./docs/en/reference/semantic-search.md)
+- [Reference system](./docs/en/reference/reference-system.md)
 - [Architecture](./ARCHITECTURE.md)
 - [Philosophy](./PHILOSOPHY.md)
 - [Contributing](./CONTRIBUTING.md)
-- [Security](./SECURITY.md)
 - [Changelog](./CHANGELOG.md)
 
 ## Development
@@ -232,7 +229,7 @@ make dev-go          # Go server with hot reload
 make dev-ui          # Vite UI development server
 ```
 
-Start with the [Developer Guide](./docs/en/contributing/developer-guide.md)
+Start with [Contributing](./CONTRIBUTING.md)
 and [Architecture](./ARCHITECTURE.md). Contributions follow
 [CONTRIBUTING.md](./CONTRIBUTING.md) under the MIT license.
 

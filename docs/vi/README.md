@@ -24,17 +24,16 @@ Nội dung tiếng Việt bám theo `docs/en/` nhưng viết lại cho dễ đ�
 
 1. [Cài đặt](./getting-started/installation.md)
 2. [Quick start](./getting-started/quick-start.md)
-3. [Dự án đầu tiên](./getting-started/first-project.md)
-4. [Vì sao có Know-Me?](./guides/why-knowns.md)
-5. [Hướng dẫn sử dụng](./guides/user-guide.md)
-6. [Quản lý task](./guides/task-management.md)
-7. [Làm việc với AI](./guides/ai-agent-guide.md)
-8. [AI workflow](./guides/ai-workflow.md)
+3. [Hướng dẫn sử dụng](./guides/user-guide.md)
+4. [Quản lý task](./guides/task-management.md)
+5. [AI workflow](./guides/ai-workflow.md)
+6. [MCP](./guides/mcp-integration.md)
+7. [Lệnh](./reference/commands.md)
 
 ## Nên đọc trang nào trước?
 
 - Người mới: đọc [Cài đặt](./getting-started/installation.md), rồi [Quick start](./getting-started/quick-start.md).
-- Project owner: đọc [Dự án đầu tiên](./getting-started/first-project.md), rồi [Workflow](./guides/workflow.md).
+- Project owner: đọc [Quick start](./getting-started/quick-start.md), rồi [Workflow](./guides/workflow.md).
 - Người dùng AI assistant: đọc [AI workflow](./guides/ai-workflow.md), [MCP](./guides/mcp-integration.md), và [Skills](./integrations/skills.md).
 - Muốn tra cứu CLI: vào thẳng [Lệnh](./reference/commands.md).
 
@@ -43,8 +42,7 @@ Nội dung tiếng Việt bám theo `docs/en/` nhưng viết lại cho dễ đ�
 - `getting-started/` — cài đặt và chạy lần đầu
 - `guides/` — hướng dẫn theo tình huống thực tế
 - `reference/` — tra cứu lệnh, config, cơ chế tham chiếu
-- `integrations/` — platform, MCP, skills, templates, sync, tương thích
-- `contributing/` — cho người muốn đóng góp
+- `integrations/` — platform, MCP, và skills
 
 ## Mục lục
 
@@ -52,14 +50,11 @@ Nội dung tiếng Việt bám theo `docs/en/` nhưng viết lại cho dễ đ�
 
 - [Cài đặt](./getting-started/installation.md)
 - [Quick start](./getting-started/quick-start.md)
-- [Dự án đầu tiên](./getting-started/first-project.md)
 
 ### Hướng dẫn
 
-- [Vì sao có Know-Me?](./guides/why-knowns.md)
 - [Hướng dẫn sử dụng](./guides/user-guide.md)
 - [Quản lý task](./guides/task-management.md)
-- [Làm việc với AI](./guides/ai-agent-guide.md)
 - [AI workflow](./guides/ai-workflow.md)
 - [Memory](./guides/memory-system.md)
 - [Workflow](./guides/workflow.md)
@@ -71,21 +66,14 @@ Nội dung tiếng Việt bám theo `docs/en/` nhưng viết lại cho dễ đ�
 - [Lệnh](./reference/commands.md)
 - [Cấu hình](./reference/configuration.md)
 - [Sync](./reference/sync.md)
-- [Validate](./reference/validate.md)
-- [Quản lý model](./reference/model-management.md)
 - [Reference system](./reference/reference-system.md)
-- [Semantic search](./reference/semantic-search.md)
 
 ### Tích hợp
 
 - [Platforms](./integrations/platforms.md)
 - [Hermes Agent](./integrations/hermes.md)
 - [Skills](./integrations/skills.md)
-- [Templates](./integrations/templates.md)
-- [Auto sync](./integrations/auto-sync.md)
-- [Tương thích](./integrations/compatibility.md)
-- [Guidance files](./integrations/guidance-files.md)
 
 ### Đóng góp
 
-- [Developer guide](./contributing/developer-guide.md)
+- [Contributing Guide](../../CONTRIBUTING.md)

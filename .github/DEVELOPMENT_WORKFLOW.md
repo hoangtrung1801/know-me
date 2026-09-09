@@ -474,7 +474,7 @@ knowme search "keyword" --type task --plain
 
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Code of Conduct](../CODE_OF_CONDUCT.md)
-- [CLI Guidelines](../CLAUDE.md)
+- [CLI Guidelines](../KNOWNS.md)
 
 ---
 

@@ -267,5 +267,5 @@ Một task coi là done khi:
 ## Xem thêm
 
 - [Quản lý task](./task-management.md)
-- [Làm việc với AI](./ai-agent-guide.md)
+- [MCP](./mcp-integration.md)
 - [Workflow](./workflow.md)

@@ -36,5 +36,4 @@ knowme sync --instructions --platform cursor
 ## Xem thêm
 
 - [Cấu hình](./configuration.md)
-- [Tương thích](../integrations/compatibility.md)
-- [Auto sync](../integrations/auto-sync.md)
+- [Lệnh](./commands.md)

@@ -13,7 +13,7 @@ If you are new to Know-Me, start with installation, then run the quick start, th
 
 - Install the CLI: [English](./en/getting-started/installation.md) / [Tieng Viet](./vi/getting-started/installation.md)
 - Create a working project: [English](./en/getting-started/quick-start.md) / [Tieng Viet](./vi/getting-started/quick-start.md)
-- Understand why Know-Me exists: [English](./en/guides/why-knowns.md) / [Tieng Viet](./vi/guides/why-knowns.md)
+- Explore the user guide: [English](./en/guides/user-guide.md) / [Tieng Viet](./vi/guides/user-guide.md)
 - Learn the project workflow: [English](./en/guides/workflow.md) / [Tieng Viet](./vi/guides/workflow.md)
 - Connect an AI assistant: [English](./en/guides/ai-workflow.md) / [Tieng Viet](./vi/guides/ai-workflow.md)
 

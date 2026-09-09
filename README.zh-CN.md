@@ -171,7 +171,7 @@ go install github.com/hoangtrung1801/known-me/cmd/knowme@latest
 | [命令参考](./docs/en/reference/commands.md) | CLI 命令和示例 |
 | [Web UI](./docs/en/guides/web-ui.md) | 工作空间、看板、链接和备忘 |
 | [配置](./docs/en/reference/configuration.md) | 项目设置和选项 |
-| [开发者指南](./docs/en/contributing/developer-guide.md) | 为 Know-Me 贡献代码 |
+| [贡献指南](./CONTRIBUTING.md) | 为 Know-Me 贡献代码 |
 
 ## 开发
 

@@ -269,5 +269,5 @@ As a rule of thumb, a task is done when:
 ## Related
 
 - [Task Management](./task-management.md)
-- [AI Agent Guide](./ai-agent-guide.md)
+- [MCP integration](./mcp-integration.md)
 - [Workflow](./workflow.md)

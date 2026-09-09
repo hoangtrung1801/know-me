@@ -95,6 +95,5 @@ knowme browser --open
 
 ## Tiếp theo
 
-- [Dự án đầu tiên](./first-project.md)
 - [Hướng dẫn sử dụng](../guides/user-guide.md)
 - [Workflow](../guides/workflow.md)

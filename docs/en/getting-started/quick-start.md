@@ -95,6 +95,5 @@ knowme browser --open
 
 ## Related
 
-- [First project](./first-project.md)
 - [User guide](../guides/user-guide.md)
 - [Workflow](../guides/workflow.md)

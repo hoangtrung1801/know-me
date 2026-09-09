@@ -461,4 +461,4 @@ network synchronization would be a separate design.
 - OpenCode: `internal/agents/opencode/`
 - LSP: `internal/lsp/`, `internal/lspdaemon/`
 - UI entry and events: `ui/embed.go`, `ui/src/App.tsx`, `ui/src/contexts/SSEContext.tsx`
-- Contributor workflow: `docs/en/contributing/developer-guide.md`
+- Contributor workflow: `CONTRIBUTING.md`
