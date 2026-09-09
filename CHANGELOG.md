@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-09-09
+
+### Added
+- Redesigned Web UI with new theme system (OKLCH color space, unified tokens), refined components, and design system documentation (`DESIGN.md`, `PRODUCT.md`).
+
+### Changed
+- Updated release workflow brand name and dual archive generation (`knownme-*` and `knowns-*`).
+
 ## [1.7.0] - 2026-09-08
 
 ### Changed
