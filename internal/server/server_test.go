@@ -14,11 +14,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/agents/opencode"
-	"github.com/hoangtrung1801/known-me/internal/lsp"
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/runtimememory"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/agents/opencode"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/runtimememory"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 type fakeLSPRuntimeStatusClient struct {

@@ -11,8 +11,8 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/hoangtrung1801/known-me/internal/search"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/search"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 const watchDebounceMs = 1500

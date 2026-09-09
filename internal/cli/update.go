@@ -16,10 +16,10 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
-	"github.com/hoangtrung1801/known-me/internal/paths"
-	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
-	"github.com/hoangtrung1801/known-me/internal/util"
+	"github.com/hoangtrung1801/know-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/know-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/know-me/internal/util"
 	"github.com/spf13/cobra"
 )
 

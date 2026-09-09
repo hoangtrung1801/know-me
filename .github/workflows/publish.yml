@@ -219,7 +219,7 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: ${{ matrix.cgo_enabled }}
         run: |
-          LDFLAGS="-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${VERSION}"
+          LDFLAGS="-s -w -X github.com/hoangtrung1801/know-me/internal/util.Version=${VERSION}"
           mkdir -p "artifacts/${{ matrix.npm_pkg }}"
           go build -ldflags "$LDFLAGS" -o "artifacts/${{ matrix.npm_pkg }}/knowme${{ matrix.ext }}" ./cmd/knowme
 

@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/paths"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 var ErrSemanticRuntimeDisabled = errors.New("semantic runtime disabled")

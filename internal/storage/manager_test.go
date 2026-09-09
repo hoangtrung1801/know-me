@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/registry"
+	"github.com/hoangtrung1801/know-me/internal/registry"
 )
 
 func TestManagerGetStore(t *testing.T) {

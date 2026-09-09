@@ -15,9 +15,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hoangtrung1801/known-me/internal/server"
-	"github.com/hoangtrung1801/known-me/internal/storage"
-	"github.com/hoangtrung1801/known-me/internal/util"
+	"github.com/hoangtrung1801/know-me/internal/server"
+	"github.com/hoangtrung1801/know-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/util"
 )
 
 var browserCmd = &cobra.Command{

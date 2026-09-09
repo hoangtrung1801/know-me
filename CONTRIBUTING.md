@@ -65,7 +65,7 @@ make all
 ### Project Structure
 
 ```
-known-me/
+know-me/
 ├── cmd/
 │   ├── knowme/           # Main CLI entry point
 │   └── knowns/           # Distribution alias entry point

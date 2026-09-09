@@ -9,9 +9,9 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/hoangtrung1801/known-me/internal/lsp"
-	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
-	"github.com/hoangtrung1801/known-me/internal/lspdaemon"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/lsp/adapters"
+	"github.com/hoangtrung1801/know-me/internal/lspdaemon"
 	"github.com/spf13/cobra"
 )
 

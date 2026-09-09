@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 // notifyServer sends a POST request to the running Know-Me server to trigger

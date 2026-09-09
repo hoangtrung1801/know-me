@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 )
 
 const (

@@ -13,7 +13,7 @@ import (
 
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
-	"github.com/hoangtrung1801/known-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 	"github.com/spf13/cobra"
 )
 

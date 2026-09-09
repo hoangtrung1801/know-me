@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/known-me/internal/links"
-	"github.com/hoangtrung1801/known-me/internal/memos"
-	"github.com/hoangtrung1801/known-me/internal/services"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/links"
+	"github.com/hoangtrung1801/know-me/internal/memos"
+	"github.com/hoangtrung1801/know-me/internal/services"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 // LSPRuntimeStatusProvider returns the canonical live LSP snapshot for an

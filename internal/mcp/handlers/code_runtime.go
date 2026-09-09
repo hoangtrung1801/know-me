@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
 )
 
 // CodeRuntime is the code-intelligence boundary used by MCP code tools.

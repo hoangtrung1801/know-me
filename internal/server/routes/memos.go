@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/known-me/internal/memos"
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/memos"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 type MemoRoutes struct {

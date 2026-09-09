@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 var taskReferenceRE = regexp.MustCompile(`^@task-[A-Za-z0-9.-]+(?:\{[a-z-]+\})?`)

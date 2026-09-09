@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 // writeJSON marshals v to indented JSON and writes it atomically to path.

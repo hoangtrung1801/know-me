@@ -1,4 +1,4 @@
-MODULE := github.com/hoangtrung1801/known-me
+MODULE := github.com/hoangtrung1801/know-me
 BINARY := knowme
 VERSION ?= $(shell git describe --tags 2>/dev/null || node -p "require('./ui/package.json').version" 2>/dev/null || echo "dev")
 LDFLAGS := -s -w -X $(MODULE)/internal/util.Version=$(VERSION)

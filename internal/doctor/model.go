@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/hoangtrung1801/known-me/internal/util"
+	"github.com/hoangtrung1801/know-me/internal/util"
 )
 
 const SchemaVersion = 1

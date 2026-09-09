@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 // getFreePort asks the OS for an available TCP port.

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/lsp"
-	"github.com/hoangtrung1801/known-me/internal/readiness"
-	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
-	"github.com/hoangtrung1801/known-me/internal/search"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/readiness"
+	"github.com/hoangtrung1801/know-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/know-me/internal/search"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )

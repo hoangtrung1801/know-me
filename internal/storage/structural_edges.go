@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/references"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/references"
 )
 
 // rawEdge is an internal edge representation used during collection and dedup.

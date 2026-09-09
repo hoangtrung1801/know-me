@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 // VersionStore reads and writes task version histories from .know-me/versions/.

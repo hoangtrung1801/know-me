@@ -1,6 +1,6 @@
 package adapters
 
-import "github.com/hoangtrung1801/known-me/internal/lsp"
+import "github.com/hoangtrung1801/know-me/internal/lsp"
 
 // AllAdapters returns all built-in language adapters.
 func AllAdapters() []lsp.LanguageAdapter {

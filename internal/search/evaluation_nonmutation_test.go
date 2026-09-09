@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 func TestEvaluationDoesNotChangeProductionRetrievalOrProjectState(t *testing.T) {

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 )
 
 // Daemon manages a shared `cloudflared tunnel --url` process keyed by the

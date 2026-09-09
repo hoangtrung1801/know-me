@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/known-me/internal/decisionmigration"
-	"github.com/hoangtrung1801/known-me/internal/decisionreview"
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/search"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/decisionmigration"
+	"github.com/hoangtrung1801/know-me/internal/decisionreview"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/search"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 // DecisionRoutes handles decision endpoints.

@@ -12,10 +12,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/lsp"
-	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
-	"github.com/hoangtrung1801/known-me/internal/paths"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/lsp/adapters"
+	"github.com/hoangtrung1801/know-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 func Run(ctx context.Context, root string) error {

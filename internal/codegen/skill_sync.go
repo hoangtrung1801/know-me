@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	instructionskills "github.com/hoangtrung1801/known-me/internal/instructions/skills"
+	instructionskills "github.com/hoangtrung1801/know-me/internal/instructions/skills"
 )
 
 // SkillsOutOfSync returns true if any embedded skill SKILL.md differs from the

@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 var safeKeyPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*-[0-9a-f]{16}$`)

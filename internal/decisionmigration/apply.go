@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hoangtrung1801/known-me/internal/decisionreview"
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/decisionreview"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 // Apply executes only explicitly selected candidates. Items are ordered so a

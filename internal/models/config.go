@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/permissions"
+	"github.com/hoangtrung1801/know-me/internal/permissions"
 )
 
 // Project is the root configuration stored in .know-me/config.json.

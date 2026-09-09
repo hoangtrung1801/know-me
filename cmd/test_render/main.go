@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/hoangtrung1801/known-me/internal/instructions/guidelines"
+	"github.com/hoangtrung1801/know-me/internal/instructions/guidelines"
 )
 
 func main() {

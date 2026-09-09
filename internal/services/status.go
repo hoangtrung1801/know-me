@@ -15,16 +15,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/agents/opencode"
-	"github.com/hoangtrung1801/known-me/internal/lsp"
-	"github.com/hoangtrung1801/known-me/internal/lsp/adapters"
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/paths"
-	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/know-me/internal/agents/opencode"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/lsp/adapters"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/runtimequeue"
 	goruntime "runtime"
 
-	"github.com/hoangtrung1801/known-me/internal/search"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/search"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 // ServiceStatus describes the current state of a managed sub-process.

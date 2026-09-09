@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/known-me/internal/links"
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/links"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 const maxLinkMultipartBytes = 11 << 20

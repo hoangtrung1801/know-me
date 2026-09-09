@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
 )
 
 const (

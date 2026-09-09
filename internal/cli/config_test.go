@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/search"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/search"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 func TestLocalONNXModelChoicesShowDownloadStatus(t *testing.T) {

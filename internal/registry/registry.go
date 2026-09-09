@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/paths"
-	"github.com/hoangtrung1801/known-me/internal/util"
+	"github.com/hoangtrung1801/know-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/util"
 )
 
 const (

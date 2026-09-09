@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hoangtrung1801/known-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
 )
 
 type GoAdapter struct{ lsp.BaseAdapter }

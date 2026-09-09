@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/permissions"
-	"github.com/hoangtrung1801/known-me/internal/storage"
-	"github.com/hoangtrung1801/known-me/internal/tasklifecycle"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/permissions"
+	"github.com/hoangtrung1801/know-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/tasklifecycle"
 	"github.com/mark3labs/mcp-go/mcp"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 )

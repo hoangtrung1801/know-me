@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hoangtrung1801/known-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 )
 
 // PluginAdapterManifest is the JSON schema for user-contributed LSP adapters.

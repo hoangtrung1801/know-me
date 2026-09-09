@@ -3,7 +3,7 @@ package references
 import (
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 func TestParse_TaskSemanticRef(t *testing.T) {

@@ -10,10 +10,10 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/known-me/internal/decisionmigration"
-	"github.com/hoangtrung1801/known-me/internal/decisionreview"
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/decisionmigration"
+	"github.com/hoangtrung1801/know-me/internal/decisionreview"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 func TestDecisionRoutesLifecycle(t *testing.T) {

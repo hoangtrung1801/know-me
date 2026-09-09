@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/known-me/internal/registry"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/registry"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 // WorkspaceRoutes exposes the global logical-project registry.

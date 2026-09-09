@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/hoangtrung1801/known-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 )
 
 // RuntimeError is an actionable LSP runtime failure suitable for MCP/CLI output.

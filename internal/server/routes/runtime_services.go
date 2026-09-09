@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/known-me/internal/services"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/services"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 const runtimeServicesTimeout = 3 * time.Second

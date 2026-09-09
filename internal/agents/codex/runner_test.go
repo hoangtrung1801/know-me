@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 func TestACPRunnerReadsStructuredOutput(t *testing.T) {

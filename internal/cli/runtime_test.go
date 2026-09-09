@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/services"
+	"github.com/hoangtrung1801/know-me/internal/services"
 )
 
 func TestFormatServiceLinesIncludesSemanticRuntimeDetails(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/util"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/util"
 )
 
 // LinkStore persists one global Link per JSON file under root/links.

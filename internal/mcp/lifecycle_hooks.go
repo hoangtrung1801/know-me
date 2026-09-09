@@ -1,7 +1,7 @@
 package mcp
 
 import (
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 	"github.com/mark3labs/mcp-go/server"
 )
 

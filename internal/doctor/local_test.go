@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/lsp"
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/readiness"
-	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
-	"github.com/hoangtrung1801/known-me/internal/search"
-	"github.com/hoangtrung1801/known-me/internal/services"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/lsp"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/readiness"
+	"github.com/hoangtrung1801/know-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/know-me/internal/search"
+	"github.com/hoangtrung1801/know-me/internal/services"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 func TestSearchChecksReportUnavailableModelAndEmptyIndex(t *testing.T) {

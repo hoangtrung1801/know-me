@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 // Engine executes Know-Me code-generation templates.

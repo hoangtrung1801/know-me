@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 )
 
 const codexDocsURL = "https://github.com/agentclientprotocol/codex-acp"

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/models"
 	"gopkg.in/yaml.v3"
 )
 

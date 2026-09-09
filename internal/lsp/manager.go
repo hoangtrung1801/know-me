@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/hoangtrung1801/known-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 )
 
 // MissingServer describes a language detected in the project but without an available binary.

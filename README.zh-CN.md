@@ -160,7 +160,7 @@ npm install -g knowns
 需要 Go 1.24.2 或更高版本。
 
 ```bash
-go install github.com/hoangtrung1801/known-me/cmd/knowme@latest
+go install github.com/hoangtrung1801/know-me/cmd/knowme@latest
 ```
 
 ## 文档

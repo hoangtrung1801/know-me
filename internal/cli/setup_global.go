@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/hoangtrung1801/known-me/internal/codegen"
-	"github.com/hoangtrung1801/known-me/internal/runtimeinstall"
+	"github.com/hoangtrung1801/know-me/internal/codegen"
+	"github.com/hoangtrung1801/know-me/internal/runtimeinstall"
 	"github.com/spf13/cobra"
 )
 

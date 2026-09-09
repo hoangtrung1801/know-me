@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/models"
-	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
-	"github.com/hoangtrung1801/known-me/internal/storage"
+	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 type countingEmbedder struct {

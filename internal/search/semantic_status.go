@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hoangtrung1801/known-me/internal/runtimequeue"
+	"github.com/hoangtrung1801/know-me/internal/runtimequeue"
 )
 
 const semanticRuntimeStatusMaxAge = 10 * time.Minute

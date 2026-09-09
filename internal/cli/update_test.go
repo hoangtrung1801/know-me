@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hoangtrung1801/known-me/internal/util"
+	"github.com/hoangtrung1801/know-me/internal/util"
 )
 
 func TestPackageManagerUpgradeRequiresExternalShellOnWindows(t *testing.T) {

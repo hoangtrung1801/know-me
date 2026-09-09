@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/hoangtrung1801/known-me/internal/paths"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 	ort "github.com/yalue/onnxruntime_go"
 )
 

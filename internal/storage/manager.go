@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/hoangtrung1801/known-me/internal/registry"
+	"github.com/hoangtrung1801/know-me/internal/registry"
 )
 
 // Manager coordinates access to the active store and logical project registry.
