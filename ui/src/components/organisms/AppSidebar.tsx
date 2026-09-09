@@ -159,7 +159,7 @@ export function AppSidebar({
 			<nav
 				aria-label="Main navigation"
 				data-navigation-dock
-				className="fixed bottom-4 left-1/2 z-50 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-1 overflow-x-auto rounded-2xl bg-background p-1.5 shadow-[0_8px_18px_-10px_rgba(55,53,47,0.45)] dark:shadow-[0_8px_18px_-10px_rgba(0,0,0,0.65)]"
+				className="fixed bottom-4 left-1/2 z-50 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-1 overflow-x-auto rounded-2xl bg-popover p-2 shadow-[var(--shadow-popover)]"
 			>
 				{dockItems.map((item) => {
 					const isActive = currentPage === item.id;
@@ -171,9 +171,9 @@ export function AppSidebar({
 									onClick={(event) => handlePageNavigation(event, item.id)}
 									aria-label={item.label}
 									aria-current={isActive ? "page" : undefined}
-									className={`flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-[background-color,color,transform] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95 ${isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
+									className={`flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-[background-color,color,transform] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:bg-accent ${isActive ? "bg-accent text-accent-foreground hover:bg-accent" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
 								>
-									<item.icon className="size-4" />
+									<item.icon className="size-5" strokeWidth={1.75} />
 								</Link>
 							</TooltipTrigger>
 							<TooltipContent side="top">{item.label}</TooltipContent>
@@ -247,7 +247,7 @@ export function AppSidebar({
 											isActive={isActive}
 											tooltip={item.label}
 										>
-											<Link to={item.to} onClick={(event) => handlePageNavigation(event, item.id)}>
+											<Link to={item.to} aria-current={isActive ? "page" : undefined} onClick={(event) => handlePageNavigation(event, item.id)}>
 												<item.icon />
 												<span>{item.label}</span>
 											</Link>

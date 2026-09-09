@@ -171,7 +171,7 @@ function SectionCard({
 	className?: string;
 }) {
 	return (
-		<section className={cn("rounded-lg border border-border bg-transparent", className)}>
+		<section className={cn("rounded-lg border border-border bg-card", className)}>
 			{children}
 		</section>
 	);
@@ -615,7 +615,7 @@ function FilterBar({
 	totalCount: number;
 }) {
 	return (
-		<div className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-transparent px-3 py-3">
+		<div className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-3 py-3">
 			<fieldset className="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
 				<legend className="sr-only">Analysis period</legend>
 				{PERIOD_OPTIONS.map((option) => (
@@ -627,7 +627,7 @@ function FilterBar({
 						className={cn(
 							"h-7 rounded-md px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
 							period === option
-								? "bg-background text-foreground shadow-sm"
+								? "bg-accent text-accent-foreground"
 								: "text-muted-foreground hover:text-foreground",
 						)}
 					>
@@ -900,10 +900,11 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 
 	return (
 		<div className="analysis-workbench h-full overflow-auto bg-[var(--analysis-canvas)] text-foreground">
-			<header className="border-b border-border bg-background">
-				<div className="mx-auto flex w-full max-w-[1440px] flex-col justify-between gap-4 px-4 py-5 sm:flex-row sm:items-end sm:px-6">
+			<header className="border-b border-border bg-card">
+				<div className="mx-auto flex w-full max-w-[1440px] flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:px-6">
 					<div>
-						<div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+						<h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight">Dashboard</h1>
+						<div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 							<span>{config.name || "Know-Me"}</span>
 							<span aria-hidden="true">/</span>
 							<span>Analysis workbench</span>
@@ -916,7 +917,6 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 										: "All sources ready"}
 							</span>
 						</div>
-						<h1 className="text-2xl font-semibold tracking-[-0.035em]">Dashboard</h1>
 						<p className="mt-1 text-sm text-muted-foreground">
 							Delivery signals, knowledge health, and the next project action.
 						</p>

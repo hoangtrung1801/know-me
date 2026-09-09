@@ -67,11 +67,15 @@ export function PageHeader({
 	size = "default",
 }: PageHeaderProps) {
 	return (
-		<header className={cn("shrink-0", className)} data-page-header data-page-size={size}>
-			<div className={cn("mx-auto flex w-full flex-col justify-between gap-4 px-4 py-5 sm:flex-row sm:items-end sm:px-6", contentWidths[size])}>
+		<header className={cn("shrink-0 border-b border-border/80 bg-card", className)} data-page-header data-page-size={size}>
+			<div className={cn("mx-auto flex w-full flex-col justify-between gap-3 px-4 py-4 sm:flex-row sm:items-center sm:px-6 sm:py-4", contentWidths[size])}>
 				<div className="min-w-0">
+					<div className="flex items-center gap-2">
+						<span className="h-2 w-2 rounded-full bg-primary/80" aria-hidden="true" />
+						<h1 className="text-2xl font-semibold leading-tight tracking-[-0.03em]">{title}</h1>
+					</div>
 					{(context || status) && (
-						<div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+						<div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 							{context && <span>{context}</span>}
 							{context && status && <span aria-hidden="true">/</span>}
 							{status && (
@@ -85,13 +89,12 @@ export function PageHeader({
 							)}
 						</div>
 					)}
-					<h1 className="text-2xl font-semibold tracking-[-0.035em]">{title}</h1>
 					{description && (
-						<div className="mt-1 text-sm text-muted-foreground">{description}</div>
+					<div className="mt-1.5 max-w-[70ch] text-[13px] leading-relaxed text-muted-foreground">{description}</div>
 					)}
 				</div>
 				{actions && (
-					<div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+					<div className="flex shrink-0 flex-wrap items-center gap-2 sm:border-l sm:border-border/70 sm:pl-4">{actions}</div>
 				)}
 			</div>
 		</header>

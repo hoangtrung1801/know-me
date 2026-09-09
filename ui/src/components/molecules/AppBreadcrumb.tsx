@@ -149,7 +149,7 @@ export function AppBreadcrumb({ currentPage, projectName }: AppBreadcrumbProps) 
 	return (
 		<nav
 			aria-label="Breadcrumb"
-			className="flex items-center gap-1.5 text-sm min-w-0 flex-1 overflow-hidden"
+			className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-xs tracking-[-0.005em] sm:text-[13px]"
 		>
 			<BreadcrumbLink to="/">{projectName}</BreadcrumbLink>
 			{currentPage !== "dashboard" && (
