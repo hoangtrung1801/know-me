@@ -1,18 +1,16 @@
 {
-  "name": "@knowns/linux-x64",
+  "name": "@knowme/darwin-x64",
   "version": "0.0.0",
-  "description": "Know-Me binary for linux x64",
+  "description": "Know-Me CLI binary for macOS Intel (x86_64); local ONNX Runtime is not bundled",
   "os": [
-    "linux"
+    "darwin"
   ],
   "cpu": [
     "x64"
   ],
   "main": "knowme",
   "files": [
-    "knowme",
-    "*.so",
-    "*.so.*"
+    "knowme"
   ],
   "license": "MIT",
   "homepage": "https://knowns.sh",

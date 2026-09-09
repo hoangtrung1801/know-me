@@ -11,12 +11,12 @@
     "postinstall": "node install.js"
   },
   "optionalDependencies": {
-    "@knowns/darwin-arm64": "0.0.0",
-    "@knowns/darwin-x64": "0.0.0",
-    "@knowns/linux-arm64": "0.0.0",
-    "@knowns/linux-x64": "0.0.0",
-    "@knowns/win-arm64": "0.0.0",
-    "@knowns/win-x64": "0.0.0"
+    "@knowme/darwin-arm64": "0.0.0",
+    "@knowme/darwin-x64": "0.0.0",
+    "@knowme/linux-arm64": "0.0.0",
+    "@knowme/linux-x64": "0.0.0",
+    "@knowme/win-arm64": "0.0.0",
+    "@knowme/win-x64": "0.0.0"
   },
   "license": "MIT",
   "homepage": "https://knowns.sh",

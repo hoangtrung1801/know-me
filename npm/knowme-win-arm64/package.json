@@ -1,5 +1,5 @@
 {
-  "name": "@knowns/win-arm64",
+  "name": "@knowme/win-arm64",
   "version": "0.0.0",
   "description": "Know-Me binary for win arm64",
   "os": [

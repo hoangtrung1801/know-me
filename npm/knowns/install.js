@@ -41,8 +41,8 @@ function getPlatformPackage(platform = os.platform(), arch = os.arch()) {
   }
 
   return {
-    name: `@knowns/${p}-${a}`,
-    asset: `knowns-${p}-${a}`,
+    name: `@knowme/${p}-${a}`,
+    asset: `knowme-${p}-${a}`,
     ext: platform === "win32" ? ".exe" : "",
     packageOs: platform,
     packageCpu: arch === "ia32" ? "x64" : arch,

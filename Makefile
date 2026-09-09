@@ -246,12 +246,12 @@ cross-compile: clean
 # Build for npm distribution (maps to npm package names)
 npm-build: clean
 	@echo "Building for npm distribution..."
-	GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-darwin-arm64/knowme ./cmd/knowme
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-darwin-x64/knowme ./cmd/knowme
-	GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-linux-arm64/knowme ./cmd/knowme
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-linux-x64/knowme ./cmd/knowme
-	GOOS=windows GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-win-arm64/knowme.exe ./cmd/knowme
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-win-x64/knowme.exe ./cmd/knowme
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowme-darwin-arm64/knowme ./cmd/knowme
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowme-darwin-x64/knowme ./cmd/knowme
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowme-linux-arm64/knowme ./cmd/knowme
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowme-linux-x64/knowme ./cmd/knowme
+	GOOS=windows GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowme-win-arm64/knowme.exe ./cmd/knowme
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowme-win-x64/knowme.exe ./cmd/knowme
 
 # Build UI (requires Node.js + bun)
 ui:
@@ -264,8 +264,8 @@ release: clean ui cross-compile npm-build
 
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -f npm/knowns-*/knowme npm/knowns-*/knowme.exe npm/knowns-*/knownme npm/knowns-*/knownme.exe
-	rm -f npm/knowns-*/knowns-embed npm/knowns-*/knowns-embed.exe
+	rm -f npm/knowme-*/knowme npm/knowme-*/knowme.exe npm/knowme-*/knownme npm/knowme-*/knownme.exe
+	rm -f npm/knowme-*/knowns-embed npm/knowme-*/knowns-embed.exe
 
 # Generate embedded assets placeholder
 embed:

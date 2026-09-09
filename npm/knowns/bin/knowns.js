@@ -113,7 +113,7 @@ function getBinaryPath() {
     process.exit(1);
   }
 
-  const pkgName = `@knowns/${p}-${a}`;
+  const pkgName = `@knowme/${p}-${a}`;
   const ext = platform === "win32" ? ".exe" : "";
   const pkgParts = pkgName.split("/");
 

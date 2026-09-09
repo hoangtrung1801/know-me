@@ -18,10 +18,10 @@ if [[ ! -f $deb || ! -r $deb ]]; then
   exit 1
 fi
 
-if [[ $deb == */knowns-linux-arm64.tar.gz || $deb == knowns-linux-arm64.tar.gz ]]; then
+if [[ $deb == */knowme-linux-arm64.tar.gz || $deb == knowme-linux-arm64.tar.gz ]]; then
   case $(uname -m) in
     aarch64|arm64) ;;
-    *) echo "knowns-linux-arm64.tar.gz requires Linux ARM64." >&2; exit 1 ;;
+    *) echo "knowme-linux-arm64.tar.gz requires Linux ARM64." >&2; exit 1 ;;
   esac
 
   tmp=$(mktemp -d)

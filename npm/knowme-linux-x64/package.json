@@ -1,17 +1,18 @@
 {
-  "name": "@knowns/win-x64",
+  "name": "@knowme/linux-x64",
   "version": "0.0.0",
-  "description": "Know-Me binary for win x64",
+  "description": "Know-Me binary for linux x64",
   "os": [
-    "win32"
+    "linux"
   ],
   "cpu": [
     "x64"
   ],
   "main": "knowme",
   "files": [
-    "knowme.exe",
-    "*.dll"
+    "knowme",
+    "*.so",
+    "*.so.*"
   ],
   "license": "MIT",
   "homepage": "https://knowns.sh",

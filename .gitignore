@@ -9,10 +9,10 @@ tmp/
 /knowns-embed
 
 # npm platform binaries
-npm/knowns-*/knowme
-npm/knowns-*/knowme.exe
-npm/knowns-*/knownme
-npm/knowns-*/knownme.exe
+npm/knowme-*/knowme
+npm/knowme-*/knowme.exe
+npm/knowme-*/knownme
+npm/knowme-*/knownme.exe
 
 # OS
 .DS_Store

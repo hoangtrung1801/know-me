@@ -110,7 +110,7 @@ jobs:
           - runner: macos-15
             goos: darwin
             goarch: arm64
-            npm_pkg: knowns-darwin-arm64
+            npm_pkg: knowme-darwin-arm64
             ext: ""
             cgo_enabled: "1"
             ort_lib: libonnxruntime.dylib
@@ -118,14 +118,14 @@ jobs:
           - runner: macos-15-intel
             goos: darwin
             goarch: amd64
-            npm_pkg: knowns-darwin-x64
+            npm_pkg: knowme-darwin-x64
             ext: ""
             cgo_enabled: "1"
             bundle_onnx: "false"
           - runner: ubuntu-latest
             goos: linux
             goarch: amd64
-            npm_pkg: knowns-linux-x64
+            npm_pkg: knowme-linux-x64
             ext: ""
             cgo_enabled: "1"
             ort_lib: libonnxruntime.so
@@ -133,7 +133,7 @@ jobs:
           - runner: ubuntu-24.04-arm
             goos: linux
             goarch: arm64
-            npm_pkg: knowns-linux-arm64
+            npm_pkg: knowme-linux-arm64
             ext: ""
             cgo_enabled: "1"
             ort_lib: libonnxruntime.so
@@ -141,7 +141,7 @@ jobs:
           - runner: windows-latest
             goos: windows
             goarch: amd64
-            npm_pkg: knowns-win-x64
+            npm_pkg: knowme-win-x64
             ext: ".exe"
             cgo_enabled: "1"
             ort_lib: onnxruntime.dll
@@ -325,9 +325,9 @@ jobs:
         env:
           VERSION: ${{ needs.meta.outputs.version }}
         run: |
-          chmod +x artifacts/knowns-linux-x64/knowme
-          artifacts/knowns-linux-x64/knowme --version
-          artifacts/knowns-linux-x64/knowme --version | grep -q "$VERSION" || echo "Warning: Version mismatch"
+          chmod +x artifacts/knowme-linux-x64/knowme
+          artifacts/knowme-linux-x64/knowme --version
+          artifacts/knowme-linux-x64/knowme --version | grep -q "$VERSION" || echo "Warning: Version mismatch"
 
       - name: Prepare npm packages
         env:
@@ -335,7 +335,7 @@ jobs:
         run: |
           cp README.md npm/knowns/README.md
 
-          PLATFORM_PKGS="knowns-darwin-arm64 knowns-darwin-x64 knowns-linux-arm64 knowns-linux-x64 knowns-win-x64"
+          PLATFORM_PKGS="knowme-darwin-arm64 knowme-darwin-x64 knowme-linux-arm64 knowme-linux-x64 knowme-win-x64"
 
           for pkg in $PLATFORM_PKGS; do
             (
@@ -349,7 +349,7 @@ jobs:
             npm version "$VERSION" --no-git-tag-version --allow-same-version
           )
 
-          for dir in artifacts/knowns-*/; do
+          for dir in artifacts/knowme-*/; do
             pkg=$(basename "$dir")
             case " $PLATFORM_PKGS " in
               *" $pkg "*) ;;
@@ -381,11 +381,11 @@ jobs:
             if (pkg.name === 'knowns') {
               pkg.bin = { knowme: 'bin/knowns.js', knownme: 'bin/knowns.js', kn: 'bin/knowns.js' };
               pkg.optionalDependencies = {
-                '@knowns/darwin-arm64': version,
-                '@knowns/darwin-x64': version,
-                '@knowns/linux-arm64': version,
-                '@knowns/linux-x64': version,
-                '@knowns/win-x64': version,
+                '@knowme/darwin-arm64': version,
+                '@knowme/darwin-x64': version,
+                '@knowme/linux-arm64': version,
+                '@knowme/linux-x64': version,
+                '@knowme/win-x64': version,
               };
             }
             fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
@@ -397,15 +397,15 @@ jobs:
           echo "=== Verifying ONNX Runtime native libs in all platform packages ==="
 
           # Windows: onnxruntime.dll
-          if [ ! -f "npm/knowns-win-x64/onnxruntime.dll" ]; then
-            echo "FATAL: npm/knowns-win-x64/onnxruntime.dll is missing!"
-            ls -la npm/knowns-win-x64/ || true
+          if [ ! -f "npm/knowme-win-x64/onnxruntime.dll" ]; then
+            echo "FATAL: npm/knowme-win-x64/onnxruntime.dll is missing!"
+            ls -la npm/knowme-win-x64/ || true
             exit 1
           fi
-          echo "✓ knowns-win-x64/onnxruntime.dll"
+          echo "✓ knowme-win-x64/onnxruntime.dll"
 
           # macOS: libonnxruntime.dylib
-          for pkg in knowns-darwin-arm64; do
+          for pkg in knowme-darwin-arm64; do
             if ! ls npm/$pkg/libonnxruntime*.dylib >/dev/null 2>&1; then
               echo "FATAL: npm/$pkg/ missing libonnxruntime dylib!"
               ls -la "npm/$pkg/" || true
@@ -414,14 +414,14 @@ jobs:
             echo "✓ $pkg/libonnxruntime.dylib"
           done
 
-          if find npm/knowns-darwin-x64 -maxdepth 1 -name '*onnxruntime*' | grep -q .; then
-            echo "FATAL: npm/knowns-darwin-x64 must not contain ONNX Runtime"
+          if find npm/knowme-darwin-x64 -maxdepth 1 -name '*onnxruntime*' | grep -q .; then
+            echo "FATAL: npm/knowme-darwin-x64 must not contain ONNX Runtime"
             exit 1
           fi
-          echo "✓ knowns-darwin-x64 intentionally excludes ONNX Runtime"
+          echo "✓ knowme-darwin-x64 intentionally excludes ONNX Runtime"
 
           # Linux: libonnxruntime.so
-          for pkg in knowns-linux-arm64 knowns-linux-x64; do
+          for pkg in knowme-linux-arm64 knowme-linux-x64; do
             if ! ls npm/$pkg/libonnxruntime*.so* >/dev/null 2>&1; then
               echo "FATAL: npm/$pkg/ missing libonnxruntime.so!"
               ls -la "npm/$pkg/" || true
@@ -431,27 +431,27 @@ jobs:
           done
 
           # Main binary in all packages
-          for pkg in knowns-darwin-arm64 knowns-darwin-x64 knowns-linux-arm64 knowns-linux-x64; do
+          for pkg in knowme-darwin-arm64 knowme-darwin-x64 knowme-linux-arm64 knowme-linux-x64; do
             if [ ! -f "npm/$pkg/knowme" ]; then
               echo "FATAL: npm/$pkg/knowme is missing!"
               exit 1
             fi
             echo "✓ $pkg/knowme"
           done
-          if [ ! -f "npm/knowns-win-x64/knowme.exe" ]; then
-            echo "FATAL: npm/knowns-win-x64/knowme.exe is missing!"
+          if [ ! -f "npm/knowme-win-x64/knowme.exe" ]; then
+            echo "FATAL: npm/knowme-win-x64/knowme.exe is missing!"
             exit 1
           fi
-          echo "✓ knowns-win-x64/knowme.exe"
+          echo "✓ knowme-win-x64/knowme.exe"
 
       - name: Create tarballs
         run: |
           for pkgdir in \
-            npm/knowns-darwin-arm64 \
-            npm/knowns-darwin-x64 \
-            npm/knowns-linux-arm64 \
-            npm/knowns-linux-x64 \
-            npm/knowns-win-x64; do
+            npm/knowme-darwin-arm64 \
+            npm/knowme-darwin-x64 \
+            npm/knowme-linux-arm64 \
+            npm/knowme-linux-x64 \
+            npm/knowme-win-x64; do
             pkg=$(basename "$pkgdir")
             staging=$(mktemp -d)
             find "$pkgdir" -maxdepth 1 -mindepth 1 \
@@ -460,40 +460,36 @@ jobs:
               -exec cp -R {} "$staging/" \;
             tar -czvf "${pkg}.tar.gz" -C "$staging" .
             shasum -a 256 "${pkg}.tar.gz" > "${pkg}.tar.gz.sha256"
-            alias_pkg=$(echo "$pkg" | sed 's/^knowns-/knowme-/')
-            cp "${pkg}.tar.gz" "${alias_pkg}.tar.gz"
-            shasum -a 256 "${alias_pkg}.tar.gz" > "${alias_pkg}.tar.gz.sha256"
             rm -rf "$staging"
           done
 
       - name: Verify tarball contents
         run: |
           for archive in \
-            knowns-darwin-arm64.tar.gz; do
+            knowme-darwin-arm64.tar.gz; do
             tar -tzf "$archive" | grep -Fx "./knowme" >/dev/null || { echo "$archive missing knowme"; exit 1; }
             tar -tzf "$archive" | grep -E "^\./libonnxruntime.*\.dylib$" >/dev/null || { echo "$archive missing libonnxruntime dylib"; exit 1; }
           done
 
-          tar -tzf knowns-darwin-x64.tar.gz | grep -Fx "./knowme" >/dev/null || {
-            echo "knowns-darwin-x64.tar.gz missing knowme"
+          tar -tzf knowme-darwin-x64.tar.gz | grep -Fx "./knowme" >/dev/null || {
+            echo "knowme-darwin-x64.tar.gz missing knowme"
             exit 1
           }
-          if tar -tzf knowns-darwin-x64.tar.gz | grep -i "onnxruntime" >/dev/null; then
-            echo "knowns-darwin-x64.tar.gz must not contain ONNX Runtime"
+          if tar -tzf knowme-darwin-x64.tar.gz | grep -i "onnxruntime" >/dev/null; then
+            echo "knowme-darwin-x64.tar.gz must not contain ONNX Runtime"
             exit 1
           fi
 
           for archive in \
-            knowns-linux-arm64.tar.gz \
-            knowns-linux-x64.tar.gz; do
+            knowme-linux-arm64.tar.gz \
+            knowme-linux-x64.tar.gz; do
             tar -tzf "$archive" | grep -Fx "./knowme" >/dev/null || { echo "$archive missing knowme"; exit 1; }
             tar -tzf "$archive" | grep -E "^\./libonnxruntime\.so" >/dev/null || { echo "$archive missing libonnxruntime.so"; exit 1; }
           done
 
-          for archive in knowns-win-x64.tar.gz; do
+          for archive in knowme-win-x64.tar.gz; do
             tar -tzf "$archive" | grep -Fx "./knowme.exe" >/dev/null || { echo "$archive missing knowme.exe"; exit 1; }
             tar -tzf "$archive" | grep -Fx "./onnxruntime.dll" >/dev/null || { echo "$archive missing onnxruntime.dll"; exit 1; }
-          done
 
           # Verify ELF architecture matches package platform.
           # e_machine at ELF offset 18: 0x3E = x86_64, 0xB7 = aarch64.
@@ -510,16 +506,16 @@ jobs:
             echo "✓ $archive $file arch=$label"
           }
 
-          verify_elf_arch knowns-linux-x64.tar.gz  ./libonnxruntime.so "3e00" "x86_64"
-          verify_elf_arch knowns-linux-arm64.tar.gz ./libonnxruntime.so "b700" "aarch64"
-          verify_elf_arch knowns-linux-x64.tar.gz   ./knowme            "3e00" "x86_64"
-          verify_elf_arch knowns-linux-arm64.tar.gz  ./knowme            "b700" "aarch64"
+          verify_elf_arch knowme-linux-x64.tar.gz  ./libonnxruntime.so "3e00" "x86_64"
+          verify_elf_arch knowme-linux-arm64.tar.gz ./libonnxruntime.so "b700" "aarch64"
+          verify_elf_arch knowme-linux-x64.tar.gz   ./knowme            "3e00" "x86_64"
+          verify_elf_arch knowme-linux-arm64.tar.gz  ./knowme            "b700" "aarch64"
 
           macho_dir=$(mktemp -d)
-          tar -xzf knowns-darwin-x64.tar.gz -C "$macho_dir"
+          tar -xzf knowme-darwin-x64.tar.gz -C "$macho_dir"
           (file "$macho_dir/knowme" | grep -q "Mach-O 64-bit" &&
             file "$macho_dir/knowme" | grep -q "x86_64") || {
-            echo "FATAL: knowns-darwin-x64.tar.gz contains the wrong binary architecture"
+            echo "FATAL: knowme-darwin-x64.tar.gz contains the wrong binary architecture"
             exit 1
           }
           rm -rf "$macho_dir"

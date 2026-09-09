@@ -1,16 +1,17 @@
 {
-  "name": "@knowns/darwin-x64",
+  "name": "@knowme/darwin-arm64",
   "version": "0.0.0",
-  "description": "Know-Me CLI binary for macOS Intel (x86_64); local ONNX Runtime is not bundled",
+  "description": "Know-Me binary for darwin arm64",
   "os": [
     "darwin"
   ],
   "cpu": [
-    "x64"
+    "arm64"
   ],
   "main": "knowme",
   "files": [
-    "knowme"
+    "knowme",
+    "*.dylib"
   ],
   "license": "MIT",
   "homepage": "https://knowns.sh",
