@@ -37,6 +37,9 @@ context to what's around them.
 The product is called **Know-Me**. The command-line interface is `knowme`.
 The npm package keeps the name `knowns` for distribution compatibility.
 
+<p align="center">
+  <img src="./images/screenshot-dashboard.png" alt="Know-Me Workspace Dashboard" width="100%">
+</p>
 ## What you keep in Know-Me
 
 | Database               | What it holds                                                                         |
@@ -76,6 +79,28 @@ Storage layout:
 - `<repo>/.know-me/` — project database: tasks, docs, decisions, memories (Markdown + JSON, Git-friendly).
 - `~/.know-me/` — personal database: project registry, saved links, memos, global memory.
 - Search indexes are derived and rebuildable; delete them any time.
+
+## Visual Workspace
+
+Know-Me includes a built-in, local-first Web UI (`knowme browser --open` or `http://localhost:6421`):
+
+<p align="center">
+  <img src="./images/screenshot-kanban.png" alt="Know-Me Kanban Board" width="100%">
+</p>
+
+- **Kanban Board** — Interactive delivery stages (`To Do`, `In Progress`, `In Review`, `Done`), acceptance criteria checklists, priority badges, and project filters.
+
+<p align="center">
+  <img src="./images/screenshot-docs.png" alt="Know-Me Documentation" width="100%">
+</p>
+
+- **Documentation & Specs** — Markdown knowledge base with structured metadata, tags, project assignment, and cross-references.
+
+<p align="center">
+  <img src="./images/screenshot-graph.png" alt="Know-Me Knowledge Graph" width="100%">
+</p>
+
+- **Knowledge Graph** — Interactive visualization mapping connections across tasks, documents, decisions, and memories.
 
 ## Quick start
 

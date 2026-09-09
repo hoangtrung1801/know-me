@@ -27,6 +27,14 @@
 
 > **为眼前的工作，以及那些不想忘记的事情，提供一个平静的归处。**
 
+<p align="center">
+  <img src="./images/screenshot-dashboard.png" alt="Know-Me 仪表盘" width="100%">
+</p>
+
+<p align="center">
+  <img src="./images/screenshot-kanban.png" alt="Know-Me 看板" width="100%">
+</p>
+
 ## 目录
 
 - [为什么使用 Know-Me](#为什么使用-know-me)

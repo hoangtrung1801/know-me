@@ -27,6 +27,14 @@ Công việc thì dễ bắt đầu nhưng khó giữ cho gọn gàng. Dự án 
 
 > **Một nơi bình tĩnh cho việc bạn đang làm—và những điều bạn không muốn quên.**
 
+<p align="center">
+  <img src="./images/screenshot-dashboard.png" alt="Không gian làm việc Know-Me Dashboard" width="100%">
+</p>
+
+<p align="center">
+  <img src="./images/screenshot-kanban.png" alt="Bảng Kanban Know-Me" width="100%">
+</p>
+
 ## Mục lục
 
 - [Tại sao cần Know-Me?](#tại-sao-cần-know-me)
