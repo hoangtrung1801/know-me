@@ -37,20 +37,16 @@ context to what's around them.
 The product is called **Know-Me**. The command-line interface is `knowme`.
 The npm package keeps the name `knowns` for distribution compatibility.
 
-<p align="center">
-  <img src="./images/how-knowns-works.png" alt="Know-Me workspace" width="100%">
-</p>
-
 ## What you keep in Know-Me
 
-| Database | What it holds |
-|---|---|
-| **Projects** | Centralized home per project; every task, doc, and decision links back to one |
-| **Tasks & Kanban** | Planned work with status, acceptance criteria, notes; `board` renders the Kanban view |
-| **Documents** | Durable project knowledge — specs, architecture, onboarding, journals |
-| **Memos** | Fast global notes and captures, no project required |
-| **Links** | Saved URLs with metadata for reading later or referencing from tasks/docs |
-| **Memory & Decisions** | Reusable conventions plus recorded system decisions with evidence |
+| Database               | What it holds                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| **Projects**           | Centralized home per project; every task, doc, and decision links back to one         |
+| **Tasks & Kanban**     | Planned work with status, acceptance criteria, notes; `board` renders the Kanban view |
+| **Documents**          | Durable project knowledge — specs, architecture, onboarding, journals                 |
+| **Memos**              | Fast global notes and captures, no project required                                   |
+| **Links**              | Saved URLs with metadata for reading later or referencing from tasks/docs             |
+| **Memory & Decisions** | Reusable conventions plus recorded system decisions with evidence                     |
 
 Everything is human-readable on disk (Markdown + JSON), versionable with Git,
 and searchable from any interface. See [Philosophy](./PHILOSOPHY.md) for why.
@@ -169,23 +165,23 @@ knowme --version
 
 ## Common commands
 
-| Command | Purpose |
-|---|---|
-| `knowme init` | Initialize or register a project |
-| `knowme task ...` | Create and manage planned work |
-| `knowme board` | Show the Kanban board |
-| `knowme doc ...` | Create and manage project documentation |
-| `knowme memo ...` | Capture and list fast global notes |
-| `knowme link ...` | Save and list links for later |
-| `knowme memory ...` | Store reusable project or global context |
-| `knowme decision ...` | Record and review system decisions |
-| `knowme search ...` | Search tasks, docs, memories, and decisions |
-| `knowme retrieve ...` | Retrieve ranked context for an AI workflow |
-| `knowme code ...` | Inspect indexed symbols and dependencies |
-| `knowme validate` | Check project structure and configuration |
-| `knowme browser` | Start or open the local Web UI |
-| `knowme setup ...` | Configure agent platforms and integrations |
-| `knowme sync` | Apply project configuration and generated artifacts |
+| Command               | Purpose                                             |
+| --------------------- | --------------------------------------------------- |
+| `knowme init`         | Initialize or register a project                    |
+| `knowme task ...`     | Create and manage planned work                      |
+| `knowme board`        | Show the Kanban board                               |
+| `knowme doc ...`      | Create and manage project documentation             |
+| `knowme memo ...`     | Capture and list fast global notes                  |
+| `knowme link ...`     | Save and list links for later                       |
+| `knowme memory ...`   | Store reusable project or global context            |
+| `knowme decision ...` | Record and review system decisions                  |
+| `knowme search ...`   | Search tasks, docs, memories, and decisions         |
+| `knowme retrieve ...` | Retrieve ranked context for an AI workflow          |
+| `knowme code ...`     | Inspect indexed symbols and dependencies            |
+| `knowme validate`     | Check project structure and configuration           |
+| `knowme browser`      | Start or open the local Web UI                      |
+| `knowme setup ...`    | Configure agent platforms and integrations          |
+| `knowme sync`         | Apply project configuration and generated artifacts |
 
 `knowme [command] --help` shows command-specific options. Most commands
 support `--plain` for automation-friendly output and `--json` for structured
