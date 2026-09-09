@@ -86,8 +86,8 @@ func onlineVersionChecker(deps onlineDependencies) Checker {
 				return onlineWarning(
 					"Version service could not be queried",
 					"version_request_invalid",
-					"Run `knownme update` directly to check for an available release.",
-					"knownme update",
+					"Run `knowme update` directly to check for an available release.",
+					"knowme update",
 				), nil
 			}
 			req.Header.Set("Accept", "application/json")
@@ -96,8 +96,8 @@ func onlineVersionChecker(deps onlineDependencies) Checker {
 				return onlineWarning(
 					"Version service is unreachable",
 					networkErrorCode(ctx, err),
-					"Retry the online diagnostic or run `knownme update` directly.",
-					"knownme update",
+					"Retry the online diagnostic or run `knowme update` directly.",
+					"knowme update",
 				), nil
 			}
 			defer resp.Body.Close()
@@ -105,8 +105,8 @@ func onlineVersionChecker(deps onlineDependencies) Checker {
 				result := onlineWarning(
 					"Version service returned an unexpected response",
 					"version_unexpected_status",
-					"Retry the online diagnostic or run `knownme update` directly.",
-					"knownme update",
+					"Retry the online diagnostic or run `knowme update` directly.",
+					"knowme update",
 				)
 				result.Evidence["statusCode"] = resp.StatusCode
 				return result, nil
@@ -120,8 +120,8 @@ func onlineVersionChecker(deps onlineDependencies) Checker {
 				return onlineWarning(
 					"Version service returned an invalid response",
 					"version_invalid_response",
-					"Run `knownme update` directly to check for an available release.",
-					"knownme update",
+					"Run `knowme update` directly to check for an available release.",
+					"knowme update",
 				), nil
 			}
 			latest := strings.TrimSpace(payload.Version)
@@ -129,8 +129,8 @@ func onlineVersionChecker(deps onlineDependencies) Checker {
 				return onlineWarning(
 					"Version service returned an invalid response",
 					"version_invalid_response",
-					"Run `knownme update` directly to check for an available release.",
-					"knownme update",
+					"Run `knowme update` directly to check for an available release.",
+					"knowme update",
 				), nil
 			}
 			evidence := Evidence{
@@ -144,7 +144,7 @@ func onlineVersionChecker(deps onlineDependencies) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Update Know-Me to the latest available version.",
-						Command:     "knownme update",
+						Command:     "knowme update",
 					},
 				}, nil
 			}
@@ -370,7 +370,7 @@ func providerRemediation(id string) *Remediation {
 		Description: "Verify the configured embedding provider and its credentials.",
 	}
 	if safeProviderIDPattern.MatchString(id) && !sensitiveIDPattern.MatchString(id) {
-		remediation.Command = "knownme provider test " + id
+		remediation.Command = "knowme provider test " + id
 	}
 	return remediation
 }

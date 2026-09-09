@@ -1,11 +1,11 @@
 # Cài đặt
 
-Cài `knowns` CLI trước. Việc cài đặt chỉ làm cho command khả dụng; bạn vẫn cần chạy `knownme init` trong từng repository muốn quản lý bằng Know-Me.
+Cài `knowns` CLI trước. Việc cài đặt chỉ làm cho command khả dụng; bạn vẫn cần chạy `knowme init` trong từng repository muốn quản lý bằng Know-Me.
 
 ## Yêu cầu
 
 - Terminal trên macOS, Linux, hoặc Windows
-- Git (nếu muốn `knownme init` nhận diện repo)
+- Git (nếu muốn `knowme init` nhận diện repo)
 - Tùy chọn: local model cho semantic search
 
 ## Nền tảng được hỗ trợ
@@ -53,7 +53,7 @@ irm https://knowns.sh/script/install.ps1 | iex
 ## Build từ source
 
 ```bash
-go build -o ./bin/knownme ./cmd/knownme
+go build -o ./bin/knowme ./cmd/knowme
 ```
 
 Dùng khi đang dev chính Know-Me.
@@ -61,7 +61,7 @@ Dùng khi đang dev chính Know-Me.
 ## Kiểm tra
 
 ```bash
-knownme --version
+knowme --version
 ```
 
 Nếu command in ra version, CLI đã cài xong. Tiếp theo, vào repository bạn muốn quản lý và chạy quick start.
@@ -71,7 +71,7 @@ Nếu command in ra version, CLI đã cài xong. Tiếp theo, vào repository b�
 Chạy qua npx:
 
 ```bash
-npx knownme init
+npx knowme init
 ```
 
 ## Tiếp theo

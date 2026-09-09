@@ -6,7 +6,7 @@
 ### CLI
 ```bash
 # Search for existing tasks first
-knownme search "keyword" --type task --plain
+knowme search "keyword" --type task --plain
 ```
 {{/if}}
 {{#if mcp}}
@@ -24,7 +24,7 @@ mcp__knowns__search({ "query": "keyword", "type": "task" })
 {{#if cli}}
 ### CLI
 ```bash
-knownme task create "Clear title (WHAT)" \
+knowme task create "Clear title (WHAT)" \
   -d "Description (WHY)" \
   --ac "Outcome 1" \
   --ac "Outcome 2" \
@@ -45,7 +45,7 @@ mcp__knowns__create_task({
 
 **Note:** Add acceptance criteria after creation:
 ```bash
-knownme task edit <id> --ac "Outcome 1" --ac "Outcome 2"
+knowme task edit <id> --ac "Outcome 1" --ac "Outcome 2"
 ```
 {{/if}}
 
@@ -78,8 +78,8 @@ Explain WHY. Include doc refs: `@doc/security-patterns`
 {{#if cli}}
 ### CLI
 ```bash
-knownme task create "Parent task"
-knownme task create "Subtask" --parent 48  # Raw ID only!
+knowme task create "Parent task"
+knowme task create "Subtask" --parent 48  # Raw ID only!
 ```
 {{/if}}
 {{#if mcp}}

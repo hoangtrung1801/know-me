@@ -602,7 +602,7 @@ func (m *Manager) runtimeErrorForCommand(cmd ServerCommand, err error) error {
 	}
 	code := "csharp_lsp_runtime_error"
 	message := "C# language server failed"
-	remediation := "Check the C# LSP log, run `knownme lsp install csharp`, and ensure .NET SDK 10+ is available."
+	remediation := "Check the C# LSP log, run `knowme lsp install csharp`, and ensure .NET SDK 10+ is available."
 	if errors.Is(err, io.EOF) {
 		code = "csharp_lsp_eof"
 		message = "C# language server closed the protocol stream before replying"

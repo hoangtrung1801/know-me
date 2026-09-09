@@ -12,7 +12,7 @@ const __dirname = dirname(__filename);
 const isWindows = process.platform === "win32";
 const defaultBinary = resolve(
 	__dirname,
-	isWindows ? "../../bin/knownme.exe" : "../../bin/knownme",
+	isWindows ? "../../bin/knowme.exe" : "../../bin/knowme",
 );
 const BINARY = process.env.TEST_BINARY
 	? resolve(process.cwd(), process.env.TEST_BINARY)

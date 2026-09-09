@@ -478,7 +478,7 @@ func openSemanticRuntimeEmbedder(cfg semanticRuntimeConfig) (EmbedderProvider, e
 	if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
 		onnxPath = filepath.Join(cfg.modelDir, "onnx", "model.onnx")
 		if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
-			return nil, fmt.Errorf("embedding model %q not downloaded (run: knownme model download %s)", cfg.modelID, cfg.modelID)
+			return nil, fmt.Errorf("embedding model %q not downloaded (run: knowme model download %s)", cfg.modelID, cfg.modelID)
 		}
 	}
 	return NewEmbedder(EmbedderConfig{

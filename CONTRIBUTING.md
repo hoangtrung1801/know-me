@@ -30,7 +30,7 @@ Any new feature must respect that `.know-me/` files are the source of truth.
 
 The CLI and MCP server are primary interfaces:
 
-- Work fully from the CLI (`knownme`)
+- Work fully from the CLI (`knowme`)
 - Provide `--plain` output for human and AI consumption
 - Support `--json` for programmatic integration
 - Maintain clean MCP tools in `internal/mcp/`
@@ -59,7 +59,7 @@ cd know-me
 make all
 
 # Verify the build
-./bin/knownme --version
+./bin/knowme --version
 ```
 
 ### Project Structure
@@ -67,7 +67,7 @@ make all
 ```
 known-me/
 ├── cmd/
-│   ├── knownme/          # Main CLI entry point
+│   ├── knowme/           # Main CLI entry point
 │   └── knowns/           # Distribution alias entry point
 ├── internal/
 │   ├── cli/              # Cobra commands and flags
@@ -90,7 +90,7 @@ known-me/
 
 ```bash
 make all             # Build both UI and CLI
-make build           # Build Go CLI binary (bin/knownme)
+make build           # Build Go CLI binary (bin/knowme)
 make test            # Run Go unit and race tests
 make lint            # Run golangci-lint
 make test-e2e        # Run CLI and MCP E2E tests

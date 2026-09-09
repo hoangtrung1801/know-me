@@ -22,7 +22,7 @@ Bắt đầu từ đây nếu muốn đóng góp cho Know-Me.
 ## Lệnh hay dùng
 
 ```bash
-go build -o ./bin/knownme ./cmd/knownme
+go build -o ./bin/knowme ./cmd/knowme
 go test ./...
 go test ./internal/cli -count=1
 go test ./tests -count=1

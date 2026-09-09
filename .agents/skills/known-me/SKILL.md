@@ -12,19 +12,19 @@ Use the CLI only; do not use Know-Me MCP tools.
 Run these read-only checks from the project root:
 
 ```bash
-knownme doctor --plain
-knownme memory list --plain
-knownme --help
+knowme doctor --plain
+knowme memory list --plain
+knowme --help
 ```
 
-Treat `knownme --help` as the complete, version-correct command index. Before using any command or nested command whose flags are not already known, run:
+Treat `knowme --help` as the complete, version-correct command index. Before using any command or nested command whose flags are not already known, run:
 
 ```bash
-knownme <command> --help
-knownme <command> <subcommand> --help
+knowme <command> --help
+knowme <command> <subcommand> --help
 ```
 
-Prefer `--json` for agent parsing and `--plain` for human-facing output. Search before reading: `knownme search "<query>" --plain`; retrieve structured context with `knownme retrieve "<query>" --json`.
+Prefer `--json` for agent parsing and `--plain` for human-facing output. Search before reading: `knowme search "<query>" --plain`; retrieve structured context with `knowme retrieve "<query>" --json`.
 
 ## Command map
 
@@ -39,26 +39,36 @@ Prefer `--json` for agent parsing and `--plain` for human-facing output. Search 
 | Local models, language servers, integrations | `model`, `lsp`, `provider`, `browser`, `runtime`, `tunnel`, `update` |
 | Source navigation and edits | `code` |
 
+## Capture routing
+
+When asked to add a record to Know-Me, choose the smallest matching record type:
+
+| Input | Create |
+| --- | --- |
+| Quick note, idea, or other short item | Memo: `knowme memo add "<content>"` |
+| Work or a task to track | Task: `knowme task create "<title>" --ac "<acceptance criteria>"` |
+| A URL or link | Link: `knowme link add <url>` |
+
 ## Tasks
 
-Use tasks for bounded, traceable work. Inspect first with `knownme task list --plain` and `knownme task <id> --plain`; create with a title and acceptance criteria, then update status, assignee, plan, notes, or criteria through `knownme task edit <id> --help`. Use `history` before resolving disputed changes. Archive completed or inactive work; use `hard-delete` only after confirming the exact ID and recovery is unnecessary.
+Use tasks for bounded, traceable work. Inspect first with `knowme task list --plain` and `knowme task <id> --plain`; create with a title and acceptance criteria, then update status, assignee, plan, notes, or criteria through `knowme task edit <id> --help`. Use `history` before resolving disputed changes. Archive completed or inactive work; use `hard-delete` only after confirming the exact ID and recovery is unnecessary.
 
 ```bash
-knownme task create "Add login" --ac "Users can sign in"
-knownme task edit <id> -s in-progress
-knownme task edit <id> --check-ac 1
+knowme task create "Add login" --ac "Users can sign in"
+knowme task edit <id> -s in-progress
+knowme task edit <id> --check-ac 1
 ```
 
 ## Links
 
-Links are global saved URLs, not project docs. Use `knownme link add <url>` to capture one, `knownme link list --json` to find its ID, and `knownme link update <id> --help` to correct metadata or replace its image. There is no link delete command; do not invent one.
+Links are global saved URLs, not project docs. Use `knowme link add <url>` to capture one, `knowme link list --json` to find its ID, and `knowme link update <id> --help` to correct metadata or replace its image. There is no link delete command; do not invent one.
 
 ## Memos
 
-Memos are short global scratch notes, separate from durable project `memory` records. Use `knownme memo add "<content>"`, `knownme memo list --search "<query>"`, and `knownme memo update <id> "<content>"`. Confirm the ID before `knownme memo delete <id>`.
+Memos are short global scratch notes, separate from durable project `memory` records. Use `knowme memo add "<content>"`, `knowme memo list --search "<query>"`, and `knowme memo update <id> "<content>"`. Confirm the ID before `knowme memo delete <id>`.
 
 ## Projects
 
-A project is the current working directory registered by `knownme init`; there is no separate `project` command. Run `knownme status --plain` to identify the active project and readiness, `knownme doctor --plain` to diagnose it, and `knownme init` only to initialize or register the current directory. Use `knownme settings` for interactive project settings and `knownme config <get|set|list|reset> --help` for scriptable configuration. Run `knownme sync` after changing bundled or integration artifacts.
+A project is the current working directory registered by `knowme init`; there is no separate `project` command. Run `knowme status --plain` to identify the active project and readiness, `knowme doctor --plain` to diagnose it, and `knowme init` only to initialize or register the current directory. Use `knowme settings` for interactive project settings and `knowme config <get|set|list|reset> --help` for scriptable configuration. Run `knowme sync` after changing bundled or integration artifacts.
 
-Never edit Know-Me-managed task or document Markdown directly. Use the matching CLI command, preview destructive or bulk operations when available, and run `knownme validate --plain` after changes.
+Never edit Know-Me-managed task or document Markdown directly. Use the matching CLI command, preview destructive or bulk operations when available, and run `knowme validate --plain` after changes.

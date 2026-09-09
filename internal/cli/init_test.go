@@ -16,9 +16,8 @@ import (
 )
 
 func TestCreateOpenCodeConfigQuietCreatesConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
-
 	projectRoot := t.TempDir()
 
 	if err := createOpenCodeConfigQuiet(projectRoot); err != nil {
@@ -34,20 +33,20 @@ func TestCreateOpenCodeConfigQuietCreatesConfig(t *testing.T) {
 	mcp := getMap(t, config, "mcp")
 	knowns := getMap(t, mcp, "knowns")
 	if got := knowns["type"]; got != "local" {
-		t.Fatalf("expected knownme MCP type local, got %#v", got)
+		t.Fatalf("expected knowme MCP type local, got %#v", got)
 	}
 	if got := knowns["enabled"]; got != true {
-		t.Fatalf("expected knownme MCP enabled true, got %#v", got)
+		t.Fatalf("expected knowme MCP enabled true, got %#v", got)
 	}
 
 	command, ok := knowns["command"].([]any)
 	if !ok {
-		t.Fatalf("expected knownme command to be []any, got %T", knowns["command"])
+		t.Fatalf("expected knowme command to be []any, got %T", knowns["command"])
 	}
 	if len(command) != 3 {
 		t.Fatalf("expected 3 command parts, got %d", len(command))
 	}
-	expected := []string{"knownme", "mcp", "--stdio"}
+	expected := []string{"knowme", "mcp", "--stdio"}
 	for i, want := range expected {
 		if command[i] != want {
 			t.Fatalf("expected command[%d] = %q, got %#v", i, want, command[i])
@@ -226,7 +225,7 @@ func TestSettingsCommandSurface(t *testing.T) {
 	}
 	for _, child := range configCmd.Commands() {
 		if child.Name() == "toggle" {
-			t.Fatalf("knownme config toggle must not be registered")
+			t.Fatalf("knowme config toggle must not be registered")
 		}
 	}
 }
@@ -245,9 +244,8 @@ func setInitBoolFlag(t *testing.T, name string, value bool) {
 }
 
 func TestCreateMCPJsonFileQuietUsesNpxKnowns(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
-
 	projectRoot := t.TempDir()
 
 	if err := createMCPJsonFileQuiet(projectRoot, false); err != nil {
@@ -257,9 +255,8 @@ func TestCreateMCPJsonFileQuietUsesNpxKnowns(t *testing.T) {
 	config := readJSONFile(t, filepath.Join(projectRoot, ".mcp.json"))
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
-
-	if got := knowns["command"]; got != "knownme" {
-		t.Fatalf("expected command knowns, got %#v", got)
+	if got := knowns["command"]; got != "knowme" {
+		t.Fatalf("expected command knowme, got %#v", got)
 	}
 
 	args, ok := knowns["args"].([]any)
@@ -315,14 +312,13 @@ func TestCreateOpenCodeConfigQuietMergesExistingConfig(t *testing.T) {
 		t.Fatalf("expected existing MCP entry to be preserved")
 	}
 	if _, ok := mcp["knowns"]; !ok {
-		t.Fatalf("expected knownme MCP entry to be added")
+		t.Fatalf("expected knowme MCP entry to be added")
 	}
 }
 
 func TestCreateCursorMCPConfigQuietCreatesConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
-
 	projectRoot := t.TempDir()
 
 	if err := createCursorMCPConfigQuiet(projectRoot); err != nil {
@@ -332,9 +328,8 @@ func TestCreateCursorMCPConfigQuietCreatesConfig(t *testing.T) {
 	config := readJSONFile(t, filepath.Join(projectRoot, ".cursor", "mcp.json"))
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
-
-	if got := knowns["command"]; got != "knownme" {
-		t.Fatalf("expected command knowns, got %#v", got)
+	if got := knowns["command"]; got != "knowme" {
+		t.Fatalf("expected command knowme, got %#v", got)
 	}
 
 	args, ok := knowns["args"].([]any)
@@ -353,9 +348,8 @@ func TestCreateCursorMCPConfigQuietCreatesConfig(t *testing.T) {
 }
 
 func TestCreateCodexMCPConfigQuietCreatesConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
-
 	projectRoot := t.TempDir()
 
 	if err := createCodexMCPConfigQuiet(projectRoot); err != nil {
@@ -364,14 +358,13 @@ func TestCreateCodexMCPConfigQuietCreatesConfig(t *testing.T) {
 
 	content := readTextFile(t, filepath.Join(projectRoot, ".codex", "config.toml"))
 	assertContains(t, content, "[mcp_servers.knowns]")
-	assertContains(t, content, `command = "knownme"`)
+	assertContains(t, content, `command = "knowme"`)
 	assertContains(t, content, `args = ["mcp", "--stdio"]`)
 }
 
 func TestCreateCodexMCPConfigQuietMergesExistingConfig(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	t.Cleanup(func() { execLookPath = defaultExecLookPath })
-
 	projectRoot := t.TempDir()
 	configDir := filepath.Join(projectRoot, ".codex")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
@@ -412,11 +405,11 @@ func TestCreateAntigravityRulesQuietCreatesRuleFile(t *testing.T) {
 	assertContains(t, content, "trigger: always_on")
 	assertContains(t, content, "Start with Know-Me MCP `initial`")
 	assertContains(t, content, "Prefer Know-Me MCP tools")
-	assertContains(t, content, "`knownme`")
+	assertContains(t, content, "`knowme`")
 }
 
 func TestCreateAntigravityMCPConfigQuietUsesAbsoluteProjectPath(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	home := t.TempDir()
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
@@ -433,9 +426,8 @@ func TestCreateAntigravityMCPConfigQuietUsesAbsoluteProjectPath(t *testing.T) {
 	config := readJSONFile(t, filepath.Join(home, ".gemini", "antigravity", "mcp_config.json"))
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
-
-	if got := knowns["command"]; got != "knownme" {
-		t.Fatalf("expected command knowns, got %#v", got)
+	if got := knowns["command"]; got != "knowme" {
+		t.Fatalf("expected command knowme, got %#v", got)
 	}
 
 	args, ok := knowns["args"].([]any)
@@ -454,7 +446,7 @@ func TestCreateAntigravityMCPConfigQuietUsesAbsoluteProjectPath(t *testing.T) {
 }
 
 func TestCreateHermesMCPConfigQuietUsesAbsoluteProjectPathAndSkills(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	home := t.TempDir()
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
@@ -471,9 +463,8 @@ func TestCreateHermesMCPConfigQuietUsesAbsoluteProjectPathAndSkills(t *testing.T
 	config := readYAMLFile(t, filepath.Join(home, ".hermes", "config.yaml"))
 	mcpServers := getMap(t, config, "mcp_servers")
 	knowns := getMap(t, mcpServers, "knowns")
-
-	if got := knowns["command"]; got != "knownme" {
-		t.Fatalf("expected command knowns, got %#v", got)
+	if got := knowns["command"]; got != "knowme" {
+		t.Fatalf("expected command knowme, got %#v", got)
 	}
 
 	args := anyStringSlice(knowns["args"])
@@ -491,8 +482,7 @@ func TestCreateHermesMCPConfigQuietUsesAbsoluteProjectPathAndSkills(t *testing.T
 }
 
 func TestSetupGlobalHermesMCPUsesGlobalSkillsWithoutProject(t *testing.T) {
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
-	t.Cleanup(func() { execLookPath = defaultExecLookPath })
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 
 	home := t.TempDir()
 	if err := setupGlobalHermesMCP(home); err != nil {
@@ -519,7 +509,7 @@ func TestSetupGlobalHermesMCPUsesGlobalSkillsWithoutProject(t *testing.T) {
 func TestRunSyncPlatformConfigsSkipsWhenPlatformsUnset(t *testing.T) {
 	projectRoot := t.TempDir()
 	home := t.TempDir()
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
 		execLookPath = defaultExecLookPath
@@ -547,7 +537,7 @@ func TestRunSyncPlatformConfigsSkipsWhenPlatformsUnset(t *testing.T) {
 func TestRunSyncPlatformConfigsCreatesCursorHermesAndAntigravityArtifacts(t *testing.T) {
 	projectRoot := t.TempDir()
 	home := t.TempDir()
-	execLookPath = func(string) (string, error) { return "/usr/local/bin/knownme", nil }
+	execLookPath = func(string) (string, error) { return "/usr/local/bin/knowme", nil }
 	osUserHomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() {
 		execLookPath = defaultExecLookPath
@@ -729,7 +719,7 @@ func TestSyncAntigravityMCPConfigUpdatesCommandAndProject(t *testing.T) {
 		},
 	})
 
-	updated, err := syncAntigravityMCPConfig(projectRoot, "knownme", []string{"mcp", "--stdio"})
+	updated, err := syncAntigravityMCPConfig(projectRoot, "knowme", []string{"mcp", "--stdio"})
 	if err != nil {
 		t.Fatalf("syncAntigravityMCPConfig returned error: %v", err)
 	}
@@ -740,7 +730,7 @@ func TestSyncAntigravityMCPConfigUpdatesCommandAndProject(t *testing.T) {
 	config := readJSONFile(t, configPath)
 	mcpServers := getMap(t, config, "mcpServers")
 	knowns := getMap(t, mcpServers, "knowns")
-	if got := knowns["command"]; got != "knownme" {
+	if got := knowns["command"]; got != "knowme" {
 		t.Fatalf("expected command knowns, got %#v", got)
 	}
 	args, ok := knowns["args"].([]any)
@@ -774,7 +764,7 @@ func TestSyncCodexMCPConfigUpdatesCommand(t *testing.T) {
 		t.Fatalf("seed config.toml: %v", err)
 	}
 
-	updated, err := syncCodexMCPConfig(projectRoot, "knownme", []string{"mcp", "--stdio"})
+	updated, err := syncCodexMCPConfig(projectRoot, "knowme", []string{"mcp", "--stdio"})
 	if err != nil {
 		t.Fatalf("syncCodexMCPConfig returned error: %v", err)
 	}
@@ -783,7 +773,7 @@ func TestSyncCodexMCPConfigUpdatesCommand(t *testing.T) {
 	}
 
 	content := readTextFile(t, configPath)
-	assertContains(t, content, `command = "knownme"`)
+	assertContains(t, content, `command = "knowme"`)
 	assertContains(t, content, `args = ["mcp", "--stdio"]`)
 	assertNotContains(t, content, `command = "npx"`)
 }
@@ -845,7 +835,7 @@ func TestPlatformLabelUsesUnifiedRuntimeArtifactSummary(t *testing.T) {
 func TestRuntimeInstallHelpersExposeAvailabilitySummary(t *testing.T) {
 	opts := runtimeinstall.Options{
 		HomeDir:        t.TempDir(),
-		ExecutablePath: "/usr/local/bin/knownme",
+		ExecutablePath: "/usr/local/bin/knowme",
 		LookPath: func(name string) (string, error) {
 			if name == "claude" {
 				return "/usr/local/bin/claude", nil

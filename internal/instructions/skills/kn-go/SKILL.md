@@ -99,7 +99,7 @@ mcp_knowns_time({ "action": "start", "taskId": "<id>" })
 ```
 
 - Research context: follow refs, search related docs/memories, check templates
-- Use `search` for discovery first. If a task/spec needs assembled execution context, use `mcp_knowns_search({ "action": "retrieve", "query": "<keywords>" })` before drafting or executing the plan. Fall back to CLI `knownme retrieve "<keywords>" --json` if MCP is unavailable.
+- Use `search` for discovery first. If a task/spec needs assembled execution context, use `mcp_knowns_search({ "action": "retrieve", "query": "<keywords>" })` before drafting or executing the plan. Fall back to CLI `knowme retrieve "<keywords>" --json` if MCP is unavailable.
 - Draft and save plan directly (no approval gate)
 
 ```json

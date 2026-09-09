@@ -116,7 +116,7 @@ func TestOnlineVersionCheckReportsAvailableUpdate(t *testing.T) {
 	}
 	version := findCheck(t, result, "online.version")
 	if version.Status != StatusWarn || version.Evidence["latestVersion"] != "999.0.0" ||
-		version.Remediation == nil || version.Remediation.Command != "knownme update" {
+		version.Remediation == nil || version.Remediation.Command != "knowme update" {
 		t.Fatalf("version check = %#v", version)
 	}
 }

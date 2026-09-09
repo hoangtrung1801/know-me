@@ -6,7 +6,7 @@ import (
 )
 
 func TestRootCommandUsesKnowmeName(t *testing.T) {
-	if !strings.HasPrefix(rootCmd.Use, "knownme ") {
-		t.Fatalf("root command use = %q, want knownme prefix", rootCmd.Use)
+	if !strings.HasPrefix(rootCmd.Use, "knowme ") {
+		t.Fatalf("root command use = %q, want knowme prefix", rootCmd.Use)
 	}
 }

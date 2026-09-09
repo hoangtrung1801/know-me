@@ -22,7 +22,7 @@ Start here if you are contributing to Know-Me.
 ## Useful commands
 
 ```bash
-go build -o ./bin/knownme ./cmd/knownme
+go build -o ./bin/knowme ./cmd/knowme
 go test ./...
 go test ./internal/cli -count=1
 go test ./tests -count=1

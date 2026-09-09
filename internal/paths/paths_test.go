@@ -6,8 +6,8 @@ import (
 )
 
 func TestActiveIdentityUsesKnowmeNames(t *testing.T) {
-	if CLIName != "knownme" {
-		t.Fatalf("CLIName = %q, want knownme", CLIName)
+	if CLIName != "knowme" {
+		t.Fatalf("CLIName = %q, want knowme", CLIName)
 	}
 	if StoreDirName != ".know-me" {
 		t.Fatalf("StoreDirName = %q, want .know-me", StoreDirName)

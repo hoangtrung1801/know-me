@@ -2,10 +2,10 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-# cmd = "go build -o ./tmp/knownme ./cmd/knownme && lsof -ti:6420 | xargs kill -9 2>/dev/null || true"
-# entrypoint = ["./tmp/knownme", "browser", "--restart", "--dev", "--port", "6420", "--no-open"]
+# cmd = "go build -o ./tmp/knowme ./cmd/knowme && lsof -ti:6420 | xargs kill -9 2>/dev/null || true"
+# entrypoint = ["./tmp/knowme", "browser", "--restart", "--dev", "--port", "6420", "--no-open"]
 cmd = "lsof -ti:6420 | xargs kill -9 2>/dev/null || true"
-entrypoint = ["go","run","./cmd/knownme/main.go", "browser", "--restart", "--dev", "--port", "6420", "--no-open"]
+entrypoint = ["go","run","./cmd/knowme/main.go", "browser", "--restart", "--dev", "--port", "6420", "--no-open"]
 include_ext = ["go"]
 exclude_dir = ["tmp", "bin", "ui", "node_modules", ".git", ".know-me"]
 delay = 200

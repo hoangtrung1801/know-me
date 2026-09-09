@@ -94,7 +94,7 @@ func (a *TerraformLSAdapter) CheckPrerequisites(ctx context.Context) error {
 }
 func (a *TerraformLSAdapter) InstallGuide() lsp.InstallGuide {
 	return lsp.InstallGuide{
-		KnownsCmd: "knownme lsp install terraform",
+		KnownsCmd: "knowme lsp install terraform",
 		URL:       terraformLSRepositoryURL,
 		Notes:     "Requires Terraform CLI; existing PATH terraform-ls binaries take precedence over the managed release",
 	}

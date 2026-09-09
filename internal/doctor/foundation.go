@@ -52,7 +52,7 @@ func projectActiveChecker(store *storage.Store) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Initialize a Know-Me project in the current workspace.",
-						Command:     "knownme init",
+						Command:     "knowme init",
 					},
 				}, nil
 			}
@@ -124,7 +124,7 @@ func projectStorageChecker(store *storage.Store) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Restore the .know-me directory or initialize the project again.",
-						Command:     "knownme init",
+						Command:     "knowme init",
 					},
 				}, nil
 			}
@@ -164,7 +164,7 @@ func projectStorageChecker(store *storage.Store) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Recreate the missing Know-Me storage directories.",
-						Command:     "knownme init",
+						Command:     "knowme init",
 					},
 				}, nil
 			}
@@ -199,7 +199,7 @@ func validationSummaryChecker(store *storage.Store) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Inspect and resolve the detailed validation issues.",
-						Command:     "knownme validate",
+						Command:     "knowme validate",
 					},
 				}, nil
 			case result.WarningCount > 0:
@@ -209,7 +209,7 @@ func validationSummaryChecker(store *storage.Store) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Inspect the detailed validation warnings.",
-						Command:     "knownme validate",
+						Command:     "knowme validate",
 					},
 				}, nil
 			default:

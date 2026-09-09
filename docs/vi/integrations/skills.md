@@ -12,15 +12,15 @@ Skills tách biệt với MCP tools. MCP tools hiện trong client dưới dạn
 
 ## Setup
 
-Skills được tạo qua `knownme setup <target> --global` cho personal assistant setup thông thường, qua `knownme setup <target>` khi chủ ý muốn repo-local setup, hoặc re-sync bằng `knownme sync --skills`:
+Skills được tạo qua `knowme setup <target> --global` cho personal assistant setup thông thường, qua `knowme setup <target>` khi chủ ý muốn repo-local setup, hoặc re-sync bằng `knowme sync --skills`:
 
 ```bash
-knownme setup claude --global    # Sync Claude skills/config ở user scope
-knownme setup opencode --global  # Sync OpenCode skills/config ở user scope
-knownme setup codex --global     # Sync Codex skills/config ở user scope
-knownme setup hermes --global    # Sync Hermes external skill config ở user scope
-knownme setup kiro --global      # Sync Kiro skills/config ở user scope
-knownme sync --skills   # Re-sync tất cả platforms đã cấu hình
+knowme setup claude --global    # Sync Claude skills/config ở user scope
+knowme setup opencode --global  # Sync OpenCode skills/config ở user scope
+knowme setup codex --global     # Sync Codex skills/config ở user scope
+knowme setup hermes --global    # Sync Hermes external skill config ở user scope
+knowme setup kiro --global      # Sync Kiro skills/config ở user scope
+knowme sync --skills   # Re-sync tất cả platforms đã cấu hình
 ```
 
 ## Invocation syntax
@@ -59,5 +59,5 @@ Khi research scope lớn và runtime expose sub-agent tools, `kn-research` có t
 ## Ghi chú
 
 - `.agents/skills` là primary path cho agent-compatible platforms
-- `knownme init` không còn sync skills — dùng `knownme setup <target> --global` sau init cho personal assistant setup
-- `knownme sync --skills` là entrypoint để regenerate skills sau khi update
+- `knowme init` không còn sync skills — dùng `knowme setup <target> --global` sau init cho personal assistant setup
+- `knowme sync --skills` là entrypoint để regenerate skills sau khi update

@@ -45,7 +45,7 @@ type EmbeddingSettings struct {
 	ProjectDefaults       *ProjectDefaults             `json:"projectDefaults,omitempty"`
 }
 
-// ProjectDefaults are user-level defaults applied by future `knownme init` runs.
+// ProjectDefaults are user-level defaults applied by future `knowme init` runs.
 type ProjectDefaults struct {
 	ProjectName string                 `json:"projectName,omitempty"`
 	Settings    models.ProjectSettings `json:"settings,omitempty"`
@@ -167,7 +167,7 @@ func (s *EmbeddingSettings) AddModel(id string, model EmbeddingModel) error {
 		return fmt.Errorf("embedding model %q already exists", id)
 	}
 	if _, exists := s.Providers[model.Provider]; !exists {
-		return fmt.Errorf("provider %q not found; register it first with 'knownme provider add'", model.Provider)
+		return fmt.Errorf("provider %q not found; register it first with 'knowme provider add'", model.Provider)
 	}
 	s.Models[id] = model
 	return nil

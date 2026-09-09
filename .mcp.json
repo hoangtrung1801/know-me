@@ -5,7 +5,7 @@
         "mcp",
         "--stdio"
       ],
-      "command": "knownme"
+      "command": "knowme"
     }
   }
 }

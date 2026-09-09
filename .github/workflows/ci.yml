@@ -64,7 +64,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knownme.exe ./cmd/knownme
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowme.exe ./cmd/knowme
 
       - name: Download ONNX Runtime (Unix)
         if: runner.os != 'Windows'
@@ -115,7 +115,7 @@ jobs:
 
       - name: Run canonical keyword retrieval evaluation gate
         if: runner.os != 'Windows'
-        run: ./bin/knownme --json eval retrieval --output "$RUNNER_TEMP/retrieval-evaluation-keyword.json"
+        run: ./bin/knowme --json eval retrieval --output "$RUNNER_TEMP/retrieval-evaluation-keyword.json"
 
       - name: Upload canonical keyword retrieval report
         if: runner.os != 'Windows'
@@ -154,22 +154,22 @@ jobs:
       - name: Build native Intel binary without ONNX Runtime
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knownme ./cmd/knownme
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowme ./cmd/knowme
 
       - name: Verify installer and disabled Local ONNX path
         shell: bash
         run: |
-          file bin/knownme | grep -q "Mach-O 64-bit"
-          file bin/knownme | grep -q "x86_64"
+          file bin/knowme | grep -q "Mach-O 64-bit"
+          file bin/knowme | grep -q "x86_64"
           test ! -e bin/libonnxruntime.dylib
-          ./bin/knownme --version
+          ./bin/knowme --version
 
           export KNOWNS_INSTALLER_TEST=1
           source install/install.sh
           detect_platform
           test "$PLATFORM" = "darwin-x64"
 
-          output=$(./bin/knownme model download gte-small 2>&1) && {
+          output=$(./bin/knowme model download gte-small 2>&1) && {
             echo "Local ONNX model download unexpectedly succeeded"
             exit 1
           }
@@ -181,24 +181,24 @@ jobs:
             git init -q
             export KNOWN_LSP_AUTO_INSTALL=0
             export NO_UPDATE_CHECK=1
-            "$GITHUB_WORKSPACE/bin/knownme" init "Intel Smoke" --no-wizard --no-open
-            config_output=$("$GITHUB_WORKSPACE/bin/knownme" config set semanticSearch true 2>&1) && {
+            "$GITHUB_WORKSPACE/bin/knowme" init "Intel Smoke" --no-wizard --no-open
+            config_output=$("$GITHUB_WORKSPACE/bin/knowme" config set semanticSearch true 2>&1) && {
               echo "Local ONNX config unexpectedly succeeded"
               exit 1
             }
             echo "$config_output" | grep -q "Local ONNX is not bundled for macOS Intel"
-            sync_output=$("$GITHUB_WORKSPACE/bin/knownme" sync --model 2>&1)
+            sync_output=$("$GITHUB_WORKSPACE/bin/knowme" sync --model 2>&1)
             echo "$sync_output"
             echo "$sync_output" | grep -q "keyword/BM25 search remains active"
 
             bun -e 'const fs = require("fs"); const p = ".know-me/config.json"; const c = JSON.parse(fs.readFileSync(p, "utf8")); c.settings.semanticSearch = { enabled: true, provider: "local", model: "gte-small", huggingFaceId: "Xenova/gte-small", dimensions: 384, maxTokens: 512 }; fs.writeFileSync(p, JSON.stringify(c, null, 2) + "\n");'
             export KNOWN_RUNTIME_INLINE=1
-            status_output=$("$GITHUB_WORKSPACE/bin/knownme" search --status-check 2>&1)
+            status_output=$("$GITHUB_WORKSPACE/bin/knowme" search --status-check 2>&1)
             echo "$status_output" | grep -q "ONNX runtime: unavailable on macOS Intel"
-            setup_output=$("$GITHUB_WORKSPACE/bin/knownme" search --setup 2>&1)
+            setup_output=$("$GITHUB_WORKSPACE/bin/knowme" search --setup 2>&1)
             echo "$setup_output" | grep -q "Local ONNX setup is unavailable on macOS Intel"
-            "$GITHUB_WORKSPACE/bin/knownme" task create "Intel keyword fallback" --description "BM25 remains available without ONNX"
-            search_output=$("$GITHUB_WORKSPACE/bin/knownme" search "Intel keyword fallback" --plain 2>&1)
+            "$GITHUB_WORKSPACE/bin/knowme" task create "Intel keyword fallback" --description "BM25 remains available without ONNX"
+            search_output=$("$GITHUB_WORKSPACE/bin/knowme" search "Intel keyword fallback" --plain 2>&1)
             echo "$search_output"
             echo "$search_output" | grep -q "Matched by: keyword"
           )
@@ -224,7 +224,7 @@ jobs:
         run: cd ui && bun install --frozen-lockfile && bun run build
 
       - name: Build Know-Me
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knownme ./cmd/knownme
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowme ./cmd/knowme
 
       - name: Install pinned ONNX Runtime
         run: |
@@ -237,14 +237,14 @@ jobs:
 
       - name: Prepare pinned semantic index
         run: |
-          ./bin/knownme model download gte-small
-          ./bin/knownme model set gte-small
-          ./bin/knownme config set settings.semanticSearch.provider local
-          ./bin/knownme search --reindex --plain
+          ./bin/knowme model download gte-small
+          ./bin/knowme model set gte-small
+          ./bin/knowme config set settings.semanticSearch.provider local
+          ./bin/knowme search --reindex --plain
 
       - name: Run pinned semantic retrieval evaluation
         run: |
-          ./bin/knownme --json eval retrieval \
+          ./bin/knowme --json eval retrieval \
             --mode semantic \
             --runtime-id "$PINNED_RETRIEVAL_RUNTIME" \
             --baseline internal/search/testdata/retrieval_evaluation_semantic_baseline.json \
@@ -252,7 +252,7 @@ jobs:
 
       - name: Run pinned hybrid retrieval evaluation
         run: |
-          ./bin/knownme --json eval retrieval \
+          ./bin/knowme --json eval retrieval \
             --mode hybrid \
             --runtime-id "$PINNED_RETRIEVAL_RUNTIME" \
             --baseline internal/search/testdata/retrieval_evaluation_hybrid_baseline.json \
@@ -348,27 +348,27 @@ jobs:
 
       - name: Build Go binary (Unix)
         if: runner.os != 'Windows'
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knownme ./cmd/knownme
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowme ./cmd/knowme
 
       - name: Build Go binary (Windows)
         if: runner.os == 'Windows'
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knownme.exe ./cmd/knownme
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowme.exe ./cmd/knowme
 
       - name: Install managed LSP fixtures and expose selected binaries
         shell: bash
         run: |
-          KNOWNS_BINARY="$PWD/bin/knownme"
+          KNOWNS_BINARY="$PWD/bin/knowme"
           if [ "$RUNNER_OS" = "Windows" ]; then
-            KNOWNS_BINARY="$PWD/bin/knownme.exe"
+            KNOWNS_BINARY="$PWD/bin/knowme.exe"
           fi
 
           for language in markdown bash json terraform yaml; do
             "$KNOWNS_BINARY" lsp install "$language"
           done
 
-          STATUS_FILE="$RUNNER_TEMP/knownme-lsp-status.json"
+          STATUS_FILE="$RUNNER_TEMP/knowme-lsp-status.json"
           "$KNOWNS_BINARY" lsp list --json > "$STATUS_FILE"
           node - "$STATUS_FILE" <<'NODE'
           const fs = require('fs');
@@ -407,14 +407,14 @@ jobs:
 
       - name: Run LSP fixtures (Unix)
         if: runner.os != 'Windows'
-        run: TEST_LSP_FIXTURES=1 TEST_BINARY="$PWD/bin/knownme" go test -v -timeout 15m -count=1 ./tests/lspfixtures
+        run: TEST_LSP_FIXTURES=1 TEST_BINARY="$PWD/bin/knowme" go test -v -timeout 15m -count=1 ./tests/lspfixtures
 
       - name: Run LSP fixtures (Windows)
         if: runner.os == 'Windows'
         shell: bash
         env:
           CGO_ENABLED: '1'
-        run: TEST_LSP_FIXTURES=1 TEST_BINARY="$PWD/bin/knownme.exe" go test -v -timeout 15m -count=1 ./tests/lspfixtures
+        run: TEST_LSP_FIXTURES=1 TEST_BINARY="$PWD/bin/knowme.exe" go test -v -timeout 15m -count=1 ./tests/lspfixtures
 
   build-and-e2e:
     if: false  # TEMPORARILY DISABLED — re-enable by removing this line
@@ -470,7 +470,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knownme.exe ./cmd/knownme
+        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowme.exe ./cmd/knowme
 
       - name: Download ONNX Runtime (Unix)
         if: runner.os != 'Windows'
@@ -510,13 +510,13 @@ jobs:
       - name: Verify binary (Unix)
         if: runner.os != 'Windows'
         run: |
-          ./bin/knownme --version
+          ./bin/knowme --version
           echo "Build verification passed"
 
       - name: Verify binary (Windows)
         if: runner.os == 'Windows'
         run: |
-          ./bin/knownme.exe --version
+          ./bin/knowme.exe --version
           echo "Build verification passed"
 
       - name: Run E2E tests (Unix)
@@ -536,31 +536,31 @@ jobs:
 
       - name: Run semantic CLI subset (Unix)
         if: runner.os != 'Windows'
-        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knownme go test -v -timeout 300s -count=1 -run TestCLI_SemanticSearch ./...
+        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knowme go test -v -timeout 300s -count=1 -run TestCLI_SemanticSearch ./...
 
       - name: Run semantic MCP subset (Unix)
         if: runner.os != 'Windows'
-        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knownme go test -v -timeout 300s -count=1 -run 'TestMCP_SemanticSearch/(reindex|keyword_search|hybrid_search|search_docs_only|search_tasks_only)$' ./...
+        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knowme go test -v -timeout 300s -count=1 -run 'TestMCP_SemanticSearch/(reindex|keyword_search|hybrid_search|search_docs_only|search_tasks_only)$' ./...
 
       - name: Run semantic CLI subset (Windows)
         if: runner.os == 'Windows'
         shell: bash
         env:
           CGO_ENABLED: '1'
-        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knownme.exe go test -v -timeout 300s -count=1 -run TestCLI_SemanticSearch ./...
+        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knowme.exe go test -v -timeout 300s -count=1 -run TestCLI_SemanticSearch ./...
 
       - name: Run semantic MCP subset (Windows)
         if: runner.os == 'Windows'
         shell: bash
         env:
           CGO_ENABLED: '1'
-        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knownme.exe go test -v -timeout 300s -count=1 -run 'TestMCP_SemanticSearch/(reindex|keyword_search|hybrid_search|search_docs_only|search_tasks_only)$' ./...
+        run: cd tests && TEST_SEMANTIC=1 TEST_BINARY=../bin/knowme.exe go test -v -timeout 300s -count=1 -run 'TestMCP_SemanticSearch/(reindex|keyword_search|hybrid_search|search_docs_only|search_tasks_only)$' ./...
 
       - name: Run UI Playwright tests (Unix)
         if: runner.os != 'Windows'
-        run: cd ui && TEST_BINARY=../bin/knownme bun test:e2e
+        run: cd ui && TEST_BINARY=../bin/knowme bun test:e2e
 
       - name: Run UI Playwright tests (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: cd ui && TEST_BINARY=../bin/knownme.exe bun test:e2e
+        run: cd ui && TEST_BINARY=../bin/knowme.exe bun test:e2e

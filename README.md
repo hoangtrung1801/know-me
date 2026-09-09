@@ -34,7 +34,7 @@ project docs, quick memos, saved links, decisions, and memories live in one
 centralized, local-first place — then AI helps you collect, search, and add
 context to what's around them.
 
-The product is called **Know-Me**. The command-line interface is `knownme`.
+The product is called **Know-Me**. The command-line interface is `knowme`.
 The npm package keeps the name `knowns` for distribution compatibility.
 
 <p align="center">
@@ -85,28 +85,28 @@ Storage layout:
 
 ```bash
 cd your-project
-knownme init
+knowme init
 ```
 
 ```bash
 # Capture fleeting notes and links — no project ceremony needed
-knownme memo add "Idea: weekly review every Friday"
-knownme link add https://example.com/article
+knowme memo add "Idea: weekly review every Friday"
+knowme link add https://example.com/article
 
 # Manage a project: tasks on a Kanban board
-knownme task create "Set up the release" -d "Prepare the first release checklist"
-knownme board
+knowme task create "Set up the release" -d "Prepare the first release checklist"
+knowme board
 
 # Record durable knowledge
-knownme doc create "Architecture" -d "System overview" -f architecture
+knowme doc create "Architecture" -d "System overview" -f architecture
 
 # Search everything, then validate the database
-knownme search "release" --plain
-knownme retrieve "release" --json
-knownme validate --plain
+knowme search "release" --plain
+knowme retrieve "release" --json
+knowme validate --plain
 
 # Open the visual workspace
-knownme browser --open
+knowme browser --open
 ```
 
 ## Connect an AI agent
@@ -116,16 +116,16 @@ skills, not copy-pasted chat logs:
 
 ```bash
 # User-level setup for a platform
-knownme setup codex --global
-knownme setup claude --global
+knowme setup codex --global
+knowme setup claude --global
 
 # Repository-local compatibility guidance
-knownme setup agents
+knowme setup agents
 ```
 
 At the start of an AI session, the MCP server exposes `initial` for project
 operating context. Use `help` when an agent needs detailed tool schemas. Run
-`knownme sync` after changing platform configuration or updating the CLI.
+`knowme sync` after changing platform configuration or updating the CLI.
 
 See the [AI Agent Guide](./docs/en/guides/ai-agent-guide.md),
 [AI Workflow](./docs/en/guides/ai-workflow.md), and
@@ -159,36 +159,36 @@ Requires Go 1.24.2 or later:
 git clone https://github.com/hoangtrung1801/know-me.git
 cd know-me
 make all
-./bin/knownme --version
+./bin/knowme --version
 ```
 
 Verify any installation with:
 
 ```bash
-knownme --version
+knowme --version
 ```
 
 ## Common commands
 
 | Command | Purpose |
 |---|---|
-| `knownme init` | Initialize or register a project |
-| `knownme task ...` | Create and manage planned work |
-| `knownme board` | Show the Kanban board |
-| `knownme doc ...` | Create and manage project documentation |
-| `knownme memo ...` | Capture and list fast global notes |
-| `knownme link ...` | Save and list links for later |
-| `knownme memory ...` | Store reusable project or global context |
-| `knownme decision ...` | Record and review system decisions |
-| `knownme search ...` | Search tasks, docs, memories, and decisions |
-| `knownme retrieve ...` | Retrieve ranked context for an AI workflow |
-| `knownme code ...` | Inspect indexed symbols and dependencies |
-| `knownme validate` | Check project structure and configuration |
-| `knownme browser` | Start or open the local Web UI |
-| `knownme setup ...` | Configure agent platforms and integrations |
-| `knownme sync` | Apply project configuration and generated artifacts |
+| `knowme init` | Initialize or register a project |
+| `knowme task ...` | Create and manage planned work |
+| `knowme board` | Show the Kanban board |
+| `knowme doc ...` | Create and manage project documentation |
+| `knowme memo ...` | Capture and list fast global notes |
+| `knowme link ...` | Save and list links for later |
+| `knowme memory ...` | Store reusable project or global context |
+| `knowme decision ...` | Record and review system decisions |
+| `knowme search ...` | Search tasks, docs, memories, and decisions |
+| `knowme retrieve ...` | Retrieve ranked context for an AI workflow |
+| `knowme code ...` | Inspect indexed symbols and dependencies |
+| `knowme validate` | Check project structure and configuration |
+| `knowme browser` | Start or open the local Web UI |
+| `knowme setup ...` | Configure agent platforms and integrations |
+| `knowme sync` | Apply project configuration and generated artifacts |
 
-`knownme [command] --help` shows command-specific options. Most commands
+`knowme [command] --help` shows command-specific options. Most commands
 support `--plain` for automation-friendly output and `--json` for structured
 output.
 

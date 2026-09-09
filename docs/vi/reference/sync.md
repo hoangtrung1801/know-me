@@ -1,26 +1,26 @@
 # Sync
 
-`knownme sync` re-apply `.know-me/config.json` lên máy hiện tại.
+`knowme sync` re-apply `.know-me/config.json` lên máy hiện tại.
 
 ## Khi nào dùng
 
-Chạy `knownme sync` sau khi:
+Chạy `knowme sync` sau khi:
 
 - clone repo có sẵn `.know-me/`
 - upgrade CLI
 - muốn generated files khớp lại với config
 
-Để tạo lightweight project shims ban đầu, dùng `knownme init` hoặc `knownme setup agents`. Với personal AI platform setup thông thường (skills, MCP configs, runtime hooks), dùng `knownme setup <target> --global`. Chỉ dùng setup không có `--global` khi bạn chủ ý muốn repo-local integration files.
+Để tạo lightweight project shims ban đầu, dùng `knowme init` hoặc `knowme setup agents`. Với personal AI platform setup thông thường (skills, MCP configs, runtime hooks), dùng `knowme setup <target> --global`. Chỉ dùng setup không có `--global` khi bạn chủ ý muốn repo-local integration files.
 
 ## Các dạng dùng
 
 ```bash
-knownme sync
-knownme sync --skills
-knownme sync --instructions
-knownme sync --model
-knownme sync --instructions --platform claude
-knownme sync --instructions --platform cursor
+knowme sync
+knowme sync --skills
+knowme sync --instructions
+knowme sync --model
+knowme sync --instructions --platform claude
+knowme sync --instructions --platform cursor
 ```
 
 ## Refresh được gì

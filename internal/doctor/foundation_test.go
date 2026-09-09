@@ -41,7 +41,7 @@ func TestFoundationCheckersReportAggregateValidationWithoutWriting(t *testing.T)
 	if validation.Evidence["errors"].(int) < 1 {
 		t.Fatalf("validation evidence = %#v", validation.Evidence)
 	}
-	if validation.Remediation == nil || validation.Remediation.Command != "knownme validate" {
+	if validation.Remediation == nil || validation.Remediation.Command != "knowme validate" {
 		t.Fatalf("validation remediation = %#v", validation.Remediation)
 	}
 	after := snapshotTree(t, store.Root)
@@ -61,7 +61,7 @@ func TestFoundationCheckersWithoutProjectReturnValidUnhealthyResult(t *testing.T
 		t.Fatalf("Verdict = %q, want %q", result.Verdict, VerdictUnhealthy)
 	}
 	active := findCheck(t, result, "project.active")
-	if active.Status != StatusFail || active.Remediation == nil || active.Remediation.Command != "knownme init" {
+	if active.Status != StatusFail || active.Remediation == nil || active.Remediation.Command != "knowme init" {
 		t.Fatalf("active project check = %#v", active)
 	}
 	if result.ExitCode() != 1 {

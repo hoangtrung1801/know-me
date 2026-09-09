@@ -46,7 +46,7 @@ dump_memory() {
 dump_summary() {
   local label="${1:-state}"
   echo "=== ${label}: runtime summary ==="
-  knownme runtime ps --json 2>/tmp/knowns-runtime-ps.err \
+  knowme runtime ps --json 2>/tmp/knowns-runtime-ps.err \
     | jq '{running:.status.running,pid:.status.pid,version:.status.version,clients:(.status.clients // [] | length),projects:(.status.projects // [])}' \
     || { cat /tmp/knowns-runtime-ps.err || true; true; }
 
@@ -60,7 +60,7 @@ dump_summary() {
 dump_state() {
   local label="${1:-state}"
   echo "=== ${label}: knowns runtime ps --json ==="
-  knownme runtime ps --json 2>/tmp/knowns-runtime-ps.err || {
+  knowme runtime ps --json 2>/tmp/knowns-runtime-ps.err || {
     cat /tmp/knowns-runtime-ps.err || true
     true
   }
@@ -96,7 +96,7 @@ OOM_BEFORE="$(memory_event_value oom_kill)"
 OOM_BEFORE="${OOM_BEFORE:-0}"
 
 echo "=== zsh PATH check ==="
-zsh -lc 'echo "shell=$SHELL"; echo "path=$PATH"; which knownme; knownme --version'
+zsh -lc 'echo "shell=$SHELL"; echo "path=$PATH"; which knowme; knowme --version'
 
 echo "=== create smoke project ==="
 rm -rf "$PROJECT"
@@ -126,16 +126,16 @@ func main() {
 }
 EOF
 
-knownme init docker-smoke --no-wizard --no-open --git-tracked
-knownme task create "Runtime smoke task" \
+knowme init docker-smoke --no-wizard --no-open --git-tracked
+knowme task create "Runtime smoke task" \
   --description "Exercise shared Knowns runtime queue and MCP clients in Docker." \
   --label runtime-smoke
-knownme doc create "Runtime Smoke Guide" \
+knowme doc create "Runtime Smoke Guide" \
   --content "# Runtime Smoke Guide\n\nShared daemon runtime smoke test content."
 
 echo "=== start runtime and LSP status surfaces ==="
-knownme search "runtime smoke" --keyword --plain >/tmp/knowns-keyword-search.txt
-knownme lsp list --json >/tmp/knowns-lsp-list.json
+knowme search "runtime smoke" --keyword --plain >/tmp/knowns-keyword-search.txt
+knowme lsp list --json >/tmp/knowns-lsp-list.json
 if is_verbose; then
   cat /tmp/knowns-lsp-list.json
 else
@@ -165,5 +165,5 @@ if (( OOM_AFTER > OOM_BEFORE )); then
   exit 1
 fi
 
-knownme runtime stop || true
+knowme runtime stop || true
 echo "runtime docker smoke passed"

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	CLIName      = "knownme"
+	CLIName      = "knowme"
 	StoreDirName = ".know-me"
 )
 

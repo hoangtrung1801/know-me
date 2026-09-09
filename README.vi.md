@@ -87,14 +87,14 @@ Ghi lại đơn giản. Ưu tiên rõ ràng. Ít thất lạc ngữ cảnh hơn.
 
 ```bash
 # Bắt đầu không gian làm việc cho dự án
-knownme init
+knowme init
 
 # Thêm một công việc
-knownme task create "Lập kế hoạch ra mắt" --ac "Xác định mốc đầu tiên"
+knowme task create "Lập kế hoạch ra mắt" --ac "Xác định mốc đầu tiên"
 
 # Lưu thông tin hữu ích
-knownme link add "https://example.com/article"
-knownme memo add "Hỏi Sam về mốc thời gian ra mắt"
+knowme link add "https://example.com/article"
+knowme memo add "Hỏi Sam về mốc thời gian ra mắt"
 ```
 
 ## Bắt đầu nhanh
@@ -116,17 +116,17 @@ brew install knowns-dev/tap/knowns
 # Tạo hoặc đăng ký không gian làm việc cho dự án
 mkdir du-an-cua-toi
 cd du-an-cua-toi
-knownme init
+knowme init
 
 # Thêm việc cho dự án
-knownme task create "Chọn ngày ra mắt" --ac "Xác nhận ngày"
+knowme task create "Chọn ngày ra mắt" --ac "Xác nhận ngày"
 
 # Lưu thông tin hữu ích cho sau này
-knownme link add "https://example.com/launch-checklist"
-knownme memo add "Xem lại checklist vào thứ Sáu"
+knowme link add "https://example.com/launch-checklist"
+knowme memo add "Xem lại checklist vào thứ Sáu"
 
 # Mở không gian làm việc trên trình duyệt
-knownme browser --open
+knowme browser --open
 ```
 
 ## Cài đặt
@@ -160,7 +160,7 @@ npm install -g knowns
 Cần Go 1.24.2+.
 
 ```bash
-go install github.com/hoangtrung1801/known-me/cmd/knownme@latest
+go install github.com/hoangtrung1801/known-me/cmd/knowme@latest
 ```
 
 ## Tài liệu

@@ -122,7 +122,7 @@ func initSemanticLocal(store *storage.Store, ss *models.SemanticSearchSettings) 
 	if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
 		onnxPath = filepath.Join(modelDir, "onnx", "model.onnx")
 		if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
-			return nil, nil, fmt.Errorf("embedding model %q not downloaded (run: knownme model download %s)", ss.Model, ss.Model)
+			return nil, nil, fmt.Errorf("embedding model %q not downloaded (run: knowme model download %s)", ss.Model, ss.Model)
 		}
 	}
 

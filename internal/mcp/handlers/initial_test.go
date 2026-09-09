@@ -114,7 +114,7 @@ func TestLspWarningsLineWithMissing(t *testing.T) {
 		binaries: []lsp.BinaryCandidate{{Name: "pylsp"}},
 		guide: lsp.InstallGuide{
 			Command:   "pip install python-lsp-server",
-			KnownsCmd: "knownme lsp install python",
+			KnownsCmd: "knowme lsp install python",
 			URL:       "https://github.com/python-lsp/python-lsp-server",
 		},
 	})
@@ -124,7 +124,7 @@ func TestLspWarningsLineWithMissing(t *testing.T) {
 		binaries: []lsp.BinaryCandidate{{Name: "rust-analyzer"}},
 		guide: lsp.InstallGuide{
 			Command:   "rustup component add rust-analyzer",
-			KnownsCmd: "knownme lsp install rust",
+			KnownsCmd: "knowme lsp install rust",
 			URL:       "https://rust-analyzer.github.io/",
 		},
 	})
@@ -178,7 +178,7 @@ func TestLspWarningsLineIncludesCSharpRuntimeState(t *testing.T) {
 		id:       lsp.CSharpLanguageID,
 		name:     "C#",
 		binaries: []lsp.BinaryCandidate{{Name: "roslyn-ls"}, {Name: "csharp-ls"}, {Name: "omnisharp"}},
-		guide:    lsp.InstallGuide{KnownsCmd: "knownme lsp install csharp"},
+		guide:    lsp.InstallGuide{KnownsCmd: "knowme lsp install csharp"},
 	})
 	manager.SetDetector(&lsp.Detector{
 		Registry: lsp.NewRegistry([]lsp.Language{{ID: lsp.CSharpLanguageID, Extensions: []string{".cs"}, Binaries: []lsp.Binary{{Name: "csharp-ls"}}}}),

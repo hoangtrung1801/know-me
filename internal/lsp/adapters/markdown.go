@@ -46,7 +46,7 @@ func (a *MarksmanAdapter) DefaultArgs() []string                    { return []s
 func (a *MarksmanAdapter) SupportsImplementation() bool             { return false }
 func (a *MarksmanAdapter) InstallGuide() lsp.InstallGuide {
 	return lsp.InstallGuide{
-		KnownsCmd: "knownme lsp install markdown",
+		KnownsCmd: "knowme lsp install markdown",
 		URL:       marksmanRepositoryURL,
 		Notes:     "Standalone Marksman binaries are installed on demand; existing PATH binaries take precedence",
 	}

@@ -5,7 +5,7 @@ Use Hermes Agent with Know-Me through MCP, `AGENTS.md`, and optional Know-Me ski
 Hermes reads project context files such as `AGENTS.md`, supports MCP servers through `~/.hermes/config.yaml`, and can scan external skill directories. Know-Me uses those three surfaces together:
 
 - `AGENTS.md` tells Hermes to start with Know-Me MCP `initial` and use `help("tool.*")` or `help("workflow.*")` on demand.
-- `knownme mcp --stdio` exposes Know-Me tools for tasks, docs, memory, search, code, templates, and validation.
+- `knowme mcp --stdio` exposes Know-Me tools for tasks, docs, memory, search, code, templates, and validation.
 - `.agents/skills` exposes Know-Me workflow skills such as `kn-research`, `kn-plan`, `kn-flow`, and `kn-review` when Hermes scans it as an external skill directory.
 
 Hermes references:
@@ -20,28 +20,28 @@ Hermes references:
 From a Know-Me project:
 
 ```bash
-knownme init
-knownme setup hermes
+knowme init
+knowme setup hermes
 ```
 
 Hermes stores MCP settings in `~/.hermes/config.yaml`, so even project setup writes to a user-level Hermes config file. The project remains scoped because Know-Me writes `--project <this-repo>` into the MCP server args.
 
-`knownme setup hermes` creates or refreshes:
+`knowme setup hermes` creates or refreshes:
 
 - `AGENTS.md`
 - `KNOWNS.md`
 - `.agents/skills`
 - `~/.hermes/config.yaml`
 
-The Hermes config points the Know-Me MCP server at the current project with `--project`, so Hermes can launch from another directory and still use the right Know-Me store. Running `knownme setup hermes` from another project updates the same `mcp_servers.known-me` entry to that project.
+The Hermes config points the Know-Me MCP server at the current project with `--project`, so Hermes can launch from another directory and still use the right Know-Me store. Running `knowme setup hermes` from another project updates the same `mcp_servers.known-me` entry to that project.
 
 Use global setup if you want Hermes to know about Know-Me on every machine-level Hermes session:
 
 ```bash
-knownme setup hermes --global
+knowme setup hermes --global
 ```
 
-Global setup writes `~/.hermes/config.yaml` with a reusable `knownme mcp --stdio` server and `~/.agents/skills` as an external skill directory. This mode does not pin a project; Know-Me resolves the active project from the Hermes working directory or from MCP project selection.
+Global setup writes `~/.hermes/config.yaml` with a reusable `knowme mcp --stdio` server and `~/.agents/skills` as an external skill directory. This mode does not pin a project; Know-Me resolves the active project from the Hermes working directory or from MCP project selection.
 
 ## Manual config
 
@@ -102,6 +102,6 @@ Skills are not MCP tools. MCP tools appear as structured tools from the `knowns`
 ## Troubleshooting
 
 - If Hermes cannot see Know-Me tools, restart Hermes or run `/reload-mcp`.
-- If the MCP server starts in the wrong project, use `knownme setup hermes` from the project root so the generated config includes `--project`.
+- If the MCP server starts in the wrong project, use `knowme setup hermes` from the project root so the generated config includes `--project`.
 - If skills do not appear, check that `.agents/skills` exists and is listed under `skills.external_dirs`.
 - If `knowns` is not on `PATH`, reinstall Know-Me globally or use the `npx` config form.

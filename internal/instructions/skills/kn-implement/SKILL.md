@@ -73,7 +73,7 @@ Working rules:
 - If a step reveals missing context, pause implementation and gather it before continuing
 - If the task needs docs or template changes, do them as part of completion, not as an afterthought
 - Use `search` to discover relevant sources; use `retrieve` when implementation needs assembled context with citations for docs, tasks, and memories.
-- Prefer MCP `mcp_knowns_search({ "action": "retrieve", "query": "<keywords>" })` for retrieval; fall back to CLI `knownme retrieve "<keywords>" --json` if MCP is unavailable.
+- Prefer MCP `mcp_knowns_search({ "action": "retrieve", "query": "<keywords>" })` for retrieval; fall back to CLI `knowme retrieve "<keywords>" --json` if MCP is unavailable.
 
 ## Step 4: Handle Scope Changes
 

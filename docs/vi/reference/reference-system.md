@@ -22,7 +22,7 @@ Reference giúp navigate giữa các entity mà không cần nhớ path hay ID.
 ## Lệnh liên quan
 
 ```bash
-knownme resolve "@doc/specs/auth{implements}" --plain
-knownme search "authentication" --plain
-knownme retrieve "how auth works" --json
+knowme resolve "@doc/specs/auth{implements}" --plain
+knowme search "authentication" --plain
+knowme retrieve "how auth works" --json
 ```

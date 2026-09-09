@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redesigned Web UI with new theme system (OKLCH color space, unified tokens), refined components, and design system documentation (`DESIGN.md`, `PRODUCT.md`).
 
 ### Changed
-- Updated release workflow brand name and dual archive generation (`knownme-*` and `knowns-*`).
-
+- Updated CLI entry point and binary name to `knowme`.
+- Updated release workflow brand name and dual archive generation (`knowme-*` and `knowns-*`).
 ## [1.7.0] - 2026-09-08
 
 ### Changed

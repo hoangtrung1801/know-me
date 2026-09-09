@@ -1,6 +1,6 @@
 # Auto sync
 
-Know-Me dùng `knownme sync` và `knownme update` để giữ generated artifacts đồng bộ với binary và project config.
+Know-Me dùng `knowme sync` và `knowme update` để giữ generated artifacts đồng bộ với binary và project config.
 
 ## Sync được gì
 
@@ -14,10 +14,10 @@ Know-Me dùng `knownme sync` và `knownme update` để giữ generated artifact
 ## Lệnh
 
 ```bash
-knownme sync
-knownme sync --skills
-knownme sync --instructions
-knownme update
+knowme sync
+knowme sync --skills
+knowme sync --instructions
+knowme update
 ```
 
 ## Legacy

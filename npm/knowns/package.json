@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "AI-native project management CLI",
   "bin": {
+    "knowme": "bin/knowns.js",
     "knownme": "bin/knowns.js",
     "kn": "bin/knowns.js"
   },

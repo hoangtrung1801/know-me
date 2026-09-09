@@ -37,7 +37,7 @@ func (s ServerStatus) String() string {
 type InstallGuide struct {
 	Command   string `json:"command,omitempty"`    // e.g. "go install golang.org/x/tools/gopls@latest"
 	URL       string `json:"url,omitempty"`        // e.g. "https://pkg.go.dev/golang.org/x/tools/gopls"
-	KnownsCmd string `json:"knowns_cmd,omitempty"` // e.g. "knownme lsp install go" (empty if not downloadable)
+	KnownsCmd string `json:"knowns_cmd,omitempty"` // e.g. "knowme lsp install go" (empty if not downloadable)
 	Notes     string `json:"notes,omitempty"`      // e.g. "Requires Go 1.21+ installed"
 }
 

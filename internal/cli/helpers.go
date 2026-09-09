@@ -30,7 +30,7 @@ func getStore() *storage.Store {
 	store, err := resolveProjectStore(cwd)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Run 'knownme init' to initialize a project.\n")
+		fmt.Fprintf(os.Stderr, "Run 'knowme init' to initialize a project.\n")
 		os.Exit(1)
 	}
 	return store
@@ -68,7 +68,7 @@ func resolveProjectStore(start string) (*storage.Store, error) {
 	if projectID == "" {
 		project = reg.GetActive()
 		if project == nil {
-			return nil, fmt.Errorf("no active project; run 'knownme init'")
+			return nil, fmt.Errorf("no active project; run 'knowme init'")
 		}
 		projectID = project.ID
 	} else {

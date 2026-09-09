@@ -15,7 +15,7 @@ var templateCmd = &cobra.Command{
 	Use:   "template",
 	Short: "Manage code generation templates",
 	Long:  "List, view, run, and create code generation templates.",
-	// Allow 'knownme template <name>' as a shorthand for 'knownme template view <name>'
+	// Allow 'knowme template <name>' as a shorthand for 'knowme template view <name>'
 	Args: cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {

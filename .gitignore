@@ -3,11 +3,14 @@ bin/
 **/obj/
 tmp/
 *.exe
+/knowme
 /knownme
 /knowns
 /knowns-embed
 
 # npm platform binaries
+npm/knowns-*/knowme
+npm/knowns-*/knowme.exe
 npm/knowns-*/knownme
 npm/knowns-*/knownme.exe
 

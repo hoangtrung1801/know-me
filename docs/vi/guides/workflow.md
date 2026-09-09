@@ -6,7 +6,7 @@ Mục tiêu là giữ planning, context, implementation notes, và validation �
 
 ## Vòng lặp đề xuất cho mọi project
 
-1. `knownme init` một lần cho mỗi project
+1. `knowme init` một lần cho mỗi project
 2. Tạo task và doc hỗ trợ
 3. AI bắt đầu bằng MCP `initial`, rồi dùng `help`, task, doc, memory khi cần
 4. Implement
@@ -18,12 +18,12 @@ Vòng lặp này vẫn hữu ích kể cả khi không dùng AI assistant. AI in
 ## Lệnh hay đi cùng nhau
 
 ```bash
-knownme task create "..."
-knownme doc create "..."
-knownme search "..." --plain
-knownme retrieve "..." --json
-knownme validate --plain
-knownme sync
+knowme task create "..."
+knowme doc create "..."
+knowme search "..." --plain
+knowme retrieve "..." --json
+knowme validate --plain
+knowme sync
 ```
 
 ## Workflow do người điều khiển
@@ -40,7 +40,7 @@ Dùng cách này khi muốn Know-Me làm project organization layer:
 
 Dùng cách này khi assistant hỗ trợ planning hoặc implementation:
 
-1. Chạy `knownme setup <target> --global` cho assistant platform.
+1. Chạy `knowme setup <target> --global` cho assistant platform.
 2. Yêu cầu assistant inspect project state trước.
 3. Cho assistant làm việc từ task, doc, hoặc spec thay vì prompt mơ hồ.
 4. Dùng MCP tools cho structured reads/writes khi có.
@@ -67,8 +67,8 @@ Dùng `--global` cho personal assistant setup vì nó update user-level MCP conf
 Trước khi xem work là xong:
 
 ```bash
-knownme validate --plain
-knownme sync
+knowme validate --plain
+knowme sync
 ```
 
 Validation kiểm tra project integrity. Sync giữ generated shim files và platform artifacts khớp với Know-Me config hiện tại.

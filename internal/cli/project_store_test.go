@@ -130,7 +130,7 @@ func TestResolveProjectStoreRequiresActiveProject(t *testing.T) {
 		t.Fatal(err)
 	}
 	store, err := resolveProjectStore(repo)
-	if err == nil || store != nil || !strings.Contains(err.Error(), "run 'knownme init'") {
+	if err == nil || store != nil || !strings.Contains(err.Error(), "run 'knowme init'") {
 		t.Fatalf("store = %#v, err = %v, want initialization error", store, err)
 	}
 }

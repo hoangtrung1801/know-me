@@ -1,5 +1,5 @@
 MODULE := github.com/hoangtrung1801/known-me
-BINARY := knownme
+BINARY := knowme
 VERSION ?= $(shell git describe --tags 2>/dev/null || node -p "require('./ui/package.json').version" 2>/dev/null || echo "dev")
 LDFLAGS := -s -w -X $(MODULE)/internal/util.Version=$(VERSION)
 BUILD_DIR := bin
@@ -18,8 +18,8 @@ RUNTIME_DOCKER_RUN_CODE ?= 0
 RUNTIME_DOCKER_AI_SESSIONS ?= 3
 RUNTIME_DOCKER_PROJECT ?= $(CURDIR)
 RUNTIME_DOCKER_PROJECT_CONTAINER ?= knowns-runtime-project-stress-run
-RUNTIME_DOCKER_PROJECT_QUERY ?= knownme runtime MCP
-RUNTIME_DOCKER_PROJECT_CODE_PATH ?= cmd/knownme/main.go
+RUNTIME_DOCKER_PROJECT_QUERY ?= knowme runtime MCP
+RUNTIME_DOCKER_PROJECT_CODE_PATH ?= cmd/knowme/main.go
 RUNTIME_DOCKER_PROJECT_HOLD_SECONDS ?= 1
 RUNTIME_DOCKER_USER ?= $(shell id -u):$(shell id -g)
 RUNTIME_DOCKER_VERBOSE ?= 0
@@ -28,7 +28,7 @@ RUNTIME_DOCKER_ONNX_MODEL ?= gte-small
 RUNTIME_DOCKER_ONNX_REINDEX ?= 1
 RUNTIME_DOCKER_EMBED_BATCH_SIZE ?= 8
 RUNTIME_DOCKER_LSP_STRESS ?= 0
-RUNTIME_DOCKER_LSP_PATHS ?= cmd/knownme/main.go,ui/src/lib/utils.ts,ui/src/api/client.ts,tests/runtime-docker/fixtures/csharp/Program.cs
+RUNTIME_DOCKER_LSP_PATHS ?= cmd/knowme/main.go,ui/src/lib/utils.ts,ui/src/api/client.ts,tests/runtime-docker/fixtures/csharp/Program.cs
 RUNTIME_DOCKER_GOPLS_VERSION ?= v0.20.0
 
 # All 6 platform targets
@@ -46,7 +46,7 @@ all: ui build
 
 # Development build (current platform)
 build:
-	CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY) ./cmd/knownme
+	CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY) ./cmd/knowme
 
 # Build the Linux Docker smoke image. The Dockerfile builds UI assets first,
 # then builds the Go binary inside Linux so the runtime image never uses a
@@ -175,7 +175,7 @@ runtime-docker-shell: runtime-docker-build
 
 # Development build with race detector (race requires CGO)
 dev:
-	CGO_ENABLED=1 go build -race -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY) ./cmd/knownme
+	CGO_ENABLED=1 go build -race -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY) ./cmd/knowme
 
 # Run Go server with hot reload (requires air: go install github.com/air-verse/air@latest)
 dev-go:
@@ -202,7 +202,7 @@ dev-all:
 
 # Install to GOPATH/bin
 install:
-	CGO_ENABLED=1 go install -ldflags "$(LDFLAGS)" ./cmd/knownme
+	CGO_ENABLED=1 go install -ldflags "$(LDFLAGS)" ./cmd/knowme
 
 # Run tests
 test:
@@ -240,18 +240,18 @@ cross-compile: clean
 		output=$(BUILD_DIR)/$(BINARY)-$$os-$$arch; \
 		if [ "$$os" = "windows" ]; then output="$$output.exe"; fi; \
 		echo "Building $$os/$$arch..."; \
-		GOOS=$$os GOARCH=$$arch CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o $$output ./cmd/knownme; \
+		GOOS=$$os GOARCH=$$arch CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o $$output ./cmd/knowme; \
 	done
 
 # Build for npm distribution (maps to npm package names)
 npm-build: clean
 	@echo "Building for npm distribution..."
-	GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-darwin-arm64/knownme ./cmd/knownme
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-darwin-x64/knownme ./cmd/knownme
-	GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-linux-arm64/knownme ./cmd/knownme
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-linux-x64/knownme ./cmd/knownme
-	GOOS=windows GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-win-arm64/knownme.exe ./cmd/knownme
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-win-x64/knownme.exe ./cmd/knownme
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-darwin-arm64/knowme ./cmd/knowme
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-darwin-x64/knowme ./cmd/knowme
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-linux-arm64/knowme ./cmd/knowme
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-linux-x64/knowme ./cmd/knowme
+	GOOS=windows GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-win-arm64/knowme.exe ./cmd/knowme
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o npm/knowns-win-x64/knowme.exe ./cmd/knowme
 
 # Build UI (requires Node.js + bun)
 ui:
@@ -264,7 +264,7 @@ release: clean ui cross-compile npm-build
 
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -f npm/knowns-*/knownme npm/knowns-*/knownme.exe
+	rm -f npm/knowns-*/knowme npm/knowns-*/knowme.exe npm/knowns-*/knownme npm/knowns-*/knownme.exe
 	rm -f npm/knowns-*/knowns-embed npm/knowns-*/knowns-embed.exe
 
 # Generate embedded assets placeholder

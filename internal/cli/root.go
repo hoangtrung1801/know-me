@@ -25,7 +25,7 @@ var bannerLines = []string{
 }
 
 var rootCmd = &cobra.Command{
-	Use:     "knownme [options] [command]",
+	Use:     "knowme [options] [command]",
 	Short:   "The memory layer for AI-native software development",
 	Version: util.Version,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -39,10 +39,10 @@ var rootCmd = &cobra.Command{
 		fmt.Println("  Enabling AI to understand your project instantly.")
 		fmt.Println()
 		fmt.Println(StyleBold.Render("  Quick Start:"))
-		fmt.Printf("    %s  %s\n", StyleInfo.Render("knownme init"), "Initialize project")
-		fmt.Printf("    %s  %s\n", StyleInfo.Render("knownme task list"), "List all tasks")
-		fmt.Printf("    %s  %s\n", StyleInfo.Render("knownme browser"), "Open web UI")
-		fmt.Printf("    %s  %s\n", StyleInfo.Render("knownme --help"), "Show all commands")
+		fmt.Printf("    %s  %s\n", StyleInfo.Render("knowme init"), "Initialize project")
+		fmt.Printf("    %s  %s\n", StyleInfo.Render("knowme task list"), "List all tasks")
+		fmt.Printf("    %s  %s\n", StyleInfo.Render("knowme browser"), "Open web UI")
+		fmt.Printf("    %s  %s\n", StyleInfo.Render("knowme --help"), "Show all commands")
 		fmt.Println()
 		fmt.Printf("  %s  %s\n", StyleBold.Render("Homepage: "), StyleInfo.Render("https://knowns.sh"))
 		fmt.Printf("  %s  %s\n", StyleBold.Render("Documents:"), StyleInfo.Render("https://knowns.sh/docs"))
@@ -97,11 +97,11 @@ func customHelpFunc(cmd *cobra.Command, args []string) {
 	}
 
 	// Footer
-	fmt.Printf("%s\n", StyleDim.Render("Use \"knownme [command] --help\" for more information about a command."))
+	fmt.Printf("%s\n", StyleDim.Render("Use \"knowme [command] --help\" for more information about a command."))
 }
 
 // maybeWarnSkillsOutOfSync prints a one-line warning if embedded skills differ
-// from the on-disk copies. This nudges the user to run `knownme sync` after upgrading.
+// from the on-disk copies. This nudges the user to run `knowme sync` after upgrading.
 func maybeWarnSkillsOutOfSync() {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -112,7 +112,7 @@ func maybeWarnSkillsOutOfSync() {
 		return
 	}
 	if codegen.SkillsOutOfSync(cwd) {
-		fmt.Fprintf(os.Stderr, "%s\n", StyleWarning.Render("⚠ Skills are out of sync. Run 'knownme sync' to update."))
+		fmt.Fprintf(os.Stderr, "%s\n", StyleWarning.Render("⚠ Skills are out of sync. Run 'knowme sync' to update."))
 	}
 }
 
@@ -126,7 +126,7 @@ func maybeAutoSetup() {
 	}
 	root := filepath.Join(cwd, paths.StoreDirName)
 	if _, err := os.Stat(root); err != nil {
-		return // not a knownme project
+		return // not a knowme project
 	}
 
 	store := storage.NewStore(root)
@@ -169,7 +169,7 @@ func maybeAutoSetup() {
 	fmt.Println(warnStyle.Render("⚠ This project uses semantic search but the embedding model is not installed locally."))
 	fmt.Println(RenderField("Model", fmt.Sprintf("%s (%s, ~%dMB)", selected.Name, selected.ID, selected.SizeMB)))
 	fmt.Println()
-	fmt.Println(RenderHint("Run: " + RenderCmd("knownme sync")))
+	fmt.Println(RenderHint("Run: " + RenderCmd("knowme sync")))
 	fmt.Println()
 }
 

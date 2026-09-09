@@ -8,11 +8,11 @@ A task is **Done** when ALL of these are complete:
 ### CLI
 | Requirement | Command |
 |-------------|---------|
-| All AC checked | `knownme task edit <id> --check-ac N` |
-| Notes added | `knownme task edit <id> --notes "Summary"` |
-| Refs validated | `knownme validate` |
-| Timer stopped | `knownme time stop` |
-| Status = done | `knownme task edit <id> -s done` |
+| All AC checked | `knowme task edit <id> --check-ac N` |
+| Notes added | `knowme task edit <id> --notes "Summary"` |
+| Refs validated | `knowme validate` |
+| Timer stopped | `knowme time stop` |
+| Status = done | `knowme task edit <id> -s done` |
 | Tests pass | Run test suite |
 | Decision impact recorded | `System Decision Impact: none` or persisted candidate ref |
 {{/if}}
@@ -42,7 +42,7 @@ Before completing any task or spec workflow, ask:
 - **Yes:** create a first-class draft candidate linked to the task, spec/doc, and readable source:
 
 ```bash
-knownme decision create "<title>" \
+knowme decision create "<title>" \
   --task <task-id> \
   --doc <spec-or-doc-path> \
   --source @doc/<source-path> \
@@ -80,20 +80,20 @@ Passing automated checks never auto-accepts the candidate. It remains non-curren
 ### CLI
 ```bash
 # 1. Verify all AC are checked
-knownme task <id> --plain
+knowme task <id> --plain
 
 # 2. Add implementation notes
-knownme task edit <id> --notes $'## Summary
+knowme task edit <id> --notes $'## Summary
 What was done and key decisions.'
 
 # 3. Validate refs (catch broken @doc/ @task- refs)
-knownme validate
+knowme validate
 
 # 4. Stop timer (REQUIRED!)
-knownme time stop
+knowme time stop
 
 # 5. Mark done
-knownme task edit <id> -s done
+knowme task edit <id> -s done
 ```
 {{/if}}
 {{#if mcp}}
@@ -131,10 +131,10 @@ If user requests changes after task is done:
 {{#if cli}}
 ### CLI
 ```bash
-knownme task edit <id> -s in-progress    # Reopen
-knownme time start <id>                   # Restart timer
-knownme task edit <id> --ac "Fix: description"
-knownme task edit <id> --append-notes "Reopened: reason"
+knowme task edit <id> -s in-progress    # Reopen
+knowme time start <id>                   # Restart timer
+knowme task edit <id> --ac "Fix: description"
+knowme task edit <id> --append-notes "Reopened: reason"
 ```
 {{/if}}
 {{#if mcp}}
@@ -169,7 +169,7 @@ Then follow completion steps again.
 - [ ] All AC checked (`--check-ac`)
 - [ ] System Decision Impact marker recorded
 - [ ] Notes added (`--notes`)
-- [ ] Refs validated (`knownme validate`)
+- [ ] Refs validated (`knowme validate`)
 - [ ] Timer stopped (`time stop`)
 - [ ] Tests pass
 - [ ] Status = done (`-s done`)

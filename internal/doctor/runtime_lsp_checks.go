@@ -71,7 +71,7 @@ func runtimeCheckers(store *storage.Store, snapshot *serviceSnapshot) []Checker 
 					},
 					Remediation: &Remediation{
 						Description: "Inspect managed runtime status and start or repair configured services.",
-						Command:     "knownme browser",
+						Command:     "knowme browser",
 					},
 				}, nil
 			}
@@ -141,7 +141,7 @@ func lspCheckers(store *storage.Store, project *projectSnapshot, snapshot *lspSn
 				if status.InstallState == lsp.RuntimeInstallNotInstalled || status.InstallState == lsp.RuntimeInstallError {
 					command := status.InstallCmd
 					if command == "" {
-						command = "knownme lsp install " + languageID
+						command = "knowme lsp install " + languageID
 					}
 					return CheckResult{
 						Status:   StatusWarn,
@@ -160,7 +160,7 @@ func lspCheckers(store *storage.Store, project *projectSnapshot, snapshot *lspSn
 						Evidence: lspEvidence(status),
 						Remediation: &Remediation{
 							Description: "Inspect the language-server status and repair the reported capability gap.",
-							Command:     "knownme lsp list",
+							Command:     "knowme lsp list",
 						},
 					}, nil
 				}

@@ -1,6 +1,6 @@
 # Auto Sync
 
-Know-Me uses `knownme sync` and `knownme update` to keep generated artifacts aligned with the current binary and project config.
+Know-Me uses `knowme sync` and `knowme update` to keep generated artifacts aligned with the current binary and project config.
 
 ## What gets synced
 
@@ -14,10 +14,10 @@ Know-Me uses `knownme sync` and `knownme update` to keep generated artifacts ali
 ## Related commands
 
 ```bash
-knownme sync
-knownme sync --skills
-knownme sync --instructions
-knownme update
+knowme sync
+knowme sync --skills
+knowme sync --instructions
+knowme update
 ```
 
 ## Legacy note

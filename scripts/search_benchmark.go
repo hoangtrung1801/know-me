@@ -45,7 +45,7 @@ func main() {
 }
 
 func runSearch(query string) ([]searchbench.BenchmarkHit, error) {
-	cmd := exec.Command("go", "run", "./cmd/knownme", "search", query, "--keyword", "--json")
+	cmd := exec.Command("go", "run", "./cmd/knowme", "search", query, "--keyword", "--json")
 	cmd.Dir = repoRoot()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

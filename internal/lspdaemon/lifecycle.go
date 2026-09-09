@@ -47,7 +47,7 @@ func (e *DaemonError) Error() string {
 	if e.StatePath != "" {
 		message += "; status state " + e.StatePath
 	}
-	message += "; run `knownme lsp list --json` for current daemon/LSP status"
+	message += "; run `knowme lsp list --json` for current daemon/LSP status"
 	return message
 }
 

@@ -18,7 +18,7 @@ var taskCmd = &cobra.Command{
 	Use:   "task",
 	Short: "Manage tasks",
 	Long:  "Create, view, edit, and manage project tasks.",
-	// Allow 'knownme task <id>' as a shorthand for 'knownme task view <id>'
+	// Allow 'knowme task <id>' as a shorthand for 'knowme task view <id>'
 	Args: cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {

@@ -47,7 +47,7 @@ if exist "%LLVM_MINGW_BIN%\x86_64-w64-mingw32-clang.exe" (
   exit /b 1
 )
 if not exist bin mkdir bin
-go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=%VERSION%" -o bin\knownme.exe .\cmd\knownme
+go build -ldflags "-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=%VERSION%" -o bin\knowme.exe .\cmd\knowme
 if errorlevel 1 exit /b 1
 go build -ldflags "-s -w -H windowsgui -X github.com/hoangtrung1801/known-me/internal/util.Version=%VERSION%" -o bin\knowns-embed.exe .\cmd\knowns-embed
 if errorlevel 1 exit /b 1
@@ -57,9 +57,9 @@ copy /Y "%ORT_DLL%" bin\onnxruntime.dll >NUL
 if errorlevel 1 exit /b 1
 
 echo.
-echo Build completed: bin\knownme.exe
+echo Build completed: bin\knowme.exe
 echo Native sidecar built: bin\knowns-embed.exe
 echo ONNX runtime copied from: %ORT_DLL%
 echo.
 echo PowerShell test command:
-echo   .\bin\knownme.exe search --reindex
+echo   .\bin\knowme.exe search --reindex

@@ -15,14 +15,14 @@ Runtime-critical guidance nằm trong MCP `initial` và `help`, không nằm tro
 ## Refresh
 
 ```bash
-knownme init
-knownme setup agents
-knownme setup --global
-knownme sync
-knownme sync --instructions
+knowme init
+knowme setup agents
+knowme setup --global
+knowme sync
+knowme sync --instructions
 ```
 
-Dùng `knownme init` để tạo project state ban đầu và selected lightweight shims. Dùng `knownme setup agents` để tạo hoặc refresh generic repo-local shims, `knownme setup <target> --global` cho personal platform integrations thông thường, hoặc `knownme sync` để refresh generated files từ config.
+Dùng `knowme init` để tạo project state ban đầu và selected lightweight shims. Dùng `knowme setup agents` để tạo hoặc refresh generic repo-local shims, `knowme setup <target> --global` cho personal platform integrations thông thường, hoặc `knowme sync` để refresh generated files từ config.
 
 ## Agent bootstrap
 

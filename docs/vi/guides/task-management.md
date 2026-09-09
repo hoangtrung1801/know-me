@@ -28,17 +28,17 @@ Thay vì nói "làm phần auth đi", define cụ thể:
 ## Flow điển hình
 
 ```bash
-knownme task create "Add authentication" \
+knowme task create "Add authentication" \
   -d "JWT-based auth with login and register endpoints" \
   --ac "User can register" \
   --ac "User can login" \
   --priority high
 
-knownme task edit <id> -s in-progress
-knownme task edit <id> --plan '1. Review auth pattern\n2. Implement endpoints\n3. Add tests'
-knownme task edit <id> --check-ac 1
-knownme task edit <id> --append-notes "Completed middleware"
-knownme task edit <id> -s done
+knowme task edit <id> -s in-progress
+knowme task edit <id> --plan '1. Review auth pattern\n2. Implement endpoints\n3. Add tests'
+knowme task edit <id> --check-ac 1
+knowme task edit <id> --append-notes "Completed middleware"
+knowme task edit <id> -s done
 ```
 
 ## Acceptance criteria

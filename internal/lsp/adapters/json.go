@@ -42,7 +42,7 @@ func (a *JSONAdapter) CheckPrerequisites(ctx context.Context) error {
 func (a *JSONAdapter) InstallGuide() lsp.InstallGuide {
 	return lsp.InstallGuide{
 		Command:   "npm install -g vscode-json-languageserver@" + jsonLanguageServerVersion,
-		KnownsCmd: "knownme lsp install json",
+		KnownsCmd: "knowme lsp install json",
 		URL:       "https://www.npmjs.com/package/vscode-json-languageserver",
 		Notes:     "Requires Node.js; Know-Me installs the recommended integrity-pinned version",
 	}

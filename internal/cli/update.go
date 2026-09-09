@@ -93,7 +93,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("\n  %s Run %s to sync skills and rebuild the search index.\n",
 		StyleInfo.Render("ℹ"),
-		StyleBold.Render("knownme sync"))
+		StyleBold.Render("knowme sync"))
 	return nil
 }
 
@@ -129,7 +129,7 @@ func runUpgrade() error {
 	// If still unknown, prompt user to choose.
 	if method == util.InstallMethodUnknown {
 		if !isTTY() {
-			return fmt.Errorf("could not detect how knownme was installed; reinstall using one of:\n  %s\n  brew install knowns-dev/tap/knowns\n  npm i -g knowns\n  bun add -g knowns", scriptInstallCmd())
+			return fmt.Errorf("could not detect how knowme was installed; reinstall using one of:\n  %s\n  brew install knowns-dev/tap/knowns\n  npm i -g knowns\n  bun add -g knowns", scriptInstallCmd())
 		}
 		fmt.Printf("  %s Could not detect install method.\n", StyleWarning.Render("⚠"))
 		var err error
@@ -269,7 +269,7 @@ var errUpdateDeferred = errors.New("update deferred to external package manager"
 // Returns InstallMethodUnknown if the user cancels.
 func promptInstallMethod() (util.InstallMethod, string, error) {
 	if !isTTY() {
-		return util.InstallMethodScript, "knownme update", nil
+		return util.InstallMethodScript, "knowme update", nil
 	}
 	drainStdin()
 	options := []installOption{
@@ -411,7 +411,7 @@ func printPackageManagerExternalUpdateGuidance(method util.InstallMethod, instal
 }
 
 func printPackageManagerExternalUpdateGuidanceTo(w io.Writer, method util.InstallMethod, installCmd string) {
-	fmt.Fprintf(w, "  %s Windows cannot safely run %s while this knownme.exe process is active.\n",
+	fmt.Fprintf(w, "  %s Windows cannot safely run %s while this knowme.exe process is active.\n",
 		StyleWarning.Render("!"),
 		StyleBold.Render(installMethodLabel(method)),
 	)
@@ -419,7 +419,7 @@ func printPackageManagerExternalUpdateGuidanceTo(w io.Writer, method util.Instal
 	fmt.Fprintln(w, "  Close terminals/agents that are using Know-Me, then run this in a fresh PowerShell:")
 	fmt.Fprintf(w, "  %s\n", StyleInfo.Render(installCmd))
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  After it finishes, run %s to sync configs and rebuild indexes.\n", StyleBold.Render("knownme sync"))
+	fmt.Fprintf(w, "  After it finishes, run %s to sync configs and rebuild indexes.\n", StyleBold.Render("knowme sync"))
 }
 
 // scriptInstallCmd returns the install script command for the current platform.
@@ -438,7 +438,7 @@ func recommendedUpdateCommand() string {
 	if cmd != "" {
 		return cmd
 	}
-	return "knownme update"
+	return "knowme update"
 }
 
 func runHomebrewUpgrade(installCmd string) error {
@@ -611,13 +611,13 @@ func downloadAndReplaceBinary(url, binaryPath string) error {
 	if err := extractTarGz(archivePath, tmpDir); err != nil {
 		return fmt.Errorf("extract release artifact: %w", err)
 	}
-	binaryName := "knownme"
+	binaryName := "knowme"
 	if runtime.GOOS == "windows" {
-		binaryName = "knownme.exe"
+		binaryName = "knowme.exe"
 	}
 	extractedPath, err := findFile(tmpDir, func(path string, info os.FileInfo) bool {
 		name := strings.ToLower(info.Name())
-		return !info.IsDir() && (name == strings.ToLower(binaryName) || strings.HasPrefix(name, "knowns-"))
+		return !info.IsDir() && (name == strings.ToLower(binaryName) || name == "knownme" || name == "knownme.exe" || strings.HasPrefix(name, "knowns-"))
 	})
 	if err != nil {
 		return err
@@ -769,7 +769,7 @@ func mustAtoi(value string) int {
 }
 
 // syncMCPConfigs updates MCP config files in the current project to use the
-// local knownme binary instead of npx, for faster and more reliable startup.
+// local knowme binary instead of npx, for faster and more reliable startup.
 func syncMCPConfigs() error {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -792,7 +792,7 @@ func syncMCPConfigs() error {
 	}
 
 	if projectRoot == "" {
-		return nil // not in a knownme project, skip
+		return nil // not in a knowme project, skip
 	}
 
 	cmd, args := mcpCommand()

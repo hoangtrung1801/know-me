@@ -9,12 +9,12 @@ export NO_COLOR=1
 export NO_UPDATE_CHECK=1
 export KNOWNS_LSP_DAEMON=0
 export TEST_LSP_FIXTURES=1
-export TEST_BINARY=/opt/knowns/bin/knownme
+export TEST_BINARY=/opt/knowns/bin/knowme
 
 status_file="$(mktemp)"
 trap 'rm -f "$status_file"' EXIT
 
-knownme lsp list --json >"$status_file"
+knowme lsp list --json >"$status_file"
 
 if ! jq -e '
   [.[] | select(.id == "markdown" or .id == "bash" or .id == "json" or .id == "terraform" or .id == "yaml")] as $rows

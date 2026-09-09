@@ -225,23 +225,23 @@ If skills are not available in the runtime, use the CLI directly.
 
 ```bash
 # Initialize context manually
-knownme doc list --plain
-knownme doc "readme" --plain --smart
+knowme doc list --plain
+knowme doc "readme" --plain --smart
 
 # Take a task
-knownme task edit 42 -s in-progress -a @me
-knownme time start 42
+knowme task edit 42 -s in-progress -a @me
+knowme time start 42
 
 # Add plan
-knownme task edit 42 --plan $'1. Research\n2. Implement\n3. Test'
+knowme task edit 42 --plan $'1. Research\n2. Implement\n3. Test'
 
 # Mark ACs and add notes
-knownme task edit 42 --check-ac 1
-knownme task edit 42 --append-notes "Completed feature X"
+knowme task edit 42 --check-ac 1
+knowme task edit 42 --append-notes "Completed feature X"
 
 # Finish
-knownme time stop
-knownme task edit 42 -s done
+knowme time stop
+knowme task edit 42 -s done
 ```
 
 ## Use separate sessions when useful

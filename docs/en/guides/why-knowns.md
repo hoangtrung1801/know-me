@@ -33,7 +33,7 @@ Project context changes with the code. Keeping it near the repository makes it e
 - preserve decisions and conventions after the conversation ends
 - validate that generated project artifacts still match config
 
-Know-Me also supports user-level setup where that makes sense. For example, `knownme setup codex --global` installs user-level MCP config, skills, and runtime hooks so your assistant integration follows you across repositories.
+Know-Me also supports user-level setup where that makes sense. For example, `knowme setup codex --global` installs user-level MCP config, skills, and runtime hooks so your assistant integration follows you across repositories.
 
 ## Why MCP `initial` and `help`?
 

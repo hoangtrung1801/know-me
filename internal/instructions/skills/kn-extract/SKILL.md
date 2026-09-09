@@ -91,7 +91,7 @@ If a decision is current guidance rather than only a retrospective learning, cap
 - If the user asks to add a "Decision Memory" or Memory category `decision`, treat that phrase as legacy and use this first-class Decision candidate flow instead
 
 ```bash
-knownme decision create "<decision title>" \
+knowme decision create "<decision title>" \
   --task <task-id> \
   --doc <doc-path> \
   --source @doc/<source-path> \
@@ -99,8 +99,8 @@ knownme decision create "<decision title>" \
 ```
 
 ```bash
-knownme decision inbox
-knownme decision resolve supersede_existing <candidate-id> --target <current-decision-id>
+knowme decision inbox
+knowme decision resolve supersede_existing <candidate-id> --target <current-decision-id>
 ```
 
 Creation persists a non-current candidate. Missing evidence stays `needs_evidence`; duplicate/conflict candidates stay `needs_resolution`; passing checks becomes `ready_for_review`. Never auto-accept during extraction.

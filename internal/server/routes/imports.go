@@ -362,7 +362,7 @@ func (ir *ImportRoutes) gitCloneImport(source, name, ref, cachedHash string, dry
 		errMsg := strings.TrimSpace(stderr.String())
 		if isAuthError(errMsg) {
 			return nil, nil, "", false, fmt.Errorf("authentication failed for %s. "+
-				"Set KNOWNS_GIT_TOKEN env var, run 'knownme config set git.token <token>', "+
+				"Set KNOWNS_GIT_TOKEN env var, run 'knowme config set git.token <token>', "+
 				"or use an SSH URL (e.g. git@host:owner/repo.git) instead", source)
 		}
 		return nil, nil, "", false, fmt.Errorf("git clone failed: %s", errMsg)

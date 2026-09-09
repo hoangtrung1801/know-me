@@ -5,8 +5,8 @@
 {{#if cli}}
 ### CLI
 ```bash
-knownme task edit <id> -s in-progress -a @me
-knownme time start <id>    # REQUIRED!
+knowme task edit <id> -s in-progress -a @me
+knowme time start <id>    # REQUIRED!
 ```
 {{/if}}
 {{#if mcp}}
@@ -32,15 +32,15 @@ mcp__knowns__start_time({ "taskId": "<id>" })
 ### CLI
 ```bash
 # Read task and follow ALL refs
-knownme task <id> --plain
-# @doc/xxx → knownme doc "xxx" --plain
-# @task-YY → knownme task YY --plain
+knowme task <id> --plain
+# @doc/xxx → knowme doc "xxx" --plain
+# @task-YY → knowme task YY --plain
 
 # Search related docs
-knownme search "keyword" --type doc --plain
+knowme search "keyword" --type doc --plain
 
 # Check similar done tasks
-knownme search "keyword" --type task --status done --plain
+knowme search "keyword" --type task --status done --plain
 ```
 {{/if}}
 {{#if mcp}}
@@ -67,7 +67,7 @@ mcp__knowns__search({ "query": "keyword", "type": "doc" })
 {{#if cli}}
 ### CLI
 ```bash
-knownme task edit <id> --plan $'1. Research (see @doc/xxx)
+knowme task edit <id> --plan $'1. Research (see @doc/xxx)
 2. Implement
 3. Test
 4. Document'
@@ -93,8 +93,8 @@ mcp__knowns__update_task({
 ### CLI
 ```bash
 # Check AC only AFTER work is done
-knownme task edit <id> --check-ac 1
-knownme task edit <id> --append-notes "Done: feature X"
+knowme task edit <id> --check-ac 1
+knowme task edit <id> --append-notes "Done: feature X"
 ```
 {{/if}}
 {{#if mcp}}
@@ -119,11 +119,11 @@ If new requirements emerge during work:
 ### CLI
 ```bash
 # Small: Add to current task
-knownme task edit <id> --ac "New requirement"
-knownme task edit <id> --append-notes "Scope updated: reason"
+knowme task edit <id> --ac "New requirement"
+knowme task edit <id> --append-notes "Scope updated: reason"
 
 # Large: Ask user first, then create follow-up
-knownme task create "Follow-up: feature" -d "From task <id>"
+knowme task create "Follow-up: feature" -d "From task <id>"
 ```
 {{/if}}
 {{#if mcp}}

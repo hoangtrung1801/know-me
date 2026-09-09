@@ -12,6 +12,6 @@ public static class Program
     public static string BuildMessage(IEnumerable<string> args)
     {
         var suffix = args.Any() ? string.Join(",", args) : "ready";
-        return $"knownme csharp lsp {suffix}";
+        return $"knowme csharp lsp {suffix}";
     }
 }

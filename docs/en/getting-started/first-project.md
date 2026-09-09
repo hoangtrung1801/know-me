@@ -1,6 +1,6 @@
 # First Project
 
-After `knownme init`, your first goal is to add enough context that a person or AI assistant can understand the project without a long chat history. A good first setup usually includes four things:
+After `knowme init`, your first goal is to add enough context that a person or AI assistant can understand the project without a long chat history. A good first setup usually includes four things:
 
 1. create a task
 2. create one or two documents
@@ -12,26 +12,26 @@ After `knownme init`, your first goal is to add enough context that a person or 
 This example creates an authentication task because it has a clear scope and testable acceptance criteria. Replace the title and descriptions with work that matches your repository.
 
 ```bash
-knownme task create "Add authentication" \
+knowme task create "Add authentication" \
   -d "JWT-based auth with login and register endpoints" \
   --ac "User can register with email/password" \
   --ac "User can login and receive JWT token"
 
-knownme doc create "Auth Architecture" \
+knowme doc create "Auth Architecture" \
   -d "Authentication design decisions" \
   -f architecture
 
-knownme search "authentication" --plain
-knownme validate --plain
-knownme browser --open
+knowme search "authentication" --plain
+knowme validate --plain
+knowme browser --open
 ```
 
 If you want an AI assistant to use the same project context, run setup for your platform:
 
 ```bash
-knownme setup codex --global
+knowme setup codex --global
 # or:
-knownme setup claude --global
+knowme setup claude --global
 ```
 
 `--global` is recommended for personal assistant setup because it updates user-level MCP config, skills, and runtime hooks. Use non-global setup only when you intentionally want repo-local integration files.
@@ -50,7 +50,7 @@ knownme setup claude --global
 - Add one architecture doc for the most important subsystem.
 - Add one task for the next real change you plan to make.
 - Add Memory for short patterns or conventions that should be recalled later; use a System Decision for durable project choices.
-- Run `knownme validate --plain` before treating the project setup as complete.
+- Run `knowme validate --plain` before treating the project setup as complete.
 
 ## Suggested next reads
 

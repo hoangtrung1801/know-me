@@ -6,114 +6,114 @@ Dùng `knowns <command> --help` để xem syntax chính xác. Trang này là t�
 
 - `--plain` khi AI hoặc script cần text output dễ parse
 - `--json` khi cần structured output
-- `knownme sync` khi muốn generated files khớp lại với config
+- `knowme sync` khi muốn generated files khớp lại với config
 
 ## Init và sync
 
 ```bash
-knownme init
-knownme init my-project --no-wizard
-knownme init --force
-knownme setup --global
-knownme setup claude --global
-knownme setup codex --global
-knownme setup hermes --global
-knownme setup all --global
-knownme setup agents
-knownme setup
-knownme setup claude
-knownme setup codex
-knownme setup hermes
-knownme sync
-knownme sync --skills
-knownme sync --instructions
-knownme sync --model
-knownme update
-knownme update --check
-knownme settings
-knownme settings --global
+knowme init
+knowme init my-project --no-wizard
+knowme init --force
+knowme setup --global
+knowme setup claude --global
+knowme setup codex --global
+knowme setup hermes --global
+knowme setup all --global
+knowme setup agents
+knowme setup
+knowme setup claude
+knowme setup codex
+knowme setup hermes
+knowme sync
+knowme sync --skills
+knowme sync --instructions
+knowme sync --model
+knowme update
+knowme update --check
+knowme settings
+knowme settings --global
 ```
 
-`knownme init` tạo `.know-me/`, config, git tracking, semantic setup, và lightweight project instruction shims như `CLAUDE.md`/`AGENTS.md`. Runtime-critical AI guidance nằm trong MCP `initial` và on-demand `help`. Dùng `knownme setup <target> --global` cho personal assistant setup thông thường vì nó update user-level MCP config, skills, và runtime hooks trên nhiều repository. Ví dụ: `knownme setup hermes --global` cấu hình Hermes MCP config và skills ở user scope. Chỉ dùng `knownme setup <target>` khi bạn chủ ý muốn project-level integration artifacts trong repo. Dùng `knownme setup agents` khi chỉ muốn repo-local agent shims.
+`knowme init` tạo `.know-me/`, config, git tracking, semantic setup, và lightweight project instruction shims như `CLAUDE.md`/`AGENTS.md`. Runtime-critical AI guidance nằm trong MCP `initial` và on-demand `help`. Dùng `knowme setup <target> --global` cho personal assistant setup thông thường vì nó update user-level MCP config, skills, và runtime hooks trên nhiều repository. Ví dụ: `knowme setup hermes --global` cấu hình Hermes MCP config và skills ở user scope. Chỉ dùng `knowme setup <target>` khi bạn chủ ý muốn project-level integration artifacts trong repo. Dùng `knowme setup agents` khi chỉ muốn repo-local agent shims.
 
-`knownme settings` mở settings center để chỉnh project name, git tracking, AI platforms, search, code intelligence, Browser/Chat UI, và maintenance guidance. Trong Search settings, Local ONNX models hiển thị trạng thái downloaded/not downloaded; nếu chọn model chưa download, Know-Me có thể hỏi xác nhận rồi download trước khi lưu. `knownme settings --global` lưu defaults cho các lần `knownme init` sau. Dùng `knownme config get/set/list/reset` khi cần thao tác config bằng script hoặc agent.
+`knowme settings` mở settings center để chỉnh project name, git tracking, AI platforms, search, code intelligence, Browser/Chat UI, và maintenance guidance. Trong Search settings, Local ONNX models hiển thị trạng thái downloaded/not downloaded; nếu chọn model chưa download, Know-Me có thể hỏi xác nhận rồi download trước khi lưu. `knowme settings --global` lưu defaults cho các lần `knowme init` sau. Dùng `knowme config get/set/list/reset` khi cần thao tác config bằng script hoặc agent.
 
 ## Task
 
 ```bash
-knownme task create "Title" -d "Description"
-knownme task create "Add auth" \
+knowme task create "Title" -d "Description"
+knowme task create "Add auth" \
   --ac "User can login" \
   --ac "JWT token returned" \
   --priority high \
   -l auth
 
-knownme task list --plain
-knownme task list --status in-progress --assignee @me
-knownme task <id> --plain
+knowme task list --plain
+knowme task list --status in-progress --assignee @me
+knowme task <id> --plain
 
-knownme task edit <id> -s in-progress
-knownme task edit <id> --check-ac 1
-knownme task edit <id> --append-notes "Completed middleware"
-knownme task edit <id> --plan '1. Research\n2. Implement\n3. Test'
+knowme task edit <id> -s in-progress
+knowme task edit <id> --check-ac 1
+knowme task edit <id> --append-notes "Completed middleware"
+knowme task edit <id> --plan '1. Research\n2. Implement\n3. Test'
 ```
 
 ## Doc
 
 ```bash
-knownme doc create "Architecture" -d "System overview" -f architecture
-knownme doc create "Auth Pattern" -d "JWT auth pattern" -f patterns -t auth -t security
+knowme doc create "Architecture" -d "System overview" -f architecture
+knowme doc create "Auth Pattern" -d "JWT auth pattern" -f patterns -t auth -t security
 
-knownme doc list --plain
-knownme doc "architecture/auth" --plain
-knownme doc "architecture/auth" --info --plain
-knownme doc "architecture/auth" --toc --plain
-knownme doc "architecture/auth" --section "2" --plain
+knowme doc list --plain
+knowme doc "architecture/auth" --plain
+knowme doc "architecture/auth" --info --plain
+knowme doc "architecture/auth" --toc --plain
+knowme doc "architecture/auth" --section "2" --plain
 
-knownme doc edit "architecture/auth" -a "\n\n## Notes\n..."
-knownme doc edit "architecture/auth" -c "# New content"
-knownme doc edit "architecture/auth" --section "2" -c "## 2. Updated section"
+knowme doc edit "architecture/auth" -a "\n\n## Notes\n..."
+knowme doc edit "architecture/auth" -c "# New content"
+knowme doc edit "architecture/auth" --section "2" -c "## 2. Updated section"
 ```
 
 ## Search, retrieve, resolve
 
 ```bash
-knownme search "authentication" --plain
-knownme search "jwt" --type doc --plain
-knownme search "jwt" --keyword --plain
-knownme search --status-check
-knownme search --reindex
+knowme search "authentication" --plain
+knowme search "jwt" --type doc --plain
+knowme search "jwt" --keyword --plain
+knowme search --status-check
+knowme search --reindex
 
-knownme retrieve "how auth works" --json
-knownme retrieve "auth flow" --source-types doc,task --json
+knowme retrieve "how auth works" --json
+knowme retrieve "auth flow" --source-types doc,task --json
 
-knownme resolve "@doc/specs/auth{implements}" --plain
-knownme resolve "@doc/specs/auth{depends}" --direction inbound --depth 2 --plain
+knowme resolve "@doc/specs/auth{implements}" --plain
+knowme resolve "@doc/specs/auth{depends}" --direction inbound --depth 2 --plain
 ```
 
 ## Memory
 
 ```bash
-knownme memory add "We use repository pattern" --category pattern
-knownme memory list --plain
-knownme memory <id> --plain
-knownme memory edit <id> --append "More detail"
+knowme memory add "We use repository pattern" --category pattern
+knowme memory list --plain
+knowme memory <id> --plain
+knowme memory edit <id> --append "More detail"
 ```
 
 ## Decision
 
 ```bash
-knownme decision create "Use Postgres for metadata"
-knownme decision list --plain
-knownme decision get <id> --plain
-knownme decision link <id> --source @doc/architecture/storage --task <done-task-id>
-knownme decision accept <id>
-knownme decision resolve create_draft "Use Postgres for metadata"
-knownme decision supersede <old-id> <new-id>
+knowme decision create "Use Postgres for metadata"
+knowme decision list --plain
+knowme decision get <id> --plain
+knowme decision link <id> --source @doc/architecture/storage --task <done-task-id>
+knowme decision accept <id>
+knowme decision resolve create_draft "Use Postgres for metadata"
+knowme decision supersede <old-id> <new-id>
 
-knownme decision migrate preview --plain
-knownme decision migrate apply --memory <memory-id> --resolution create_decision
-knownme decision migrate rollback <memory-id>
+knowme decision migrate preview --plain
+knowme decision migrate apply --memory <memory-id> --resolution create_decision
+knowme decision migrate rollback <memory-id>
 ```
 
 Spec Decision là các rule `D1`, `D2`, … được khóa trong spec đã approve. Các lệnh trên quản lý System Decision: lựa chọn project bền vững luôn bắt đầu ở draft, cần source đọc được cùng evidence từ task hoàn tất trước khi accept, và có thể supersede về sau thay vì sửa đè lịch sử.
@@ -123,10 +123,10 @@ Migration Decision Memory legacy luôn preview trước, explicit theo từng re
 ## Templates
 
 ```bash
-knownme template list
-knownme template get <name>
-knownme template run <name>
-knownme template create <name>
+knowme template list
+knowme template get <name>
+knowme template run <name>
+knowme template create <name>
 ```
 
 ## Code intelligence
@@ -134,12 +134,12 @@ knownme template create <name>
 ### Quản lý LSP
 
 ```bash
-knownme lsp list                    # Hiển thị ngôn ngữ được hỗ trợ và trạng thái
-knownme lsp install <language>      # Tải và cài đặt LSP server
-knownme lsp cleanup                 # Xóa các phiên bản LSP server cũ
+knowme lsp list                    # Hiển thị ngôn ngữ được hỗ trợ và trạng thái
+knowme lsp install <language>      # Tải và cài đặt LSP server
+knowme lsp cleanup                 # Xóa các phiên bản LSP server cũ
 ```
 
-Know-Me tự động phát hiện ngôn ngữ trong project và kiểm tra LSP binaries. Nếu thiếu binary, `knownme lsp list` sẽ hiển thị hướng dẫn cài đặt.
+Know-Me tự động phát hiện ngôn ngữ trong project và kiểm tra LSP binaries. Nếu thiếu binary, `knowme lsp list` sẽ hiển thị hướng dẫn cài đặt.
 
 ### Code operations (qua MCP)
 
@@ -160,9 +160,9 @@ Code intelligence dựa trên LSP và được truy cập qua MCP `code` tool:
 ### Inspect code index bằng CLI
 
 ```bash
-knownme code symbols --plain
-knownme code search "AuthService" --plain
-knownme code deps --plain
+knowme code symbols --plain
+knowme code search "AuthService" --plain
+knowme code deps --plain
 ```
 
 Dùng CLI `code` commands để inspect indexed symbols/dependencies. Dùng MCP `code` tool cho navigation và edits có cấu trúc.
@@ -170,35 +170,35 @@ Dùng CLI `code` commands để inspect indexed symbols/dependencies. Dùng MCP 
 ## Validation
 
 ```bash
-knownme validate --plain
-knownme validate --scope docs --plain
-knownme validate --scope sdd --plain
-knownme validate --strict --plain
+knowme validate --plain
+knowme validate --scope docs --plain
+knowme validate --scope sdd --plain
+knowme validate --strict --plain
 ```
 
 ## Time tracking
 
 ```bash
-knownme time start <task-id>
-knownme time stop
-knownme time add <task-id> 1h30m -n "Pair programming"
-knownme time report
+knowme time start <task-id>
+knowme time stop
+knowme time add <task-id> 1h30m -n "Pair programming"
+knowme time report
 ```
 
 ## Browser UI
 
 ```bash
-knownme browser
-knownme browser --open
-knownme browser --port 6421
+knowme browser
+knowme browser --open
+knowme browser --port 6421
 ```
 
 ## Project status và audit
 
 ```bash
-knownme status
-knownme audit recent
-knownme audit stats
+knowme status
+knowme audit recent
+knowme audit stats
 ```
 
 Dùng `status` để xem project readiness, và `audit` để inspect MCP tool calls gần đây.
@@ -206,52 +206,52 @@ Dùng `status` để xem project readiness, và `audit` để inspect MCP tool c
 ## Guidance files
 
 ```bash
-knownme setup
-knownme sync --skills
-knownme sync --instructions
+knowme setup
+knowme sync --skills
+knowme sync --instructions
 ```
 
 ## Model
 
 ```bash
-knownme model add <model-name>
-knownme model list
-knownme model download multilingual-e5-small
-knownme model set multilingual-e5-small
-knownme model status
-knownme model remove <id>
+knowme model add <model-name>
+knowme model list
+knowme model download multilingual-e5-small
+knowme model set multilingual-e5-small
+knowme model status
+knowme model remove <id>
 ```
 
 ## Provider và runtime adapters
 
 ```bash
-knownme provider list
-knownme provider add --id openai --name "OpenAI" --api-base https://api.openai.com/v1 --api-key <key>
-knownme provider test <id>
-knownme provider remove <id>
+knowme provider list
+knowme provider add --id openai --name "OpenAI" --api-base https://api.openai.com/v1 --api-key <key>
+knowme provider test <id>
+knowme provider remove <id>
 
-knownme runtime status
-knownme runtime install codex
-knownme runtime ps
-knownme runtime logs
-knownme runtime stop
-knownme runtime uninstall codex
+knowme runtime status
+knowme runtime install codex
+knowme runtime ps
+knowme runtime logs
+knowme runtime stop
+knowme runtime uninstall codex
 
-knownme runtime-memory hook
-knownme runtime-memory hook --json
+knowme runtime-memory hook
+knowme runtime-memory hook --json
 ```
 
 Dùng provider commands cho API-backed embedding providers. Dùng runtime commands để install và inspect runtime memory adapters/shared runtime.
 
 Default hook output là plain prompt context cho runtime adapters. Mỗi injected memory có inline score/trust metadata, ví dụ `score=0.92; trust=active`, để assistant tự cân nhắc supplemental context.
 
-Dùng `knownme runtime-memory hook --json` khi caller cần structured metadata thay vì prompt text. JSON output có retrieval item scores và capture trust metadata như `capture.score`, `capture.threshold`, `capture.trusted`, và review `capture.matches` khi cần review.
+Dùng `knowme runtime-memory hook --json` khi caller cần structured metadata thay vì prompt text. JSON output có retrieval item scores và capture trust metadata như `capture.score`, `capture.threshold`, `capture.trusted`, và review `capture.matches` khi cần review.
 
 ## Tunnel
 
 ```bash
-knownme tunnel status
-knownme tunnel stop
+knowme tunnel status
+knowme tunnel stop
 ```
 
 Dùng tunnel commands để inspect hoặc stop Cloudflare Quick Tunnels cho local server sharing.
@@ -259,7 +259,7 @@ Dùng tunnel commands để inspect hoặc stop Cloudflare Quick Tunnels cho loc
 ## Import
 
 ```bash
-knownme import add <name> <source>
-knownme import sync
-knownme import list
+knowme import add <name> <source>
+knowme import sync
+knowme import list
 ```

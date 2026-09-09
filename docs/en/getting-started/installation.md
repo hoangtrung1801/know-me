@@ -1,6 +1,6 @@
 # Installation
 
-Install the `knowns` CLI first. Installation only makes the command available; you still need to run `knownme init` inside each repository where you want Know-Me-managed project context.
+Install the `knowns` CLI first. Installation only makes the command available; you still need to run `knowme init` inside each repository where you want Know-Me-managed project context.
 
 ## Requirements
 
@@ -53,7 +53,7 @@ irm https://knowns.sh/script/install.ps1 | iex
 ## Build from source
 
 ```bash
-go build -o ./bin/knownme ./cmd/knownme
+go build -o ./bin/knowme ./cmd/knowme
 ```
 
 Best option when developing Know-Me itself.
@@ -80,28 +80,28 @@ curl -fsSL -H "Authorization: Bearer $GITHUB_PAT" \
 echo "$(awk '{print $1}' "/tmp/$ARCHIVE.sha256")  /tmp/$ARCHIVE" \
   | shasum -a 256 -c -
 tar -xzf "/tmp/$ARCHIVE" -C "$HOME/.know-me/bin"
-chmod +x "$HOME/.know-me/bin/knownme"
-ln -sf "$HOME/.know-me/bin/knownme" "$HOME/.know-me/bin/kn"
+chmod +x "$HOME/.know-me/bin/knowme"
+ln -sf "$HOME/.know-me/bin/knowme" "$HOME/.know-me/bin/kn"
 
 export PATH="$HOME/.know-me/bin:$PATH"
-knownme --version
+knowme --version
 ```
 
 For a binary already extracted, copy it directly:
 
 ```bash
 mkdir -p "$HOME/.know-me/bin"
-cp ./knownme "$HOME/.know-me/bin/knownme"
-chmod +x "$HOME/.know-me/bin/knownme"
-ln -sf "$HOME/.know-me/bin/knownme" "$HOME/.know-me/bin/kn"
+cp ./knowme "$HOME/.know-me/bin/knowme"
+chmod +x "$HOME/.know-me/bin/knowme"
+ln -sf "$HOME/.know-me/bin/knowme" "$HOME/.know-me/bin/kn"
 export PATH="$HOME/.know-me/bin:$PATH"
-knownme --version
+knowme --version
 ```
 
 ## Verify
 
 ```bash
-knownme --version
+knowme --version
 ```
 
 If the command prints a version, the CLI is installed. Next, move into the repository you want to manage and run the quick start.
@@ -111,7 +111,7 @@ If the command prints a version, the CLI is installed. Next, move into the repos
 If you do not want a global install, you can still run Know-Me through npm:
 
 ```bash
-npx knownme init
+npx knowme init
 ```
 
 ## Next step

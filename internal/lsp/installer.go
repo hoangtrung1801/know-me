@@ -47,7 +47,7 @@ func NewInstaller(baseDir string) *Installer {
 
 // Install downloads and installs an LSP server for the given adapter.
 // Returns the path to the installed binary.
-// User-initiated only (called from `knownme lsp install`).
+// User-initiated only (called from `knowme lsp install`).
 func (i *Installer) Install(ctx context.Context, adapter LanguageAdapter) (string, error) {
 	return i.InstallWithOptions(ctx, adapter, InstallOptions{})
 }

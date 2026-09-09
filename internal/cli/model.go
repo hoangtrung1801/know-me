@@ -593,7 +593,7 @@ func runModelList(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println()
 	if !hasInstalled {
-		fmt.Println(RenderHint("Use " + RenderCmd("knownme model download <modelId>") + " to download a model."))
+		fmt.Println(RenderHint("Use " + RenderCmd("knowme model download <modelId>") + " to download a model."))
 	}
 	return nil
 }
@@ -804,7 +804,7 @@ func runModelStatus(cmd *cobra.Command, args []string) error {
 		fmt.Println(modelDimStyle.Render("  No models downloaded"))
 		fmt.Println()
 		fmt.Println(RenderHint("Download a model to enable semantic search:"))
-		fmt.Println(RenderHint("  " + RenderCmd("knownme model download gte-small")))
+		fmt.Println(RenderHint("  " + RenderCmd("knowme model download gte-small")))
 	}
 	fmt.Println()
 
@@ -823,7 +823,7 @@ func runModelStatus(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		fmt.Println(modelDimStyle.Render("  No model configured"))
-		fmt.Println(RenderHint("Set one: " + RenderCmd("knownme model set gte-small")))
+		fmt.Println(RenderHint("Set one: " + RenderCmd("knowme model set gte-small")))
 	}
 	fmt.Println()
 
@@ -884,7 +884,7 @@ func runModelSet(cmd *cobra.Command, args []string) error {
 
 	fmt.Println(modelSuccessStyle.Render(fmt.Sprintf("✓ Set default embedding model to %s (%s)", selected.ID, selected.Name)))
 	if !isModelInstalled(selected) {
-		fmt.Println(modelDimStyle.Render(fmt.Sprintf("  Download the model: knownme model download %s", selected.ID)))
+		fmt.Println(modelDimStyle.Render(fmt.Sprintf("  Download the model: knowme model download %s", selected.ID)))
 	}
 	return nil
 }
@@ -939,7 +939,7 @@ func runModelAdd(cmd *cobra.Command, args []string) error {
 	// Register in the hardcoded map is not possible at runtime,
 	// so we register in global settings as a local model reference.
 	fmt.Printf("✓ Model %q registered (local ONNX, HuggingFace: %s, %dd)\n", modelID, hfID, dims)
-	fmt.Printf("  Download: knownme model download %s\n", modelID)
+	fmt.Printf("  Download: knowme model download %s\n", modelID)
 	return nil
 }
 
@@ -952,7 +952,7 @@ func addAPIModel(modelID, modelName, providerID string, dims int) error {
 
 	provider, err := settings.GetProvider(providerID)
 	if err != nil {
-		return fmt.Errorf("provider %q not found; register it first with 'knownme provider add'", providerID)
+		return fmt.Errorf("provider %q not found; register it first with 'knowme provider add'", providerID)
 	}
 	provider = provider.WithDefaults()
 
@@ -995,7 +995,7 @@ func addAPIModel(modelID, modelName, providerID string, dims int) error {
 	}
 
 	fmt.Printf("✓ Model %q registered (provider: %s, model: %s, %dd)\n", modelID, providerID, modelName, dims)
-	fmt.Printf("  Use it: knownme model set %s\n", modelID)
+	fmt.Printf("  Use it: knowme model set %s\n", modelID)
 	return nil
 }
 

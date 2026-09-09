@@ -123,7 +123,7 @@ func TestPriorityAdaptersExposeSharedRuntimeAndInstallMetadata(t *testing.T) {
 			if !adapter.CanInstall() {
 				t.Fatal("CanInstall() = false, want managed installation")
 			}
-			if guide := adapter.InstallGuide(); guide.KnownsCmd != "knownme lsp install "+id {
+			if guide := adapter.InstallGuide(); guide.KnownsCmd != "knowme lsp install "+id {
 				t.Fatalf("InstallGuide().KnownsCmd = %q", guide.KnownsCmd)
 			}
 			deps := adapter.RuntimeDeps()
@@ -139,7 +139,7 @@ func TestPriorityAdaptersExposeSharedRuntimeAndInstallMetadata(t *testing.T) {
 			if !ok {
 				t.Fatal("shared runtime status is missing")
 			}
-			if status.InstallCmd != "knownme lsp install "+id {
+			if status.InstallCmd != "knowme lsp install "+id {
 				t.Fatalf("runtime InstallCmd = %q", status.InstallCmd)
 			}
 			if status.Backend == "" {

@@ -5,10 +5,10 @@ Templates dùng cho repeatable scaffolding và generation workflows.
 ## Lệnh
 
 ```bash
-knownme template list
-knownme template get <name>
-knownme template run <name>
-knownme template create <name>
+knowme template list
+knowme template get <name>
+knowme template run <name>
+knowme template create <name>
 ```
 
 ## Use cases

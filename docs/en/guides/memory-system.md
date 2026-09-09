@@ -27,20 +27,20 @@ Use docs when the information needs longer narrative explanation or structured s
 ## Commands
 
 ```bash
-knownme memory add "We use repository pattern" --category pattern
-knownme memory list --plain
-knownme memory <id> --plain
+knowme memory add "We use repository pattern" --category pattern
+knowme memory list --plain
+knowme memory <id> --plain
 ```
 
 Memory category `decision` is legacy and new writes are rejected. Existing entries remain readable until a reviewed migration has a verified, accepted, current replacement and Decision consumption is active. Record durable architecture or workflow choices with a first-class System Decision instead:
 
 ```bash
-knownme decision create "Use Postgres for metadata"
-knownme decision link <id> --source @doc/architecture/storage --task <done-task-id>
-knownme decision accept <id>
+knowme decision create "Use Postgres for metadata"
+knowme decision link <id> --source @doc/architecture/storage --task <done-task-id>
+knowme decision accept <id>
 ```
 
-Use `knownme decision migrate preview --plain` for a read-only inventory. Apply only one explicitly reviewed resolution at a time; use `knownme decision migrate rollback <memory-id>` to reverse a safe migration.
+Use `knowme decision migrate preview --plain` for a read-only inventory. Apply only one explicitly reviewed resolution at a time; use `knowme decision migrate rollback <memory-id>` to reverse a safe migration.
 
 ## Related
 

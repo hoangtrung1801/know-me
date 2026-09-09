@@ -11,9 +11,11 @@ releases/
 release/
 tmp/
 
+knowme
 knownme
 knowns
 knowns-embed
+knowme.exe
 knownme.exe
 knowns.exe
 runtimequeue.test.exe
@@ -27,6 +29,8 @@ ui/test-results/
 playwright-report/
 test-results/
 
+npm/knowns-*/knowme
+npm/knowns-*/knowme.exe
 npm/knowns-*/knownme
 npm/knowns-*/knownme.exe
 npm/knowns-*/knowns-embed

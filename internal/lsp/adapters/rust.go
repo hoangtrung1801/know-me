@@ -26,7 +26,7 @@ func (a *RustAnalyzerAdapter) CheckPrerequisites(ctx context.Context) error {
 	return err
 }
 func (a *RustAnalyzerAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{Command: "rustup component add rust-analyzer", KnownsCmd: "knownme lsp install rust", URL: "https://rust-analyzer.github.io/", Notes: "Requires rustup installed"}
+	return lsp.InstallGuide{Command: "rustup component add rust-analyzer", KnownsCmd: "knowme lsp install rust", URL: "https://rust-analyzer.github.io/", Notes: "Requires rustup installed"}
 }
 func (a *RustAnalyzerAdapter) CanInstall() bool                     { return true }
 func (a *RustAnalyzerAdapter) RuntimeDeps() []lsp.RuntimeDependency { return nil }

@@ -129,7 +129,7 @@ func aiRuntimeHookCheckers(state *localState) []Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: description,
-						Command:     "knownme runtime install " + status.Runtime,
+						Command:     "knowme runtime install " + status.Runtime,
 					},
 				}, nil
 			},
@@ -219,7 +219,7 @@ func aiPlatformConfigChecker(state *localState) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Regenerate the missing project integration artifact.",
-						Command:     "knownme setup " + alias,
+						Command:     "knowme setup " + alias,
 					},
 				}, nil
 			}
@@ -302,7 +302,7 @@ func aiInstructionsChecker(state *localState) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Synchronize the configured AI platform artifacts.",
-						Command:     "knownme sync",
+						Command:     "knowme sync",
 					},
 				}, nil
 			}
@@ -366,7 +366,7 @@ func aiSkillsChecker(state *localState) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Synchronize built-in skills for the configured AI platforms.",
-						Command:     "knownme sync",
+						Command:     "knowme sync",
 					},
 				}, nil
 			}

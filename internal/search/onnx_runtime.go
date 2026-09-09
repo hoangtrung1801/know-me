@@ -218,7 +218,7 @@ func ensureORTEnvironment() error {
 				archMismatch = true
 			}
 			if archMismatch {
-				fmt.Fprintf(os.Stderr, "warning: %s found but has wrong CPU architecture (expected %s); reinstall knownme for the correct platform or set KNOWNS_ORT_LIB\n", libName, runtime.GOARCH)
+				fmt.Fprintf(os.Stderr, "warning: %s found but has wrong CPU architecture (expected %s); reinstall knowme for the correct platform or set KNOWNS_ORT_LIB\n", libName, runtime.GOARCH)
 			} else {
 				fmt.Fprintf(os.Stderr, "warning: bundled %s not found next to executable, sibling lib dirs, or ~/.know-me/bin; falling back to system search which may load an incompatible version\n", libName)
 			}
@@ -226,7 +226,7 @@ func ensureORTEnvironment() error {
 		if err := ort.InitializeEnvironment(); err != nil {
 			hint := ""
 			if lib == "" {
-				hint = fmt.Sprintf(" (no bundled %s was found — a system copy may have been loaded with an incompatible version; reinstall knownme or set KNOWNS_ORT_LIB to the correct path)", ortSharedLibName())
+				hint = fmt.Sprintf(" (no bundled %s was found — a system copy may have been loaded with an incompatible version; reinstall knowme or set KNOWNS_ORT_LIB to the correct path)", ortSharedLibName())
 			}
 			ortInitErr = fmt.Errorf("initialize onnxruntime: %w%s", err, hint)
 			return

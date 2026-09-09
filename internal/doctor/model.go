@@ -1,5 +1,5 @@
 // Package doctor provides the read-only diagnostic model and check runner used
-// by the `knownme doctor` command.
+// by the `knowme doctor` command.
 package doctor
 
 import (

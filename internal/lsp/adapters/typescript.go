@@ -27,7 +27,7 @@ func (a *TypeScriptAdapter) CheckPrerequisites(ctx context.Context) error {
 	return requireMinVersion(output, "Node.js", 18, 0)
 }
 func (a *TypeScriptAdapter) InstallGuide() lsp.InstallGuide {
-	return lsp.InstallGuide{Command: "npm install -g typescript-language-server typescript", KnownsCmd: "knownme lsp install typescript", Notes: "Requires Node.js 18+ installed"}
+	return lsp.InstallGuide{Command: "npm install -g typescript-language-server typescript", KnownsCmd: "knowme lsp install typescript", Notes: "Requires Node.js 18+ installed"}
 }
 func (a *TypeScriptAdapter) CanInstall() bool { return true }
 func (a *TypeScriptAdapter) RuntimeDeps() []lsp.RuntimeDependency {

@@ -5,10 +5,10 @@ Templates are used for repeatable scaffolding and generation workflows.
 ## Common commands
 
 ```bash
-knownme template list
-knownme template get <name>
-knownme template run <name>
-knownme template create <name>
+knowme template list
+knowme template get <name>
+knowme template run <name>
+knowme template create <name>
 ```
 
 ## Typical uses

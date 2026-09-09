@@ -96,7 +96,7 @@ func DefaultOptions() Options {
 	home, _ := os.UserHomeDir()
 	exe, err := os.Executable()
 	if err != nil {
-		exe = "knownme"
+		exe = "knowme"
 	}
 	return Options{
 		HomeDir:        home,
@@ -300,8 +300,8 @@ func baselineHookCommandPath(spec runtimeSpec, opts Options) string {
 func hookCommandArgsForEvent(spec runtimeSpec, opts Options, event string) []string {
 	exe := opts.ExecutablePath
 	if opts.LookPath != nil {
-		if _, err := opts.LookPath("knownme"); err == nil {
-			exe = "knownme"
+		if _, err := opts.LookPath("knowme"); err == nil {
+			exe = "knowme"
 		}
 	}
 	return []string{exe, "runtime-memory", "hook", "--runtime", spec.Runtime, "--event", event}
@@ -539,10 +539,10 @@ func installKiro(spec runtimeSpec, opts Options) error {
 		return err
 	}
 
-	// Prefer bare "knownme" command when it's available in PATH,
+	// Prefer bare "knowme" command when it's available in PATH,
 	// so the hook stays portable across machines.
-	cmdPath := "knownme"
-	if _, lookErr := opts.LookPath("knownme"); lookErr != nil {
+	cmdPath := "knowme"
+	if _, lookErr := opts.LookPath("knowme"); lookErr != nil {
 		cmdPath = opts.ExecutablePath
 	}
 
@@ -629,7 +629,7 @@ func installOpenCode(spec runtimeSpec, opts Options) error {
 	}
 	mcp["knowns"] = map[string]any{
 		"type":    "local",
-		"command": []string{"knownme", "mcp", "--stdio"},
+		"command": []string{"knowme", "mcp", "--stdio"},
 		"enabled": true,
 	}
 	config["mcp"] = mcp
@@ -703,7 +703,7 @@ func renderOpenCodePlugin(opts Options) string {
 		"          cwd,",
 		"          env: { ...process.env },",
 		"        }).toString().trim()",
-		"        log(\"knownme hook returned\", { resultLength: result.length })",
+		"        log(\"knowme hook returned\", { resultLength: result.length })",
 		"        if (!result) return",
 		"        injectedSessions.add(sessionID)",
 		"        await client.session.prompt({",

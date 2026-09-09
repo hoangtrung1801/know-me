@@ -80,7 +80,7 @@ func renderStatusPlain(p readiness.Payload) {
 		} else if s.SemanticEnabled && !s.ModelInstalled {
 			fmt.Println("Search: semantic enabled but model not installed")
 		} else if s.SemanticEnabled && !s.ProjectIndexReady {
-			fmt.Println("Search: semantic enabled but index empty (run: knownme search --reindex)")
+			fmt.Println("Search: semantic enabled but index empty (run: knowme search --reindex)")
 		} else {
 			fmt.Println("Search: keyword-only mode")
 		}
@@ -175,7 +175,7 @@ func renderStatusStyled(p readiness.Payload) {
 		} else if !s.ModelInstalled {
 			fmt.Printf("  %s model not installed\n", StyleWarning.Render("⚠"))
 		} else if !s.ProjectIndexReady {
-			fmt.Printf("  %s index empty — run: knownme search --reindex\n", StyleWarning.Render("⚠"))
+			fmt.Printf("  %s index empty — run: knowme search --reindex\n", StyleWarning.Render("⚠"))
 		}
 		fmt.Println()
 	}

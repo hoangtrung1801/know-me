@@ -29,7 +29,7 @@ func TestLSPFixture_MarkdownMarksman(t *testing.T) {
 
 	result := runCmd(t, projectDir, 60*time.Second, env, binary, "init", "lsp-fixture-markdown", "--no-wizard", "--no-open", "--git-ignored")
 	if result.err != nil {
-		t.Fatalf("knownme init failed: %v\nstdout: %s\nstderr: %s", result.err, result.stdout, result.stderr)
+		t.Fatalf("knowme init failed: %v\nstdout: %s\nstderr: %s", result.err, result.stdout, result.stderr)
 	}
 
 	client := startMCP(t, binary, projectDir, env)

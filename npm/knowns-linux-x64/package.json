@@ -8,9 +8,9 @@
   "cpu": [
     "x64"
   ],
-  "main": "knownme",
+  "main": "knowme",
   "files": [
-    "knownme",
+    "knowme",
     "*.so",
     "*.so.*"
   ],

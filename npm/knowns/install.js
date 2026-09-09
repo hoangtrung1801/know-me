@@ -11,7 +11,7 @@ const path = require("path");
 const zlib = require("zlib");
 
 function resolveBinaryFromPackageDir(pkgDir, ext) {
-  for (const name of [`knownme${ext}`, "knownme"]) {
+  for (const name of [`knowme${ext}`, "knowme", `knownme${ext}`, "knownme"]) {
     const candidate = path.join(pkgDir, name);
     if (fs.existsSync(candidate)) {
       return candidate;
@@ -232,7 +232,7 @@ function writeDownloadedPackageMetadata(dest, platformPackage, version) {
         description: `Know-Me binary for ${platformPackage.asset.replace(/^knowns-/, "").replace(/-/g, " ")}`,
         os: [platformPackage.packageOs],
         cpu: [platformPackage.packageCpu],
-        main: `knownme${platformPackage.ext}`,
+        main: `knowme${platformPackage.ext}`,
         license: "MIT",
         homepage: "https://knowns.sh",
         repository: {

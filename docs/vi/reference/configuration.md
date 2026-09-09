@@ -68,14 +68,14 @@ Per-section git tracking toggles. Kiểm soát subdirectories nào trong `.know-
 
 Config cho semantic search: `enabled`, `model`, `provider`, `dimensions`.
 
-`provider` có thể là `local`, `ollama`, hoặc provider ID đã đăng ký bằng `knownme provider add`.
+`provider` có thể là `local`, `ollama`, hoặc provider ID đã đăng ký bằng `knowme provider add`.
 
-- `knownme init` set các giá trị này
-- `knownme settings` hiển thị Local ONNX models kèm trạng thái downloaded/not downloaded
-- Nếu chọn Local ONNX model chưa download trong `knownme settings`, Know-Me hỏi xác nhận rồi download trước khi lưu
-- `knownme provider add` và `knownme model add --provider <id> <model-name>` cấu hình API-backed embedding models
-- `knownme sync` re-apply semantic setup
-- `knownme search --reindex` rebuild local index
+- `knowme init` set các giá trị này
+- `knowme settings` hiển thị Local ONNX models kèm trạng thái downloaded/not downloaded
+- Nếu chọn Local ONNX model chưa download trong `knowme settings`, Know-Me hỏi xác nhận rồi download trước khi lưu
+- `knowme provider add` và `knowme model add --provider <id> <model-name>` cấu hình API-backed embedding models
+- `knowme sync` re-apply semantic setup
+- `knowme search --reindex` rebuild local index
 
 ### `settings.lsp`
 
@@ -95,21 +95,21 @@ Supported: `claude-code`, `opencode`, `codex`, `kiro`, `antigravity`, `cursor`, 
 
 Có thể edit `.know-me/config.json` trực tiếp, nhưng flow thường là:
 
-- `knownme init` cho lần đầu (project structure + git tracking)
-- `knownme init` cũng tạo selected lightweight project instruction shims như `CLAUDE.md` và `AGENTS.md`
-- `knownme setup <target> --global` cho personal AI platform integrations thông thường như MCP/config files, skills, runtime hooks
-- `knownme setup <target>` chỉ khi bạn chủ ý muốn repo-local integration files
-- `knownme setup agents` khi chỉ cần repo-local agent shims
-- `knownme settings` để mở settings center tương tác cho project hiện tại
-- `knownme settings --global` để lưu defaults dùng lại cho các lần `knownme init` sau
-- `knownme config get/set/list/reset` cho script hoặc agent
-- `knownme sync` để re-apply config
+- `knowme init` cho lần đầu (project structure + git tracking)
+- `knowme init` cũng tạo selected lightweight project instruction shims như `CLAUDE.md` và `AGENTS.md`
+- `knowme setup <target> --global` cho personal AI platform integrations thông thường như MCP/config files, skills, runtime hooks
+- `knowme setup <target>` chỉ khi bạn chủ ý muốn repo-local integration files
+- `knowme setup agents` khi chỉ cần repo-local agent shims
+- `knowme settings` để mở settings center tương tác cho project hiện tại
+- `knowme settings --global` để lưu defaults dùng lại cho các lần `knowme init` sau
+- `knowme config get/set/list/reset` cho script hoặc agent
+- `knowme sync` để re-apply config
 
 ## Settings và config shorthands
 
 ```bash
 # Interactive project settings UI
-knownme settings
+knowme settings
 # Hiển thị:
 #   Project
 #   Git Tracking
@@ -121,19 +121,19 @@ knownme settings
 #   Done
 
 # Defaults cho project mới
-knownme settings --global
+knowme settings --global
 
 # Hoặc set trực tiếp qua config API
-knownme config set embedding true       # Bật semantic search
-knownme config set lsp true             # Bật LSP toàn cục
-knownme config set lsp.go true          # Bật LSP cho Go
-knownme config set enableChatUI true    # Bật chat UI
+knowme config set embedding true       # Bật semantic search
+knowme config set lsp true             # Bật LSP toàn cục
+knowme config set lsp.go true          # Bật LSP cho Go
+knowme config set enableChatUI true    # Bật chat UI
 
 # Git Tracking (per-section)
-knownme config set gitTracking.tasks true
-knownme config set gitTracking.memories false
+knowme config set gitTracking.tasks true
+knowme config set gitTracking.memories false
 ```
 
 Thay đổi `gitTracking.*` sẽ tự động regenerate `.gitignore`.
 
-Interactive `knownme init` cần terminal rộng tối thiểu 90 cột. Nếu terminal quá nhỏ, Know-Me hiển thị hướng dẫn resize hoặc dùng `knownme init --no-wizard`, rồi dừng mà không tự init bằng defaults.
+Interactive `knowme init` cần terminal rộng tối thiểu 90 cột. Nếu terminal quá nhỏ, Know-Me hiển thị hướng dẫn resize hoặc dùng `knowme init --no-wizard`, rồi dừng mà không tự init bằng defaults.

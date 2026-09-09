@@ -7,7 +7,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$Binary = "knownme.exe"
+$Binary = "knowme.exe"
 $AliasBinary = "kn.exe"
 $DefaultInstallDir = Join-Path $env:USERPROFILE ".know-me\bin"
 $InstallDir = if ($env:KNOWNS_INSTALL_DIR) { $env:KNOWNS_INSTALL_DIR } else { $DefaultInstallDir }
@@ -36,7 +36,7 @@ Write-Host ""
 
 $removed = $false
 
-foreach ($name in @($Binary, $AliasBinary)) {
+foreach ($name in @($Binary, "knownme.exe", $AliasBinary)) {
     $target = Join-Path $InstallDir $name
     if (Test-Path $target) {
         Remove-Item -Path $target -Force

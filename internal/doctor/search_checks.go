@@ -85,7 +85,7 @@ func searchConfigChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: capability.Reason,
-						Command:     "knownme settings",
+						Command:     "knowme settings",
 					},
 				}, nil
 			}
@@ -98,7 +98,7 @@ func searchConfigChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Choose an embedding model in Know-Me settings.",
-						Command:     "knownme settings",
+						Command:     "knowme settings",
 					},
 				}, nil
 			}
@@ -138,7 +138,7 @@ func searchModelChecker(state *localState) Checker {
 					Summary: "No semantic model is configured",
 					Remediation: &Remediation{
 						Description: "Choose an embedding model in Know-Me settings.",
-						Command:     "knownme settings",
+						Command:     "knowme settings",
 					},
 				}, nil
 			}
@@ -169,7 +169,7 @@ func searchModelChecker(state *localState) Checker {
 						modelStatus,
 						"Configured ONNX model is not downloaded",
 						"Download the configured ONNX embedding model.",
-						"knownme model download "+settings.Model,
+						"knowme model download "+settings.Model,
 					), nil
 				case localONNXModelIncomplete:
 					return localONNXModelFinding(
@@ -177,7 +177,7 @@ func searchModelChecker(state *localState) Checker {
 						modelStatus,
 						"Configured ONNX model download is incomplete",
 						"Re-download the configured ONNX embedding model to restore missing artifacts.",
-						"knownme model download "+settings.Model+" --force",
+						"knowme model download "+settings.Model+" --force",
 					), nil
 				}
 			}
@@ -199,7 +199,7 @@ func searchModelChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Review the local ONNX model configuration.",
-						Command:     "knownme settings",
+						Command:     "knowme settings",
 					},
 				}, nil
 			}
@@ -219,7 +219,7 @@ func searchModelChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Inspect semantic runtime and model status.",
-						Command:     "knownme runtime status",
+						Command:     "knowme runtime status",
 					},
 				}, nil
 			}
@@ -241,7 +241,7 @@ func searchModelChecker(state *localState) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Download the configured ONNX embedding model.",
-						Command:     "knownme model download " + settings.Model,
+						Command:     "knowme model download " + settings.Model,
 					},
 				}, nil
 			}
@@ -253,7 +253,7 @@ func searchModelChecker(state *localState) Checker {
 					Evidence: evidence,
 					Remediation: &Remediation{
 						Description: "Review the embedding model and provider configuration.",
-						Command:     "knownme settings",
+						Command:     "knowme settings",
 					},
 				}, nil
 			}
@@ -451,7 +451,7 @@ func searchProjectIndexChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Rebuild the project and global semantic indices.",
-						Command:     "knownme search --reindex",
+						Command:     "knowme search --reindex",
 					},
 				}, nil
 			}
@@ -464,7 +464,7 @@ func searchProjectIndexChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Rebuild the project and global semantic indices.",
-						Command:     "knownme search --reindex",
+						Command:     "knowme search --reindex",
 					},
 				}, nil
 			}
@@ -525,7 +525,7 @@ func searchGlobalIndexChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Rebuild the project and global semantic indices.",
-						Command:     "knownme search --reindex",
+						Command:     "knowme search --reindex",
 					},
 				}, nil
 			}
@@ -539,7 +539,7 @@ func searchGlobalIndexChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Rebuild the project and global semantic indices.",
-						Command:     "knownme search --reindex",
+						Command:     "knowme search --reindex",
 					},
 				}, nil
 			}
@@ -586,7 +586,7 @@ func searchSemanticRuntimeChecker(state *localState) Checker {
 					},
 					Remediation: &Remediation{
 						Description: "Inspect the shared semantic runtime.",
-						Command:     "knownme runtime status",
+						Command:     "knowme runtime status",
 					},
 				}, nil
 			}

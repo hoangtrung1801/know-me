@@ -185,7 +185,7 @@ func normalizeResult(checker Checker, result CheckResult) CheckResult {
 	}
 	if (result.Status == StatusWarn || result.Status == StatusFail) && result.Remediation == nil {
 		result.Remediation = &Remediation{
-			Description: "Review this diagnostic and resolve the reported condition, then rerun knownme doctor.",
+			Description: "Review this diagnostic and resolve the reported condition, then rerun knowme doctor.",
 		}
 	}
 	return result
@@ -201,7 +201,7 @@ func normalizedFailure(checker Checker, summary, code string) CheckResult {
 			"errorCode": code,
 		},
 		Remediation: &Remediation{
-			Description: "Review the affected subsystem and rerun knownme doctor.",
+			Description: "Review the affected subsystem and rerun knowme doctor.",
 		},
 	}
 }

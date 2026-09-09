@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Stop"
 
 $Repo = "hoangtrung1801/know-me"
-$Binary = "knownme.exe"
+$Binary = "knowme.exe"
 $AliasBinary = "kn.exe"
 $DefaultInstallDir = Join-Path $env:USERPROFILE ".know-me\bin"
 $KnownsHome = Join-Path $env:USERPROFILE ".know-me"
@@ -99,10 +99,13 @@ try {
     tar -xzf (Join-Path $TmpDir $Archive) -C $TmpDir
     Write-Host "`r  + Extracted                  " -ForegroundColor Green
 
-    # Find the main binary (knownme.exe specifically — avoid matching knowns-embed.exe)
-    $ExtractedBin = Get-ChildItem -Path $TmpDir -Filter "knownme.exe" -Recurse | Select-Object -First 1
+    # Find the main binary (knowme.exe specifically — avoid matching knowns-embed.exe)
+    $ExtractedBin = Get-ChildItem -Path $TmpDir -Filter "knowme.exe" -Recurse | Select-Object -First 1
     if (-not $ExtractedBin) {
-        Write-Host "  x knownme.exe not found in archive" -ForegroundColor Red
+        $ExtractedBin = Get-ChildItem -Path $TmpDir -Filter "knownme.exe" -Recurse | Select-Object -First 1
+    }
+    if (-not $ExtractedBin) {
+        Write-Host "  x knowme.exe not found in archive" -ForegroundColor Red
         exit 1
     }
     $ExtractRoot = $ExtractedBin.Directory.FullName
@@ -156,8 +159,8 @@ try {
 
     Write-Host ""
     Write-Host "  Get started:" -ForegroundColor DarkGray
-    Write-Host "    knownme init" -ForegroundColor DarkGray
-    Write-Host "    knownme task create `"My first task`"" -ForegroundColor DarkGray
+    Write-Host "    knowme init" -ForegroundColor DarkGray
+    Write-Host "    knowme task create `"My first task`"" -ForegroundColor DarkGray
     Write-Host "" 
     Write-Host "  Uninstall:" -ForegroundColor DarkGray
     Write-Host "    irm https://github.com/$Repo/releases/download/$Version/uninstall.ps1 | iex" -ForegroundColor DarkGray

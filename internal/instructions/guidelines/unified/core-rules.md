@@ -50,7 +50,7 @@ mcp__knowns__project({ "action": "set", "projectRoot": "/path/to/project" })
 | **Plan → Approve → Code** | Share plan, WAIT for approval, then implement |
 | **AC after work** | Only check acceptance criteria AFTER completing work |
 | **Time tracking** | `time start` when taking task, `time stop` when done |
-| **Validate** | Run `knownme validate` before marking task done |
+| **Validate** | Run `knowme validate` before marking task done |
 | **Decision impact** | Record `none` or a persisted first-class draft candidate before completion; never create Decision Memory |
 | **--append-notes** | Use `--append-notes` for progress. `--notes` REPLACES all (destroys history) |
 {{/if}}
@@ -70,27 +70,27 @@ mcp__knowns__project({ "action": "set", "projectRoot": "/path/to/project" })
 
 ```bash
 # WRONG - sets assignee to garbage!
-knownme task edit 35 -a "Criterion text"
+knowme task edit 35 -a "Criterion text"
 
 # CORRECT
-knownme task edit 35 --ac "Criterion text"
+knowme task edit 35 --ac "Criterion text"
 ```
 
 ### --plain flag
 
 **Only for view/list/search commands:**
 ```bash
-knownme task <id> --plain      # ✓
-knownme task list --plain      # ✓
-knownme task create --plain    # ✗ ERROR
-knownme task edit --plain      # ✗ ERROR
+knowme task <id> --plain      # ✓
+knowme task list --plain      # ✓
+knowme task create --plain    # ✗ ERROR
+knowme task edit --plain      # ✗ ERROR
 ```
 
 ### Subtasks
 
 ```bash
-knownme task create "Sub" --parent 48    # ✓ raw ID
-knownme task create "Sub" --parent task-48  # ✗ WRONG
+knowme task create "Sub" --parent 48    # ✓ raw ID
+knowme task create "Sub" --parent task-48  # ✗ WRONG
 ```
 {{/if}}
 

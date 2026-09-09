@@ -34,7 +34,7 @@ Targets:
   all       Generate all supported AI integration files
 
 Use --global to install at user-level paths (no project required).
-Global MCP uses 'knownme mcp --stdio' without --project flag.`,
+Global MCP uses 'knowme mcp --stdio' without --project flag.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runSetupCmd,
 }
@@ -56,7 +56,7 @@ func runSetupCmd(cmd *cobra.Command, args []string) error {
 	root := filepath.Join(cwd, paths.StoreDirName)
 	if _, err := os.Stat(root); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("project is not initialized; run 'knownme init' first")
+			return fmt.Errorf("project is not initialized; run 'knowme init' first")
 		}
 		return err
 	}

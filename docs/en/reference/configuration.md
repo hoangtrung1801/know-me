@@ -82,17 +82,17 @@ Relevant fields:
 
 - `enabled`
 - `model`
-- `provider` (`"local"`, `"ollama"`, or a provider ID registered with `knownme provider add`)
+- `provider` (`"local"`, `"ollama"`, or a provider ID registered with `knowme provider add`)
 - `dimensions`
 
 Common behavior:
 
-- `knownme init` can set these values
-- `knownme settings` shows supported Local ONNX models with downloaded/not downloaded status
-- Selecting a missing Local ONNX model in `knownme settings` asks before downloading and saving it
-- `knownme provider add` and `knownme model add --provider <id> <model-name>` configure API-backed embedding models
-- `knownme sync` can re-apply the semantic setup
-- `knownme search --reindex` rebuilds the local index
+- `knowme init` can set these values
+- `knowme settings` shows supported Local ONNX models with downloaded/not downloaded status
+- Selecting a missing Local ONNX model in `knowme settings` asks before downloading and saving it
+- `knowme provider add` and `knowme model add --provider <id> <model-name>` configure API-backed embedding models
+- `knowme sync` can re-apply the semantic setup
+- `knowme search --reindex` rebuilds the local index
 
 ### `settings.lsp`
 
@@ -116,7 +116,7 @@ Supported values:
 - `copilot`
 - `agents`
 
-This setting affects what `knownme setup`, `knownme sync`, and `knownme update` create or refresh.
+This setting affects what `knowme setup`, `knowme sync`, and `knowme update` create or refresh.
 
 Examples of managed artifacts:
 
@@ -140,21 +140,21 @@ Controls whether generated artifacts should be refreshed after upgrading the CLI
 
 You can edit `.know-me/config.json` directly if you know what you are doing, but the normal path is:
 
-- `knownme init` for first-time setup (project structure + git tracking)
-- `knownme init` also creates selected lightweight project instruction shims such as `CLAUDE.md` and `AGENTS.md`
-- `knownme setup <target> --global` for normal personal AI platform integrations such as MCP/config files, skills, and runtime hooks
-- `knownme setup <target>` only when you intentionally want repo-local integration files
-- `knownme setup agents` when you only need repo-local agent shims
-- `knownme settings` for the interactive project settings center
-- `knownme settings --global` for defaults reused by future `knownme init` runs
-- `knownme config get/set/list/reset` for scriptable config access
-- `knownme sync` to re-apply config to the current machine
+- `knowme init` for first-time setup (project structure + git tracking)
+- `knowme init` also creates selected lightweight project instruction shims such as `CLAUDE.md` and `AGENTS.md`
+- `knowme setup <target> --global` for normal personal AI platform integrations such as MCP/config files, skills, and runtime hooks
+- `knowme setup <target>` only when you intentionally want repo-local integration files
+- `knowme setup agents` when you only need repo-local agent shims
+- `knowme settings` for the interactive project settings center
+- `knowme settings --global` for defaults reused by future `knowme init` runs
+- `knowme config get/set/list/reset` for scriptable config access
+- `knowme sync` to re-apply config to the current machine
 
 ### Settings and config shorthands
 
 ```bash
 # Interactive project settings UI
-knownme settings
+knowme settings
 # Shows:
 #   Project
 #   Git Tracking
@@ -166,26 +166,26 @@ knownme settings
 #   Done
 
 # Defaults for future projects
-knownme settings --global
+knowme settings --global
 
 # Or set directly via the scriptable config API
-knownme config set embedding true       # Enable semantic search
-knownme config set lsp true             # Enable LSP globally
-knownme config set lsp.go true          # Enable LSP for Go
-knownme config set enableChatUI true    # Enable chat UI
+knowme config set embedding true       # Enable semantic search
+knowme config set lsp true             # Enable LSP globally
+knowme config set lsp.go true          # Enable LSP for Go
+knowme config set enableChatUI true    # Enable chat UI
 
 # Git Tracking (per-section)
-knownme config set gitTracking.tasks true
-knownme config set gitTracking.memories false
+knowme config set gitTracking.tasks true
+knowme config set gitTracking.memories false
 ```
 
 Changing `gitTracking.*` toggles automatically regenerates `.gitignore`.
 
-Interactive `knownme init` needs a terminal at least 90 columns wide. If the terminal is too small, Know-Me prints resize and `--no-wizard` guidance and stops without initializing by defaults.
+Interactive `knowme init` needs a terminal at least 90 columns wide. If the terminal is too small, Know-Me prints resize and `--no-wizard` guidance and stops without initializing by defaults.
 
-### When to use `knownme sync`
+### When to use `knowme sync`
 
-Use `knownme sync` after:
+Use `knowme sync` after:
 
 - cloning a repo with existing `.know-me/`
 - updating the CLI
@@ -202,14 +202,14 @@ Current skills mapping:
 ## Related commands
 
 ```bash
-knownme init
-knownme setup
-knownme settings
-knownme sync
-knownme config set <key> <value>
-knownme config get <key>
-knownme model list
-knownme model download multilingual-e5-small
-knownme search --status-check
-knownme search --reindex
+knowme init
+knowme setup
+knowme settings
+knowme sync
+knowme config set <key> <value>
+knowme config get <key>
+knowme model list
+knowme model download multilingual-e5-small
+knowme search --status-check
+knowme search --reindex
 ```

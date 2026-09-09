@@ -6,7 +6,7 @@ The goal is to keep planning, context, implementation notes, and validation visi
 
 ## Suggested loop for any project
 
-1. run `knownme init` once per project
+1. run `knowme init` once per project
 2. create tasks and supporting docs
 3. let AI start with MCP `initial`, then use `help`, tasks, docs, and memory as needed
 4. implement changes
@@ -18,12 +18,12 @@ This loop works even without an AI assistant. The AI integration simply makes th
 ## Typical command loop
 
 ```bash
-knownme task create "..."
-knownme doc create "..."
-knownme search "..." --plain
-knownme retrieve "..." --json
-knownme validate --plain
-knownme sync
+knowme task create "..."
+knowme doc create "..."
+knowme search "..." --plain
+knowme retrieve "..." --json
+knowme validate --plain
+knowme sync
 ```
 
 ## Human-driven workflow
@@ -40,7 +40,7 @@ Use this when you want Know-Me as a project organization layer:
 
 Use this when an assistant is helping with planning or implementation:
 
-1. Run `knownme setup <target> --global` for the assistant platform.
+1. Run `knowme setup <target> --global` for the assistant platform.
 2. Ask the assistant to inspect project state first.
 3. Have the assistant work from a task, doc, or spec instead of from a vague prompt.
 4. Use MCP tools for structured reads/writes when available.
@@ -67,8 +67,8 @@ Use this when an assistant is helping with planning or implementation:
 Before calling work complete:
 
 ```bash
-knownme validate --plain
-knownme sync
+knowme validate --plain
+knowme sync
 ```
 
 Validation checks project integrity. Sync keeps generated shim files and platform artifacts aligned with the current Know-Me config.

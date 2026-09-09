@@ -53,7 +53,7 @@ func (a *YAMLAdapter) CheckPrerequisites(ctx context.Context) error {
 func (a *YAMLAdapter) InstallGuide() lsp.InstallGuide {
 	return lsp.InstallGuide{
 		Command:   "npm install -g yaml-language-server@" + yamlLanguageServerVersion,
-		KnownsCmd: "knownme lsp install yaml",
+		KnownsCmd: "knowme lsp install yaml",
 		URL:       "https://github.com/redhat-developer/yaml-language-server",
 		Notes:     "Requires Node.js 12+; Know-Me installs the recommended integrity-pinned version",
 	}

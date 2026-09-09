@@ -11,7 +11,7 @@ explicitly. For product principles, see [PHILOSOPHY.md](./PHILOSOPHY.md).
 Know-Me is a local-first Go application distributed as one executable. The
 same core storage and domain models are exposed through three entry points:
 
-- the Cobra CLI (`knownme`);
+- the Cobra CLI (`knowme`);
 - the local browser server and embedded React UI; and
 - the stdio MCP server used by AI agents.
 
@@ -24,7 +24,7 @@ search indexes and runs optional local or external runtimes around that data.
              +--------------------+--------------------+
              |                    |                    |
        Cobra CLI            Browser UI             MCP client
-    cmd/knownme             React + Vite             stdio JSON-RPC
+     cmd/knowme             React + Vite             stdio JSON-RPC
              |                    |                    |
              v                    v                    v
       internal/cli       internal/server        internal/mcp/handlers
@@ -53,7 +53,7 @@ format or business rule.
 
 ### CLI process
 
-`cmd/knownme/main.go` only translates process errors into exit codes and calls
+`cmd/knowme/main.go` only translates process errors into exit codes and calls
 `internal/cli.Execute`. The CLI uses Cobra to register commands such as
 `task`, `doc`, `search`, `retrieve`, `memory`, `decision`, `time`,
 `browser`, `mcp`, `lsp`, `runtime`, and `setup`.
@@ -113,7 +113,7 @@ project paths, lock files, and small JSON protocols to exchange state.
 
 | Package | Responsibility | Main boundary |
 |---|---|---|
-| `cmd/knownme` | Executable entry point | Process exit and CLI startup |
+| `cmd/knowme` | Executable entry point | Process exit and CLI startup |
 | `internal/cli` | Cobra commands, project resolution, rendering, setup | User-facing command adapter |
 | `internal/models` | Tasks, docs, decisions, memory, chat, agent, config, search, and runtime types | Shared data contracts |
 | `internal/storage` | `Store`, sub-stores, file formats, locks, versions, reference resolution | Durable state and project scope |
@@ -221,7 +221,7 @@ for that domain and make recovery explicit.
 ### CLI mutation
 
 ```text
-knownme task edit ...
+knowme task edit ...
         |
         v
   Cobra command and project resolver
@@ -390,7 +390,7 @@ Typical contributor checks are:
 
 ```bash
 go test ./...
-go build -o ./bin/knownme ./cmd/knownme
+go build -o ./bin/knowme ./cmd/knowme
 cd ui && npm run build
 ```
 
@@ -452,7 +452,7 @@ network synchronization would be a separate design.
 
 ## Useful starting points
 
-- CLI entry: `cmd/knownme/main.go`, `internal/cli/root.go`
+- CLI entry: `cmd/knowme/main.go`, `internal/cli/root.go`
 - Core store: `internal/storage/store.go`, `internal/storage/manager.go`
 - Browser server: `internal/server/server.go`, `internal/server/routes/router.go`
 - MCP bootstrap: `internal/mcp/server.go`, `internal/mcp/handlers/initial.go`

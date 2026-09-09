@@ -56,7 +56,7 @@ func CheckForUpdate() string {
 		return ""
 	}
 
-	return fmt.Sprintf("\n UPDATE  v%s available (current v%s) → knownme update\n", latest, Version)
+	return fmt.Sprintf("\n UPDATE  v%s available (current v%s) → knowme update\n", latest, Version)
 }
 
 func shouldSkipUpdateCheck() bool {
@@ -70,7 +70,7 @@ func shouldSkipUpdateCheck() bool {
 		if arg == "--plain" {
 			return true
 		}
-		// Skip when running "knownme update" — it handles its own check.
+		// Skip when running "knowme update" — it handles its own check.
 		if arg == "update" {
 			return true
 		}
@@ -164,7 +164,7 @@ func CompareVersions(a, b string) int {
 	return 0
 }
 
-// InstallMethod describes how knownme was installed.
+// InstallMethod describes how knowme was installed.
 type InstallMethod string
 
 const (
@@ -224,9 +224,11 @@ func DetectInstallMethod() (InstallMethod, string) {
 		if globalRoot != "" {
 			defaultDir := filepath.ToSlash(filepath.Join(globalRoot, "bin"))
 			if strings.HasPrefix(pathLower, strings.ToLower(defaultDir)+"/") ||
+			pathLower == strings.ToLower(defaultDir+"/knowme") ||
+			pathLower == strings.ToLower(defaultDir+"/knowme.exe") ||
 			pathLower == strings.ToLower(defaultDir+"/knownme") ||
 			pathLower == strings.ToLower(defaultDir+"/knownme.exe") {
-				return InstallMethodScript, "knownme update"
+				return InstallMethodScript, "knowme update"
 			}
 		}
 	}
@@ -249,7 +251,7 @@ func DetectInstallMethod() (InstallMethod, string) {
 		if meta.ManagedBy != "" {
 			switch {
 			case meta.IsScriptManaged():
-				return InstallMethodScript, "knownme update"
+				return InstallMethodScript, "knowme update"
 			case strings.Contains(meta.ManagedBy, "brew"):
 				return InstallMethodBrew, "brew upgrade knowns-dev/tap/knowns"
 			case strings.Contains(meta.ManagedBy, "bun"):
@@ -263,7 +265,7 @@ func DetectInstallMethod() (InstallMethod, string) {
 			}
 		}
 		if meta.Method == "script" {
-			return InstallMethodScript, "knownme update"
+			return InstallMethodScript, "knowme update"
 		}
 	}
 
@@ -271,14 +273,14 @@ func DetectInstallMethod() (InstallMethod, string) {
 	if globalRoot != "" {
 		installJSON := filepath.Join(globalRoot, "install.json")
 		if _, err := os.Stat(installJSON); err == nil {
-			return InstallMethodScript, "knownme update"
+			return InstallMethodScript, "knowme update"
 		}
 	}
 
 	return InstallMethodUnknown, ""
 }
 
-// DetectInstallCmd returns the appropriate upgrade command based on how knownme was installed.
+// DetectInstallCmd returns the appropriate upgrade command based on how knowme was installed.
 func DetectInstallCmd() string {
 	_, cmd := DetectInstallMethod()
 	if cmd == "" {

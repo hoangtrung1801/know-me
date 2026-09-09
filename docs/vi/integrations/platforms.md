@@ -1,6 +1,6 @@
 # Platforms
 
-Know-Me generate và sync artifacts khác nhau cho từng AI platform qua `knownme setup <target> --global` cho user-level setup, hoặc `knownme setup <target>` cho repo-local setup.
+Know-Me generate và sync artifacts khác nhau cho từng AI platform qua `knowme setup <target> --global` cho user-level setup, hoặc `knowme setup <target>` cho repo-local setup.
 
 ## Platform IDs
 
@@ -32,25 +32,25 @@ Know-Me generate và sync artifacts khác nhau cho từng AI platform qua `known
 
 ## Setup
 
-`knownme init` tạo lightweight project shims để agent route tới MCP `initial`/`help` ngay. Với personal assistant setup thông thường, tạo AI integration artifacts ở user scope:
+`knowme init` tạo lightweight project shims để agent route tới MCP `initial`/`help` ngay. Với personal assistant setup thông thường, tạo AI integration artifacts ở user scope:
 
 ```bash
-knownme setup claude --global      # Claude user-level MCP/skills/hooks
-knownme setup opencode --global    # OpenCode user-level MCP/skills/hooks
-knownme setup codex --global       # Codex user-level MCP/skills/hooks
-knownme setup kiro --global        # Kiro user-level MCP/skills/hooks
-knownme setup hermes --global      # Hermes user-level MCP/skills config
-knownme setup antigravity --global # Antigravity/Gemini global MCP config
-knownme setup cursor --global      # Cursor user-level MCP config
-knownme setup gemini --global      # Gemini global MCP config
-knownme setup all --global         # Tất cả platforms ở user scope
-knownme setup agents               # chỉ lightweight repo-local agent shims
+knowme setup claude --global      # Claude user-level MCP/skills/hooks
+knowme setup opencode --global    # OpenCode user-level MCP/skills/hooks
+knowme setup codex --global       # Codex user-level MCP/skills/hooks
+knowme setup kiro --global        # Kiro user-level MCP/skills/hooks
+knowme setup hermes --global      # Hermes user-level MCP/skills config
+knowme setup antigravity --global # Antigravity/Gemini global MCP config
+knowme setup cursor --global      # Cursor user-level MCP config
+knowme setup gemini --global      # Gemini global MCP config
+knowme setup all --global         # Tất cả platforms ở user scope
+knowme setup agents               # chỉ lightweight repo-local agent shims
 ```
 
 ## Ghi chú
 
 - `.agents/skills` là primary path cho agent-compatible platforms
 - Chi tiết setup Hermes nằm ở [Hermes Agent](./hermes.md)
-- `knownme init` tạo selected lightweight instruction shims mặc định, như `CLAUDE.md` và `AGENTS.md`
-- dùng `knownme setup <target> --global` cho personal assistant setup thông thường trên nhiều repository
-- chỉ dùng `knownme setup <target>` khi bạn chủ ý muốn project-level MCP/config files, skills, runtime hooks
+- `knowme init` tạo selected lightweight instruction shims mặc định, như `CLAUDE.md` và `AGENTS.md`
+- dùng `knowme setup <target> --global` cho personal assistant setup thông thường trên nhiều repository
+- chỉ dùng `knowme setup <target>` khi bạn chủ ý muốn project-level MCP/config files, skills, runtime hooks

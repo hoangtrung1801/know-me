@@ -33,7 +33,7 @@ Run validation with SDD-awareness to check spec coverage and task status.
 
 ### Via CLI
 ```bash
-knownme validate --sdd --plain
+knowme validate --sdd --plain
 ```
 
 ### Via MCP (if available)
@@ -73,13 +73,13 @@ Passed:
 
 **Medium coverage (50-80%):**
 > Some tasks are missing spec references. Consider:
-> - Link existing tasks to specs: `knownme task edit <id> --spec specs/<name>`
+> - Link existing tasks to specs: `knowme task edit <id> --spec specs/<name>`
 > - Create specs for unlinked work: `/kn-spec <feature-name>`
 
 **Low coverage (<50%):**
 > Many tasks lack spec references. For better traceability:
 > 1. Create specs for major features: `/kn-spec <feature>`
-> 2. Link tasks to specs: `knownme task edit <id> --spec specs/<name>`
+> 2. Link tasks to specs: `knowme task edit <id> --spec specs/<name>`
 > 3. Use `/kn-plan --from @doc/specs/<name>` for new tasks
 
 ## Step 4: Suggest Actions
@@ -97,7 +97,7 @@ Based on warnings, add the most relevant fixes inside the key-details section, t
 **For incomplete ACs:**
 > Check task progress:
 > ```bash
-> knownme task <id> --plain
+> knowme task <id> --plain
 > ```
 
 **For approved specs without tasks:**

@@ -126,7 +126,7 @@ func TestYAMLAdapterRuntimeMetadata(t *testing.T) {
 	}
 
 	guide := adapter.InstallGuide()
-	if guide.KnownsCmd != "knownme lsp install yaml" || guide.Command != "npm install -g yaml-language-server@"+yamlLanguageServerVersion || guide.URL == "" {
+	if guide.KnownsCmd != "knowme lsp install yaml" || guide.Command != "npm install -g yaml-language-server@"+yamlLanguageServerVersion || guide.URL == "" {
 		t.Fatalf("InstallGuide() = %#v", guide)
 	}
 }

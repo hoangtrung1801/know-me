@@ -536,7 +536,7 @@ func runGlobalSettings() error {
 			huh.NewGroup(
 				huh.NewSelect[string]().
 					Title("Global Settings").
-					Description("Defaults for new projects created by knownme init").
+					Description("Defaults for new projects created by knowme init").
 					Options(
 						huh.NewOption("Project Defaults", "project"),
 						huh.NewOption("Default Git Tracking", "git"),
@@ -565,7 +565,7 @@ func runGlobalSettings() error {
 				return err
 			}
 			fmt.Println(RenderSuccess("Global settings saved."))
-			fmt.Println(RenderHint("Run: knownme init to use these defaults in a new project."))
+			fmt.Println(RenderHint("Run: knowme init to use these defaults in a new project."))
 			return nil
 		case "project":
 			name := defaults.ProjectName
@@ -717,7 +717,7 @@ func configurePlatforms(store *storage.Store, project *models.Project) error {
 	if err := store.Config.Save(project); err != nil {
 		return err
 	}
-	fmt.Println(RenderHint("Run: knownme sync to apply platform changes to generated files."))
+	fmt.Println(RenderHint("Run: knowme sync to apply platform changes to generated files."))
 	return nil
 }
 
@@ -754,7 +754,7 @@ func configureCodeIntelligence(store *storage.Store, project *models.Project) er
 	if err := store.Config.Save(project); err != nil {
 		return err
 	}
-	fmt.Println(RenderHint("Run: knownme lsp status for missing server install guidance."))
+	fmt.Println(RenderHint("Run: knowme lsp status for missing server install guidance."))
 	return nil
 }
 
@@ -879,11 +879,11 @@ func configureLSPSettings(settings *models.ProjectSettings) error {
 
 func showSettingsMaintenance(project *models.Project) error {
 	fmt.Println(RenderSectionHeader("Maintenance"))
-	fmt.Println(RenderHint("Run: knownme sync to apply generated files, git rules, models, and MCP configs."))
+	fmt.Println(RenderHint("Run: knowme sync to apply generated files, git rules, models, and MCP configs."))
 	if project.Settings.SemanticSearch != nil && project.Settings.SemanticSearch.Enabled {
-		fmt.Println(RenderHint("Run: knownme search --reindex after changing search settings."))
+		fmt.Println(RenderHint("Run: knowme search --reindex after changing search settings."))
 	}
-	fmt.Println(RenderHint("Run: knownme config list --plain for scriptable inspection."))
+	fmt.Println(RenderHint("Run: knowme config list --plain for scriptable inspection."))
 	return nil
 }
 
@@ -988,7 +988,7 @@ func applyLocalONNXSelection(store *storage.Store, project *models.Project, mode
 		}
 		if !download {
 			fmt.Println(RenderWarning(fmt.Sprintf("Kept previous Local ONNX model; %q was not downloaded.", selected.ID)))
-			fmt.Println(RenderHint("Run: " + RenderCmd(fmt.Sprintf("knownme model download %s", selected.ID)) + " and select it again."))
+			fmt.Println(RenderHint("Run: " + RenderCmd(fmt.Sprintf("knowme model download %s", selected.ID)) + " and select it again."))
 			return false, nil
 		}
 		if err := runSemanticSetupForSettings(selected.ID, false); err != nil {
@@ -1470,7 +1470,7 @@ func listAPIModels(baseURL, apiKey string) ([]string, error) {
 }
 
 func init() {
-	settingsCmd.Flags().Bool("global", false, "Edit global defaults for future knownme init runs")
+	settingsCmd.Flags().Bool("global", false, "Edit global defaults for future knowme init runs")
 
 	configResetCmd.Flags().BoolP("yes", "y", false, "Skip confirmation prompt")
 

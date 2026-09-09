@@ -77,7 +77,7 @@ func TestJSONAdapterRuntimeMetadata(t *testing.T) {
 	}
 
 	guide := adapter.InstallGuide()
-	if guide.KnownsCmd != "knownme lsp install json" || guide.URL == "" {
+	if guide.KnownsCmd != "knowme lsp install json" || guide.URL == "" {
 		t.Fatalf("InstallGuide() = %#v", guide)
 	}
 	prerequisites := adapter.Prerequisites()

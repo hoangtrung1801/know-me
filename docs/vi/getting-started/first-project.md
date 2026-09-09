@@ -1,6 +1,6 @@
 # Dự án đầu tiên
 
-Sau `knownme init`, mục tiêu đầu tiên là thêm đủ context để một người hoặc AI assistant hiểu project mà không cần một chat history dài. Một setup đầu tiên thường gồm 4 việc:
+Sau `knowme init`, mục tiêu đầu tiên là thêm đủ context để một người hoặc AI assistant hiểu project mà không cần một chat history dài. Một setup đầu tiên thường gồm 4 việc:
 
 1. tạo task
 2. tạo 1-2 doc
@@ -12,26 +12,26 @@ Sau `knownme init`, mục tiêu đầu tiên là thêm đủ context để một
 Ví dụ này tạo auth task vì scope rõ và acceptance criteria dễ kiểm tra. Hãy thay title và description bằng work thật trong repository của bạn.
 
 ```bash
-knownme task create "Add authentication" \
+knowme task create "Add authentication" \
   -d "JWT-based auth with login and register endpoints" \
   --ac "User can register with email/password" \
   --ac "User can login and receive JWT token"
 
-knownme doc create "Auth Architecture" \
+knowme doc create "Auth Architecture" \
   -d "Authentication design decisions" \
   -f architecture
 
-knownme search "authentication" --plain
-knownme validate --plain
-knownme browser --open
+knowme search "authentication" --plain
+knowme validate --plain
+knowme browser --open
 ```
 
 Nếu muốn AI assistant dùng cùng project context, chạy setup cho platform của bạn:
 
 ```bash
-knownme setup codex --global
+knowme setup codex --global
 # hoặc:
-knownme setup claude --global
+knowme setup claude --global
 ```
 
 Dùng `--global` cho personal assistant setup vì nó update user-level MCP config, skills, và runtime hooks. Chỉ dùng setup không có `--global` khi bạn chủ ý muốn repo-local integration files.
@@ -50,7 +50,7 @@ Dùng `--global` cho personal assistant setup vì nó update user-level MCP conf
 - Thêm một architecture doc cho subsystem quan trọng nhất.
 - Thêm một task cho thay đổi thật tiếp theo bạn định làm.
 - Chỉ thêm Memory cho pattern hoặc convention ngắn cần recall; dùng System Decision cho lựa chọn project bền vững.
-- Chạy `knownme validate --plain` trước khi xem project setup là xong.
+- Chạy `knowme validate --plain` trước khi xem project setup là xong.
 
 ## Tiếp theo
 

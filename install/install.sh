@@ -14,7 +14,7 @@
 set -e
 
 REPO="hoangtrung1801/know-me"
-BINARY="knownme"
+BINARY="knowme"
 DEFAULT_INSTALL_DIR="${HOME}/.know-me/bin"
 INSTALL_DIR="${KNOWNS_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 KNOWN_DIR="${HOME}/.know-me"
@@ -248,7 +248,7 @@ main() {
     if [ "${KNOWNS_NO_SYMLINK:-0}" != "1" ]; then
         ln -sf "${INSTALL_DIR}/${BINARY}" "${INSTALL_DIR}/kn" 2>/dev/null || true
         if [ -L "${INSTALL_DIR}/kn" ]; then
-            success "Created symlink: kn → knownme"
+            success "Created symlink: kn → knowme"
         fi
     fi
 
@@ -257,8 +257,8 @@ main() {
 
     # Verify installation
     printf "\n"
-    if command -v knownme >/dev/null 2>&1; then
-        INSTALLED_VERSION=$(knownme --version 2>/dev/null || echo "unknown")
+    if command -v knowme >/dev/null 2>&1; then
+        INSTALLED_VERSION=$(knowme --version 2>/dev/null || echo "unknown")
         printf "  ${GREEN}${BOLD}Know-Me CLI ${INSTALLED_VERSION} installed successfully!${RESET}\n"
     else
         printf "  ${GREEN}${BOLD}Know-Me CLI installed successfully!${RESET}\n"
@@ -273,8 +273,8 @@ main() {
     fi
 
     printf "\n  ${DIM}Get started:${RESET}\n"
-    printf "  ${DIM}  knownme init${RESET}\n"
-    printf "  ${DIM}  knownme task create \"My first task\"${RESET}\n\n"
+    printf "  ${DIM}  knowme init${RESET}\n"
+    printf "  ${DIM}  knowme task create \"My first task\"${RESET}\n\n"
 
     printf "  ${DIM}Uninstall:${RESET}\n"
     printf "  ${DIM}  curl -fsSL https://github.com/${REPO}/releases/download/${VERSION}/uninstall.sh | sh${RESET}\n\n"

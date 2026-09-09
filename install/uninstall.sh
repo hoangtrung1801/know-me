@@ -51,6 +51,10 @@ main() {
 
     removed=0
 
+    if remove_path "${INSTALL_DIR}/knowme"; then
+        success "Removed ${INSTALL_DIR}/knowme"
+        removed=1
+    fi
     if remove_path "${INSTALL_DIR}/knownme"; then
         success "Removed ${INSTALL_DIR}/knownme"
         removed=1

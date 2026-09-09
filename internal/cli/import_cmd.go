@@ -91,7 +91,7 @@ func runImportAdd(cmd *cobra.Command, args []string) error {
 			},
 		)
 		if syncErr != nil {
-			fmt.Println(RenderHint("You can retry with: " + RenderCmd("knownme import sync")))
+			fmt.Println(RenderHint("You can retry with: " + RenderCmd("knowme import sync")))
 			return nil
 		}
 		// Update lastSync and commitHash.
@@ -418,7 +418,7 @@ func cliGitSync(source, ref, importDir, name, cachedHash string, force bool) (ad
 				"Options:\n"+
 				"  1. Use SSH URL:      git@host:owner/repo.git\n"+
 				"  2. Set token:        export KNOWNS_GIT_TOKEN=<your-token>\n"+
-				"  3. Set config token: knownme config set git.token <your-token>", source)
+				"  3. Set config token: knowme config set git.token <your-token>", source)
 		}
 		return 0, 0, 0, "", fmt.Errorf("git clone failed: %s", errMsg)
 	}

@@ -163,7 +163,7 @@ func printDecisionReviewRequired(cmd *cobra.Command, result *decisionreview.Resu
 	fmt.Fprintf(&b, "Allowed resolutions: %s\n", strings.Join(result.AllowedResolutions, ", "))
 	if result.Candidate != nil {
 		fmt.Fprintf(&b, "Persisted candidate: %s\n", result.Candidate.ID)
-		fmt.Fprintf(&b, "Run `knownme decision resolve <resolution> %s` with --target when required.\n", result.Candidate.ID)
+		fmt.Fprintf(&b, "Run `knowme decision resolve <resolution> %s` with --target when required.\n", result.Candidate.ID)
 	}
 	printPaged(cmd, b.String())
 }

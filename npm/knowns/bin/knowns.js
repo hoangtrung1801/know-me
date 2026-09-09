@@ -11,7 +11,7 @@ function uniq(values) {
 }
 
 function resolveFromPackageDir(pkgDir, ext) {
-  for (const name of [`knownme${ext}`, "knownme"]) {
+  for (const name of [`knowme${ext}`, "knowme", `knownme${ext}`, "knownme"]) {
     const candidate = path.join(pkgDir, name);
     if (fs.existsSync(candidate)) {
       return candidate;
@@ -152,7 +152,7 @@ function getBinaryPath() {
   } catch {}
 
   console.error(
-    `Could not find knownme binary for ${platform}-${arch}.\n` +
+    `Could not find knowme binary for ${platform}-${arch}.\n` +
       `Expected package: ${pkgName}\n` +
       `Try reinstalling:\n${getInstallHint(pkgName)}`
   );

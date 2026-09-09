@@ -68,7 +68,7 @@ func TestCollectRuntimeStatusesCSharpIncludesBackendProjectLogAndAttempts(t *tes
 			{Name: "csharp-ls", CheckArgs: []string{"--version"}},
 			{Name: "omnisharp", CheckArgs: []string{"--version"}},
 		},
-		guide:      InstallGuide{KnownsCmd: "knownme lsp install csharp"},
+		guide:      InstallGuide{KnownsCmd: "knowme lsp install csharp"},
 		canInstall: true,
 	}
 	detector := &Detector{
@@ -173,7 +173,7 @@ func TestCollectRuntimeStatusesExposesExpectedBackendWhenNotInstalled(t *testing
 		id:       "markdown",
 		name:     "Markdown",
 		binaries: []BinaryCandidate{{Name: "marksman"}},
-		guide:    InstallGuide{KnownsCmd: "knownme lsp install markdown"},
+		guide:    InstallGuide{KnownsCmd: "knowme lsp install markdown"},
 	}
 	detector := &Detector{
 		Registry:  NewEmptyRegistry(),

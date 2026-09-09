@@ -115,7 +115,7 @@ func runProviderAdd(cmd *cobra.Command, args []string) error {
 			for _, m := range models {
 				fmt.Printf("    • %s (%dd)\n", m.ShortName, m.Dimensions)
 			}
-			fmt.Printf("\n  Add a model: knownme model add --provider %s --model <name>\n", id)
+			fmt.Printf("\n  Add a model: knowme model add --provider %s --model <name>\n", id)
 		}
 	}
 
@@ -131,7 +131,7 @@ func runProviderList(cmd *cobra.Command, args []string) error {
 
 	if len(settings.Providers) == 0 {
 		fmt.Println("No providers registered.")
-		fmt.Println("  Add one: knownme provider add --id ollama --api-base http://localhost:11434/v1")
+		fmt.Println("  Add one: knowme provider add --id ollama --api-base http://localhost:11434/v1")
 		return nil
 	}
 

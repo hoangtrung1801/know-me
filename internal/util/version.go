@@ -36,7 +36,7 @@ func readNpmVersion() string {
 	dir := filepath.Dir(exe)
 
 	// Check common locations relative to the binary:
-	// 1. ../package.json  (npm/knowns/bin/knownme → npm/knowns/package.json)
+	// 1. ../package.json  (npm/knowns/bin/knowme → npm/knowns/package.json)
 	// 2. ../../package.json
 	candidates := []string{
 		filepath.Join(dir, "..", "package.json"),
@@ -62,7 +62,7 @@ func readNpmVersion() string {
 		if err := json.Unmarshal(data, &pkg); err != nil {
 			continue
 		}
-		// Only use it if it's actually the knownme package
+		// Only use it if it's actually the knowme package
 		if pkg.Version != "" && (pkg.Name == "knowns" || pkg.Name == "@anthropic/knowns" || pkg.Name == "") {
 			return pkg.Version
 		}

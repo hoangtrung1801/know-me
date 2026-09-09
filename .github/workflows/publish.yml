@@ -221,7 +221,7 @@ jobs:
         run: |
           LDFLAGS="-s -w -X github.com/hoangtrung1801/known-me/internal/util.Version=${VERSION}"
           mkdir -p "artifacts/${{ matrix.npm_pkg }}"
-          go build -ldflags "$LDFLAGS" -o "artifacts/${{ matrix.npm_pkg }}/knownme${{ matrix.ext }}" ./cmd/knownme
+          go build -ldflags "$LDFLAGS" -o "artifacts/${{ matrix.npm_pkg }}/knowme${{ matrix.ext }}" ./cmd/knowme
 
       - name: Bundle ONNX Runtime native library
         if: matrix.bundle_onnx == 'true'
@@ -279,13 +279,13 @@ jobs:
         if: matrix.goos == 'darwin' && matrix.goarch == 'amd64'
         run: |
           ARTIFACT_DIR="artifacts/${{ matrix.npm_pkg }}"
-          test -x "${ARTIFACT_DIR}/knownme"
+          test -x "${ARTIFACT_DIR}/knowme"
           if find "${ARTIFACT_DIR}" -maxdepth 1 -name '*onnxruntime*' | grep -q .; then
             echo "FATAL: macOS Intel package must not bundle ONNX Runtime"
             exit 1
           fi
-          "${ARTIFACT_DIR}/knownme" --version
-          output=$("${ARTIFACT_DIR}/knownme" model download gte-small 2>&1) && {
+          "${ARTIFACT_DIR}/knowme" --version
+          output=$("${ARTIFACT_DIR}/knowme" model download gte-small 2>&1) && {
             echo "FATAL: Local ONNX model download unexpectedly succeeded"
             exit 1
           }
@@ -325,9 +325,9 @@ jobs:
         env:
           VERSION: ${{ needs.meta.outputs.version }}
         run: |
-          chmod +x artifacts/knowns-linux-x64/knownme
-          artifacts/knowns-linux-x64/knownme --version
-          artifacts/knowns-linux-x64/knownme --version | grep -q "$VERSION" || echo "Warning: Version mismatch"
+          chmod +x artifacts/knowns-linux-x64/knowme
+          artifacts/knowns-linux-x64/knowme --version
+          artifacts/knowns-linux-x64/knowme --version | grep -q "$VERSION" || echo "Warning: Version mismatch"
 
       - name: Prepare npm packages
         env:
@@ -358,10 +358,10 @@ jobs:
             mkdir -p "npm/$pkg"
             cp -R "$dir"/. "npm/$pkg/"
             # Mark executables
-            for exe in "npm/$pkg/knownme" "npm/$pkg/knownme.exe"; do
+            for exe in "npm/$pkg/knowme" "npm/$pkg/knowme.exe"; do
               [ -f "$exe" ] && chmod +x "$exe" 2>/dev/null || true
             done
-            if [ ! -f "npm/$pkg/knownme" ] && [ ! -f "npm/$pkg/knownme.exe" ]; then
+            if [ ! -f "npm/$pkg/knowme" ] && [ ! -f "npm/$pkg/knowme.exe" ]; then
               echo "Missing main binary for $pkg"
               exit 1
             fi
@@ -379,7 +379,7 @@ jobs:
             pkg.repository = repo;
             pkg.homepage = 'https://knowns.sh';
             if (pkg.name === 'knowns') {
-              pkg.bin = { knownme: 'bin/knowns.js', kn: 'bin/knowns.js' };
+              pkg.bin = { knowme: 'bin/knowns.js', knownme: 'bin/knowns.js', kn: 'bin/knowns.js' };
               pkg.optionalDependencies = {
                 '@knowns/darwin-arm64': version,
                 '@knowns/darwin-x64': version,
@@ -432,17 +432,17 @@ jobs:
 
           # Main binary in all packages
           for pkg in knowns-darwin-arm64 knowns-darwin-x64 knowns-linux-arm64 knowns-linux-x64; do
-            if [ ! -f "npm/$pkg/knownme" ]; then
-              echo "FATAL: npm/$pkg/knownme is missing!"
+            if [ ! -f "npm/$pkg/knowme" ]; then
+              echo "FATAL: npm/$pkg/knowme is missing!"
               exit 1
             fi
-            echo "✓ $pkg/knownme"
+            echo "✓ $pkg/knowme"
           done
-          if [ ! -f "npm/knowns-win-x64/knownme.exe" ]; then
-            echo "FATAL: npm/knowns-win-x64/knownme.exe is missing!"
+          if [ ! -f "npm/knowns-win-x64/knowme.exe" ]; then
+            echo "FATAL: npm/knowns-win-x64/knowme.exe is missing!"
             exit 1
           fi
-          echo "✓ knowns-win-x64/knownme.exe"
+          echo "✓ knowns-win-x64/knowme.exe"
 
       - name: Create tarballs
         run: |
@@ -460,7 +460,7 @@ jobs:
               -exec cp -R {} "$staging/" \;
             tar -czvf "${pkg}.tar.gz" -C "$staging" .
             shasum -a 256 "${pkg}.tar.gz" > "${pkg}.tar.gz.sha256"
-            alias_pkg=$(echo "$pkg" | sed 's/^knowns-/knownme-/')
+            alias_pkg=$(echo "$pkg" | sed 's/^knowns-/knowme-/')
             cp "${pkg}.tar.gz" "${alias_pkg}.tar.gz"
             shasum -a 256 "${alias_pkg}.tar.gz" > "${alias_pkg}.tar.gz.sha256"
             rm -rf "$staging"
@@ -470,12 +470,12 @@ jobs:
         run: |
           for archive in \
             knowns-darwin-arm64.tar.gz; do
-            tar -tzf "$archive" | grep -Fx "./knownme" >/dev/null || { echo "$archive missing knownme"; exit 1; }
+            tar -tzf "$archive" | grep -Fx "./knowme" >/dev/null || { echo "$archive missing knowme"; exit 1; }
             tar -tzf "$archive" | grep -E "^\./libonnxruntime.*\.dylib$" >/dev/null || { echo "$archive missing libonnxruntime dylib"; exit 1; }
           done
 
-          tar -tzf knowns-darwin-x64.tar.gz | grep -Fx "./knownme" >/dev/null || {
-            echo "knowns-darwin-x64.tar.gz missing knownme"
+          tar -tzf knowns-darwin-x64.tar.gz | grep -Fx "./knowme" >/dev/null || {
+            echo "knowns-darwin-x64.tar.gz missing knowme"
             exit 1
           }
           if tar -tzf knowns-darwin-x64.tar.gz | grep -i "onnxruntime" >/dev/null; then
@@ -486,12 +486,12 @@ jobs:
           for archive in \
             knowns-linux-arm64.tar.gz \
             knowns-linux-x64.tar.gz; do
-            tar -tzf "$archive" | grep -Fx "./knownme" >/dev/null || { echo "$archive missing knownme"; exit 1; }
+            tar -tzf "$archive" | grep -Fx "./knowme" >/dev/null || { echo "$archive missing knowme"; exit 1; }
             tar -tzf "$archive" | grep -E "^\./libonnxruntime\.so" >/dev/null || { echo "$archive missing libonnxruntime.so"; exit 1; }
           done
 
           for archive in knowns-win-x64.tar.gz; do
-            tar -tzf "$archive" | grep -Fx "./knownme.exe" >/dev/null || { echo "$archive missing knownme.exe"; exit 1; }
+            tar -tzf "$archive" | grep -Fx "./knowme.exe" >/dev/null || { echo "$archive missing knowme.exe"; exit 1; }
             tar -tzf "$archive" | grep -Fx "./onnxruntime.dll" >/dev/null || { echo "$archive missing onnxruntime.dll"; exit 1; }
           done
 
@@ -512,13 +512,13 @@ jobs:
 
           verify_elf_arch knowns-linux-x64.tar.gz  ./libonnxruntime.so "3e00" "x86_64"
           verify_elf_arch knowns-linux-arm64.tar.gz ./libonnxruntime.so "b700" "aarch64"
-          verify_elf_arch knowns-linux-x64.tar.gz   ./knownme            "3e00" "x86_64"
-          verify_elf_arch knowns-linux-arm64.tar.gz  ./knownme            "b700" "aarch64"
+          verify_elf_arch knowns-linux-x64.tar.gz   ./knowme            "3e00" "x86_64"
+          verify_elf_arch knowns-linux-arm64.tar.gz  ./knowme            "b700" "aarch64"
 
           macho_dir=$(mktemp -d)
           tar -xzf knowns-darwin-x64.tar.gz -C "$macho_dir"
-          (file "$macho_dir/knownme" | grep -q "Mach-O 64-bit" &&
-            file "$macho_dir/knownme" | grep -q "x86_64") || {
+          (file "$macho_dir/knowme" | grep -q "Mach-O 64-bit" &&
+            file "$macho_dir/knowme" | grep -q "x86_64") || {
             echo "FATAL: knowns-darwin-x64.tar.gz contains the wrong binary architecture"
             exit 1
           }

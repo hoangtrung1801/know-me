@@ -5,8 +5,8 @@ Know-Me có Web UI cho người muốn xem project context trực quan thay vì 
 ## Mở
 
 ```bash
-knownme browser
-knownme browser --open
+knowme browser
+knowme browser --open
 ```
 
 Chạy command từ một Know-Me project. Dùng `--open` khi muốn Know-Me start local server và tự mở default browser.
