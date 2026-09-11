@@ -41,7 +41,7 @@ function getPlatformPackage(platform = os.platform(), arch = os.arch()) {
   }
 
   return {
-    name: `@knowme/${p}-${a}`,
+    name: `@hoangtrung1801/knowme-${p}-${a}`,
     asset: `knowme-${p}-${a}`,
     ext: platform === "win32" ? ".exe" : "",
     packageOs: platform,
@@ -59,7 +59,11 @@ function getPackageJson(packageRoot) {
 
 function getRequestedVersion(packageRoot, pkgName) {
   const pkg = getPackageJson(packageRoot);
-  return pkg.optionalDependencies && pkg.optionalDependencies[pkgName];
+  const optVer = pkg.optionalDependencies && pkg.optionalDependencies[pkgName];
+  if (optVer && optVer !== "0.0.0") {
+    return optVer;
+  }
+  return pkg.version;
 }
 
 function resolveInstalledPackageDir(packageRoot, pkgName, ext) {
@@ -101,7 +105,7 @@ function getNpmCommand() {
 }
 
 function installPackageIntoPackageRoot(packageRoot, pkgName, version) {
-  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "knowns-install-"));
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "knowme-install-"));
   const env = { ...process.env };
   delete env.npm_config_global;
   delete env.npm_config_prefix;
@@ -117,6 +121,7 @@ function installPackageIntoPackageRoot(packageRoot, pkgName, version) {
         stdio: "pipe",
         encoding: "utf8",
         env,
+        timeout: 10000,
       }
     );
 
@@ -136,10 +141,29 @@ function installPackageIntoPackageRoot(packageRoot, pkgName, version) {
   }
 }
 
-function fetchBuffer(url, redirects = 0) {
+async function fetchBuffer(url, redirects = 0) {
+  if (typeof fetch === "function") {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(url, {
+        headers: { "User-Agent": "knowme-installer" },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        throw new Error(`Download failed (${response.status}) for ${url}${body ? `: ${body}` : ""}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   return new Promise((resolve, reject) => {
     https
-      .get(url, (response) => {
+      .get(url, { headers: { "User-Agent": "knowme-installer" } }, (response) => {
         const status = response.statusCode || 0;
 
         if (status >= 300 && status < 400 && response.headers.location) {
@@ -229,12 +253,11 @@ function writeDownloadedPackageMetadata(dest, platformPackage, version) {
       {
         name: platformPackage.name,
         version,
-        description: `Know-Me binary for ${platformPackage.asset.replace(/^knowns-/, "").replace(/-/g, " ")}`,
+        description: `Know-Me binary for ${platformPackage.asset.replace(/^knowme-/, "").replace(/-/g, " ")}`,
         os: [platformPackage.packageOs],
         cpu: [platformPackage.packageCpu],
         main: `knowme${platformPackage.ext}`,
         license: "MIT",
-        homepage: "https://knowns.sh",
         repository: {
           type: "git",
           url: "git+https://github.com/hoangtrung1801/know-me.git",
@@ -265,7 +288,7 @@ async function downloadPackageFromGitHubRelease(packageRoot, platformPackage, ve
 
 function getInstallHint(pkgName) {
   const base = process.env.npm_config_global === "true" ? "npm install -g" : "npm install";
-  return `${base} knowns ${pkgName}`;
+  return `${base} @hoangtrung1801/knowme ${pkgName}`;
 }
 
 async function ensurePlatformBinary() {

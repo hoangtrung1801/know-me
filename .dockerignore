@@ -29,9 +29,9 @@ ui/test-results/
 playwright-report/
 test-results/
 
-npm/knowns-*/knowme
-npm/knowns-*/knowme.exe
-npm/knowns-*/knownme
-npm/knowns-*/knownme.exe
-npm/knowns-*/knowns-embed
-npm/knowns-*/knowns-embed.exe
+npm/knowme-*/knowme
+npm/knowme-*/knowme.exe
+npm/knowme-*/knownme
+npm/knowme-*/knownme.exe
+npm/knowme-*/knowns-embed
+npm/knowme-*/knowns-embed.exe

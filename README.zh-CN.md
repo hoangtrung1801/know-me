@@ -5,15 +5,14 @@
 <h1 align="center">Know-Me</h1>
 
 <p align="center">
-  <strong>面向项目、任务、已保存链接和快速备忘的本地优先工作空间。</strong>
+  <strong>别再向 AI 编程助手反复解释你的项目了。</strong>
 </p>
 
 <p align="center">
-  <sub>本地优先 · 支持自托管 · 为日常工作节奏而生</sub>
+  <sub>本地优先记忆层 · 任务 · 文档 · 架构决策 · Git 友好 · MCP</sub>
 </p>
 
 <p align="center">
-  <a href="https://knowns.sh">主页</a> |
   <a href="./README.md">English</a> |
   <a href="./README.vi.md">Tiếng Việt</a> |
   <a href="./docs/README.md">文档</a>
@@ -21,11 +20,9 @@
 
 ---
 
-工作容易开始，却很难一直保持井然有序。项目在一个地方，任务在另一个地方，有用的链接消失在浏览器标签页里，快速笔记也会淹没在聊天记录中。
+每次开启新的 AI 编程会话，你都要重新复制粘贴上下文、解释架构设计并提醒 agent 已经确立的技术规范。上下文分散在聊天记录中，agent 频频丢失方向。
 
-**Know-Me 把它们集中到一起。** 在本地整理工作，从任何项目回到工作上下文，并在合适的时候使用 CLI 或 Web UI。
-
-> **为眼前的工作，以及那些不想忘记的事情，提供一个平静的归处。**
+**Know-Me 为此而生。** 它是面向 AI 辅助软件项目的本地优先记忆层。将任务、文档、架构决策和项目上下文保存在透明的本地文件（Markdown + JSON）中，团队与 AI agent 均可通过 MCP 直接检查与更新。
 
 <p align="center">
   <img src="./images/screenshot-dashboard.png" alt="Know-Me 仪表盘" width="100%">
@@ -117,9 +114,9 @@ knowme memo add "询问 Sam 关于发布计划的时间安排"
 
 ```bash
 # 安装
-brew install knowns-dev/tap/knowns
-# 或：npm install -g knowns
-# 或：curl -fsSL https://knowns.sh/script/install | sh
+brew install hoangtrung1801/tap/knowme
+# 或：npm install -g @hoangtrung1801/knowme
+# 或：curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 
 # 创建或注册项目工作空间
 mkdir my-project
@@ -142,25 +139,25 @@ knowme browser --open
 ### Homebrew（macOS/Linux）
 
 ```bash
-brew install knowns-dev/tap/knowns
+brew install hoangtrung1801/tap/knowme
 ```
 
 ### Shell 安装程序（macOS/Linux）
 
 ```bash
-curl -fsSL https://knowns.sh/script/install | sh
+curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 ```
 
 ### PowerShell 安装程序（Windows）
 
 ```powershell
-irm https://knowns.sh/script/install.ps1 | iex
+irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.ps1 | iex
 ```
 
 ### npm
 
 ```bash
-npm install -g knowns
+npm install -g @hoangtrung1801/knowme
 ```
 
 ### 从源代码安装
@@ -195,8 +192,7 @@ make ui
 
 ## 链接
 
-- [主页](https://knowns.sh)
-- [npm](https://www.npmjs.com/package/knowns)
+- [npm](https://www.npmjs.com/package/@hoangtrung1801/knowme)
 - [GitHub](https://github.com/hoangtrung1801/know-me)
 - [Discord](https://discord.knowns.dev)
 - [发布版本](https://github.com/hoangtrung1801/know-me/releases)

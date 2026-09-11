@@ -25,7 +25,7 @@ Người dùng nâng cao có thể chủ động đặt `KNOWN_ORT_LIB` trỏ đ
 ## Homebrew
 
 ```bash
-brew install knowns-dev/tap/knowns
+brew install hoangtrung1801/tap/knowme
 ```
 
 Cách nên dùng trên macOS/Linux.
@@ -33,7 +33,7 @@ Cách nên dùng trên macOS/Linux.
 ## npm
 
 ```bash
-npm install -g knowns
+npm install -g @hoangtrung1801/knowme
 ```
 
 Phù hợp nếu đã dùng Node tooling sẵn.
@@ -41,13 +41,13 @@ Phù hợp nếu đã dùng Node tooling sẵn.
 ## Shell installer (macOS/Linux)
 
 ```bash
-curl -fsSL https://knowns.sh/script/install | sh
+curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 ```
 
 ## PowerShell installer (Windows)
 
 ```powershell
-irm https://knowns.sh/script/install.ps1 | iex
+irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.ps1 | iex
 ```
 
 ## Build từ source

@@ -292,7 +292,7 @@ export function AppSidebar({
 								<ExternalLink className="w-2.5 h-2.5" />
 							</a>
 							<a
-								href="https://knowns.sh/changelog"
+								href="https://github.com/hoangtrung1801/know-me/releases"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="font-mono hover:text-sidebar-foreground transition-colors truncate max-w-[120px]"

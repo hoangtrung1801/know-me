@@ -1,5 +1,5 @@
 {
-  "name": "@knowme/win-x64",
+  "name": "@hoangtrung1801/knowme-win-x64",
   "version": "0.0.0",
   "description": "Know-Me binary for win x64",
   "os": [
@@ -14,7 +14,6 @@
     "*.dll"
   ],
   "license": "MIT",
-  "homepage": "https://knowns.sh",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hoangtrung1801/know-me.git"

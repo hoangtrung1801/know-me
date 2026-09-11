@@ -35,8 +35,8 @@ function ensureExecutable(binary) {
 
 function getInstallHint(pkgName) {
   return (
-    `npm install knowns ${pkgName}\n` +
-    `Or for global installs: npm install -g knowns ${pkgName}`
+    `npm install @hoangtrung1801/knowme ${pkgName}\n` +
+    `Or for global installs: npm install -g @hoangtrung1801/knowme ${pkgName}`
   );
 }
 
@@ -89,32 +89,7 @@ function stageWindowsBinary(binary, options = {}) {
   return cachedBinary;
 }
 
-function getBinaryPath() {
-  const platform = os.platform();
-  const arch = os.arch();
-
-  const platformMap = {
-    darwin: "darwin",
-    linux: "linux",
-    win32: "win",
-  };
-
-  const archMap = {
-    arm64: "arm64",
-    x64: "x64",
-    ia32: "x64", // fallback
-  };
-
-  const p = platformMap[platform];
-  const a = archMap[arch];
-
-  if (!p || !a) {
-    console.error(`Unsupported platform: ${platform}-${arch}`);
-    process.exit(1);
-  }
-
-  const pkgName = `@knowme/${p}-${a}`;
-  const ext = platform === "win32" ? ".exe" : "";
+function findBinary(pkgName, ext) {
   const pkgParts = pkgName.split("/");
 
   const packageDirs = uniq([
@@ -150,6 +125,55 @@ function getBinaryPath() {
       return resolved;
     }
   } catch {}
+
+  return null;
+}
+
+function getBinaryPath() {
+  const platform = os.platform();
+  const arch = os.arch();
+
+  const platformMap = {
+    darwin: "darwin",
+    linux: "linux",
+    win32: "win",
+  };
+
+  const archMap = {
+    arm64: "arm64",
+    x64: "x64",
+    ia32: "x64", // fallback
+  };
+
+  const p = platformMap[platform];
+  const a = archMap[arch];
+
+  if (!p || !a) {
+    console.error(`Unsupported platform: ${platform}-${arch}`);
+    process.exit(1);
+  }
+
+  const pkgName = `@hoangtrung1801/knowme-${p}-${a}`;
+  const ext = platform === "win32" ? ".exe" : "";
+
+  let binary = findBinary(pkgName, ext);
+  if (!binary) {
+    try {
+      const installScript = path.resolve(__dirname, "..", "install.js");
+      if (fs.existsSync(installScript)) {
+        const { spawnSync } = require("child_process");
+        spawnSync(process.execPath, [installScript], {
+          stdio: "inherit",
+          env: process.env,
+        });
+        binary = findBinary(pkgName, ext);
+      }
+    } catch {}
+  }
+
+  if (binary) {
+    return binary;
+  }
 
   console.error(
     `Could not find knowme binary for ${platform}-${arch}.\n` +

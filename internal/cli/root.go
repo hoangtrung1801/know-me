@@ -44,8 +44,6 @@ var rootCmd = &cobra.Command{
 		fmt.Printf("    %s  %s\n", StyleInfo.Render("knowme browser"), "Open web UI")
 		fmt.Printf("    %s  %s\n", StyleInfo.Render("knowme --help"), "Show all commands")
 		fmt.Println()
-		fmt.Printf("  %s  %s\n", StyleBold.Render("Homepage: "), StyleInfo.Render("https://knowns.sh"))
-		fmt.Printf("  %s  %s\n", StyleBold.Render("Documents:"), StyleInfo.Render("https://knowns.sh/docs"))
 		fmt.Printf("  %s  %s\n", StyleBold.Render("Discord:  "), StyleInfo.Render("https://discord.knowns.dev"))
 		fmt.Println()
 	},

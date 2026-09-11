@@ -195,7 +195,7 @@ jobs:
 
       - name: Run npm installer tests
         if: matrix.goos == 'windows' || (matrix.goos == 'darwin' && matrix.goarch == 'amd64')
-        run: bun test npm/knowns/install.test.js
+        run: bun test npm/knowme/install.test.js
 
       - name: Trace downloaded UI artifact
         env:
@@ -333,7 +333,7 @@ jobs:
         env:
           VERSION: ${{ needs.meta.outputs.version }}
         run: |
-          cp README.md npm/knowns/README.md
+          cp README.md npm/knowme/README.md
 
           PLATFORM_PKGS="knowme-darwin-arm64 knowme-darwin-x64 knowme-linux-arm64 knowme-linux-x64 knowme-win-x64"
 
@@ -345,7 +345,7 @@ jobs:
           done
 
           (
-            cd npm/knowns
+            cd npm/knowme
             npm version "$VERSION" --no-git-tag-version --allow-same-version
           )
 
@@ -377,15 +377,14 @@ jobs:
             if (!fs.existsSync(pkgPath)) continue;
             const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
             pkg.repository = repo;
-            pkg.homepage = 'https://knowns.sh';
-            if (pkg.name === 'knowns') {
-              pkg.bin = { knowme: 'bin/knowns.js', knownme: 'bin/knowns.js', kn: 'bin/knowns.js' };
+            if (pkg.name === '@hoangtrung1801/knowme') {
+              pkg.bin = { knowme: 'bin/knowme.js', knownme: 'bin/knowme.js', kn: 'bin/knowme.js' };
               pkg.optionalDependencies = {
-                '@knowme/darwin-arm64': version,
-                '@knowme/darwin-x64': version,
-                '@knowme/linux-arm64': version,
-                '@knowme/linux-x64': version,
-                '@knowme/win-x64': version,
+                '@hoangtrung1801/knowme-darwin-arm64': version,
+                '@hoangtrung1801/knowme-darwin-x64': version,
+                '@hoangtrung1801/knowme-linux-arm64': version,
+                '@hoangtrung1801/knowme-linux-x64': version,
+                '@hoangtrung1801/knowme-win-x64': version,
               };
             }
             fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');

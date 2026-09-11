@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	defaultVersionEndpoint = "https://registry.npmjs.org/knowns/latest"
+	defaultVersionEndpoint = "https://registry.npmjs.org/@hoangtrung1801/knowme/latest"
 	onlineCheckTimeout     = 3 * time.Second
 )
 

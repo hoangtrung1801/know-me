@@ -1,6 +1,6 @@
 # Publishing Guide
 
-This guide explains how to publish the `knowns` package to npm using GitHub Actions.
+This guide explains how to publish the `@hoangtrung1801/knowme` package to npm using GitHub Actions.
 
 ## Setup
 
@@ -127,7 +127,7 @@ git status
 
 - Delete the tag: `git tag -d v0.1.0`
 - Delete remote tag: `git push origin :refs/tags/v0.1.0`
-- Unpublish from npm (within 72 hours): `npm unpublish knowns@0.1.0`
+- Unpublish from npm (within 72 hours): `npm unpublish @hoangtrung1801/knowme@0.1.0`
 - Fix version and try again
 
 ### Package Already Published
@@ -158,15 +158,15 @@ node dist/index.js --help
 
 # Test installation from local build
 npm pack
-npm install -g knowns-0.1.0.tgz
-knowns --help
+npm install -g hoangtrung1801-knowme-0.1.0.tgz
+knowme --help
 ```
 
 ## NPM Package Settings
 
 After first publish, configure your package on npm:
 
-1. Go to [npmjs.com/package/knowns](https://npmjs.com/package/knowns)
+1. Go to [npmjs.com/package/@hoangtrung1801/knowme](https://npmjs.com/package/@hoangtrung1801/knowme)
 2. Add description, keywords, README
 3. Enable 2FA for publishing (highly recommended)
 4. Consider setting up npm provenance (already configured in workflow)
@@ -183,6 +183,6 @@ After first publish, configure your package on npm:
 
 ## Links
 
-- [NPM Package](https://www.npmjs.com/package/knowns)
+- [NPM Package](https://www.npmjs.com/package/@hoangtrung1801/knowme)
 - [GitHub Repository](https://github.com/hoangtrung1801/know-me)
 - [GitHub Actions](https://github.com/hoangtrung1801/know-me/actions)

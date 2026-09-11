@@ -43,10 +43,10 @@ func TestPackageManagerUpgradeRunsInProcessOffWindows(t *testing.T) {
 
 func TestPackageManagerExternalUpdateGuidanceIncludesCommand(t *testing.T) {
 	var output strings.Builder
-	printPackageManagerExternalUpdateGuidanceTo(&output, util.InstallMethodNPM, "npm i -g knowns")
+	printPackageManagerExternalUpdateGuidanceTo(&output, util.InstallMethodNPM, "npm i -g @hoangtrung1801/knowme")
 
 	got := output.String()
-	if !strings.Contains(got, "npm i -g knowns") {
+	if !strings.Contains(got, "npm i -g @hoangtrung1801/knowme") {
 		t.Fatalf("expected guidance to include npm command, got:\n%s", got)
 	}
 	if !strings.Contains(got, "fresh PowerShell") {

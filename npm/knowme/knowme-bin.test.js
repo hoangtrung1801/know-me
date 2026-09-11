@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-const { stageWindowsBinary } = require("./bin/knowns.js");
+const { stageWindowsBinary } = require("./bin/knowme.js");
 
 const tempRoots = [];
 
@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function createPlatformPackage() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "knowns-bin-test-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "knowme-bin-test-"));
   tempRoots.push(root);
   const packageDir = path.join(root, "package");
   const cacheRoot = path.join(root, "cache");

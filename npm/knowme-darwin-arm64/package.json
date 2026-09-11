@@ -1,6 +1,6 @@
 {
-  "name": "@knowme/darwin-arm64",
-  "version": "0.0.0",
+  "name": "@hoangtrung1801/knowme-darwin-arm64",
+  "version": "1.10.0",
   "description": "Know-Me binary for darwin arm64",
   "os": [
     "darwin"
@@ -14,7 +14,6 @@
     "*.dylib"
   ],
   "license": "MIT",
-  "homepage": "https://knowns.sh",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hoangtrung1801/know-me.git"

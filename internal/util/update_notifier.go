@@ -16,7 +16,7 @@ import (
 const (
 	cacheTTL       = 1 * time.Hour
 	fetchTimeout   = 2 * time.Second
-	npmRegistryURL = "https://registry.npmjs.org/knowns/latest"
+	npmRegistryURL = "https://registry.npmjs.org/@hoangtrung1801/knowme/latest"
 )
 
 type updateCache struct {
@@ -205,19 +205,19 @@ func DetectInstallMethod() (InstallMethod, string) {
 
 		// Homebrew (macOS/Linux only)
 		if strings.Contains(pathLower, "/homebrew/") || strings.Contains(pathLower, "/cellar/") || strings.Contains(pathLower, "/linuxbrew/") {
-			return InstallMethodBrew, "brew upgrade knowns-dev/tap/knowns"
+			return InstallMethodBrew, "brew upgrade hoangtrung1801/tap/knowme"
 		}
 
 		// Package managers from path
 		switch {
 		case strings.Contains(pathLower, "/pnpm/") || strings.Contains(pathLower, "/pnpm-global/") || strings.Contains(pathLower, "\\pnpm\\"):
-			return InstallMethodPNPM, "pnpm add -g knowns"
+			return InstallMethodPNPM, "pnpm add -g @hoangtrung1801/knowme"
 		case strings.Contains(pathLower, "/.yarn/") || strings.Contains(pathLower, "/yarn/"):
-			return InstallMethodYarn, "yarn global add knowns"
+			return InstallMethodYarn, "yarn global add @hoangtrung1801/knowme"
 		case strings.Contains(pathLower, "/.bun/") || strings.Contains(pathLower, "/bun/"):
-			return InstallMethodBun, "bun add -g knowns"
+			return InstallMethodBun, "bun add -g @hoangtrung1801/knowme"
 		case strings.Contains(pathLower, "/npm/") || strings.Contains(pathLower, "/node_modules/"):
-			return InstallMethodNPM, "npm i -g knowns"
+			return InstallMethodNPM, "npm i -g @hoangtrung1801/knowme"
 		}
 
 		// Script install: binary in ~/.know-me/bin/
@@ -237,13 +237,13 @@ func DetectInstallMethod() (InstallMethod, string) {
 	ua := os.Getenv("npm_config_user_agent")
 	switch {
 	case strings.HasPrefix(ua, "pnpm/"):
-		return InstallMethodPNPM, "pnpm add -g knowns"
+		return InstallMethodPNPM, "pnpm add -g @hoangtrung1801/knowme"
 	case strings.HasPrefix(ua, "yarn/"):
-		return InstallMethodYarn, "yarn global add knowns"
+		return InstallMethodYarn, "yarn global add @hoangtrung1801/knowme"
 	case strings.HasPrefix(ua, "bun/"):
-		return InstallMethodBun, "bun add -g knowns"
+		return InstallMethodBun, "bun add -g @hoangtrung1801/knowme"
 	case strings.HasPrefix(ua, "npm/"):
-		return InstallMethodNPM, "npm i -g knowns"
+		return InstallMethodNPM, "npm i -g @hoangtrung1801/knowme"
 	}
 
 	// 4. Fallback to persisted metadata (only if runtime detection found nothing).
@@ -253,15 +253,15 @@ func DetectInstallMethod() (InstallMethod, string) {
 			case meta.IsScriptManaged():
 				return InstallMethodScript, "knowme update"
 			case strings.Contains(meta.ManagedBy, "brew"):
-				return InstallMethodBrew, "brew upgrade knowns-dev/tap/knowns"
+				return InstallMethodBrew, "brew upgrade hoangtrung1801/tap/knowme"
 			case strings.Contains(meta.ManagedBy, "bun"):
-				return InstallMethodBun, "bun add -g knowns"
+				return InstallMethodBun, "bun add -g @hoangtrung1801/knowme"
 			case strings.Contains(meta.ManagedBy, "pnpm"):
-				return InstallMethodPNPM, "pnpm add -g knowns"
+				return InstallMethodPNPM, "pnpm add -g @hoangtrung1801/knowme"
 			case strings.Contains(meta.ManagedBy, "yarn"):
-				return InstallMethodYarn, "yarn global add knowns"
+				return InstallMethodYarn, "yarn global add @hoangtrung1801/knowme"
 			case strings.Contains(meta.ManagedBy, "npm"):
-				return InstallMethodNPM, "npm i -g knowns"
+				return InstallMethodNPM, "npm i -g @hoangtrung1801/knowme"
 			}
 		}
 		if meta.Method == "script" {
@@ -284,7 +284,7 @@ func DetectInstallMethod() (InstallMethod, string) {
 func DetectInstallCmd() string {
 	_, cmd := DetectInstallMethod()
 	if cmd == "" {
-		return "npm i -g knowns"
+		return "npm i -g @hoangtrung1801/knowme"
 	}
 	return cmd
 }

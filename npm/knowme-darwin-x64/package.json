@@ -1,5 +1,5 @@
 {
-  "name": "@knowme/darwin-x64",
+  "name": "@hoangtrung1801/knowme-darwin-x64",
   "version": "0.0.0",
   "description": "Know-Me CLI binary for macOS Intel (x86_64); local ONNX Runtime is not bundled",
   "os": [
@@ -13,7 +13,6 @@
     "knowme"
   ],
   "license": "MIT",
-  "homepage": "https://knowns.sh",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hoangtrung1801/know-me.git"

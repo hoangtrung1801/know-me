@@ -129,7 +129,7 @@ func runUpgrade() error {
 	// If still unknown, prompt user to choose.
 	if method == util.InstallMethodUnknown {
 		if !isTTY() {
-			return fmt.Errorf("could not detect how knowme was installed; reinstall using one of:\n  %s\n  brew install knowns-dev/tap/knowns\n  npm i -g knowns\n  bun add -g knowns", scriptInstallCmd())
+			return fmt.Errorf("could not detect how knowme was installed; reinstall using one of:\n  %s\n  brew install hoangtrung1801/tap/knowme\n  npm i -g @hoangtrung1801/knowme\n  bun add -g @hoangtrung1801/knowme", scriptInstallCmd())
 		}
 		fmt.Printf("  %s Could not detect install method.\n", StyleWarning.Render("⚠"))
 		var err error
@@ -274,11 +274,11 @@ func promptInstallMethod() (util.InstallMethod, string, error) {
 	drainStdin()
 	options := []installOption{
 		{util.InstallMethodScript, "Install script", scriptInstallCmd()},
-		{util.InstallMethodBrew, "Homebrew", "brew upgrade knowns-dev/tap/knowns"},
-		{util.InstallMethodNPM, "npm", "npm i -g knowns"},
-		{util.InstallMethodBun, "bun", "bun add -g knowns"},
-		{util.InstallMethodPNPM, "pnpm", "pnpm add -g knowns"},
-		{util.InstallMethodYarn, "yarn", "yarn global add knowns"},
+		{util.InstallMethodBrew, "Homebrew", "brew upgrade hoangtrung1801/tap/knowme"},
+		{util.InstallMethodNPM, "npm", "npm i -g @hoangtrung1801/knowme"},
+		{util.InstallMethodBun, "bun", "bun add -g @hoangtrung1801/knowme"},
+		{util.InstallMethodPNPM, "pnpm", "pnpm add -g @hoangtrung1801/knowme"},
+		{util.InstallMethodYarn, "yarn", "yarn global add @hoangtrung1801/knowme"},
 	}
 	m := &selectModel{options: options}
 	p := tea.NewProgram(m, tea.WithInput(os.Stdin))
@@ -425,9 +425,9 @@ func printPackageManagerExternalUpdateGuidanceTo(w io.Writer, method util.Instal
 // scriptInstallCmd returns the install script command for the current platform.
 func scriptInstallCmd() string {
 	if updateRuntimeGOOS == "windows" {
-		return "irm https://knowns.sh/script/install.ps1 | iex"
+		return "irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.ps1 | iex"
 	}
-	return "curl -fsSL https://knowns.sh/script/install | sh"
+	return "curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh"
 }
 
 func recommendedUpdateCommand() string {

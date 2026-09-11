@@ -4,7 +4,7 @@ const { test, expect } = require("bun:test");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const { getPlatformPackage } = require("./install.js");
+const { getPlatformPackage, getInstallHint } = require("./install.js");
 
 function readPackageJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(__dirname, relativePath), "utf8"));
@@ -12,7 +12,7 @@ function readPackageJson(relativePath) {
 
 test("maps Windows x64 to the published package name", () => {
   expect(getPlatformPackage("win32", "x64")).toEqual({
-    name: "@knowme/win-x64",
+    name: "@hoangtrung1801/knowme-win-x64",
     asset: "knowme-win-x64",
     ext: ".exe",
     packageOs: "win32",
@@ -22,7 +22,7 @@ test("maps Windows x64 to the published package name", () => {
 
 test("maps macOS Intel to the darwin-x64 package and release asset", () => {
   expect(getPlatformPackage("darwin", "x64")).toEqual({
-    name: "@knowme/darwin-x64",
+    name: "@hoangtrung1801/knowme-darwin-x64",
     asset: "knowme-darwin-x64",
     ext: "",
     packageOs: "darwin",
@@ -43,7 +43,7 @@ test("all platform manifests use the knowme package scope", () => {
   for (const [platform, packageOs, packageCpu] of packages) {
     const pkg = readPackageJson(`../knowme-${platform}/package.json`);
 
-    expect(pkg.name).toBe(`@knowme/${platform}`);
+    expect(pkg.name).toBe(`@hoangtrung1801/knowme-${platform}`);
     expect(pkg.os).toEqual([packageOs]);
     expect(pkg.cpu).toEqual([packageCpu]);
     expect(pkg.main).toBe("knowme");
@@ -66,4 +66,19 @@ test("Windows platform packages use npm's win32 os identifier", () => {
   expect(arm64Pkg.os).toEqual(["win32"]);
   expect(x64Pkg.cpu).toEqual(["x64"]);
   expect(arm64Pkg.cpu).toEqual(["arm64"]);
+});
+
+test("wrapper package manifest is named @hoangtrung1801/knowme with knowme binary entrypoints", () => {
+  const pkg = readPackageJson("./package.json");
+
+  expect(pkg.name).toBe("@hoangtrung1801/knowme");
+  expect(pkg.bin).toEqual({
+    knowme: "bin/knowme.js",
+    knownme: "bin/knowme.js",
+    kn: "bin/knowme.js",
+  });
+});
+
+test("getInstallHint suggests installing @hoangtrung1801/knowme package", () => {
+  expect(getInstallHint("@hoangtrung1801/knowme-darwin-arm64")).toBe("npm install @hoangtrung1801/knowme @hoangtrung1801/knowme-darwin-arm64");
 });

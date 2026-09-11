@@ -25,7 +25,7 @@ Advanced users can explicitly set `KNOWN_ORT_LIB` to a compatible x86_64 `libonn
 ## Homebrew
 
 ```bash
-brew install knowns-dev/tap/knowns
+brew install hoangtrung1801/tap/knowme
 ```
 
 Recommended on macOS and Linux when you want a packaged install.
@@ -33,7 +33,7 @@ Recommended on macOS and Linux when you want a packaged install.
 ## npm
 
 ```bash
-npm install -g knowns
+npm install -g @hoangtrung1801/knowme
 ```
 
 Useful when your environment already uses Node tooling.
@@ -41,13 +41,13 @@ Useful when your environment already uses Node tooling.
 ## Shell installer (macOS/Linux)
 
 ```bash
-curl -fsSL https://knowns.sh/script/install | sh
+curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 ```
 
 ## PowerShell installer (Windows)
 
 ```powershell
-irm https://knowns.sh/script/install.ps1 | iex
+irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.ps1 | iex
 ```
 
 ## Build from source

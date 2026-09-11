@@ -1,5 +1,5 @@
 {
-  "name": "@knowme/linux-x64",
+  "name": "@hoangtrung1801/knowme-linux-x64",
   "version": "0.0.0",
   "description": "Know-Me binary for linux x64",
   "os": [
@@ -15,7 +15,6 @@
     "*.so.*"
   ],
   "license": "MIT",
-  "homepage": "https://knowns.sh",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hoangtrung1801/know-me.git"

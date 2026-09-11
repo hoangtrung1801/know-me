@@ -5,15 +5,14 @@
 <h1 align="center">Know-Me</h1>
 
 <p align="center">
-  <strong>Không gian làm việc local-first cho dự án, công việc, liên kết đã lưu và ghi chú nhanh.</strong>
+  <strong>Ngừng giải thích lại dự án cho AI coding agent mỗi khi mở session mới.</strong>
 </p>
 
 <p align="center">
-  <sub>Local-first · Tự host được · Dành cho nhịp làm việc hằng ngày</sub>
+  <sub>Lớp bộ nhớ local-first · Task · Tài liệu · Quyết định kỹ thuật · Git-friendly · MCP</sub>
 </p>
 
 <p align="center">
-  <a href="https://knowns.sh">Trang chủ</a> |
   <a href="./README.md">English</a> |
   <a href="./README.zh-CN.md">简体中文</a> |
   <a href="./docs/vi/README.md">Tài liệu</a>
@@ -21,11 +20,9 @@
 
 ---
 
-Công việc thì dễ bắt đầu nhưng khó giữ cho gọn gàng. Dự án nằm một nơi, việc cần làm nằm nơi khác, link hữu ích trôi giữa các tab trình duyệt, còn ghi chú nhanh biến mất trong lịch sử chat.
+Mỗi lần mở session AI coding mới, bạn lại phải copy-paste ngữ cảnh, giải thích lại kiến trúc và nhắc agent về các quyết định kỹ thuật đã thống nhất. Ngữ cảnh trôi dạt trong lịch sử chat, còn agent liên tục mất phương hướng.
 
-**Know-Me gom chúng lại.** Sắp xếp công việc ngay trên máy của bạn, quay lại từ bất kỳ dự án nào, và dùng CLI hoặc Web UI theo cách phù hợp.
-
-> **Một nơi bình tĩnh cho việc bạn đang làm—và những điều bạn không muốn quên.**
+**Know-Me giải quyết điều đó.** Đây là lớp bộ nhớ local-first cho các dự án phần mềm làm việc cùng AI. Lưu trữ task, tài liệu, quyết định kỹ thuật và ngữ cảnh dự án ngay trong các file mã nguồn (Markdown + JSON) mà cả bạn, team và AI agent đều có thể trực tiếp kiểm tra và cập nhật qua MCP.
 
 <p align="center">
   <img src="./images/screenshot-dashboard.png" alt="Không gian làm việc Know-Me Dashboard" width="100%">
@@ -117,9 +114,9 @@ Phiên làm việc đầu tiên chỉ cần năm bước nhỏ:
 
 ```bash
 # Cài đặt
-brew install knowns-dev/tap/knowns
-# hoặc: npm install -g knowns
-# hoặc: curl -fsSL https://knowns.sh/script/install | sh
+brew install hoangtrung1801/tap/knowme
+# hoặc: npm install -g @hoangtrung1801/knowme
+# hoặc: curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 
 # Tạo hoặc đăng ký không gian làm việc cho dự án
 mkdir du-an-cua-toi
@@ -142,25 +139,25 @@ knowme browser --open
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew install knowns-dev/tap/knowns
+brew install hoangtrung1801/tap/knowme
 ```
 
 ### Shell installer (macOS/Linux)
 
 ```bash
-curl -fsSL https://knowns.sh/script/install | sh
+curl -fsSL https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.sh | sh
 ```
 
 ### PowerShell installer (Windows)
 
 ```powershell
-irm https://knowns.sh/script/install.ps1 | iex
+irm https://raw.githubusercontent.com/hoangtrung1801/know-me/main/install/install.ps1 | iex
 ```
 
 ### npm
 
 ```bash
-npm install -g knowns
+npm install -g @hoangtrung1801/knowme
 ```
 
 ### Từ mã nguồn
@@ -195,8 +192,7 @@ make ui
 
 ## Liên kết
 
-- [Trang chủ](https://knowns.sh)
-- [npm](https://www.npmjs.com/package/knowns)
+- [npm](https://www.npmjs.com/package/@hoangtrung1801/knowme)
 - [GitHub](https://github.com/hoangtrung1801/know-me)
 - [Discord](https://discord.knowns.dev)
 - [Releases](https://github.com/hoangtrung1801/know-me/releases)

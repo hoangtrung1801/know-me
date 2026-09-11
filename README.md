@@ -5,11 +5,11 @@
 <h1 align="center">Know-Me</h1>
 
 <p align="center">
-  <strong>Your personal database for everything you collect.</strong>
+  <strong>Stop re-explaining your project to AI coding agents.</strong>
 </p>
 
 <p align="center">
-  <sub>Local-first · File-based · Tasks · Docs · Memos · Links · AI-searchable</sub>
+  <sub>Local-first memory layer · Tasks · Docs · Decisions · Git-friendly · MCP</sub>
 </p>
 
 <p align="center">
@@ -17,11 +17,10 @@
   <a href="https://github.com/hoangtrung1801/know-me/releases"><img src="https://img.shields.io/github/v/release/hoangtrung1801/know-me?color=blue" alt="Release"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/Go-%3E%3D1.24.2-00ADD8?logo=go" alt="Go Version">
-  <a href="https://www.npmjs.com/package/knowns"><img src="https://img.shields.io/npm/v/knowns?color=crimson&logo=npm" alt="npm"></a>
+  <a href="https://www.npmjs.com/package/@hoangtrung1801/knowme"><img src="https://img.shields.io/npm/v/@hoangtrung1801/knowme?color=crimson&logo=npm" alt="npm"></a>
 </p>
 
 <p align="center">
-  <a href="https://knowns.sh">Homepage</a> ·
   <a href="./docs/en/README.md">Documentation</a> ·
   <a href="./README.vi.md">Tiếng Việt</a> ·
   <a href="./README.zh-CN.md">简体中文</a>
@@ -29,13 +28,11 @@
 
 ---
 
-Know-Me is a personal database for everything you have and collect. Tasks,
-project docs, quick memos, saved links, decisions, and memories live in one
-centralized, local-first place — then AI helps you collect, search, and add
-context to what's around them.
+**Know-Me** is a local-first memory layer for AI-assisted software projects.
+Keep tasks, docs, decisions, and project context in files your team and AI
+agents can actually inspect.
 
 The product is called **Know-Me**. The command-line interface is `knowme`.
-The npm package keeps the name `knowns` for distribution compatibility.
 
 <p align="center">
   <img src="./images/screenshot-dashboard.png" alt="Know-Me Workspace Dashboard" width="100%">
@@ -43,7 +40,7 @@ The npm package keeps the name `knowns` for distribution compatibility.
 
 ## What you keep in Know-Me
 
-| Database               | What it holds                                                                         |
+| Resource               | What it holds                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------- |
 | **Projects**           | Centralized home per project; every task, doc, and decision links back to one         |
 | **Tasks & Kanban**     | Planned work with status, acceptance criteria, notes; `board` renders the Kanban view |
@@ -59,12 +56,12 @@ and searchable from any interface. See [Philosophy](./PHILOSOPHY.md) for why.
 
 AI is a collection and recall assistant, not a black box:
 
-- **Collect** — capture a memo, link, task, or doc from the CLI, Web UI, or an agent; Know-Me files it in the right database.
+- **Collect** — capture a memo, link, task, or doc from the CLI, Web UI, or an agent; Know-Me files it in the right place.
 - **Search** — keyword, hybrid, semantic, and reference-aware lookup across tasks, docs, memories, and decisions.
 - **Enrich** — `retrieve` pulls ranked context for the thing you're working on, so agents and humans see surrounding decisions, docs, and code references instead of guessing.
 
 Nothing important lives only in chat history. If it's worth keeping, it goes
-in the database with a reference (`@doc/<path>`, `@task/<id>`) that resolves
+in project memory with a reference (`@doc/<path>`, `@task/<id>`) that resolves
 to the exact source every time.
 
 ## How it works
@@ -73,12 +70,12 @@ One Go application, three entry points over the same storage and domain services
 
 - **CLI** — scriptable capture and management (`task`, `doc`, `memo`, `link`, `board`, `search`).
 - **Web UI** — local browser workspace for Kanban boards, docs, graphs, and chat workflows.
-- **MCP server + skills** — agents connect straight to your personal database via structured MCP tools and skills (see below).
+- **MCP server + skills** — agents connect straight to your project memory layer via structured MCP tools and skills (see below).
 
 Storage layout:
 
-- `<repo>/.know-me/` — project database: tasks, docs, decisions, memories (Markdown + JSON, Git-friendly).
-- `~/.know-me/` — personal database: project registry, saved links, memos, global memory.
+- `<repo>/.know-me/` — project memory: tasks, docs, decisions, memories (Markdown + JSON, Git-friendly).
+- `~/.know-me/` — global workspace: project registry, saved links, memos, global memory.
 - Search indexes are derived and rebuildable; delete them any time.
 
 ## Visual Workspace
@@ -133,7 +130,7 @@ knowme browser --open
 
 ## Connect an AI agent
 
-Agents read and write the same personal database you use — via MCP tools and
+Agents read and write the same project memory you use — via MCP tools and
 skills, not copy-pasted chat logs:
 
 ```bash
@@ -157,7 +154,7 @@ See the [AI Workflow](./docs/en/guides/ai-workflow.md) and
 ### npm
 
 ```bash
-npm install -g knowns
+npm install -g @hoangtrung1801/knowme
 ```
 
 ### Shell installer (macOS / Linux)
@@ -257,8 +254,7 @@ and [Architecture](./ARCHITECTURE.md). Contributions follow
 
 ## Links
 
-- [Homepage](https://knowns.sh)
 - [GitHub](https://github.com/hoangtrung1801/know-me)
-- [npm](https://www.npmjs.com/package/knowns)
+- [npm](https://www.npmjs.com/package/@hoangtrung1801/knowme)
 - [Discord](https://discord.knowns.dev)
 - [Releases](https://github.com/hoangtrung1801/know-me/releases)
