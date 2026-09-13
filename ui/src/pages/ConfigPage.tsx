@@ -15,22 +15,12 @@ import {
 	Loader2,
 	AlertCircle,
 	CheckCircle2,
-	Download,
-	Package,
-	ChevronRight,
-	RefreshCw,
-	X,
 	Monitor,
-	Power,
-	PowerOff,
 	Activity,
 	Search,
-	Code2,
 	Wrench,
-	Globe,
 	Shield,
 	Archive,
-	Copy,
 	type LucideIcon,
 } from "lucide-react";
 import { ScrollArea } from "../components/ui/ScrollArea";
@@ -46,34 +36,12 @@ import { useOpenCode } from "../contexts/OpenCodeContext";
 import { useOpenCodeModelManager } from "../hooks/useOpencodeModelManager";
 import { usePageLifecycle, usePersistentPageState } from "../contexts/PageWorkspaceContext";
 import { OpenCodeModelManager } from "../components/organisms/OpenCodeModelManager";
-import DecisionMigrationTool from "../components/organisms/DecisionMigrationTool";
 import { toast } from "../components/ui/sonner";
-import { importApi, saveUserPreferences, getRuntimeServices, getEmbeddingModels, testEmbeddingModel, linkClassifierApi, tunnelApi, lspApi, codexAgentApi, type EmbeddingModelInfo, type EmbeddingModelsResponse, type EmbeddingModelTestResult, type Import, type ImportDetail, type ImportResult, type RuntimeService, type LSPLanguageInfo } from "../api/client";
+import { saveUserPreferences, getRuntimeServices, linkClassifierApi, codexAgentApi, type RuntimeService } from "../api/client";
 import type { CodexStatus } from "../models/agent";
 
 const DEFAULT_STATUSES = ["todo", "in-progress", "in-review", "done", "blocked", "on-hold", "urgent"];
 const COLOR_OPTIONS = ["gray", "blue", "green", "yellow", "red", "purple", "orange", "pink", "cyan", "indigo"];
-const CSHARP_BACKENDS = ["auto", "roslyn-ls", "csharp-ls", "omnisharp"];
-
-type LSPLogKind = "runtime" | "trace";
-
-interface LSPConfigDraft {
-	backend?: string;
-	projectPath?: string;
-	version?: string;
-	binary?: string;
-}
-
-interface LSPLogPanelState {
-	kind: LSPLogKind;
-	content: string;
-	path?: string;
-	loading?: boolean;
-}
-
-function displayValue(value?: string) {
-	return value && value.trim() ? value : "-";
-}
 
 function statusVariant(status?: string): "default" | "secondary" | "destructive" | "outline" {
 	switch (status) {
@@ -95,7 +63,7 @@ function statusVariant(status?: string): "default" | "secondary" | "destructive"
 
 // ── Category definitions ──────────────────────────────────────────
 
-type Category = "general" | "tasks" | "board" | "search" | "code" | "ai" | "imports" | "runtime" | "tunnel" | "security" | "tools" | "advanced";
+type Category = "general" | "tasks" | "board" | "search" | "ai" | "runtime" | "security" | "advanced";
 
 interface CategoryDef {
 	id: Category;
@@ -108,14 +76,10 @@ const ALL_CATEGORIES: CategoryDef[] = [
 	{ id: "general", label: "General", icon: Settings, description: "Project name, defaults, and preferences" },
 	{ id: "tasks", label: "Task lifecycle", icon: Archive, description: "Retrieval, retention, and automatic archival" },
 	{ id: "board", label: "Board", icon: Columns3, description: "Kanban statuses, colors, and visible columns" },
-	{ id: "search", label: "Search", icon: Search, description: "Semantic search configuration" },
-	{ id: "code", label: "Code", icon: Code2, description: "LSP servers and code intelligence" },
+	{ id: "search", label: "Search", icon: Search, description: "Search configuration" },
 	{ id: "ai", label: "AI", icon: Bot, description: "Codex task workflows and OpenCode Chat UI" },
-	{ id: "imports", label: "Imports", icon: Download, description: "Imported templates and docs" },
 	{ id: "runtime", label: "Runtime", icon: Monitor, description: "Runtime services and sub-processes" },
-	{ id: "tunnel", label: "Tunnel", icon: Globe, description: "Cloudflare Tunnel for remote access" },
 	{ id: "security", label: "Security", icon: Shield, description: "Password protection" },
-	{ id: "tools", label: "Tools", icon: Wrench, description: "Maintenance and migration utilities" },
 	{ id: "advanced", label: "Advanced", icon: Wrench, description: "Git tracking, server, platforms, and JSON" },
 ];
 
@@ -316,135 +280,6 @@ export default function ConfigPage() {
 		void loadCodexStatus();
 	}, [activationId, isHydrated, loadCodexStatus]);
 
-	// Imports state
-	const [imports, setImports] = useState<Import[]>([]);
-	const [importsLoading, setImportsLoading] = useState(true);
-	const [selectedImport, setSelectedImport] = useState<ImportDetail | null>(null);
-	const [showAddModal, setShowAddModal] = usePersistentPageState("config", "showAddModal", false);
-	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
-	const [syncingImport, setSyncingImport] = useState<string | null>(null);
-	const [removingImport, setRemovingImport] = useState<string | null>(null);
-	const [removeDeleteFiles, setRemoveDeleteFiles] = useState(false);
-
-	// Add import form state
-	const [addSource, setAddSource] = usePersistentPageState("config", "addSource", "");
-	const [addName, setAddName] = usePersistentPageState("config", "addName", "");
-	const [addType, setAddType] = usePersistentPageState("config", "addType", "");
-	const [addRef, setAddRef] = usePersistentPageState("config", "addRef", "");
-	const [addLink, setAddLink] = usePersistentPageState("config", "addLink", false);
-	const [addDryRun, setAddDryRun] = usePersistentPageState("config", "addDryRun", true);
-	const [adding, setAdding] = useState(false);
-	const [addResult, setAddResult] = useState<ImportResult | null>(null);
-	const [addError, setAddError] = useState<string | null>(null);
-
-	// Load imports
-	const loadImports = useCallback(async () => {
-		if (!isActiveRef.current) return;
-		try {
-			const data = await importApi.list();
-			if (isActiveRef.current) setImports(data.imports);
-		} catch (err) {
-			if (isActiveRef.current) console.error("Failed to load imports:", err);
-		} finally {
-			if (isActiveRef.current) setImportsLoading(false);
-		}
-	}, []);
-
-	// Load import detail
-	const loadImportDetail = async (name: string) => {
-		if (!isActiveRef.current) return;
-		try {
-			const data = await importApi.get(name);
-			if (isActiveRef.current) setSelectedImport(data.import);
-		} catch (err) {
-			if (isActiveRef.current) console.error("Failed to load import:", err);
-		}
-	};
-
-	// Handle add import
-	const handleAddImport = async (overrideDryRun?: boolean) => {
-		if (!addSource.trim()) return;
-		const dryRun = overrideDryRun ?? addDryRun;
-		setAdding(true);
-		setAddError(null);
-		if (dryRun) {
-			setAddResult(null);
-		}
-		try {
-			const result = await importApi.add({
-				source: addSource,
-				name: addName || undefined,
-				type: addType || undefined,
-				ref: addRef || undefined,
-				link: addLink,
-				dryRun,
-			});
-			setAddResult(result);
-			if (!dryRun) {
-				loadImports();
-				setShowAddModal(false);
-				resetAddForm();
-			}
-		} catch (err) {
-			setAddError(err instanceof Error ? err.message : String(err));
-		} finally {
-			setAdding(false);
-		}
-	};
-
-	// Handle sync
-	const handleSync = async (name: string) => {
-		setSyncingImport(name);
-		try {
-			await importApi.sync(name);
-			loadImports();
-			toast.success(`Synced "${name}"`);
-		} catch (err) {
-			console.error("Failed to sync:", err);
-			toast.error(`Failed to sync "${name}"`);
-		} finally {
-			setSyncingImport(null);
-		}
-	};
-
-	// Handle remove
-	const handleRemove = async () => {
-		if (!selectedImport) return;
-		setRemovingImport(selectedImport.name);
-		try {
-			await importApi.remove(selectedImport.name, removeDeleteFiles);
-			setShowRemoveConfirm(false);
-			setSelectedImport(null);
-			loadImports();
-		} catch (err) {
-			console.error("Failed to remove:", err);
-		} finally {
-			setRemovingImport(null);
-		}
-	};
-
-	// Reset add form
-	const resetAddForm = () => {
-		setAddSource("");
-		setAddName("");
-		setAddType("");
-		setAddRef("");
-		setAddLink(false);
-		setAddDryRun(true);
-		setAddResult(null);
-		setAddError(null);
-	};
-
-	// Close detail view
-	const closeImportDetail = () => {
-		setSelectedImport(null);
-	};
-
-	useEffect(() => {
-		if (!isHydrated || !isActiveRef.current) return;
-		loadImports();
-	}, [activationId, isHydrated, loadImports]);
-
 	const autoSave = useAutoSave(updateConfig);
 
 	// Keep the local draft aligned with the latest effective server config.
@@ -551,59 +386,6 @@ export default function ConfigPage() {
 	const [services, setServices] = useState<RuntimeService[]>([]);
 	const [servicesLoading, setServicesLoading] = useState(true);
 
-	// Embedding models state
-	const [embeddingModels, setEmbeddingModels] = useState<EmbeddingModelsResponse | null>(null);
-	const [modelsLoading, setModelsLoading] = useState(true);
-
-	// LSP language management state
-	const [availableLangs, setAvailableLangs] = useState<LSPLanguageInfo[]>([]);
-	const [showAddDropdown, setShowAddDropdown] = useState(false);
-	const [lspActionsLoading, setLspActionsLoading] = useState<Record<string, boolean>>({});
-	const [lspConfigDrafts, setLspConfigDrafts] = useState<Record<string, LSPConfigDraft>>({});
-	const [lspLogPanels, setLspLogPanels] = useState<Record<string, LSPLogPanelState>>({});
-	const [lspTraceEnabled, setLspTraceEnabled] = useState<Record<string, boolean>>({});
-	const dropdownRef = useRef<HTMLDivElement>(null);
-
-	// Close LSP dropdown on outside click
-	useEffect(() => {
-		if (!showAddDropdown) return;
-		const handler = (e: MouseEvent) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-				setShowAddDropdown(false);
-			}
-		};
-		document.addEventListener("mousedown", handler);
-		return () => document.removeEventListener("mousedown", handler);
-	}, [showAddDropdown]);
-
-	const refreshLspLanguages = useCallback(async () => {
-		if (!isActiveRef.current) return [];
-		const data = await lspApi.getLanguages();
-		const languages = data.languages || [];
-		if (!isActiveRef.current) return languages;
-		setAvailableLangs(languages);
-		setLspTraceEnabled((prev) => {
-			const next = { ...prev };
-			for (const lang of languages) {
-				next[lang.id] = lang.traceEnabled ?? false;
-			}
-			return next;
-		});
-		return languages;
-	}, []);
-
-	// Load available LSP languages
-	useEffect(() => {
-		if (!isHydrated || !isActiveRef.current) return;
-		refreshLspLanguages().catch(() => {});
-	}, [activationId, isHydrated, refreshLspLanguages]);
-
-	// API endpoint test state
-	const [apiBase, setApiBase] = useState("");
-	const [apiKey, setApiKey] = useState("");
-	const [testModelName, setTestModelName] = useState("");
-	const [testing, setTesting] = useState(false);
-	const [testResult, setTestResult] = useState<EmbeddingModelTestResult | null>(null);
 
 	const loadRuntimeServices = useCallback(async () => {
 		if (!isActiveRef.current) return;
@@ -625,88 +407,6 @@ export default function ConfigPage() {
 		}
 	}, [activationId, activeCategory, isHydrated, loadRuntimeServices]);
 
-	// Load embedding models on mount and when provider changes
-	const loadEmbeddingModels = useCallback(async () => {
-		if (!isActiveRef.current) return;
-		try {
-			setModelsLoading(true);
-			const data = await getEmbeddingModels();
-			if (isActiveRef.current) setEmbeddingModels(data);
-		} catch (err) {
-			if (isActiveRef.current) console.error("Failed to load embedding models:", err);
-		} finally {
-			if (isActiveRef.current) setModelsLoading(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		if (!isHydrated || !isActiveRef.current) return;
-		void loadEmbeddingModels();
-	}, [activationId, isHydrated, loadEmbeddingModels]);
-
-	useEffect(() => {
-		if (!initialized || semanticProvider !== "api") return;
-		setApiBase((current) => current || "http://localhost:11434/v1");
-		setTestModelName((current) => current || config.semanticSearch?.model || "");
-	}, [initialized, semanticProvider, config.semanticSearch?.model]);
-
-	// Select embedding model and update config
-	const selectEmbeddingModel = useCallback((model: EmbeddingModelInfo) => {
-		const isApi = model.source === "ollama" || model.provider !== undefined;
-		const modelName = model.name;
-		const patch: Partial<Config> = {
-			semanticSearch: {
-				...(config.semanticSearch || {}),
-				provider: semanticProvider,
-				model: modelName,
-				dimensions: model.dimensions || config.semanticSearch?.dimensions || 384,
-				...(isApi ? {
-					huggingFaceId: "",
-				} : {
-					huggingFaceId: model.huggingFaceId || "",
-				}),
-			},
-		};
-		setConfig(prev => ({ ...prev, ...patch }));
-		autoSave(patch);
-	}, [config.semanticSearch, semanticProvider, autoSave]);
-
-	// Test embedding API endpoint
-	const handleTestEmbedding = async () => {
-		if (!apiBase.trim() || !testModelName.trim()) return;
-		setTesting(true);
-		setTestResult(null);
-		try {
-			const data = await testEmbeddingModel({
-				apiBase: apiBase.trim(),
-				apiKey: apiKey.trim(),
-				model: testModelName.trim(),
-			});
-			setTestResult(data);
-			if (data.success) {
-				update({
-					semanticSearch: {
-						...(config.semanticSearch || {}),
-						provider: "api",
-						model: testModelName.trim(),
-						dimensions: data.dimensions,
-					},
-				});
-				toast.success(`Model works! ${data.dimensions} dimensions detected.`);
-			}
-		} catch (err) {
-			setTestResult({ success: false, error: err instanceof Error ? err.message : "Request failed" });
-		} finally {
-			setTesting(false);
-		}
-	};
-
-	// Helper to determine if a model is selected
-	const isModelSelected = useCallback((model: EmbeddingModelInfo): boolean => {
-		const ss = config.semanticSearch;
-		if (!ss?.model) return false;
-		return ss.model === model.name;
-	}, [config.semanticSearch]);
 
 	const statuses = config.statuses || DEFAULT_STATUSES;
 	const statusColors = config.statusColors || {};
@@ -956,68 +656,9 @@ export default function ConfigPage() {
 		);
 	};
 
-	const renderEmbeddingModels = () => {
-		const provider = semanticProvider;
-		const models = provider === "local"
-			? embeddingModels?.local || []
-			: provider === "ollama"
-				? embeddingModels?.api || []
-				: embeddingModels?.configured || [];
-
-		const hintByProvider: Record<string, string> = {
-			local: "Select a local ONNX model",
-			ollama: "Select an Ollama embedding model",
-			api: "Select a configured API model",
-		};
-
-		return (
-			<FieldRow label="Model" hint={hintByProvider[provider] || "Select a model"}>
-				{modelsLoading ? (
-					<div className="flex items-center justify-center py-4">
-						<Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-					</div>
-				) : models.length === 0 ? (
-					<div className="text-sm text-muted-foreground py-2">
-						{provider === "ollama"
-							? "No Ollama embedding models found. Ensure Ollama is running and has embedding models pulled."
-							: provider === "api"
-								? "No configured API models. Use the endpoint config below to test and add one."
-								: "No local models found."}
-					</div>
-				) : (
-					<div className="space-y-2">
-						{models.map((model) => {
-							const selected = isModelSelected(model);
-							return (
-								<div
-									key={model.name}
-									className={`flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer transition-colors ${selected ? "ring-2 ring-primary" : ""}`}
-									onClick={() => selectEmbeddingModel(model)}
-								>
-									<div className="flex-1">
-										<div className="text-sm font-medium">{model.name}</div>
-										<div className="text-xs text-muted-foreground">{model.dimensions}d{model.maxTokens ? `, ${model.maxTokens} tokens` : ""}</div>
-									</div>
-									{"installed" in model && model.installed !== undefined ? (
-										model.installed ? (
-											<Badge variant="default">Installed</Badge>
-										) : (
-											<Badge variant="outline">Not installed</Badge>
-										)
-									) : null}
-									{selected && <Check className="w-4 h-4 text-primary" />}
-								</div>
-							);
-						})}
-					</div>
-				)}
-			</FieldRow>
-		);
-	};
-
 	const renderSearch = () => (
 		<div>
-			<SectionHeader icon={Search} title="Semantic Search" description="Configure embedding model and provider for semantic search" />
+			<SectionHeader icon={Search} title="Search" description="Configure search settings" />
 
 			<FieldRow label="Enabled">
 				<Switch
@@ -1029,73 +670,13 @@ export default function ConfigPage() {
 				/>
 			</FieldRow>
 
-			{config.localONNX?.supported === false && (
-				<div
-					className="mb-3 flex gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
-					data-testid="local-onnx-unavailable"
-				>
-					<AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-					<span>{config.localONNX.reason || "Local ONNX is unavailable on this platform. Use Ollama or an API provider."}</span>
-				</div>
-			)}
-
-			<FieldRow label="Provider" hint="local = ONNX built-in, ollama = local Ollama server, api = custom endpoint">
-				<select
-					value={semanticProvider}
-					onChange={(e) => {
-						update({ semanticSearch: { ...(config.semanticSearch || {}), provider: e.target.value } });
-						void loadEmbeddingModels();
-					}}
-					className="w-full px-3 py-2 rounded-md border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-				>
-					<option value="local" disabled={config.localONNX?.supported === false}>Local (ONNX)</option>
-					<option value="ollama">Ollama</option>
-					<option value="api">API (OpenAI-compatible)</option>
-				</select>
+			<FieldRow label="Model" hint="Model identifier">
+				<Input
+					value={config.semanticSearch?.model || ""}
+					onChange={(e) => update({ semanticSearch: { ...(config.semanticSearch || {}), model: e.target.value } })}
+					placeholder="e.g. gte-small"
+				/>
 			</FieldRow>
-
-			{renderEmbeddingModels()}
-
-			{semanticProvider === "api" && (
-				<>
-					<Separator className="my-4" />
-					<SectionHeader icon={Search} title="API Endpoint" description="Configure a custom OpenAI-compatible embedding endpoint" />
-
-					<FieldRow label="API Base URL" hint="e.g. http://localhost:11434/v1">
-						<Input value={apiBase} onChange={(e) => setApiBase(e.target.value)} placeholder="http://localhost:11434/v1" />
-					</FieldRow>
-
-					<FieldRow label="API Key" hint="Optional Bearer token">
-						<Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Leave empty for local providers" />
-					</FieldRow>
-
-					<FieldRow label="Model name" hint="Model to send in API request">
-						<div className="flex gap-2">
-							<Input value={testModelName} onChange={(e) => setTestModelName(e.target.value)} placeholder="e.g. text-embedding-3-small" className="flex-1" />
-							<Button onClick={() => void handleTestEmbedding()} disabled={testing} variant="outline" size="sm">
-								{testing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Test"}
-							</Button>
-						</div>
-					</FieldRow>
-
-					{testResult && (
-						<div className={`ml-[calc(11rem+1rem)] rounded-lg border p-3 text-sm ${testResult.success ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
-							{testResult.success ? `Detected ${testResult.dimensions} dimensions` : testResult.error}
-						</div>
-					)}
-				</>
-			)}
-
-			{semanticProvider === "local" && (
-				<FieldRow label="HuggingFace ID" hint="Full HuggingFace model identifier (read-only when model is selected)">
-					<Input
-						value={config.semanticSearch?.huggingFaceId || ""}
-						onChange={(e) => update({ semanticSearch: { ...(config.semanticSearch || {}), provider: "local", huggingFaceId: e.target.value } })}
-						placeholder="Select a model above"
-						readOnly={!!config.semanticSearch?.huggingFaceId}
-					/>
-				</FieldRow>
-			)}
 
 			<FieldRow label="Dimensions" hint="Embedding vector size">
 				<Input
@@ -1115,472 +696,6 @@ export default function ConfigPage() {
 		</div>
 	);
 
-	const renderCode = () => {
-		const languages = config.lsp?.languages || {};
-		const languageEntries = Object.entries(languages);
-
-		const setActionLoading = (key: string, value: boolean) => {
-			setLspActionsLoading((prev) => ({ ...prev, [key]: value }));
-		};
-
-		const updateLocalLanguage = (langId: string, nextConfig: Record<string, unknown>) => {
-			setConfig((prev) => {
-				const newLangs = {
-					...(prev.lsp?.languages || {}),
-					[langId]: { ...(prev.lsp?.languages?.[langId] || {}), ...nextConfig },
-				};
-				return { ...prev, lsp: { ...(prev.lsp || {}), enabled: true, languages: newLangs } };
-			});
-		};
-
-		const handleAddLanguage = async (langId: string) => {
-			setActionLoading(langId, true);
-			setShowAddDropdown(false);
-			try {
-				await lspApi.addLanguage(langId);
-				setConfig((prev) => {
-					const newLangs = {
-						...(prev.lsp?.languages || {}),
-						[langId]: { ...(prev.lsp?.languages?.[langId] || {}), enabled: true },
-					};
-					const next = { ...prev, lsp: { ...(prev.lsp || {}), enabled: true, languages: newLangs } };
-					autoSave(next);
-					return next;
-				});
-				toast.success(`Added ${langId} language server`);
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to add language");
-			} finally {
-				setActionLoading(langId, false);
-				refreshLspLanguages().catch(() => {});
-			}
-		};
-
-		const handleToggleLanguage = async (langId: string, enabled: boolean) => {
-			setActionLoading(langId, true);
-			try {
-				await lspApi.toggleLanguage(langId, enabled);
-				setConfig((prev) => {
-					const langConfig = prev.lsp?.languages?.[langId];
-					if (langConfig) {
-						const newLangs = { ...prev.lsp!.languages, [langId]: { ...langConfig, enabled } };
-						const next = { ...prev, lsp: { ...(prev.lsp || {}), languages: newLangs } };
-						autoSave(next);
-						return next;
-					}
-					return prev;
-				});
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to toggle language");
-			} finally {
-				setActionLoading(langId, false);
-				refreshLspLanguages().catch(() => {});
-			}
-		};
-
-		const handleRemoveLanguage = async (langId: string) => {
-			setActionLoading(langId, true);
-			try {
-				await lspApi.removeLanguage(langId);
-				setConfig((prev) => {
-					const newLangs = { ...(prev.lsp?.languages || {}) };
-					delete newLangs[langId];
-					const next = { ...prev, lsp: { ...(prev.lsp || {}), languages: newLangs } };
-					autoSave(next);
-					return next;
-				});
-				toast.success(`Removed ${langId} language server`);
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to remove language");
-			} finally {
-				setActionLoading(langId, false);
-				refreshLspLanguages().catch(() => {});
-			}
-		};
-
-		const handleRestartLanguage = async (langId: string) => {
-			const key = `${langId}:restart`;
-			setActionLoading(key, true);
-			try {
-				await lspApi.restartLanguage(langId);
-				toast.success(`Restarted ${langId}`);
-				await refreshLspLanguages();
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to restart language server");
-			} finally {
-				await refreshLspLanguages().catch(() => []);
-				setActionLoading(key, false);
-			}
-		};
-
-		const handleInstallLanguage = async (langId: string, action: "install" | "update") => {
-			const key = `${langId}:${action}`;
-			setActionLoading(key, true);
-			try {
-				await lspApi.installLanguage(langId, action);
-				toast.success(`${action === "install" ? "Installed" : "Updated"} ${langId}`);
-				await refreshLspLanguages();
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : `Failed to ${action} dependency`);
-			} finally {
-				await refreshLspLanguages().catch(() => []);
-				setActionLoading(key, false);
-			}
-		};
-
-		const handleCleanupLanguage = async (langId: string) => {
-			const key = `${langId}:cleanup`;
-			setActionLoading(key, true);
-			try {
-				await lspApi.cleanupLanguage(langId);
-				toast.success(`Cleaned ${langId} dependencies`);
-				await refreshLspLanguages();
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to cleanup dependencies");
-			} finally {
-				await refreshLspLanguages().catch(() => []);
-				setActionLoading(key, false);
-			}
-		};
-
-		const handleConfigDraft = (langId: string, field: keyof LSPConfigDraft, value: string) => {
-			setLspConfigDrafts((prev) => ({ ...prev, [langId]: { ...(prev[langId] || {}), [field]: value } }));
-		};
-
-		const handleApplyLanguageConfig = async (langId: string, langConfig: Record<string, any>, info: LSPLanguageInfo | undefined, apply: boolean) => {
-			const key = `${langId}:config`;
-			const draft = lspConfigDrafts[langId] || {};
-			const patch = {
-				backend: draft.backend ?? langConfig.backend ?? "auto",
-				projectPath: draft.projectPath ?? langConfig.projectPath ?? "",
-				version: draft.version ?? langConfig.version ?? info?.version ?? "",
-				binary: draft.binary ?? langConfig.binary ?? "",
-				apply,
-			};
-			setActionLoading(key, true);
-			try {
-				await lspApi.updateLanguageConfig(langId, patch);
-				const { apply: _apply, ...localPatch } = patch;
-				updateLocalLanguage(langId, localPatch);
-				setLspConfigDrafts((prev) => ({ ...prev, [langId]: {} }));
-				toast.success(apply ? `Applied and restarted ${langId}` : `Updated ${langId} settings`);
-				await refreshLspLanguages();
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to update LSP config");
-			} finally {
-				await refreshLspLanguages().catch(() => []);
-				setActionLoading(key, false);
-			}
-		};
-
-		const handleLoadLogs = async (langId: string, kind: LSPLogKind = lspLogPanels[langId]?.kind || "runtime") => {
-			setLspLogPanels((prev) => ({ ...prev, [langId]: { ...(prev[langId] || { kind, content: "" }), kind, loading: true } }));
-			try {
-				const data = await lspApi.getLanguageLogs(langId, kind, 200);
-				setLspLogPanels((prev) => ({
-					...prev,
-					[langId]: { kind: data.kind, content: data.content, path: data.logPath, loading: false },
-				}));
-			} catch (err) {
-				setLspLogPanels((prev) => ({ ...prev, [langId]: { kind, content: err instanceof Error ? err.message : "Failed to load logs", loading: false } }));
-			}
-		};
-
-		const handleTraceToggle = async (langId: string, enabled: boolean) => {
-			const key = `${langId}:trace`;
-			setActionLoading(key, true);
-			try {
-				const data = await lspApi.setLanguageTrace(langId, enabled);
-				setLspTraceEnabled((prev) => ({ ...prev, [langId]: data.enabled }));
-				toast.success(data.enabled ? `Trace enabled for ${langId}` : `Trace disabled for ${langId}`);
-				if (data.enabled) {
-					await handleLoadLogs(langId, "trace");
-				}
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Failed to update trace");
-			} finally {
-				setActionLoading(key, false);
-			}
-		};
-
-		const configuredIds = new Set(Object.keys(languages));
-		const unconfiguredLangs = availableLangs.filter((lang) => !configuredIds.has(lang.id));
-
-		return (
-			<div>
-				<SectionHeader icon={Code2} title="Language Server Protocol" description="LSP servers for code intelligence" />
-
-				<FieldRow label="Enabled">
-					<Switch
-						checked={config.lsp?.enabled ?? false}
-						onCheckedChange={(checked) =>
-							update({ lsp: { ...(config.lsp || {}), enabled: checked } })
-						}
-					/>
-				</FieldRow>
-
-				<Separator className="my-2" />
-				<div className="ml-[30px] mb-3 flex items-center justify-between">
-					<div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Languages</div>
-					<div className="relative" ref={dropdownRef}>
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => setShowAddDropdown(!showAddDropdown)}
-							disabled={unconfiguredLangs.length === 0}
-						>
-							<Plus className="w-3.5 h-3.5 mr-1" />
-							Add
-						</Button>
-						{showAddDropdown && (
-							<div className="absolute right-0 top-full mt-1 z-50 min-w-48 rounded-lg border bg-popover shadow-lg">
-								{unconfiguredLangs.length === 0 ? (
-									<div className="px-3 py-2 text-xs text-muted-foreground">No languages available</div>
-								) : (
-									<div className="py-1">
-										{unconfiguredLangs.map((lang) => (
-											<button
-												key={lang.id}
-												type="button"
-												className="w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center gap-2"
-												onClick={() => handleAddLanguage(lang.id)}
-											>
-												<span className="capitalize flex-1">{lang.name}</span>
-												{!lang.installed && (
-													<span className="text-xs text-muted-foreground">(not installed)</span>
-												)}
-											</button>
-										))}
-									</div>
-								)}
-							</div>
-						)}
-					</div>
-				</div>
-
-				{languageEntries.length === 0 ? (
-					<div className="ml-[30px] py-4 text-center border rounded-lg bg-muted/20">
-						<Code2 className="w-8 h-8 mx-auto text-muted-foreground" />
-						<p className="mt-2 text-sm text-muted-foreground">No language servers configured</p>
-						<p className="text-xs text-muted-foreground mt-1">Click "Add" above to configure an LSP language</p>
-					</div>
-				) : (
-					<div className="ml-[30px] space-y-3">
-						{languageEntries.map(([lang, langConfig]) => {
-							const info = availableLangs.find((a) => a.id === lang);
-							const draft = lspConfigDrafts[lang] || {};
-							const logPanel = lspLogPanels[lang];
-							const isRunning = info?.running ?? false;
-							const isInstalled = info?.installed ?? langConfig.binary !== undefined;
-							const langEnabled = langConfig.enabled ?? true;
-							const busy = Object.entries(lspActionsLoading).some(([key, value]) => value && key.startsWith(lang));
-							const configBusy = lspActionsLoading[`${lang}:config`] ?? false;
-							const traceOn = lspTraceEnabled[lang] ?? info?.traceEnabled ?? false;
-
-							return (
-								<div key={lang} className="overflow-hidden rounded-lg border bg-card">
-									<div className="border-l-2 border-primary/50">
-										<div className="border-b bg-muted/20 px-3 py-2.5">
-											<div className="flex min-w-0 items-start gap-3">
-												<Switch
-													checked={langConfig.enabled ?? false}
-													onCheckedChange={(checked) => handleToggleLanguage(lang, checked)}
-													disabled={busy}
-												/>
-												<div className="min-w-0 space-y-1.5">
-													<div className="flex flex-wrap items-center gap-2">
-														<span className={`mt-0.5 h-2 w-2 rounded-full ${isRunning ? "bg-emerald-500" : langEnabled ? "bg-amber-500" : "bg-muted-foreground/50"}`} />
-														<span className="truncate text-sm font-semibold">{info?.name || lang}</span>
-														{busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-													</div>
-													<div className="flex flex-wrap gap-1.5">
-												<Badge variant={statusVariant(info?.status || info?.runningState)} className="text-[11px] font-medium">
-													{displayValue(info?.status || info?.runningState)}
-														</Badge>
-														<Badge variant={statusVariant(info?.installState)} className="text-[11px] font-medium">
-															{displayValue(info?.installState)}
-														</Badge>
-														<Badge variant={statusVariant(info?.readinessState)} className="text-[11px] font-medium">
-															{displayValue(info?.readinessState)}
-														</Badge>
-													</div>
-												</div>
-											</div>
-											<div className="mt-2 flex items-start gap-1.5">
-												<div className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fit,minmax(6.5rem,1fr))] gap-1.5">
-													<Button className="h-7 px-2" size="sm" variant="outline" onClick={() => handleRestartLanguage(lang)} disabled={busy || !langEnabled}>
-														<RefreshCw className="w-3.5 h-3.5 mr-1" />
-														Restart
-													</Button>
-													<Button className="h-7 px-2" size="sm" variant="outline" onClick={() => handleInstallLanguage(lang, "install")} disabled={busy || !info?.installHint}>
-														<Download className="w-3.5 h-3.5 mr-1" />
-														Install
-													</Button>
-													<Button className="h-7 px-2" size="sm" variant="outline" onClick={() => handleInstallLanguage(lang, "update")} disabled={busy || !isInstalled}>
-														<Package className="w-3.5 h-3.5 mr-1" />
-														Update
-													</Button>
-													<Button className="h-7 px-2" size="sm" variant="outline" onClick={() => handleCleanupLanguage(lang)} disabled={busy || !info?.cleanupEligible}>
-														<X className="w-3.5 h-3.5 mr-1" />
-														Cleanup
-													</Button>
-													<Button className="h-7 px-2" size="sm" variant="outline" onClick={() => handleLoadLogs(lang)} disabled={busy}>
-														<Terminal className="w-3.5 h-3.5 mr-1" />
-														Logs
-													</Button>
-													<Button className="h-7 px-2" size="sm" variant={traceOn ? "default" : "outline"} onClick={() => handleTraceToggle(lang, !traceOn)} disabled={busy}>
-														<Activity className="w-3.5 h-3.5 mr-1" />
-														Trace
-													</Button>
-												</div>
-												<Button aria-label={`Remove ${info?.name || lang}`} className="h-7 w-7 shrink-0 px-0 text-muted-foreground hover:text-destructive" size="sm" variant="outline" onClick={() => handleRemoveLanguage(lang)} disabled={busy}>
-													<Trash2 className="h-3.5 w-3.5" />
-												</Button>
-											</div>
-										</div>
-
-										<div className="grid grid-cols-[repeat(auto-fit,minmax(11.5rem,1fr))] gap-2 p-3">
-											<div className="min-w-0 rounded-md border bg-background/60 px-2.5 py-2">
-												<div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Backend</div>
-												<div className="mt-1 break-words font-mono text-[11px] leading-5 text-foreground">{displayValue(info?.backend)}{info?.backendSource ? ` (${info.backendSource})` : ""}</div>
-											</div>
-											<div className="min-w-0 rounded-md border bg-background/60 px-2.5 py-2">
-												<div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Project</div>
-												<div className="mt-1 break-words font-mono text-[11px] leading-5 text-foreground">{displayValue(info?.projectPath)}{info?.projectKind ? ` (${info.projectKind})` : ""}</div>
-											</div>
-											<div className="min-w-0 rounded-md border bg-background/60 px-2.5 py-2">
-												<div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Binary</div>
-												<div className="mt-1 break-words font-mono text-[11px] leading-5 text-foreground">{displayValue(info?.binaryPath || info?.binary || langConfig.binary)}</div>
-											</div>
-											<div className="min-w-0 rounded-md border bg-background/60 px-2.5 py-2">
-												<div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Version</div>
-												<div className="mt-1 break-words font-mono text-[11px] leading-5 text-foreground">{displayValue(info?.version || langConfig.version)}</div>
-											</div>
-											<div className="min-w-0 rounded-md border bg-background/60 px-2.5 py-2">
-												<div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Cache</div>
-												<div className="mt-1 break-words font-mono text-[11px] leading-5 text-foreground">{displayValue(info?.cachePath)}</div>
-											</div>
-											<div className="min-w-0 rounded-md border bg-background/60 px-2.5 py-2">
-												<div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Log</div>
-												<div className="mt-1 break-words font-mono text-[11px] leading-5 text-foreground">{displayValue(info?.logPath)}</div>
-											</div>
-											<div className="min-w-0 rounded-md border bg-background/60 px-2.5 py-2">
-												<div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Capabilities</div>
-												<div className="mt-1 break-words font-mono text-[11px] leading-5 text-foreground">{displayValue(info?.capabilities?.join(", "))}</div>
-											</div>
-										</div>
-
-										{info?.installHint && !isInstalled && (
-											<div className="mx-3 mb-3 rounded-md border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">Install: <code className="text-xs">{info.installHint}</code></div>
-										)}
-										{(info?.installError || info?.updateError) && (
-											<div className="mx-3 mb-3 flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-												<AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-												<span>{info.installError || info.updateError}</span>
-											</div>
-										)}
-										{info?.missingCapabilities && info.missingCapabilities.length > 0 && (
-											<div className="mx-3 mb-3 flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-												<AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-												<span>Missing required capabilities: {info.missingCapabilities.join(", ")}</span>
-											</div>
-										)}
-										{info?.attempts && info.attempts.length > 0 && (
-											<div className="mx-3 mb-3 flex flex-wrap gap-1.5">
-												{info.attempts.map((attempt, index) => (
-													<Badge key={`${attempt.backend}-${index}`} variant={statusVariant(attempt.status)} className="text-xs font-normal">
-														{attempt.backend}: {attempt.status}{attempt.reason ? ` - ${attempt.reason}` : ""}
-													</Badge>
-												))}
-											</div>
-										)}
-									</div>
-
-									{lang === "csharp" && (
-										<div className="m-3 mt-0 grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2 rounded-md border bg-muted/20 p-3">
-											<select
-												value={draft.backend ?? langConfig.backend ?? "auto"}
-												onChange={(e) => handleConfigDraft(lang, "backend", e.target.value)}
-												className="px-3 py-2 rounded-md border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-												disabled={configBusy}
-											>
-												{CSHARP_BACKENDS.map((backend) => (
-													<option key={backend} value={backend}>{backend}</option>
-												))}
-											</select>
-											<Input
-												value={draft.projectPath ?? langConfig.projectPath ?? ""}
-												onChange={(e) => handleConfigDraft(lang, "projectPath", e.target.value)}
-												placeholder={info?.projectPath || "solution or project path"}
-												disabled={configBusy}
-											/>
-											<Input
-												value={draft.version ?? langConfig.version ?? ""}
-												onChange={(e) => handleConfigDraft(lang, "version", e.target.value)}
-												placeholder="version override"
-												disabled={configBusy}
-											/>
-											<Button size="sm" onClick={() => handleApplyLanguageConfig(lang, langConfig, info, true)} disabled={configBusy || !langEnabled}>
-												{configBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1" />}
-												Apply
-											</Button>
-										</div>
-									)}
-
-									{logPanel && (
-										<div className="m-3 mt-0 overflow-hidden rounded-md border bg-muted/20">
-											<div className="grid gap-2 border-b px-3 py-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
-												<div className="flex items-center gap-1">
-													<Button className="h-7 px-2" size="sm" variant={logPanel.kind === "runtime" ? "default" : "outline"} onClick={() => handleLoadLogs(lang, "runtime")}>
-														Runtime
-													</Button>
-													<Button className="h-7 px-2" size="sm" variant={logPanel.kind === "trace" ? "default" : "outline"} onClick={() => handleLoadLogs(lang, "trace")}>
-														Trace
-													</Button>
-												</div>
-												<span className="min-w-0 truncate rounded bg-background/60 px-2 py-1 font-mono text-[11px] text-muted-foreground">{displayValue(logPanel.path || info?.logPath)}</span>
-												<div className="flex items-center gap-1 justify-self-start sm:justify-self-end">
-													<Button className="h-7 w-7 px-0" size="sm" variant="outline" onClick={() => navigator.clipboard?.writeText(logPanel.path || info?.logPath || "")}>
-														<Copy className="h-3.5 w-3.5" />
-													</Button>
-													<Button className="h-7 w-7 px-0" size="sm" variant="outline" onClick={() => handleLoadLogs(lang, logPanel.kind)} disabled={logPanel.loading}>
-														{logPanel.loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-													</Button>
-												</div>
-											</div>
-											<pre className="max-h-64 overflow-auto whitespace-pre-wrap p-3 text-xs font-mono text-muted-foreground">
-												{logPanel.loading ? "Loading..." : logPanel.content || "No log output"}
-											</pre>
-										</div>
-									)}
-								</div>
-							);
-						})}
-					</div>
-				)}
-
-				<Separator className="my-4" />
-
-				<SectionHeader icon={Code2} title="Code Intelligence Ignore" description="Patterns to exclude from code analysis" />
-
-				<FieldRow label="Ignore patterns" hint="One pattern per line">
-					<textarea
-						value={(config.codeIntelligenceIgnore || []).join("\n")}
-						onChange={(e) =>
-							update({
-								codeIntelligenceIgnore: e.target.value
-									.split("\n")
-									.map((l) => l.trim())
-									.filter(Boolean),
-							})
-						}
-						className="w-full h-32 px-3 py-2 rounded-md border bg-input text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-						placeholder={"node_modules/\ndist/\n*.test.ts\n*.spec.ts"}
-					/>
-				</FieldRow>
-			</div>
-		);
-	};
 
 	const renderAI = () => {
 		const codexCommand = codexStatus?.installed ? codexStatus.loginCommand : codexStatus?.installCommand;
@@ -1714,57 +829,6 @@ export default function ConfigPage() {
 		);
 	};
 
-	const renderImports = () => (
-		<div>
-			<SectionHeader icon={Download} title="Imports" description="Imported templates and docs" />
-
-			{importsLoading ? (
-				<div className="flex items-center justify-center py-6">
-					<Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-				</div>
-			) : imports.length === 0 ? (
-				<div className="py-4 text-center border rounded-lg bg-muted/20">
-					<Download className="w-8 h-8 mx-auto text-muted-foreground" />
-					<p className="mt-2 text-sm text-muted-foreground">No imports yet</p>
-					<Button onClick={() => setShowAddModal(true)} variant="outline" size="sm" className="mt-2">
-						<Plus className="w-4 h-4 mr-2" />
-						Add Import
-					</Button>
-				</div>
-			) : (
-				<div className="space-y-2 mb-4">
-					{imports.map((imp) => (
-						<div
-							key={imp.name}
-							className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-							onClick={() => loadImportDetail(imp.name)}
-						>
-							<div className="flex items-center gap-3 min-w-0">
-								<Package className="w-4 h-4 text-muted-foreground shrink-0" />
-								<div className="min-w-0">
-									<div className="text-sm font-medium truncate">{imp.name}</div>
-									<div className="text-xs text-muted-foreground truncate">{imp.source}</div>
-								</div>
-							</div>
-							<div className="flex items-center gap-2">
-								<span className="text-xs text-muted-foreground">{imp.fileCount} files</span>
-								<ChevronRight className="w-4 h-4 text-muted-foreground" />
-							</div>
-						</div>
-					))}
-				</div>
-			)}
-
-			{imports.length > 0 && (
-				<div className="flex justify-end mb-4">
-					<Button onClick={() => setShowAddModal(true)} size="sm" variant="outline">
-						<Plus className="w-4 h-4 mr-2" />
-						Add
-					</Button>
-				</div>
-			)}
-		</div>
-	);
 
 		const statusDotClass = (status: RuntimeService["status"]) => {
 			switch (status) {
@@ -1940,96 +1004,6 @@ export default function ConfigPage() {
 		{ id: "agents", label: "Agents" },
 	];
 
-	// ── Tunnel state ──────────────────────────────────────────────────
-	const [tunnelStatus, setTunnelStatus] = useState<{ running: boolean; url?: string }>({ running: false });
-	const [tunnelLoading, setTunnelLoading] = useState(false);
-	const [tunnelError, setTunnelError] = useState<string | null>(null);
-
-	useEffect(() => {
-		if (!isHydrated || !isActiveRef.current) return;
-		tunnelApi.getStatus().then((status) => {
-			if (isActiveRef.current) setTunnelStatus(status);
-		}).catch(() => {});
-	}, [activationId, isHydrated]);
-
-	const handleTunnelStart = async () => {
-		setTunnelLoading(true);
-		setTunnelError(null);
-		try {
-			const result = await tunnelApi.start();
-			setTunnelStatus({ running: true, url: result.url });
-			toast.success(`Tunnel active: ${result.url}`);
-		} catch (err) {
-			setTunnelError(err instanceof Error ? err.message : "Failed to start tunnel");
-		} finally {
-			setTunnelLoading(false);
-		}
-	};
-
-	const handleTunnelStop = async () => {
-		setTunnelLoading(true);
-		setTunnelError(null);
-		try {
-			await tunnelApi.stop();
-			setTunnelStatus({ running: false });
-			toast.success("Tunnel stopped");
-		} catch (err) {
-			setTunnelError(err instanceof Error ? err.message : "Failed to stop tunnel");
-		} finally {
-			setTunnelLoading(false);
-		}
-	};
-
-	const renderTunnel = () => (
-		<div>
-			<SectionHeader icon={Globe} title="Cloudflare Tunnel" description="Expose this server to the internet via Cloudflare Quick Tunnel" />
-
-			<FieldRow label="Status">
-				<div className="flex items-center gap-3">
-					<div className={`w-2.5 h-2.5 rounded-full ${tunnelStatus.running ? "bg-green-500" : "bg-gray-400"}`} />
-					<span className="text-sm">{tunnelStatus.running ? "Running" : "Stopped"}</span>
-				</div>
-			</FieldRow>
-
-			{tunnelStatus.running && tunnelStatus.url && (
-				<FieldRow label="Public URL">
-					<div className="flex items-center gap-2">
-						<code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">{tunnelStatus.url}</code>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => {
-								navigator.clipboard.writeText(tunnelStatus.url!);
-								toast.success("URL copied");
-							}}
-						>
-							<Copy className="w-3.5 h-3.5" />
-						</Button>
-					</div>
-				</FieldRow>
-			)}
-
-			{tunnelError && (
-				<FieldRow label="">
-					<p className="text-sm text-destructive">{tunnelError}</p>
-				</FieldRow>
-			)}
-
-			<FieldRow label="Control">
-				{tunnelStatus.running ? (
-					<Button variant="outline" onClick={handleTunnelStop} disabled={tunnelLoading}>
-						{tunnelLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PowerOff className="w-4 h-4 mr-2" />}
-						Stop Tunnel
-					</Button>
-				) : (
-					<Button onClick={handleTunnelStart} disabled={tunnelLoading}>
-						{tunnelLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Power className="w-4 h-4 mr-2" />}
-						Start Tunnel
-					</Button>
-				)}
-			</FieldRow>
-		</div>
-	);
 
 	// ── Security state ────────────────────────────────────────────────
 	const { isProtected, setPassword: authSetPassword, removePassword: authRemovePassword } = useAuth();
@@ -2198,25 +1172,15 @@ export default function ConfigPage() {
 		</div>
 	);
 
-	const renderTools = () => (
-		<div>
-			<SectionHeader icon={Wrench} title="Tools" description="Explicit maintenance workflows that are kept outside normal product flows" />
-			<DecisionMigrationTool />
-		</div>
-	);
 
 	const contentByCategory: Record<Category, () => React.ReactNode> = {
 		general: renderGeneral,
 		tasks: renderTaskLifecycle,
 		board: renderBoard,
 		search: renderSearch,
-		code: renderCode,
 		ai: renderAI,
-		imports: renderImports,
 		runtime: renderRuntime,
-		tunnel: renderTunnel,
 		security: renderSecurity,
-		tools: renderTools,
 		advanced: renderAdvanced,
 	};
 
@@ -2311,224 +1275,13 @@ export default function ConfigPage() {
 						id="settings-panel"
 						role="tabpanel"
 						aria-label={`${categories.find((category) => category.id === activeCategory)?.label || "Active"} settings`}
-						className={`w-full p-4 md:p-6 ${activeCategory === "code" ? "max-w-4xl" : "max-w-2xl"}`}
+						className="w-full max-w-2xl p-4 md:p-6"
 					>
 						{contentByCategory[activeCategory]()}
 					</div>
 				</ScrollArea>
 			</div>
 
-			{/* Add Import Modal */}
-			{showAddModal && (
-				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-					<div className="bg-card rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-						<div className="p-6 border-b">
-							<h2 className="text-lg font-semibold">Add Import</h2>
-							<p className="text-sm text-muted-foreground mt-1">
-								Import templates and docs from an external source
-							</p>
-						</div>
-
-						<div className="p-6 space-y-4">
-							<div>
-								<Label className="mb-2 block">
-									Source <span className="text-red-500">*</span>
-								</Label>
-								<Input
-									type="text"
-									value={addSource}
-									onChange={(e) => setAddSource(e.target.value)}
-									placeholder="https://github.com/org/repo.git, @org/package, or ../path"
-								/>
-							</div>
-
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label className="mb-2 block">Name (optional)</Label>
-									<Input
-										type="text"
-										value={addName}
-										onChange={(e) => setAddName(e.target.value)}
-										placeholder="Auto-detect"
-									/>
-								</div>
-								<div>
-									<Label className="mb-2 block">Type (optional)</Label>
-									<select
-										value={addType}
-										onChange={(e) => setAddType(e.target.value)}
-										className="w-full px-3 py-2 rounded-lg border border-border/40 bg-background"
-									>
-										<option value="">Auto-detect</option>
-										<option value="git">Git</option>
-										<option value="npm">NPM</option>
-										<option value="local">Local</option>
-									</select>
-								</div>
-							</div>
-
-							<div>
-								<Label className="mb-2 block">Ref (optional)</Label>
-								<Input
-									type="text"
-									value={addRef}
-									onChange={(e) => setAddRef(e.target.value)}
-									placeholder="Branch, tag, or version"
-								/>
-							</div>
-
-							<div className="flex items-center gap-4 p-3 rounded-lg border border-border/40 bg-muted/30">
-								<Switch id="link" checked={addLink} onCheckedChange={setAddLink} />
-								<Label htmlFor="link" className="text-sm cursor-pointer flex-1">
-									<span className="font-medium">Symlink</span>
-									<span className="text-muted-foreground ml-2">(local only)</span>
-								</Label>
-							</div>
-
-							<div className="flex items-center gap-4 p-3 rounded-lg border border-border/40 bg-muted/30">
-								<Switch id="dry-run" checked={addDryRun} onCheckedChange={setAddDryRun} />
-								<Label htmlFor="dry-run" className="text-sm cursor-pointer flex-1">
-									<span className="font-medium">Preview mode</span>
-									<span className="text-muted-foreground ml-2">(no files created)</span>
-								</Label>
-							</div>
-
-							{addError && (
-								<div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4">
-									<div className="flex items-start gap-2 text-red-600 dark:text-red-400">
-										<AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-										<div className="text-sm">{addError}</div>
-									</div>
-								</div>
-							)}
-
-							{addResult && (
-								<div className={`border rounded-lg p-4 ${addResult.dryRun ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200" : "bg-green-50 dark:bg-green-950/30 border-green-200"}`}>
-									<div className="font-medium">
-										{addResult.dryRun ? "Preview Complete" : "Import Complete"}
-									</div>
-									{addResult.summary && (
-										<div className="text-sm text-muted-foreground mt-1">
-											{addResult.summary.added} added, {addResult.summary.updated} updated, {addResult.summary.skipped} skipped
-										</div>
-									)}
-								</div>
-							)}
-						</div>
-
-						<div className="p-6 border-t flex justify-end gap-3">
-							<Button variant="secondary" onClick={() => { resetAddForm(); setShowAddModal(false); }} disabled={adding}>
-								{addResult && !addResult.dryRun ? "Close" : "Cancel"}
-							</Button>
-							{(!addResult || addResult.dryRun) && (
-								<Button
-									onClick={() => {
-										if (addResult && addResult.dryRun) {
-											setAddDryRun(false);
-											handleAddImport(false);
-										} else {
-											handleAddImport();
-										}
-									}}
-									disabled={adding || !addSource.trim()}
-								>
-									{adding ? (
-										<>
-											<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-											{addResult && addResult.dryRun ? "Importing..." : "Checking..."}
-										</>
-									) : addResult && addResult.dryRun ? (
-										"Import Now"
-									) : (
-										"Preview"
-									)}
-								</Button>
-							)}
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* Import Detail Modal */}
-			{selectedImport && (
-				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-					<div className="bg-card rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-						<div className="p-6 border-b">
-							<div className="flex items-center justify-between">
-								<div className="flex items-center gap-3">
-									<Package className="w-6 h-6 text-muted-foreground" />
-									<div>
-										<h2 className="text-lg font-semibold">{selectedImport.name}</h2>
-										<p className="text-sm text-muted-foreground font-mono">{selectedImport.source}</p>
-									</div>
-								</div>
-								<Button variant="ghost" size="sm" onClick={closeImportDetail}>
-									<X className="w-4 h-4" />
-								</Button>
-							</div>
-						</div>
-
-						<div className="p-6 space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<div className="text-xs text-muted-foreground mb-1">Type</div>
-									<div className="font-medium capitalize">{selectedImport.type}</div>
-								</div>
-								<div>
-									<div className="text-xs text-muted-foreground mb-1">Files</div>
-									<div className="font-medium">{selectedImport.fileCount} files</div>
-								</div>
-							</div>
-
-							<div className="flex gap-2 pt-2">
-								<Button onClick={() => handleSync(selectedImport.name)} disabled={syncingImport === selectedImport.name} variant="outline" size="sm">
-									{syncingImport === selectedImport.name ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-									Sync
-								</Button>
-								<Button onClick={() => setShowRemoveConfirm(true)} variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-									<Trash2 className="w-4 h-4 mr-2" />
-									Remove
-								</Button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* Remove Confirmation Modal */}
-			{showRemoveConfirm && selectedImport && (
-				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-					<div className="bg-card rounded-lg shadow-xl max-w-md w-full">
-						<div className="p-6 border-b">
-							<h2 className="text-lg font-semibold text-red-600">Remove Import</h2>
-						</div>
-
-						<div className="p-6 space-y-4">
-							<p>Are you sure you want to remove the import <strong>{selectedImport.name}</strong>?</p>
-
-							<div className="flex items-center gap-4 p-3 rounded-lg border border-border/40 bg-muted/30">
-								<Switch id="delete-files" checked={removeDeleteFiles} onCheckedChange={setRemoveDeleteFiles} />
-								<Label htmlFor="delete-files" className="text-sm cursor-pointer flex-1">
-									<span className="font-medium">Also delete imported files</span>
-									<span className="text-muted-foreground block text-xs mt-0.5">
-										{selectedImport.fileCount} files will be permanently deleted
-									</span>
-								</Label>
-							</div>
-						</div>
-
-						<div className="p-6 border-t flex justify-end gap-3">
-							<Button variant="secondary" onClick={() => { setShowRemoveConfirm(false); setRemoveDeleteFiles(false); }} disabled={removingImport !== null}>
-								Cancel
-							</Button>
-							<Button onClick={handleRemove} disabled={removingImport !== null} className="bg-red-600 hover:bg-red-700 text-white">
-								{removingImport ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-								Remove
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 }

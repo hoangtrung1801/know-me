@@ -54,9 +54,8 @@ format or business rule.
 ### CLI process
 
 `cmd/knowme/main.go` only translates process errors into exit codes and calls
-`internal/cli.Execute`. The CLI uses Cobra to register commands such as
-`task`, `doc`, `search`, `retrieve`, `memory`, `decision`, `time`,
-`browser`, `mcp`, `lsp`, `runtime`, and `setup`.
+internal/cli.Execute. The CLI uses Cobra to register commands such as
+`task`, `doc`, `search`, `retrieve`, `time`, `browser`, `mcp`, `runtime`, and `setup`.
 
 Most commands resolve a project or global store, call a domain/storage
 operation, and render plain, JSON, or interactive output. The CLI is also the
@@ -70,7 +69,7 @@ launcher for the browser server, MCP server, runtime worker, and LSP daemon.
 - the Chi router and route groups;
 - optional password authentication;
 - the shared `SSEBroker`;
-- Codex, OpenCode, LSP, and tunnel managers when configured; and
+- Codex and OpenCode managers when configured; and
 - startup recovery and background monitors.
 
 The router serves JSON APIs under `/api`, the shared event stream at
@@ -83,7 +82,7 @@ same process.
 
 `internal/mcp` wraps `mcp-go` and exposes Know-Me operations over stdio JSON-RPC.
 Handlers are registered by capability: project, task, doc, time, search,
-code, template, validation, memory, decision, link, and memo.
+template, validation, link, and memo.
 
 MCP startup has two important boundaries:
 
@@ -101,9 +100,7 @@ packages as the CLI and browser server.
 Some work is intentionally moved out of the interactive process:
 
 - `internal/runtimequeue` coordinates durable jobs, leases, polling, and
-  results for search/index work;
-- `internal/lspdaemon` exposes a project-scoped local RPC service that keeps
-  language servers alive and reuses them across requests; and
+  results for search/index work; and
 - `internal/agents/codex` starts an ACP child process for Codex task work.
 
 These are local process boundaries, not remote service dependencies. They use
@@ -115,7 +112,7 @@ project paths, lock files, and small JSON protocols to exchange state.
 |---|---|---|
 | `cmd/knowme` | Executable entry point | Process exit and CLI startup |
 | `internal/cli` | Cobra commands, project resolution, rendering, setup | User-facing command adapter |
-| `internal/models` | Tasks, docs, decisions, memory, chat, agent, config, search, and runtime types | Shared data contracts |
+| `internal/models` | Tasks, docs, chat, agent, config, search, and runtime types | Shared data contracts |
 | `internal/storage` | `Store`, sub-stores, file formats, locks, versions, reference resolution | Durable state and project scope |
 | `internal/registry` | Machine-level project registry | Logical project selection |
 | `internal/server` | HTTP lifecycle, middleware, SSE broker, WebSocket/proxy plumbing | Browser process boundary |
@@ -123,15 +120,11 @@ project paths, lock files, and small JSON protocols to exchange state.
 | `internal/mcp` | MCP server lifecycle, permissions, audit, dynamic project state | AI tool adapter |
 | `internal/mcp/handlers` | MCP tool groups and structured responses | MCP capability boundary |
 | `internal/search` | Keyword, semantic, hybrid search, indexing, retrieval, evaluation | Derived knowledge access |
-| `internal/references` | `@doc`, `@task`, `@memory`, and related reference parsing | Cross-entity links |
+| `internal/references` | `@doc`, `@task`, and related reference parsing | Cross-entity links |
 | `internal/tasklifecycle` | Task status, archive, purge, and lifecycle policy | Shared task transitions |
-| `internal/decisionreview`, `internal/memoryreview` | Review and migration policy | Decision/memory safety checks |
 | `internal/agents/codex` | ACP transport, task workflow, runs, review gates, task chat | Codex process boundary |
 | `internal/agents/opencode` | OpenCode client, daemon, readiness, events, and runtime state | OpenCode integration boundary |
-| `internal/lsp` | Language adapters, project detection, sessions, diagnostics, edits | Language intelligence |
-| `internal/lspdaemon` | Long-lived LSP process and client protocol | LSP process boundary |
 | `internal/runtimequeue` | Durable local job queue and runtime leases | Background-work boundary |
-| `internal/runtimememory` | Bounded memory retrieval/injection and capture decisions | AI runtime context |
 | `internal/links`, `internal/memos` | Global saved-link and memo services | Global workspace features |
 | `ui` | Embedded Vite build and React application | Browser presentation |
 
@@ -144,7 +137,7 @@ new package. Prefer an existing package when the responsibility already fits.
 
 `storage.Store` is the top-level coordinator for the `.know-me` data format. It
 owns sub-stores for tasks, docs, config, time, templates, versions,
-workspaces, chats, memory, decisions, and agent state.
+workspaces, chats, and agent state.
 
 - `storage.NewStore(root)` opens a repository-local store.
 - `storage.NewProjectStore(globalRoot, projectID, repositoryRoot)` opens the
@@ -167,29 +160,23 @@ The exact set grows with enabled features, but the important ownership is:
 ├── tasks/*.md                  active tasks with YAML frontmatter
 ├── archive/*.md                archived tasks
 ├── docs/**/*.md                project documents
-├── decisions/*.md              system decisions
-├── memory/*.md                 project memory entries
-├── templates/                  code/document templates
+├── templates/                  document templates
 ├── versions/                   task and document history
 ├── chats.json                  readable chat sessions and messages
-├── agent-workflows.json        Codex workflow, runs, and review comments
 ├── workspaces.json             workspace/runtime records
 ├── time.json                   active timers
 ├── time-entries.json           recorded time entries
 ├── .search/                    derived indexes, locks, queue state, and requests
 └── runtime/                    runtime logs and process-specific state
-```
 
 The machine-level `~/.know-me/` store holds global data such as the project
-registry, global memory, saved links, memos, embedding models/settings, and
-logs. Some project metadata also lives there when the global multi-project
-store is active.
+registry, saved links, memos, and logs. Some project metadata also lives there
+when the global multi-project store is active.
 
 The source of truth is the durable entity data, not a derived search index or
 runtime log:
 
-- Markdown plus YAML frontmatter is used for tasks, docs, decisions, memory,
-  and memos.
+- Markdown plus YAML frontmatter is used for tasks, docs, and memos.
 - JSON is used for configuration, chats, agent state, timers, workspaces,
   links, and version records.
 - `.search/` contains rebuildable lexical/semantic indexes and runtime queue
@@ -248,7 +235,7 @@ successful mutation -> SSEBroker -> /api/events -> SSEContext -> UI refresh
 ```
 
 The UI uses one shared `EventSource` per browser tab through
-`ui/src/contexts/SSEContext.tsx`. Named events cover tasks, docs, decisions,
+`ui/src/contexts/SSEContext.tsx`. Named events cover tasks, docs,
 timers, chats, agent progress, OpenCode events, runtime services, and full
 refreshes. Event payloads are hints for invalidation or targeted upserts; the
 API remains authoritative when a page reloads state.

@@ -4,13 +4,9 @@
 package readiness
 
 import (
-	"context"
-	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/hoangtrung1801/know-me/internal/lsp"
-	"github.com/hoangtrung1801/know-me/internal/lsp/adapters"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/permissions"
 	"github.com/hoangtrung1801/know-me/internal/search"
@@ -30,7 +26,6 @@ type Payload struct {
 	Knowledge    *KnowledgeStatus  `json:"knowledge,omitempty"`
 	Search       *SearchStatus     `json:"search,omitempty"`
 	Runtime      *RuntimeStatus    `json:"runtime,omitempty"`
-	LSP          []LSPStatus       `json:"lsp,omitempty"`
 	Permissions  *PermissionStatus `json:"permissions,omitempty"`
 	Capabilities []string          `json:"capabilities,omitempty"`
 }
@@ -100,48 +95,6 @@ type RuntimeStatus struct {
 	State            string `json:"state"` // "healthy", "degraded", "stopped"
 }
 
-// LSPStatus reports per-language LSP server availability.
-type LSPStatus struct {
-	ID                     string               `json:"id"`
-	Name                   string               `json:"name"`
-	Enabled                bool                 `json:"enabled"`
-	Detected               bool                 `json:"detected"`
-	Status                 string               `json:"status"`
-	InstallState           string               `json:"installState"`
-	RunningState           string               `json:"runningState"`
-	ReadinessState         string               `json:"readinessState"`
-	Binary                 string               `json:"binary,omitempty"`
-	BinaryPath             string               `json:"binaryPath,omitempty"`
-	Source                 string               `json:"source,omitempty"`
-	Version                string               `json:"version,omitempty"`
-	CachePath              string               `json:"cachePath,omitempty"`
-	SelectedPath           string               `json:"selectedPath,omitempty"`
-	CleanupEligible        bool                 `json:"cleanupEligible,omitempty"`
-	InstallError           string               `json:"installError,omitempty"`
-	UpdateError            string               `json:"updateError,omitempty"`
-	InstallCmd             string               `json:"installCmd,omitempty"`
-	Backend                string               `json:"backend,omitempty"`
-	BackendSource          string               `json:"backendSource,omitempty"`
-	ProjectPath            string               `json:"projectPath,omitempty"`
-	ProjectKind            string               `json:"projectKind,omitempty"`
-	LogPath                string               `json:"logPath,omitempty"`
-	Attempts               []lsp.BackendAttempt `json:"attempts,omitempty"`
-	Owner                  string               `json:"owner,omitempty"`
-	DaemonState            string               `json:"daemonState,omitempty"`
-	DaemonPID              int                  `json:"daemonPid,omitempty"`
-	DaemonClients          int                  `json:"daemonClients,omitempty"`
-	DaemonTransport        string               `json:"daemonTransport,omitempty"`
-	DaemonEndpoint         string               `json:"daemonEndpoint,omitempty"`
-	DaemonIdleDeadline     string               `json:"daemonIdleDeadline,omitempty"`
-	DaemonLeaseCount       int                  `json:"daemonLeaseCount,omitempty"`
-	DaemonLeaseOwners      []string             `json:"daemonLeaseOwners,omitempty"`
-	CapabilitiesKnown      bool                 `json:"capabilitiesKnown,omitempty"`
-	Capabilities           []string             `json:"capabilities,omitempty"`
-	AdvertisedCapabilities []string             `json:"advertisedCapabilities,omitempty"`
-	ObservedCapabilities   []string             `json:"observedCapabilities,omitempty"`
-	RequiredCapabilities   []string             `json:"requiredCapabilities,omitempty"`
-	MissingCapabilities    []string             `json:"missingCapabilities,omitempty"`
-}
 
 // PermissionStatus reports the active AI permission policy.
 type PermissionStatus struct {
@@ -156,9 +109,6 @@ type Options struct {
 	// Runtime is an optional pre-built runtime snapshot (from server cache).
 	// When nil, runtime section is omitted or shows disabled.
 	Runtime *RuntimeStatus
-	// LSP is an optional pre-built LSP runtime snapshot from a live manager.
-	// When nil, BuildReadiness performs side-effect-light static inspection.
-	LSP []lsp.LanguageRuntimeStatus
 }
 
 // BuildReadiness collects all readiness sections from the given store.
@@ -178,7 +128,6 @@ func BuildReadiness(store *storage.Store, opts Options) Payload {
 	p.Knowledge = buildKnowledge(store)
 	p.Search = buildSearch(store)
 	p.Runtime = opts.Runtime
-	p.LSP = buildLSP(projectPath, store, opts.LSP)
 	p.Permissions = buildPermissions(store)
 	p.Capabilities = buildCapabilities(p.Search, p.Runtime)
 
@@ -206,63 +155,7 @@ func buildKnowledge(store *storage.Store) *KnowledgeStatus {
 		ks.Templates = len(templates)
 	}
 
-	// Memory counts by layer.
-	if local, err := store.Memory.ListLocal(); err == nil {
-		ks.Memories.Project = len(local)
-		for _, memory := range local {
-			if models.IsLegacyDecisionMemoryCategory(memory.Category) {
-				ks.Memories.LegacyDecision++
-			}
-		}
-	}
-	if global, err := store.Memory.ListGlobalOnly(); err == nil {
-		ks.Memories.Global = len(global)
-		for _, memory := range global {
-			if models.IsLegacyDecisionMemoryCategory(memory.Category) {
-				ks.Memories.LegacyDecision++
-			}
-		}
-	}
 
-	if decisions, err := store.Decisions.List(); err == nil {
-		ks.Decisions.Total = len(decisions)
-		for _, decision := range decisions {
-			switch {
-			case decision.CurrentForDefaultRetrieval():
-				ks.Decisions.Current++
-			case decision.Status == models.DecisionStatusDraft:
-				ks.Decisions.Draft++
-			default:
-				ks.Decisions.Historical++
-			}
-		}
-	}
-
-	// Import count: count subdirectories in .know-me/imports/ that have _import.json.
-	importsDir := filepath.Join(store.Root, "imports")
-	if entries, err := os.ReadDir(importsDir); err == nil {
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			metaPath := filepath.Join(importsDir, e.Name(), "_import.json")
-			if _, err := os.Stat(metaPath); err == nil {
-				ks.Imports++
-			}
-		}
-	}
-
-	// Relations: count from code_edges if available.
-	if store.CodeRefIndexExists() {
-		db := store.SemanticDB()
-		if db != nil {
-			var count int
-			if err := db.QueryRow("SELECT COUNT(*) FROM code_edges").Scan(&count); err == nil {
-				ks.Relations = count
-			}
-			db.Close()
-		}
-	}
 
 	return ks
 }
@@ -351,71 +244,6 @@ func buildSemanticRuntimeReadiness() *SemanticRuntimeReadiness {
 	return readiness
 }
 
-func buildLSP(projectPath string, store *storage.Store, runtimeStatuses []lsp.LanguageRuntimeStatus) []LSPStatus {
-	if runtimeStatuses == nil {
-		project, _ := store.Config.Load()
-		var defaults *storage.ProjectDefaults
-		if settings, err := storage.NewEmbeddingSettingsStore().Load(); err == nil {
-			defaults = settings.ProjectDefaults
-		}
-		cfg := lsp.ConfigFromProjectWithDefaults(project, defaults)
-		runtimeStatuses = lsp.CollectRuntimeStatuses(context.Background(), lsp.RuntimeStatusOptions{
-			Root:     projectPath,
-			Config:   cfg,
-			Adapters: adapters.All(),
-		})
-	}
-
-	statuses := make([]LSPStatus, 0, len(runtimeStatuses))
-	for _, status := range runtimeStatuses {
-		statuses = append(statuses, lspStatusFromRuntime(status))
-	}
-	return statuses
-}
-
-func lspStatusFromRuntime(status lsp.LanguageRuntimeStatus) LSPStatus {
-	return LSPStatus{
-		ID:                     status.ID,
-		Name:                   status.Name,
-		Enabled:                status.Enabled,
-		Detected:               status.Detected,
-		Status:                 status.Status,
-		InstallState:           status.InstallState,
-		RunningState:           status.RunningState,
-		ReadinessState:         status.ReadinessState,
-		Binary:                 status.Binary,
-		BinaryPath:             status.BinaryPath,
-		Source:                 status.Source,
-		Version:                status.Version,
-		CachePath:              status.CachePath,
-		SelectedPath:           status.SelectedPath,
-		CleanupEligible:        status.CleanupEligible,
-		InstallError:           status.InstallError,
-		UpdateError:            status.UpdateError,
-		InstallCmd:             status.InstallCmd,
-		Backend:                status.Backend,
-		BackendSource:          status.BackendSource,
-		ProjectPath:            status.ProjectPath,
-		ProjectKind:            status.ProjectKind,
-		LogPath:                status.LogPath,
-		Attempts:               status.Attempts,
-		Owner:                  status.Owner,
-		DaemonState:            status.DaemonState,
-		DaemonPID:              status.DaemonPID,
-		DaemonClients:          status.DaemonClients,
-		DaemonTransport:        status.DaemonTransport,
-		DaemonEndpoint:         status.DaemonEndpoint,
-		DaemonIdleDeadline:     status.DaemonIdleDeadline,
-		DaemonLeaseCount:       status.DaemonLeaseCount,
-		DaemonLeaseOwners:      append([]string(nil), status.DaemonLeaseOwners...),
-		CapabilitiesKnown:      status.CapabilitiesKnown,
-		Capabilities:           append([]string(nil), status.Capabilities...),
-		AdvertisedCapabilities: append([]string(nil), status.AdvertisedCapabilities...),
-		ObservedCapabilities:   append([]string(nil), status.ObservedCapabilities...),
-		RequiredCapabilities:   append([]string(nil), status.RequiredCapabilities...),
-		MissingCapabilities:    append([]string(nil), status.MissingCapabilities...),
-	}
-}
 
 func buildCapabilities(ss *SearchStatus, rs *RuntimeStatus) []string {
 	var caps []string

@@ -103,7 +103,7 @@ const (
 	MatchSemantic MatchMethod = "semantic"
 )
 
-// EmbeddingModelConfig holds the configuration for a specific embedding model.
+// EmbeddingModelConfig holds the configuration for a specific model.
 type EmbeddingModelConfig struct {
 	Name          string
 	Dimensions    int
@@ -113,7 +113,7 @@ type EmbeddingModelConfig struct {
 	DocPrefix     string // prefix prepended to documents before embedding
 }
 
-// Known embedding model configurations.
+// Known model configurations.
 var EmbeddingModels = map[string]EmbeddingModelConfig{
 	"gte-small": {
 		Name:          "gte-small",

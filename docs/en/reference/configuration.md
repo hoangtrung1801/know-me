@@ -82,7 +82,7 @@ Relevant fields:
 
 - `enabled`
 - `model`
-- `provider` (`"local"`, `"ollama"`, or a provider ID registered with `knowme provider add`)
+- `provider` (`"local"`, `"ollama"`)
 - `dimensions`
 
 Common behavior:
@@ -90,15 +90,7 @@ Common behavior:
 - `knowme init` can set these values
 - `knowme settings` shows supported Local ONNX models with downloaded/not downloaded status
 - Selecting a missing Local ONNX model in `knowme settings` asks before downloading and saving it
-- `knowme provider add` and `knowme model add --provider <id> <model-name>` configure API-backed embedding models
-- `knowme sync` can re-apply the semantic setup
 - `knowme search --reindex` rebuilds the local index
-
-### `settings.lsp`
-
-Controls LSP-based code intelligence.
-
-- `enabled`: whether LSP servers are started for code navigation
 
 ### `settings.platforms`
 
@@ -116,7 +108,7 @@ Supported values:
 - `copilot`
 - `agents`
 
-This setting affects what `knowme setup`, `knowme sync`, and `knowme update` create or refresh.
+This setting affects what `knowme setup` and `knowme update` create or refresh.
 
 Examples of managed artifacts:
 
@@ -148,7 +140,7 @@ You can edit `.know-me/config.json` directly if you know what you are doing, but
 - `knowme settings` for the interactive project settings center
 - `knowme settings --global` for defaults reused by future `knowme init` runs
 - `knowme config get/set/list/reset` for scriptable config access
-- `knowme sync` to re-apply config to the current machine
+- `knowme setup` to re-apply integration files to the current machine
 
 ### Settings and config shorthands
 
@@ -183,33 +175,3 @@ Changing `gitTracking.*` toggles automatically regenerates `.gitignore`.
 
 Interactive `knowme init` needs a terminal at least 90 columns wide. If the terminal is too small, Know-Me prints resize and `--no-wizard` guidance and stops without initializing by defaults.
 
-### When to use `knowme sync`
-
-Use `knowme sync` after:
-
-- cloning a repo with existing `.know-me/`
-- updating the CLI
-- wanting to restore generated artifacts to match config
-
-### Platform-related compatibility
-
-Current skills mapping:
-
-- `.claude/skills` -> Claude Code
-- `.agents/skills` -> OpenCode, Codex, Hermes Agent, Antigravity, Generic Agents
-- `.kiro/skills` -> Kiro
-
-## Related commands
-
-```bash
-knowme init
-knowme setup
-knowme settings
-knowme sync
-knowme config set <key> <value>
-knowme config get <key>
-knowme model list
-knowme model download multilingual-e5-small
-knowme search --status-check
-knowme search --reindex
-```

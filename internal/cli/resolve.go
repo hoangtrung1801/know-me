@@ -23,50 +23,12 @@ func runResolve(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check for structural traversal flags.
-	direction, _ := cmd.Flags().GetString("direction")
-	depth, _ := cmd.Flags().GetInt("depth")
-	relation, _ := cmd.Flags().GetString("relation")
-	entityType, _ := cmd.Flags().GetString("type")
-
-	params := models.StructuralParams{
-		Direction: direction,
-		Depth:     depth,
-	}
-	if relation != "" {
-		params.RelationTypes = splitCSVFlag(relation)
-	}
-	if entityType != "" {
-		params.EntityTypes = splitCSVFlag(entityType)
-	}
-
-	out := cmd.OutOrStdout()
-
-	// If structural params are present, use structural traversal.
-	if params.IsStructural() {
-		result, err := store.StructuralResolve(args[0], params)
-		if err != nil {
-			return err
-		}
-
-		if isJSON(cmd) {
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(result)
-		}
-		if isPlain(cmd) {
-			writePlainStructuralResult(out, result)
-			return nil
-		}
-		writePrettyStructuralResult(out, result)
-		return nil
-	}
-
 	// Otherwise, use the existing simple resolution.
 	resolution, err := store.ResolveRawReference(args[0])
 	if err != nil {
 		return err
 	}
+	out := cmd.OutOrStdout()
 
 	if isJSON(cmd) {
 		enc := json.NewEncoder(out)
@@ -149,46 +111,6 @@ func formatReferenceFragment(fragment *models.DocReferenceFragment) string {
 }
 
 func init() {
-	resolveCmd.Flags().String("direction", "", "Traversal direction: outbound (default), inbound, or both")
-	resolveCmd.Flags().Int("depth", 0, "Max traversal hops (1-3, default 1)")
-	resolveCmd.Flags().String("relation", "", "Filter by relation kinds (comma-separated)")
-	resolveCmd.Flags().String("type", "", "Filter result entities by kind (comma-separated)")
 	rootCmd.AddCommand(resolveCmd)
 }
 
-// splitCSVFlag splits a comma-separated flag value into trimmed non-empty parts.
-func splitCSVFlag(s string) []string {
-	parts := strings.Split(s, ",")
-	result := make([]string, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if p != "" {
-			result = append(result, p)
-		}
-	}
-	return result
-}
-
-func writePlainStructuralResult(w io.Writer, result models.StructuralResult) {
-	fmt.Fprintf(w, "Root: %s:%s\n", result.Root.Kind, result.Root.ID)
-	if result.Root.Title != "" {
-		fmt.Fprintf(w, "Root Title: %s\n", result.Root.Title)
-	}
-	fmt.Fprintf(w, "Edges: %d\n", len(result.Edges))
-	for i, e := range result.Edges {
-		fmt.Fprintf(w, "  [%d] %s:%s --%s--> %s:%s (depth=%d, origin=%s, dir=%s)\n",
-			i+1, e.Source.Kind, e.Source.ID, e.Relation,
-			e.Target.Kind, e.Target.ID, e.Depth, e.Origin, e.Direction)
-	}
-	if len(result.Unresolved) > 0 {
-		fmt.Fprintf(w, "Unresolved: %d\n", len(result.Unresolved))
-		for _, u := range result.Unresolved {
-			fmt.Fprintf(w, "  - %s (%s)\n", u.Ref, u.Reason)
-		}
-	}
-}
-
-func writePrettyStructuralResult(w io.Writer, result models.StructuralResult) {
-	fmt.Fprintf(w, "Structural Traversal\n====================\n\n")
-	writePlainStructuralResult(w, result)
-}

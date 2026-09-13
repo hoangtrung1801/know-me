@@ -317,8 +317,8 @@ func appendDocTag(tags []string, tag string) []string {
 	return append(tags, tag)
 }
 
-// RewriteDocReferences rewrites @doc refs across local docs, tasks, and memories.
-func (ds *DocStore) RewriteDocReferences(oldPath, newPath string, taskStore *TaskStore, memoryStore *MemoryStore) error {
+// RewriteDocReferences rewrites @doc refs across local docs and tasks.
+func (ds *DocStore) RewriteDocReferences(oldPath, newPath string, taskStore *TaskStore) error {
 	docs, err := ds.List()
 	if err != nil {
 		return err
@@ -373,23 +373,6 @@ func (ds *DocStore) RewriteDocReferences(oldPath, newPath string, taskStore *Tas
 				if err := taskStore.Update(task); err != nil {
 					return err
 				}
-			}
-		}
-	}
-	if memoryStore != nil {
-		memories, err := memoryStore.List("")
-		if err != nil {
-			return err
-		}
-		for _, memory := range memories {
-			rewritten := references.RewriteDocPath(memory.Content, oldPath, newPath)
-			if rewritten == memory.Content {
-				continue
-			}
-			memory.Content = rewritten
-			memory.UpdatedAt = time.Now().UTC()
-			if err := memoryStore.Update(memory); err != nil {
-				return err
 			}
 		}
 	}

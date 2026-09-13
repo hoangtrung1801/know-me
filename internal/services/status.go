@@ -16,8 +16,6 @@ import (
 	"time"
 
 	"github.com/hoangtrung1801/know-me/internal/agents/opencode"
-	"github.com/hoangtrung1801/know-me/internal/lsp"
-	"github.com/hoangtrung1801/know-me/internal/lsp/adapters"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/paths"
 	"github.com/hoangtrung1801/know-me/internal/runtimequeue"
@@ -64,7 +62,7 @@ const detectionTimeout = 2 * time.Second
 
 // LSPRuntimeStatusProvider supplies the canonical live LSP snapshot for a
 // project while the other service detectors run in parallel.
-type LSPRuntimeStatusProvider func(context.Context, *storage.Store) []lsp.LanguageRuntimeStatus
+type LSPRuntimeStatusProvider any
 
 // DetectAll returns status for all managed sub-processes and cleans up stale
 // process marker files for compatibility with existing status callers.
@@ -117,21 +115,6 @@ func detectAll(ctx context.Context, store *storage.Store, cleanupStale bool, lsp
 		add(detectOpenCode(proj, cleanupStale))
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if lspStatusProvider != nil {
-			probeCtx, cancel := context.WithTimeout(ctx, detectionTimeout)
-			defer cancel()
-			add(lspServicesFromRuntimeStatuses(proj, lspStatusProvider(probeCtx, store)))
-			return
-		}
-		projectRoot := ""
-		if store != nil {
-			projectRoot = store.RepositoryRoot()
-		}
-		add(detectLSP(proj, projectRoot))
-	}()
 
 	wg.Add(1)
 	go func() {
@@ -239,135 +222,6 @@ func detectOpenCode(proj *models.Project, cleanupStale bool) []ServiceStatus {
 	return []ServiceStatus{ss}
 }
 
-// ----- LSP Server Detection -----
-
-func detectLSP(proj *models.Project, projectRoot string) []ServiceStatus {
-	// Determine which languages are configured.
-	var defaults *storage.ProjectDefaults
-	if settings, err := storage.NewEmbeddingSettingsStore().Load(); err == nil {
-		defaults = settings.ProjectDefaults
-	}
-	lspConfig := lsp.ConfigFromProjectWithDefaults(proj, defaults)
-
-	// If LSP is globally disabled, report one disabled entry.
-	if proj != nil && proj.Settings.LSP != nil && proj.Settings.LSP.Enabled != nil && !*proj.Settings.LSP.Enabled {
-		return []ServiceStatus{{
-			Name:            "LSP (global)",
-			Type:            "lsp",
-			Status:          "disabled",
-			EnabledInConfig: false,
-			Details:         make(map[string]string),
-		}}
-	}
-
-	statuses := lsp.CollectRuntimeStatuses(context.Background(), lsp.RuntimeStatusOptions{
-		Root:     projectRoot,
-		Config:   lspConfig,
-		Adapters: adapters.All(),
-	})
-	return lspServicesFromRuntimeStatuses(proj, statuses)
-}
-
-func lspServicesFromRuntimeStatuses(proj *models.Project, statuses []lsp.LanguageRuntimeStatus) []ServiceStatus {
-	if proj != nil && proj.Settings.LSP != nil && proj.Settings.LSP.Enabled != nil && !*proj.Settings.LSP.Enabled {
-		return []ServiceStatus{{
-			Name:            "LSP (global)",
-			Type:            "lsp",
-			Status:          "disabled",
-			EnabledInConfig: false,
-			Details:         make(map[string]string),
-		}}
-	}
-
-	if len(statuses) == 0 {
-		return []ServiceStatus{{
-			Name:            "LSP",
-			Type:            "lsp",
-			Status:          "stopped",
-			EnabledInConfig: true,
-			Details:         map[string]string{"reason": "no languages detected"},
-		}}
-	}
-
-	results := make([]ServiceStatus, 0, len(statuses))
-	for _, runtimeStatus := range statuses {
-		ss := ServiceStatus{
-			Name:            "LSP (" + runtimeStatus.ID + ")",
-			Type:            "lsp",
-			Status:          serviceStatusFromLSP(runtimeStatus),
-			EnabledInConfig: runtimeStatus.Enabled,
-			Details: map[string]string{
-				"language":        runtimeStatus.ID,
-				"detected":        strconv.FormatBool(runtimeStatus.Detected),
-				"enabled":         strconv.FormatBool(runtimeStatus.Enabled),
-				"install_state":   runtimeStatus.InstallState,
-				"running_state":   runtimeStatus.RunningState,
-				"readiness_state": runtimeStatus.ReadinessState,
-			},
-		}
-		addDetail := func(key, value string) {
-			if value != "" {
-				ss.Details[key] = value
-			}
-		}
-		addDetail("binary", runtimeStatus.Binary)
-		addDetail("source", runtimeStatus.Source)
-		addDetail("backend", runtimeStatus.Backend)
-		addDetail("backend_source", runtimeStatus.BackendSource)
-		addDetail("version", runtimeStatus.Version)
-		addDetail("selected_path", runtimeStatus.SelectedPath)
-		addDetail("project_path", runtimeStatus.ProjectPath)
-		addDetail("log_path", runtimeStatus.LogPath)
-		addDetail("install_cmd", runtimeStatus.InstallCmd)
-		addDetail("install_error", runtimeStatus.InstallError)
-		addDetail("update_error", runtimeStatus.UpdateError)
-		addDetail("owner", runtimeStatus.Owner)
-		addDetail("daemon_state", runtimeStatus.DaemonState)
-		addDetail("daemon_transport", runtimeStatus.DaemonTransport)
-		addDetail("daemon_endpoint", runtimeStatus.DaemonEndpoint)
-		addDetail("daemon_idle_deadline", runtimeStatus.DaemonIdleDeadline)
-		if runtimeStatus.DaemonPID > 0 {
-			ss.Details["daemon_pid"] = strconv.Itoa(runtimeStatus.DaemonPID)
-		}
-		if runtimeStatus.DaemonClients > 0 {
-			ss.Details["daemon_clients"] = strconv.Itoa(runtimeStatus.DaemonClients)
-		}
-		if runtimeStatus.DaemonLeaseCount > 0 {
-			ss.Details["daemon_lease_count"] = strconv.Itoa(runtimeStatus.DaemonLeaseCount)
-		}
-		if len(runtimeStatus.DaemonLeaseOwners) > 0 {
-			ss.Details["daemon_lease_owners"] = strings.Join(runtimeStatus.DaemonLeaseOwners, ",")
-		}
-		if runtimeStatus.InstallState != lsp.RuntimeInstallInstalled {
-			ss.Details["reason"] = runtimeStatus.InstallState
-		}
-
-		results = append(results, ss)
-	}
-
-	return results
-}
-
-func serviceStatusFromLSP(status lsp.LanguageRuntimeStatus) string {
-	switch status.RunningState {
-	case lsp.RuntimeRunningRunning, lsp.RuntimeRunningStarting:
-		return "running"
-	case lsp.RuntimeRunningCrashed:
-		return "error"
-	case lsp.RuntimeRunningDisabled:
-		return "disabled"
-	}
-	switch status.Status {
-	case lsp.RuntimeRunningRunning:
-		return "running"
-	case lsp.RuntimeRunningCrashed, lsp.RuntimeInstallError:
-		return "error"
-	case lsp.RuntimeInstallDisabled:
-		return "disabled"
-	default:
-		return "stopped"
-	}
-}
 
 // ----- Cloudflared Tunnel Detection -----
 
@@ -537,44 +391,11 @@ func detectEmbedding(store *storage.Store) []ServiceStatus {
 	}
 
 	switch semCfg.Provider {
-	case "api", "ollama":
-		embStore := storage.NewEmbeddingSettingsStore()
-		settings, err := embStore.Load()
-		if err != nil {
-			ss.Status = "error"
-			ss.Details["error"] = "cannot load embedding settings"
-			return []ServiceStatus{ss}
-		}
-
-		model, err := settings.GetModel(semCfg.Model)
-		if err != nil {
-			ss.Status = "error"
-			ss.Details["error"] = "model " + semCfg.Model + " not found"
-			ss.Details["degraded"] = "true"
-			return []ServiceStatus{ss}
-		}
-
-		provider, err := settings.GetProvider(model.Provider)
-		if err != nil {
-			ss.Status = "error"
-			ss.Details["error"] = "provider " + model.Provider + " not found"
-			ss.Details["degraded"] = "true"
-			return []ServiceStatus{ss}
-		}
-		provider = provider.WithDefaults()
-
-		ss.Details["model_id"] = semCfg.Model
-		ss.Details["model"] = model.Model
-		ss.Details["provider_id"] = model.Provider
-		ss.Details["api_base"] = provider.APIBase
-		ss.Details["dimensions"] = strconv.Itoa(model.Dimensions)
-		setEmbeddingRuntimeActivityStatus(&ss)
-
 	case "local", "":
 		modelCfg, ok := search.EmbeddingModels[semCfg.Model]
 		if !ok {
 			ss.Status = "error"
-			ss.Details["error"] = "unknown embedding model: " + semCfg.Model
+			ss.Details["error"] = "unknown model: " + semCfg.Model
 			ss.Details["degraded"] = "true"
 			return []ServiceStatus{ss}
 		}

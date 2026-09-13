@@ -10,14 +10,11 @@ import (
 )
 
 var taskReferenceRE = regexp.MustCompile(`^@task-[A-Za-z0-9.-]+(?:\{[a-z-]+\})?`)
-var memoryReferenceRE = regexp.MustCompile(`^@memory-[A-Za-z0-9-]+(?:\{[a-z-]+\})?`)
 var docRangeSuffixRE = regexp.MustCompile(`:(\d+)-(\d+)$`)
 var docLineSuffixRE = regexp.MustCompile(`:(\d+)$`)
 
 var slashNamespaces = map[string]string{
 	"task/":     "task",
-	"memory/":   "memory",
-	"decision/": "decision",
 	"doc/":      "doc",
 	"template/": "template",
 }
@@ -113,10 +110,6 @@ func Parse(raw string) (models.SemanticReference, bool) {
 		ref.Type = "task"
 		ref.Target = strings.TrimPrefix(body, "task-")
 		ref.Legacy = true
-	case strings.HasPrefix(body, "memory-"):
-		ref.Type = "memory"
-		ref.Target = strings.TrimPrefix(body, "memory-")
-		ref.Legacy = true
 	case strings.HasPrefix(body, "doc/"):
 		ref.Type = "doc"
 		ref.Target, ref.Fragment = parseDocTarget(strings.TrimPrefix(body, "doc/"))
@@ -190,16 +183,10 @@ func extractReferenceAt(content string) string {
 		return extractDocReferenceAt(content)
 	case strings.HasPrefix(content, "@task/"):
 		return extractNamespacedReferenceAt(content, len("@task/"))
-	case strings.HasPrefix(content, "@memory/"):
-		return extractNamespacedReferenceAt(content, len("@memory/"))
-	case strings.HasPrefix(content, "@decision/"):
-		return extractNamespacedReferenceAt(content, len("@decision/"))
 	case strings.HasPrefix(content, "@template/"):
 		return extractNamespacedReferenceAt(content, len("@template/"))
 	case strings.HasPrefix(content, "@task-"):
 		return taskReferenceRE.FindString(content)
-	case strings.HasPrefix(content, "@memory-"):
-		return memoryReferenceRE.FindString(content)
 	default:
 		return ""
 	}

@@ -30,8 +30,6 @@ func TestParse_CanonicalSlashRefs(t *testing.T) {
 		canonical string
 	}{
 		{"@task/rag001{blocked-by}", "task", "rag001", "@task/rag001{blocked-by}"},
-		{"@memory/mem001{follows}", "memory", "mem001", "@memory/mem001{follows}"},
-		{"@decision/20260618-1024-use-qdrant-as-default-vector-db", "decision", "20260618-1024-use-qdrant-as-default-vector-db", "@decision/20260618-1024-use-qdrant-as-default-vector-db"},
 		{"@template/go-feature", "template", "go-feature", "@template/go-feature"},
 	}
 
@@ -92,7 +90,7 @@ func TestParse_DocRefWithLineRange(t *testing.T) {
 }
 
 func TestParse_InvalidRelation(t *testing.T) {
-	ref, ok := Parse("@memory-mem001{owns}")
+	ref, ok := Parse("@task/rag001{owns}")
 	if !ok {
 		t.Fatal("expected parse success")
 	}
@@ -110,8 +108,8 @@ func TestParse_ProjectPrefixedRefs(t *testing.T) {
 
 func TestExtract_MixedSemanticRefs(t *testing.T) {
 	refs := Extract("See @doc/guides/setup{implements}, @task/rag001, @task-legacy, @memory/mem001, @memory-old{follows}, and @decision/20260618-1024-use-qdrant-as-default-vector-db.")
-	if len(refs) != 6 {
-		t.Fatalf("ref count = %d, want 6: %+v", len(refs), refs)
+	if len(refs) != 3 {
+		t.Fatalf("ref count = %d, want 3: %+v", len(refs), refs)
 	}
 	if refs[1].Relation != models.SemanticReferenceRelationReferences {
 		t.Fatalf("plain task ref should default to references, got %+v", refs[1])
@@ -119,10 +117,11 @@ func TestExtract_MixedSemanticRefs(t *testing.T) {
 	if refs[2].Canonical != "@task/legacy" || !refs[2].Legacy {
 		t.Fatalf("legacy task ref not normalized: %+v", refs[2])
 	}
-	if refs[4].Canonical != "@memory/old{follows}" || !refs[4].Legacy {
-		t.Fatalf("legacy memory ref not normalized: %+v", refs[4])
-	}
-	if refs[5].Type != "decision" {
-		t.Fatalf("decision ref not extracted: %+v", refs[5])
+}
+
+func TestExtract_IgnoresCodeMemoryDecision(t *testing.T) {
+	refs := Extract("See @code/foo, @memory/bar, @memory-baz, and @decision/qux.")
+	if len(refs) != 0 {
+		t.Fatalf("expected 0 refs for demoted types, got %d: %+v", len(refs), refs)
 	}
 }

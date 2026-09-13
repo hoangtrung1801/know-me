@@ -290,30 +290,18 @@ func TestValidateDoc_ValidDoc(t *testing.T) {
 	}
 }
 
-func TestValidateDoc_DecisionRefs(t *testing.T) {
+func TestValidateDoc_CodeMemoryDecisionIgnored(t *testing.T) {
 	store := newValidateTestStore(t)
-	now := time.Now().UTC()
-	decisionID := "20260618-1024-use-qdrant-as-default-vector-db"
-	if err := store.Decisions.Create(&models.DecisionEntry{
-		ID:        decisionID,
-		Title:     "Use Qdrant as default vector DB",
-		Status:    models.DecisionStatusAccepted,
-		Sources:   []string{"@doc/readme"},
-		CreatedAt: now,
-		UpdatedAt: now,
-	}, storage.DecisionCreateOptions{Now: now}); err != nil {
-		t.Fatalf("create decision: %v", err)
-	}
-
 	doc := &models.Doc{
-		Path:        "readme",
-		Title:       "README",
-		Description: "desc",
-		Content:     "See @decision/20260618-1024-use-qdrant-as-default-vector-db and @decision/20260618-1024-missing.",
+		Path:        "guides/code-mem-dec",
+		Title:       "Valid doc with demoted refs",
+		Description: "A valid description.",
+		Content:     "See @code/foo, @memory/bar, @decision/baz.",
 	}
 	issues := validateDoc(doc, nil, nil, nil, store)
-	assertNoIssueMessageContains(t, issues, decisionID)
-	assertHasCode(t, issues, "BROKEN_DECISION_REF")
+	if len(issues) > 0 {
+		t.Errorf("expected no issues for demoted refs, got %d: %v", len(issues), issues)
+	}
 }
 
 func TestValidateDoc_TemplateRefs(t *testing.T) {
@@ -418,37 +406,6 @@ func TestValidateMemory_ResolutionMetadata(t *testing.T) {
 	assertHasCode(t, issues, "MEMORY_REJECTED_MISSING_REASON")
 }
 
-func TestValidateMemory_DecisionSourceRefs(t *testing.T) {
-	store := newValidateTestStore(t)
-	now := time.Now().UTC()
-	supersededID := "20260618-1024-use-qdrant-as-default-vector-db"
-	if err := store.Decisions.Create(&models.DecisionEntry{
-		ID:           supersededID,
-		Title:        "Use Qdrant as default vector DB",
-		Status:       models.DecisionStatusSuperseded,
-		SupersededBy: []string{"20260618-1030-use-sqlite-vec"},
-		Sources:      []string{"@doc/source"},
-		CreatedAt:    now,
-		UpdatedAt:    now,
-	}, storage.DecisionCreateOptions{Now: now}); err != nil {
-		t.Fatalf("create superseded decision: %v", err)
-	}
-	memory := &models.MemoryEntry{
-		ID:           "decision-source",
-		Title:        "Decision source",
-		Layer:        models.MemoryLayerProject,
-		Status:       models.MemoryStatusActive,
-		Confidence:   models.MemoryConfidenceHigh,
-		LastVerified: now,
-		TTLDays:      90,
-		Sources:      []string{"@decision/" + supersededID, "@decision/20260618-1111-missing"},
-		Content:      "Decision sourced memory.",
-	}
-
-	issues := validateMemory(memory, nil, nil, nil, store)
-	assertHasCode(t, issues, "MEMORY_SOURCE_DECISION_SUPERSEDED")
-	assertHasCode(t, issues, "MEMORY_BROKEN_SOURCE_REF")
-}
 
 func newValidateTestStore(t *testing.T) *storage.Store {
 	t.Helper()

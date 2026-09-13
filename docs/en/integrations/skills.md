@@ -12,7 +12,7 @@ Skills are separate from MCP tools. MCP tools appear in clients as structured do
 
 ## Setup
 
-Skills are generated via `knowme setup <target> --global` for normal personal assistant setup, via `knowme setup <target>` for intentional repo-local setup, or re-synced with `knowme sync --skills`:
+Skills are generated via `knowme setup <target> --global` for normal personal assistant setup, via `knowme setup <target>` for intentional repo-local setup, or refreshed with `knowme setup`:
 
 ```bash
 knowme setup claude --global    # Syncs Claude skills/config at user scope
@@ -20,7 +20,7 @@ knowme setup opencode --global  # Syncs OpenCode skills/config at user scope
 knowme setup codex --global     # Syncs Codex skills/config at user scope
 knowme setup hermes --global    # Syncs Hermes external skill config at user scope
 knowme setup kiro --global      # Syncs Kiro skills/config at user scope
-knowme sync --skills   # Re-syncs all configured platforms
+knowme setup agents       # Syncs agent skills
 ```
 
 ## Invocation syntax
@@ -49,7 +49,7 @@ $kn-flow @doc/<spec-path> --sequential # Opt out of Codex sub-agent delegation
 
 `kn-research` is MCP-first:
 
-- use Know-Me `search`/`retrieve` for project docs, tasks, memory, and decisions
+- use Know-Me `search`/`retrieve` for project docs and tasks
 - use Know-Me `code` tools before raw file search for code structure, symbols, definitions, and references
 - use specialized external MCP providers such as Context7/library docs, GitHub/source MCP, or official docs MCP when upstream facts matter
 - use general web search only when specialized MCP providers are unavailable, insufficient, or explicitly requested
@@ -60,4 +60,4 @@ When the research scope is large and the runtime exposes sub-agent tools, `kn-re
 
 - `.agents/skills` is the primary path for agent-compatible platforms
 - `knowme init` no longer syncs skills — use `knowme setup <target> --global` after init for personal assistant setup
-- `knowme sync --skills` is the entrypoint for regenerating skills after updates
+- `knowme setup` is the entrypoint for regenerating skills after updates

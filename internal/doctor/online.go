@@ -266,36 +266,7 @@ func onlineProviderChecker(store *storage.Store, deps onlineDependencies) Checke
 }
 
 func loadConfiguredProvider(store *storage.Store) (providerTarget, bool, error) {
-	if store == nil {
-		return providerTarget{}, false, nil
-	}
-	project, err := store.Config.Load()
-	if err != nil {
-		return providerTarget{}, false, err
-	}
-	semantic := project.Settings.SemanticSearch
-	if semantic == nil || !semantic.Enabled ||
-		(semantic.Provider != "api" && semantic.Provider != "ollama") {
-		return providerTarget{}, false, nil
-	}
-
-	settings, err := storage.NewEmbeddingSettingsStore().Load()
-	if err != nil {
-		return providerTarget{}, false, err
-	}
-	model, err := settings.GetModel(semantic.Model)
-	if err != nil {
-		return providerTarget{}, false, err
-	}
-	provider, err := settings.GetProvider(model.Provider)
-	if err != nil {
-		return providerTarget{}, false, err
-	}
-	return providerTarget{
-		ID:      model.Provider,
-		APIBase: provider.APIBase,
-		APIKey:  provider.APIKey,
-	}, true, nil
+	return providerTarget{}, false, nil
 }
 
 func providerProbeURL(apiBase string) (string, error) {

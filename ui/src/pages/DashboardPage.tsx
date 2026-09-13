@@ -21,15 +21,11 @@ import {
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
 	auditApi,
-	decisionApi,
 	getDocs,
 	getRuntimeServices,
 	getSDDStats,
-	memoryApi,
 	type AuditEvent,
-	type DecisionEntry,
 	type Doc,
-	type MemoryEntry,
 	type RuntimeService,
 	type SDDResult,
 } from "../api/client";
@@ -69,9 +65,6 @@ interface RemoteData {
 	refreshedAt: Date | null;
 	sdd: SDDResult | null;
 	docs: Doc[] | null;
-	memories: MemoryEntry[] | null;
-	decisions: DecisionEntry[] | null;
-	decisionReview: DecisionEntry[] | null;
 	auditErrors: AuditEvent[] | null;
 	services: RuntimeService[] | null;
 	errors: string[];
@@ -107,9 +100,6 @@ const EMPTY_REMOTE_DATA: RemoteData = {
 	refreshedAt: null,
 	sdd: null,
 	docs: null,
-	memories: null,
-	decisions: null,
-	decisionReview: null,
 	auditErrors: null,
 	services: null,
 	errors: [],
@@ -702,9 +692,6 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 		const requests = [
 			getSDDStats().then((value) => markFresh("sdd", value)).catch(() => markError("Spec coverage")),
 			getDocs().then((value) => markFresh("docs", value)).catch(() => markError("Document inventory")),
-			memoryApi.list("project").then((value) => markFresh("memories", value)).catch(() => markError("Memory health")),
-			decisionApi.list().then((value) => markFresh("decisions", value)).catch(() => markError("Decision inventory")),
-			decisionApi.reviewInbox().then((value) => markFresh("decisionReview", value)).catch(() => markError("Decision review")),
 			auditApi.recent({ limit: 5, result: "error" })
 				.then((value) => markFresh("auditErrors", value.events))
 				.catch(() => markError("Recent failures")),
@@ -812,26 +799,6 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 
 	const knowledgeSignals = useMemo<KnowledgeSignal[]>(() => {
 		const coverage = remote.sdd?.stats.coverage;
-		const activeMemories = remote.memories?.filter((item) => item.status === "active").length;
-		const proposedMemories = remote.memories?.filter((item) => item.status === "proposed").length;
-		const reviewableMemories =
-			activeMemories !== undefined && proposedMemories !== undefined
-				? activeMemories + proposedMemories
-				: undefined;
-		const memoryReadiness =
-			reviewableMemories && activeMemories !== undefined
-				? Math.round((activeMemories / reviewableMemories) * 100)
-				: null;
-		const acceptedDecisions = remote.decisions?.filter((item) => item.status === "accepted").length;
-		const decisionReviewCount = remote.decisionReview?.length;
-		const decisionTotal =
-			acceptedDecisions !== undefined && decisionReviewCount !== undefined
-				? acceptedDecisions + decisionReviewCount
-				: undefined;
-		const decisionReadiness =
-			decisionTotal && acceptedDecisions !== undefined
-				? Math.round((acceptedDecisions / decisionTotal) * 100)
-				: null;
 
 		return [
 			{
@@ -857,37 +824,6 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 					? "Freshness is not exposed by the document list API"
 					: "Document inventory endpoint is unavailable",
 				tone: "neutral",
-			},
-			{
-				key: "memory",
-				title: "Memory readiness",
-				icon: Database,
-				href: "/memory",
-				value: memoryReadiness,
-				valueLabel: memoryReadiness !== null ? `${memoryReadiness}% active` : "Unavailable",
-				detail:
-					activeMemories !== undefined && proposedMemories !== undefined
-						? `${activeMemories} active · ${proposedMemories} proposed`
-						: "Memory inventory endpoint is unavailable",
-				tone: memoryReadiness !== null && memoryReadiness >= 80 ? "healthy" : memoryReadiness !== null && memoryReadiness >= 60 ? "watch" : memoryReadiness !== null ? "critical" : "neutral",
-			},
-			{
-				key: "decision",
-				title: "Decision review",
-				icon: GitPullRequest,
-				href: "/decisions",
-				value: decisionReadiness,
-				valueLabel:
-					decisionReviewCount !== undefined
-						? decisionReviewCount === 0
-							? "Inbox clear"
-							: `${decisionReviewCount} waiting`
-						: "Unavailable",
-				detail:
-					acceptedDecisions !== undefined && decisionReviewCount !== undefined
-						? `${acceptedDecisions} accepted · ${decisionReviewCount} awaiting review`
-						: "Decision review endpoint is unavailable",
-				tone: decisionReviewCount === 0 ? "healthy" : decisionReviewCount !== undefined && decisionReviewCount <= 3 ? "watch" : decisionReviewCount !== undefined ? "critical" : "neutral",
 			},
 		];
 	}, [remote]);
@@ -1243,20 +1179,13 @@ export default function DashboardPage({ tasks, loading }: DashboardPageProps) {
 							</div>
 						</SectionCard>
 
-						<div className="mt-3 grid grid-cols-2 gap-2">
+						<div className="mt-3">
 							<Link
 								to="/tasks"
 								className="flex items-center justify-center gap-2 rounded-lg border border-border/70 bg-card px-3 py-2 text-xs font-medium hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							>
 								<BookOpen className="h-3.5 w-3.5" />
 								All tasks
-							</Link>
-							<Link
-								to="/graph"
-								className="flex items-center justify-center gap-2 rounded-lg border border-border/70 bg-card px-3 py-2 text-xs font-medium hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							>
-								<Database className="h-3.5 w-3.5" />
-								Knowledge graph
 							</Link>
 						</div>
 					</aside>

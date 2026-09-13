@@ -74,11 +74,11 @@ Xem [Platforms](../integrations/platforms.md) để biết các setup target đ�
 ## 7. Sync khi cần
 
 ```bash
-knowme sync
+knowme setup
 knowme update
 ```
 
-Chạy `knowme sync` sau khi clone repo, đổi selected platforms, hoặc update CLI. Dùng `knowme update` khi muốn Know-Me refresh generated project artifacts theo behavior hiện tại của CLI.
+Chạy `knowme setup` sau khi clone repo, đổi selected platforms, hoặc update CLI. Dùng `knowme update` khi muốn Know-Me refresh generated project artifacts theo behavior hiện tại của CLI.
 
 ## 8. Mở lại Web UI
 

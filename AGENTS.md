@@ -20,11 +20,8 @@ Compatibility entrypoint for runtimes that auto-detect `AGENTS.md`.
 - Never manually edit Know-Me-managed task or doc markdown.
 - Search first, then read only relevant docs and code.
 - Use `search` for discovery; use MCP `retrieve` tool when a workflow needs structured context with citations. Fall back to CLI `knowme retrieve` if MCP is unavailable.
-- For code operations, use `code` tool: `find`/`symbols` for structure, `references`/`definition` for navigation, `rename`/`replace`/`replace_body`/`insert`/`delete` for editing. Use `help("code.*")` or `help("workflow.code-edit")` for details.
 - Plan before implementation unless the user explicitly overrides that workflow.
 - Validate before considering work complete.
-- Use memory tools: `memory({ action: "list" })` at session start, `memory({ action: "add" })` after tasks for reusable knowledge.
-- Proactively capture durable memory when scope and durability are clear.
 
 ## Quick Reference
 

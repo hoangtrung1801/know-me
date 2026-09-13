@@ -181,37 +181,6 @@ func (b *bm25LexicalBackend) buildCorpus(opts SearchOptions) ([]lexicalDoc, erro
 		}
 	}
 
-	if opts.Type == "all" || opts.Type == "memory" {
-		entries, err := b.store.Memory.List("")
-		if err != nil {
-			return nil, err
-		}
-		for _, entry := range entries {
-			if !memoryVisibleForSearch(entry, opts) {
-				continue
-			}
-			if opts.Tag != "" && !containsStr(entry.Tags, opts.Tag) {
-				continue
-			}
-			corpus = append(corpus, lexicalDocFromMemory(entry))
-		}
-	}
-
-	if opts.Type == "all" || opts.Type == "decision" {
-		decisions, err := b.store.Decisions.List()
-		if err != nil {
-			return nil, err
-		}
-		for _, decision := range decisions {
-			if !decisionVisibleForSearch(decision, opts) {
-				continue
-			}
-			if opts.Tag != "" && !containsStr(decision.Tags, opts.Tag) {
-				continue
-			}
-			corpus = append(corpus, lexicalDocFromDecision(decision))
-		}
-	}
 
 	return corpus, nil
 }

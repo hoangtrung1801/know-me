@@ -19,7 +19,6 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { navigateTo } from "../../lib/navigation";
 import { cn, toDisplayPath, isSpec, parseACProgress, type Doc } from "../../lib/utils";
-import { importApi, type Import } from "../../api/client";
 import { usePageLifecycle } from "../../contexts/PageWorkspaceContext";
 
 interface FolderEntry {
@@ -255,22 +254,7 @@ export function DocsFileManager({
 	const [viewingImportSource, setViewingImportSource] = useState<string | null>(null);
 	
 	// Cache imports metadata (source URL, type, etc.)
-	const [importsMap, setImportsMap] = useState<Map<string, Import>>(new Map());
-	
-	// Refresh import metadata whenever the retained Docs page becomes active.
-	useEffect(() => {
-		if (!isHydrated || !isActive) return;
-		let cancelled = false;
-		importApi.list().then(({ imports }) => {
-			if (cancelled) return;
-			const map = new Map<string, Import>();
-			imports.forEach((imp) => map.set(imp.name, imp));
-			setImportsMap(map);
-		}).catch((err) => {
-			if (!cancelled) console.error("Failed to fetch imports:", err);
-		});
-		return () => { cancelled = true; };
-	}, [activationId, isActive, isHydrated]);
+	const [importsMap] = useState<Map<string, { type?: string; source?: string }>>(new Map());
 
 	// Auto-sync viewingImportSource when viewing an imported doc
 	useEffect(() => {

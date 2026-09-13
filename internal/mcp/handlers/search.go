@@ -304,32 +304,6 @@ func handleResolve(getStore func() *storage.Store, req mcp.CallToolRequest) (*mc
 		return errResult(err.Error())
 	}
 
-	args := req.GetArguments()
-
-	// Check for structural traversal params.
-	params := models.StructuralParams{}
-	if v, ok := stringArg(args, "direction"); ok {
-		params.Direction = v
-	}
-	if v, ok := intArg(args, "depth"); ok {
-		params.Depth = v
-	}
-	if v, ok := stringArg(args, "relationTypes"); ok && v != "" {
-		params.RelationTypes = splitCommaSeparated(v)
-	}
-	if v, ok := stringArg(args, "entityTypes"); ok && v != "" {
-		params.EntityTypes = splitCommaSeparated(v)
-	}
-
-	// If structural params are present, use structural traversal.
-	if params.IsStructural() {
-		result, err := store.StructuralResolve(raw, params)
-		if err != nil {
-			return errResult(err.Error())
-		}
-		out, _ := json.MarshalIndent(result, "", "  ")
-		return mcp.NewToolResultText(string(out)), nil
-	}
 
 	// Otherwise, use the existing simple resolution.
 	out, err := resolveReferenceJSON(store, raw)

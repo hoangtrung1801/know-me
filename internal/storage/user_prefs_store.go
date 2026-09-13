@@ -13,9 +13,16 @@ import (
 	"github.com/hoangtrung1801/know-me/internal/paths"
 )
 
+// ProjectDefaults are user-level defaults applied by future `knowme init` runs.
+type ProjectDefaults struct {
+	ProjectName string                 `json:"projectName,omitempty"`
+	Settings    models.ProjectSettings `json:"settings,omitempty"`
+}
+
 // UserPrefs holds user-level preferences that apply across all projects.
 type UserPrefs struct {
-	OpenCodeModels *models.OpenCodeModelSettings `json:"opencodeModels,omitempty"`
+	OpenCodeModels  *models.OpenCodeModelSettings `json:"opencodeModels,omitempty"`
+	ProjectDefaults *ProjectDefaults             `json:"projectDefaults,omitempty"`
 }
 
 // UserPrefsStore reads and writes ~/.know-me/preferences.json.

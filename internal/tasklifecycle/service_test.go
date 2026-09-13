@@ -422,7 +422,7 @@ func TestArchivePreservesTaskAndHistoryAndReturnsDurableKnowledgeWarning(t *test
 	if len(result.Warnings) != 1 || result.Warnings[0].Code != WarningDurableKnowledge {
 		t.Fatalf("warnings = %#v", result.Warnings)
 	}
-	wantRefs := []string{"@decision/keep01", "@doc/guides/lifecycle", "@memory/keep02"}
+	wantRefs := []string{"@doc/guides/lifecycle"}
 	if !reflect.DeepEqual(result.Warnings[0].References, wantRefs) {
 		t.Fatalf("warning refs = %v, want %v", result.Warnings[0].References, wantRefs)
 	}

@@ -68,7 +68,6 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	restart, _ := cmd.Flags().GetBool("restart")
 	dev, _ := cmd.Flags().GetBool("dev")
 	watchFlag, _ := cmd.Flags().GetBool("watch")
-	tunnelFlag, _ := cmd.Flags().GetBool("tunnel")
 	passwordFlag, _ := cmd.Flags().GetString("password")
 	allowTaskHardDelete, _ := cmd.Flags().GetBool("allow-task-hard-delete")
 
@@ -96,7 +95,7 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	port = selectedPort
 
 
-	srv := server.NewServer(store, projectRoot, port, server.Options{Dev: dev, Tunnel: tunnelFlag, Password: passwordFlag, AllowTaskHardDelete: allowTaskHardDelete, DisableLSP: true, DisableOpenCode: true})
+	srv := server.NewServer(store, projectRoot, port, server.Options{Dev: dev, Password: passwordFlag, AllowTaskHardDelete: allowTaskHardDelete, DisableOpenCode: true})
 
 	url := "http://" + net.JoinHostPort(host, fmt.Sprint(port))
 	fmt.Println()
@@ -252,7 +251,6 @@ func init() {
 	browserCmd.Flags().Bool("restart", false, "Restart server if already running")
 	browserCmd.Flags().Bool("dev", false, "Enable development mode (verbose logging)")
 	browserCmd.Flags().Bool("watch", false, "Enable file watcher for auto-indexing on code changes")
-	browserCmd.Flags().Bool("tunnel", false, "Expose via a Cloudflare Quick Tunnel (requires cloudflared)")
 	browserCmd.Flags().String("password", "", "Protect WebUI with a password (in-memory only)")
 	browserCmd.Flags().Bool("allow-task-hard-delete", false, "Grant this server instance Task hard-delete capability")
 

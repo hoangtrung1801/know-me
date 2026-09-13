@@ -6,7 +6,7 @@ Use `knowns <command> --help` for the exact syntax accepted by the current binar
 
 - Use `--plain` when an AI or script needs text output that is easy to parse.
 - Use `--json` when you want structured output.
-- Use `knowme sync` when you want generated files and platform artifacts to match the current config.
+- Use `knowme setup` when you want generated files and platform artifacts to match the current config.
 
 ## Initialize and sync
 
@@ -43,26 +43,6 @@ knowme setup hermes          # Project-linked Hermes config and AGENTS.md
 ```
 
 Use `--global` for normal personal assistant setup. It updates user-level MCP config, skills, and runtime hooks, so the integration follows you across repositories. Use project-level setup only when you intentionally want repo-local platform artifacts.
-
-### `knowme sync`
-
-Re-applies `.know-me/config.json` to the current machine.
-
-```bash
-knowme sync
-knowme sync --skills
-knowme sync --instructions
-knowme sync --model
-knowme sync --instructions --platform claude
-knowme sync --instructions --platform cursor
-```
-
-Typical uses:
-
-- after cloning a repo
-- after updating Know-Me
-- after changing selected platforms
-- after changing local generated artifacts manually and wanting to restore them
 
 ### `knowme update`
 
@@ -194,75 +174,6 @@ knowme resolve "@doc/specs/auth{depends}" --direction inbound --depth 2 --plain
 
 Use resolve to traverse structural relationships between docs, tasks, and other entities.
 
-## Memory
-
-```bash
-knowme memory add "We use repository pattern" --category pattern
-knowme memory list --plain
-knowme memory <id> --plain
-knowme memory edit <id> --append "More detail"
-```
-
-Memory is useful for persistent project-level or global patterns, conventions, preferences, and failures that AI should recall later. The `decision` category is legacy and rejected for new writes.
-
-## Decisions
-
-```bash
-knowme decision create "Use Postgres for metadata"
-knowme decision list --plain
-knowme decision get <id> --plain
-knowme decision link <id> --source @doc/architecture/storage --task <done-task-id>
-knowme decision accept <id>
-knowme decision resolve create_draft "Use Postgres for metadata"
-knowme decision supersede <old-id> <new-id>
-
-knowme decision migrate preview --plain
-knowme decision migrate apply --memory <memory-id> --resolution create_decision
-knowme decision migrate rollback <memory-id>
-```
-
-Spec Decisions are locked `D1`, `D2`, … implementation rules in an approved spec. The commands above manage System Decisions: durable project choices that start as drafts, require readable sources plus completed task evidence before acceptance, and may later be superseded rather than edited in place.
-
-Legacy Decision Memory migration is preview-first, explicit per record, journaled, and reversible. Supported resolutions are `create_decision`, `link_existing`, `consolidate_duplicate`, `reclassify`, `archive_noise`, `reject_noise`, and `leave_unchanged`; there is no implicit bulk apply.
-
-## Code intelligence
-
-### LSP management
-
-```bash
-knowme lsp list                    # Show supported languages and their status
-knowme lsp install <language>      # Download and install an LSP server
-knowme lsp cleanup                 # Remove old LSP server versions
-```
-
-Know-Me auto-detects project languages and checks for LSP binaries. If a binary is missing, `knowme lsp list` shows install guidance.
-
-### Code operations (via MCP)
-
-Code intelligence is LSP-based and accessed through the MCP `code` tool:
-
-- `symbols` — list symbols in a file
-- `find` — search symbols by name pattern with optional body/depth
-- `definition` — go to definition
-- `references` — find all references
-- `implementations` — find implementations of interface
-- `diagnostics` — get compile errors/warnings
-- `rename` — rename symbol across workspace
-- `replace` — regex/literal text replacement
-- `replace_body` — replace entire symbol body
-- `insert` — insert code before/after a symbol
-- `delete` — safe delete with reference check
-
-### Code index inspection (CLI)
-
-```bash
-knowme code symbols --plain
-knowme code search "AuthService" --plain
-knowme code deps --plain
-```
-
-Use CLI code commands for inspecting indexed symbol/dependency data. Use the MCP `code` tool for structured navigation and edits.
-
 ## Validation
 
 ```bash
@@ -305,30 +216,9 @@ Use `status` for project readiness and `audit` to inspect recent MCP tool calls.
 
 ```bash
 knowme setup
-knowme sync --skills
-knowme sync --instructions
 ```
 
-Use `knowme setup` to generate AI integration files, or `knowme sync` to refresh them.
-
-## Model management
-
-```bash
-knowme model add <model-name>
-knowme model list
-knowme model download multilingual-e5-small
-knowme model set multilingual-e5-small
-knowme model status
-knowme model remove <id>
-```
-
-## Providers and runtime adapters
-
-```bash
-knowme provider list
-knowme provider add --id openai --name "OpenAI" --api-base https://api.openai.com/v1 --api-key <key>
-knowme provider test <id>
-knowme provider remove <id>
+Use `knowme setup` to generate or refresh AI integration files.
 
 knowme runtime status
 knowme runtime install codex
@@ -341,27 +231,9 @@ knowme runtime-memory hook
 knowme runtime-memory hook --json
 ```
 
-Use providers for API-backed embedding providers. Use runtime commands to install and inspect runtime memory adapters and the shared runtime.
+Use runtime commands to install and inspect runtime adapters and the shared runtime.
 
 The default hook output is plain prompt context for runtime adapters. Each injected memory includes inline score/trust metadata, for example `score=0.92; trust=active`, so the assistant can weigh supplemental context.
 
 Use `knowme runtime-memory hook --json` when a caller needs structured metadata instead of prompt text. JSON output includes retrieval item scores and capture trust metadata such as `capture.score`, `capture.threshold`, `capture.trusted`, and review `capture.matches` when review is required.
 
-## Tunnels
-
-```bash
-knowme tunnel status
-knowme tunnel stop
-```
-
-Use tunnel commands to inspect or stop Cloudflare Quick Tunnels created for local server sharing.
-
-## Imports
-
-```bash
-knowme import add <name> <source>
-knowme import sync
-knowme import list
-```
-
-Use imports when you want to bring in docs or templates from git, local, or package sources.

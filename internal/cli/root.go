@@ -12,7 +12,6 @@ import (
 
 	"github.com/hoangtrung1801/know-me/internal/codegen"
 	"github.com/hoangtrung1801/know-me/internal/paths"
-	"github.com/hoangtrung1801/know-me/internal/storage"
 	"github.com/hoangtrung1801/know-me/internal/util"
 )
 
@@ -99,7 +98,7 @@ func customHelpFunc(cmd *cobra.Command, args []string) {
 }
 
 // maybeWarnSkillsOutOfSync prints a one-line warning if embedded skills differ
-// from the on-disk copies. This nudges the user to run `knowme sync` after upgrading.
+// from the on-disk copies. This nudges the user to run `knowme setup agents` after upgrading.
 func maybeWarnSkillsOutOfSync() {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -110,69 +109,12 @@ func maybeWarnSkillsOutOfSync() {
 		return
 	}
 	if codegen.SkillsOutOfSync(cwd) {
-		fmt.Fprintf(os.Stderr, "%s\n", StyleWarning.Render("⚠ Skills are out of sync. Run 'knowme sync' to update."))
+		fmt.Fprintf(os.Stderr, "%s\n", StyleWarning.Render("⚠ Skills are out of sync. Run 'knowme setup agents' to update."))
 	}
-}
-
-// maybeAutoSetup detects a cloned Know-Me project with config.json but missing
-// local setup (e.g. embedding model not downloaded) and prompts the user to
-// complete setup. This runs on the first command after cloning.
-func maybeAutoSetup() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return
-	}
-	root := filepath.Join(cwd, paths.StoreDirName)
-	if _, err := os.Stat(root); err != nil {
-		return // not a knowme project
-	}
-
-	store := storage.NewStore(root)
-	cfg, err := store.Config.Load()
-	if err != nil {
-		return
-	}
-
-	// Check if semantic search is configured but model is not installed
-	if cfg.Settings.SemanticSearch == nil || !cfg.Settings.SemanticSearch.Enabled {
-		return
-	}
-	if _, unsupported := currentLocalONNXUnsupported(cfg.Settings.SemanticSearch); unsupported {
-		return
-	}
-
-	modelID := cfg.Settings.SemanticSearch.Model
-	if modelID == "" {
-		return
-	}
-
-	// Find the model in supported list
-	var selected *embeddingModel
-	for i := range supportedModels {
-		if supportedModels[i].ID == modelID {
-			selected = &supportedModels[i]
-			break
-		}
-	}
-	if selected == nil {
-		return
-	}
-
-	if isModelInstalled(selected) {
-		return // already installed, nothing to do
-	}
-
-	// Model not installed — prompt user
-	fmt.Println()
-	fmt.Println(warnStyle.Render("⚠ This project uses semantic search but the embedding model is not installed locally."))
-	fmt.Println(RenderField("Model", fmt.Sprintf("%s (%s, ~%dMB)", selected.Name, selected.ID, selected.SizeMB)))
-	fmt.Println()
-	fmt.Println(RenderHint("Run: " + RenderCmd("knowme sync")))
-	fmt.Println()
 }
 
 func shouldSkipCLIWarnings(args []string) bool {
-	for _, name := range []string{"doctor", "runtime", "runtime-memory", "__runtime", "__lsp-daemon"} {
+	for _, name := range []string{"doctor", "runtime", "runtime-memory", "__runtime"} {
 		if slices.Contains(args, name) {
 			return true
 		}
@@ -189,8 +131,6 @@ func Execute() error {
 	// Warn if skills are out of sync after a CLI upgrade.
 	maybeWarnSkillsOutOfSync()
 
-	// Check if cloned project needs local setup (e.g. embedding model download).
-	maybeAutoSetup()
 
 	// Start update check in background while command runs
 	msgCh := make(chan string, 1)

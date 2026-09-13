@@ -12,7 +12,7 @@ Skills tách biệt với MCP tools. MCP tools hiện trong client dưới dạn
 
 ## Setup
 
-Skills được tạo qua `knowme setup <target> --global` cho personal assistant setup thông thường, qua `knowme setup <target>` khi chủ ý muốn repo-local setup, hoặc re-sync bằng `knowme sync --skills`:
+Skills được tạo qua `knowme setup <target> --global` cho personal assistant setup thông thường, qua `knowme setup <target>` khi chủ ý muốn repo-local setup, hoặc refresh bằng `knowme setup`:
 
 ```bash
 knowme setup claude --global    # Sync Claude skills/config ở user scope
@@ -20,7 +20,7 @@ knowme setup opencode --global  # Sync OpenCode skills/config ở user scope
 knowme setup codex --global     # Sync Codex skills/config ở user scope
 knowme setup hermes --global    # Sync Hermes external skill config ở user scope
 knowme setup kiro --global      # Sync Kiro skills/config ở user scope
-knowme sync --skills   # Re-sync tất cả platforms đã cấu hình
+knowme setup agents       # Sync agent skills
 ```
 
 ## Invocation syntax
@@ -49,7 +49,7 @@ $kn-flow @doc/<spec-path> --sequential # Opt out Codex sub-agent delegation
 
 `kn-research` là MCP-first:
 
-- dùng Know-Me `search`/`retrieve` cho project docs, tasks, memory, và decisions
+- dùng Know-Me `search`/`retrieve` cho project docs và tasks
 - dùng Know-Me `code` tools trước raw file search để xem code structure, symbols, definitions, và references
 - dùng specialized external MCP providers như Context7/library docs, GitHub/source MCP, hoặc official docs MCP khi cần upstream facts
 - dùng general web search chỉ khi specialized MCP providers không có, không đủ, hoặc user yêu cầu rõ
@@ -60,4 +60,4 @@ Khi research scope lớn và runtime expose sub-agent tools, `kn-research` có t
 
 - `.agents/skills` là primary path cho agent-compatible platforms
 - `knowme init` không còn sync skills — dùng `knowme setup <target> --global` sau init cho personal assistant setup
-- `knowme sync --skills` là entrypoint để regenerate skills sau khi update
+- `knowme setup` là entrypoint để regenerate skills sau khi update

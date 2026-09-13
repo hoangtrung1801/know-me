@@ -79,14 +79,14 @@ knowme validate --plain
 ### Sync
 
 ```bash
-knowme sync
+knowme setup
 ```
 
 ## Chọn surface nào?
 
 - Dùng CLI khi cần command nhanh, script, hoặc terminal-first work.
-- Dùng Web UI khi cần board, doc browser, graph view, config pages, hoặc chat workflow.
-- Dùng MCP khi AI assistant cần structured access tới task, doc, search, memory, template, và validation.
+- Dùng Web UI khi cần board, doc browser, config pages, hoặc chat workflow.
+- Dùng MCP khi AI assistant cần structured access tới task, doc, search, template, và validation.
 - Dùng skill khi muốn agent-side workflow như tạo spec, implement, review, hoặc orchestration bằng full flow.
 
 ## Tiếp theo

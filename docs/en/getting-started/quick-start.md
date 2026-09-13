@@ -74,11 +74,11 @@ See [Platforms](../integrations/platforms.md) for supported setup targets.
 ## 7. Sync generated artifacts when needed
 
 ```bash
-knowme sync
+knowme setup
 knowme update
 ```
 
-Use `knowme sync` after cloning, after changing selected platforms, or after updating the CLI. Use `knowme update` when you want Know-Me to refresh generated project artifacts to the current CLI behavior.
+Use `knowme setup` after cloning, after changing selected platforms, or after updating the CLI. Use `knowme update` when you want Know-Me to refresh generated project artifacts to the current CLI behavior.
 
 ## 8. Open the Web UI again later
 

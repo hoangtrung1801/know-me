@@ -25,7 +25,6 @@ import { Sheet, SheetContent, SheetTitle } from "../components/ui/sheet";
 import { DocsDocHeader } from "./docs/DocsDocHeader";
 import { DocsCreateView } from "./docs/DocsCreateView";
 import { DocsEmptyState } from "./docs/DocsEmptyState";
-import { DocMiniGraph } from "./docs/DocMiniGraph";
 import { DocHistorySheet } from "./docs/DocHistorySheet";
 import { MDRenderWithHighlight } from "../components/editor/MDRenderWithHighlight";
 
@@ -618,7 +617,6 @@ function DocsPageInner() {
 									{!isEditing && (
 										<div data-docs-rail className="docs-side-rail w-52 shrink-0 hidden xl:block pt-10 pr-5">
 											<div className="sticky top-8">
-												<DocMiniGraph docPath={selectedDoc.path} />
 												<DocsTOC markdown={selectedDoc.content || ""} scrollContainerRef={scrollContainerRef} onHeadingSelect={navigateToHeading} />
 											</div>
 										</div>

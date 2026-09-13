@@ -12,9 +12,6 @@ import (
 // ExecuteRuntimeJob runs a queued runtime job synchronously inside the shared runtime.
 func ExecuteRuntimeJob(storeRoot string, job runtimequeue.Job) error {
 	store := storage.NewStore(storeRoot)
-	defer func() {
-		_ = PersistDefaultSemanticRuntimeStatus()
-	}()
 	switch job.Kind {
 	case runtimequeue.JobIndexTask:
 		return executeRuntimeEntity(store, string(job.Kind)+" "+job.Target, func(svc *IndexService) error {

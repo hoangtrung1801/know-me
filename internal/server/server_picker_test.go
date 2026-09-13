@@ -34,15 +34,15 @@ func TestNewServerAllowsPickerMode(t *testing.T) {
 	}
 }
 
-func TestNewServerCanDisableLSPAndOpenCode(t *testing.T) {
+func TestNewServerCanDisableOpenCode(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	store := storage.NewStore(storage.GlobalRootPath())
 	if err := store.Init(""); err != nil {
 		t.Fatal(err)
 	}
-	s := NewServer(store, "", 0, Options{DisableLSP: true, DisableOpenCode: true})
-	if s.lspManager != nil || s.runtimeOpenCode != nil {
-		t.Fatalf("lsp = %#v, opencode = %#v", s.lspManager, s.runtimeOpenCode)
+	s := NewServer(store, "", 0, Options{DisableOpenCode: true})
+	if s.runtimeOpenCode != nil {
+		t.Fatalf("opencode = %#v", s.runtimeOpenCode)
 	}
 	if _, configured := s.openCodeConfig(); configured {
 		t.Fatal("OpenCode must remain disabled")
@@ -151,8 +151,6 @@ func TestProjectScopedRoutes_Return503_WhenNoStore(t *testing.T) {
 		{"GET", "/api/docs"},
 		{"GET", "/api/config"},
 		{"GET", "/api/search?q=test"},
-		{"GET", "/api/graph"},
-		{"GET", "/api/memories"},
 		{"GET", "/api/validate/sdd"},
 		{"GET", "/api/time/status"},
 	}

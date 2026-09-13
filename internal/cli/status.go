@@ -176,14 +176,7 @@ func renderStatusPlain(p readiness.Payload) {
 
 	if p.Knowledge != nil {
 		k := p.Knowledge
-		totalMem := k.Memories.Project + k.Memories.Global
-		fmt.Printf("Knowledge: %d docs, %d tasks, %d templates, %d memories, %d decisions, %d relations\n",
-			k.Docs, k.Tasks, k.Templates, totalMem, k.Decisions.Total, k.Relations)
-		fmt.Printf("Decisions: %d current, %d draft, %d historical; %d legacy Decision Memories\n",
-			k.Decisions.Current, k.Decisions.Draft, k.Decisions.Historical, k.Memories.LegacyDecision)
-		if k.Imports > 0 {
-			fmt.Printf("Imports: %d active sources\n", k.Imports)
-		}
+		fmt.Printf("Knowledge: %d docs, %d tasks, %d templates\n", k.Docs, k.Tasks, k.Templates)
 	}
 
 	if p.Search != nil {
@@ -217,24 +210,6 @@ func renderStatusPlain(p readiness.Payload) {
 		fmt.Println("Runtime: not running")
 	}
 
-	if len(p.LSP) > 0 {
-		parts := make([]string, 0, len(p.LSP))
-		for _, item := range p.LSP {
-			detail := item.Status
-			if item.Backend != "" {
-				detail += "/" + item.Backend
-			}
-			if item.ReadinessState != "" && item.ReadinessState != "not_applicable" {
-				detail += " readiness=" + item.ReadinessState
-			}
-			if item.Status == "not_installed" && item.InstallCmd != "" {
-				parts = append(parts, fmt.Sprintf("%s=%s (run: %s)", item.ID, item.Status, item.InstallCmd))
-			} else {
-				parts = append(parts, fmt.Sprintf("%s=%s", item.ID, detail))
-			}
-		}
-		fmt.Printf("LSP: %s\n", strings.Join(parts, ", "))
-	}
 
 	if len(p.Capabilities) > 0 {
 		fmt.Printf("Capabilities: %s\n", strings.Join(p.Capabilities, ", "))
@@ -256,24 +231,9 @@ func renderStatusStyled(p readiness.Payload) {
 	// Knowledge
 	if p.Knowledge != nil {
 		k := p.Knowledge
-		totalMem := k.Memories.Project + k.Memories.Global
 		fmt.Println(StyleBold.Render("Knowledge"))
 		fmt.Printf("  %s %d docs, %d tasks, %d templates\n",
 			StyleSuccess.Render("✓"), k.Docs, k.Tasks, k.Templates)
-		fmt.Printf("  %s %d memories (%d project, %d global)\n",
-			StyleSuccess.Render("✓"), totalMem, k.Memories.Project, k.Memories.Global)
-		fmt.Printf("  %s %d System Decisions (%d current, %d draft, %d historical)\n",
-			StyleSuccess.Render("✓"), k.Decisions.Total, k.Decisions.Current, k.Decisions.Draft, k.Decisions.Historical)
-		if k.Memories.LegacyDecision > 0 {
-			fmt.Printf("  %s %d legacy Decision Memories await reviewed migration\n",
-				StyleWarning.Render("⚠"), k.Memories.LegacyDecision)
-		}
-		if k.Relations > 0 {
-			fmt.Printf("  %s %d relations\n", StyleSuccess.Render("✓"), k.Relations)
-		}
-		if k.Imports > 0 {
-			fmt.Printf("  %s %d import sources\n", StyleInfo.Render("↓"), k.Imports)
-		}
 		fmt.Println()
 	}
 
@@ -318,36 +278,6 @@ func renderStatusStyled(p readiness.Payload) {
 		fmt.Println()
 	}
 
-	// LSP
-	if len(p.LSP) > 0 {
-		fmt.Println(StyleBold.Render("LSP"))
-		for _, item := range p.LSP {
-			marker := StyleDim.Render("○")
-			if item.Status == "running" || item.Status == "installed" {
-				marker = StyleSuccess.Render("✓")
-			} else if item.Status == "not_installed" && item.InstallCmd != "" {
-				marker = StyleWarning.Render("⚠")
-			}
-			line := fmt.Sprintf("  %s %s: %s", marker, item.ID, item.Status)
-			if item.Backend != "" {
-				line += fmt.Sprintf(" backend=%s", item.Backend)
-			}
-			if item.Binary != "" {
-				line += fmt.Sprintf(" (%s via %s)", item.Binary, item.Source)
-			}
-			if item.ReadinessState != "" && item.ReadinessState != "not_applicable" {
-				line += fmt.Sprintf(" readiness=%s", item.ReadinessState)
-			}
-			if item.LogPath != "" {
-				line += fmt.Sprintf(" log=%s", item.LogPath)
-			}
-			fmt.Println(line)
-			if item.Status == "not_installed" && item.InstallCmd != "" {
-				fmt.Printf("    Run: %s\n", item.InstallCmd)
-			}
-		}
-		fmt.Println()
-	}
 
 	// Capabilities
 	if len(p.Capabilities) > 0 {

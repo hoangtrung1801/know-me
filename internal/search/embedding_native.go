@@ -26,7 +26,7 @@ type EmbedderConfig struct {
 func NewEmbedder(cfg EmbedderConfig) (*Embedder, error) {
 	modelCfg, ok := EmbeddingModels[cfg.ModelName]
 	if !ok {
-		return nil, fmt.Errorf("unknown embedding model %q", cfg.ModelName)
+		return nil, fmt.Errorf("unknown model %q", cfg.ModelName)
 	}
 
 	dims := cfg.Dimensions

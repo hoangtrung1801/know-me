@@ -79,14 +79,14 @@ knowme validate --plain
 ### Keep generated artifacts aligned
 
 ```bash
-knowme sync
+knowme setup
 ```
 
 ## Choosing a surface
 
 - Use the CLI when you want fast commands, scripts, or terminal-first work.
-- Use the Web UI when you want a board, doc browser, graph view, config pages, or chat workflow.
-- Use MCP when an AI assistant needs structured access to tasks, docs, search, memory, templates, and validation.
+- Use the Web UI when you want a board, doc browser, config pages, or chat workflow.
+- Use MCP when an AI assistant needs structured access to tasks, docs, search, templates, and validation.
 - Use skills when you want agent-side workflows such as spec creation, implementation, review, or full flow orchestration.
 
 ## Recommended next reads

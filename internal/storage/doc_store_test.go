@@ -51,17 +51,6 @@ func TestDocStoreRenameAndRewriteDocReferences(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create task: %v", err)
 	}
-	if err := store.Memory.Create(&models.MemoryEntry{
-		ID:        "mem001",
-		Title:     "Memory",
-		Layer:     models.MemoryLayerProject,
-		Category:  "pattern",
-		Content:   "Remember @doc/guides/old{implements}",
-		CreatedAt: now,
-		UpdatedAt: now,
-	}); err != nil {
-		t.Fatalf("create memory: %v", err)
-	}
 
 	renamed := *oldDoc
 	renamed.Path = "guides/new"
@@ -70,7 +59,7 @@ func TestDocStoreRenameAndRewriteDocReferences(t *testing.T) {
 	if err := store.Docs.Rename(oldDoc.Path, &renamed); err != nil {
 		t.Fatalf("rename doc: %v", err)
 	}
-	if err := store.Docs.RewriteDocReferences(oldDoc.Path, renamed.Path, store.Tasks, store.Memory); err != nil {
+	if err := store.Docs.RewriteDocReferences(oldDoc.Path, renamed.Path, store.Tasks); err != nil {
 		t.Fatalf("rewrite doc refs: %v", err)
 	}
 
@@ -104,13 +93,6 @@ func TestDocStoreRenameAndRewriteDocReferences(t *testing.T) {
 		t.Fatalf("task notes = %q", task.ImplementationNotes)
 	}
 
-	memory, err := store.Memory.Get("mem001")
-	if err != nil {
-		t.Fatalf("get memory: %v", err)
-	}
-	if memory.Content != "Remember @doc/guides/new{implements}" {
-		t.Fatalf("memory content = %q", memory.Content)
-	}
 }
 
 func TestDocStoreApprovedLockedDecisionEditRequiresReview(t *testing.T) {

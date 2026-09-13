@@ -148,7 +148,7 @@ func (d *OllamaDetector) GetEmbeddingDimensions(info *OllamaModelInfo) int {
 	if info == nil || info.ModelInfo == nil {
 		return 0
 	}
-	// Look for embedding_length in model_info (common key for embedding models).
+	// Look for embedding_length in model_info (common key for models).
 	if v, ok := info.ModelInfo["general.embedding_length"]; ok {
 		return toInt(v)
 	}

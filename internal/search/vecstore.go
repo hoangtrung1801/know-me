@@ -452,7 +452,7 @@ func (s *FileVectorStore) Stats() (chunkCount int, model string, indexedAt time.
 // Close is a no-op for FileVectorStore (no persistent connection).
 func (s *FileVectorStore) Close() error { return nil }
 
-// Model returns the embedding model name.
+// Model returns the model name.
 func (s *FileVectorStore) Model() string { return s.model }
 
 // GetContentHash returns empty for FileVectorStore (no hash support).

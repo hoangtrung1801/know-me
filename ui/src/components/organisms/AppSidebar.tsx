@@ -9,10 +9,7 @@ import {
 	Github,
 	ExternalLink,
 	ArrowRightLeft,
-	Network,
-	Brain,
 	Link2,
-	ScrollText,
 	Activity,
 		FolderOpen,
 	NotebookPen,
@@ -86,18 +83,6 @@ const topNavItems = [
 		to: "/docs",
 	},
 	{
-		id: "graph",
-		label: "Graph",
-		icon: Network,
-		to: "/graph",
-	},
-	{
-		id: "memory",
-		label: "Memories",
-		icon: Brain,
-		to: "/memory",
-	},
-	{
 		id: "links",
 		label: "Saved Links",
 		icon: Link2,
@@ -108,12 +93,6 @@ const topNavItems = [
 		label: "Memos",
 		icon: NotebookPen,
 		to: "/memos",
-	},
-	{
-		id: "decisions",
-		label: "System Decisions",
-		icon: ScrollText,
-		to: "/decisions",
 	},
 	{
 		id: "audit",

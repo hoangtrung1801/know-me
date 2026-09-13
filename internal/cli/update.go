@@ -91,9 +91,9 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Warning: runtime restart failed: %v\n", err)
 	}
 
-	fmt.Printf("\n  %s Run %s to sync skills and rebuild the search index.\n",
+	fmt.Printf("\n  %s Run %s to sync skills.\n",
 		StyleInfo.Render("ℹ"),
-		StyleBold.Render("knowme sync"))
+		StyleBold.Render("knowme setup"))
 	return nil
 }
 
@@ -419,7 +419,7 @@ func printPackageManagerExternalUpdateGuidanceTo(w io.Writer, method util.Instal
 	fmt.Fprintln(w, "  Close terminals/agents that are using Know-Me, then run this in a fresh PowerShell:")
 	fmt.Fprintf(w, "  %s\n", StyleInfo.Render(installCmd))
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  After it finishes, run %s to sync configs and rebuild indexes.\n", StyleBold.Render("knowme sync"))
+	fmt.Fprintf(w, "  After it finishes, run %s to sync configs.\n", StyleBold.Render("knowme setup"))
 }
 
 // scriptInstallCmd returns the install script command for the current platform.

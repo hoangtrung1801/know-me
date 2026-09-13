@@ -477,7 +477,7 @@ func handleDocUpdate(getStore func() *storage.Store, req mcp.CallToolRequest) (*
 		if err := store.Docs.Rename(oldPath, doc); err != nil {
 			return errFailed("rename doc", err)
 		}
-		if err := store.Docs.RewriteDocReferences(oldPath, doc.Path, store.Tasks, store.Memory); err != nil {
+		if err := store.Docs.RewriteDocReferences(oldPath, doc.Path, store.Tasks); err != nil {
 			return errFailed("rewrite doc references", err)
 		}
 		search.BestEffortRemoveDoc(store, oldPath)

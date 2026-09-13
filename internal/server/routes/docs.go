@@ -318,7 +318,7 @@ func (dr *DocRoutes) update(w http.ResponseWriter, r *http.Request) {
 			respondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		if err := dr.getStore().Docs.RewriteDocReferences(oldPath, doc.Path, dr.getStore().Tasks, dr.getStore().Memory); err != nil {
+		if err := dr.getStore().Docs.RewriteDocReferences(oldPath, doc.Path, dr.getStore().Tasks); err != nil {
 			respondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}

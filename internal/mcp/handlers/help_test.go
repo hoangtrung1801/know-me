@@ -6,20 +6,20 @@ import (
 
 func testRegistry() map[string]HelpEntry {
 	return map[string]HelpEntry{
-		"code.find": {
-			When:     "Locate symbols by name without knowing exact file",
-			Params:   map[string]string{"query": "required — name pattern", "path": "optional — restrict scope", "include_body": "bool"},
-			Why:      "Semantic lookup finds by structure not string",
-			Examples: []string{`code(find, query:"HandleAuth", include_body:true)`},
-			Flow:     "code(symbols) for overview → code(find) for specific symbol",
+		"docs.get": {
+			When:     "Read documentation without loading more content than needed",
+			Params:   map[string]string{"path": "required — doc path", "smart": "bool", "section": "heading title"},
+			Why:      "Smart get keeps context small and avoids full long doc",
+			Examples: []string{`docs(get, path:"guides/cli-guide", smart:true)`},
+			Flow:     "docs(list) for overview → docs(get) for specific doc",
 		},
-		"code.symbols": {
-			When:   "Get structured symbol tree for a file",
-			Params: map[string]string{"path": "required — file path"},
+		"docs.list": {
+			When:   "List documentation files in the repository",
+			Params: map[string]string{"query": "optional — filter pattern"},
 		},
-		"code.insert": {
-			When:   "Add new code before or after a symbol",
-			Params: map[string]string{"path": "required", "anchor": "required — symbol name", "position": "before|after", "body": "required"},
+		"docs.create": {
+			When:   "Create a new document",
+			Params: map[string]string{"path": "required", "title": "required", "content": "required"},
 		},
 		"tasks.update": {
 			When:   "Progress task status, check ACs, append notes",
@@ -35,47 +35,47 @@ func testRegistry() map[string]HelpEntry {
 
 func TestHelpExactMatch(t *testing.T) {
 	registry := testRegistry()
-	keys := helpMatches(registry, "code.find")
-	if len(keys) != 1 || keys[0] != "code.find" {
-		t.Errorf("expected exact match for code.find, got %v", keys)
+	keys := helpMatches(registry, "docs.get")
+	if len(keys) != 1 || keys[0] != "docs.get" {
+		t.Errorf("expected exact match for docs.get, got %v", keys)
 	}
 }
 
 func TestHelpWildcard(t *testing.T) {
 	registry := testRegistry()
-	keys := helpMatches(registry, "code.*")
+	keys := helpMatches(registry, "docs.*")
 	if len(keys) != 3 {
-		t.Errorf("expected 3 matches for code.*, got %d: %v", len(keys), keys)
+		t.Errorf("expected 3 matches for docs.*, got %d: %v", len(keys), keys)
 	}
 	for _, k := range keys {
-		if !contains(k, "code.") {
-			t.Errorf("expected key to start with code., got %s", k)
+		if !contains(k, "docs.") {
+			t.Errorf("expected key to start with docs., got %s", k)
 		}
 	}
 }
 
 func TestHelpKeywordSearch(t *testing.T) {
 	registry := testRegistry()
-	keys := helpMatches(registry, "insert")
+	keys := helpMatches(registry, "section")
 	if len(keys) == 0 {
-		t.Fatal("expected keyword search for 'insert' to find code.insert")
+		t.Fatal("expected keyword search for 'section' to find docs.get")
 	}
 	found := false
 	for _, k := range keys {
-		if k == "code.insert" {
+		if k == "docs.get" {
 			found = true
 		}
 	}
 	if !found {
-		t.Errorf("expected code.insert in results, got %v", keys)
+		t.Errorf("expected docs.get in results, got %v", keys)
 	}
 }
 
 func TestHelpKeywordSearchCaseInsensitive(t *testing.T) {
 	registry := testRegistry()
-	keys := helpMatches(registry, "SYMBOL")
+	keys := helpMatches(registry, "SECTION")
 	if len(keys) == 0 {
-		t.Fatal("expected case-insensitive search for 'SYMBOL' to find matches")
+		t.Fatal("expected case-insensitive search for 'SECTION' to find matches")
 	}
 }
 
@@ -89,7 +89,7 @@ func TestHelpNoMatch(t *testing.T) {
 
 func TestHelpSuggestions(t *testing.T) {
 	registry := testRegistry()
-	suggestions := helpSuggestions(registry, "codex")
+	suggestions := helpSuggestions(registry, "tasker")
 	if len(suggestions) == 0 {
 		t.Fatal("expected suggestions when no match")
 	}
@@ -100,15 +100,15 @@ func TestHelpSuggestions(t *testing.T) {
 
 func TestResolveHelpQueriesJSON(t *testing.T) {
 	registry := testRegistry()
-	result := resolveHelpQueries(registry, []string{"code.find", "tasks.*"})
+	result := resolveHelpQueries(registry, []string{"docs.get", "tasks.*"})
 
-	codeSection, ok := result["code"]
+	docsSection, ok := result["docs"]
 	if !ok {
-		t.Fatal("expected 'code' key in result")
+		t.Fatal("expected 'docs' key in result")
 	}
-	codeMap := codeSection.(map[string]HelpEntry)
-	if _, ok := codeMap["find"]; !ok {
-		t.Error("expected 'find' action in code section")
+	docsMap := docsSection.(map[string]HelpEntry)
+	if _, ok := docsMap["get"]; !ok {
+		t.Error("expected 'get' action in docs section")
 	}
 
 	tasksSection, ok := result["tasks"]

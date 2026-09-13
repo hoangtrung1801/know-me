@@ -11,14 +11,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hoangtrung1801/know-me/internal/storage"
 )
+
+// RetryConfig configures exponential backoff for API rate limiting.
+type RetryConfig struct {
+	MaxRetries   int
+	InitialDelay int
+	MaxDelay     int
+}
 
 // APIEmbedder produces embedding vectors via an OpenAI-compatible /v1/embeddings endpoint.
 type APIEmbedder struct {
 	client     *http.Client
 	config     APIEmbedderConfig
-	retryOpts  storage.RetryConfig
+	retryOpts  RetryConfig
 	dimensions int
 }
 
@@ -30,7 +36,7 @@ type APIEmbedderConfig struct {
 	Dimensions int    // expected embedding dimensions
 	Timeout    int    // seconds per request (default 30)
 	BatchSize  int    // max texts per API call (default 64)
-	Retry      storage.RetryConfig
+	Retry      RetryConfig
 }
 
 // openaiEmbeddingRequest is the request body for /v1/embeddings.

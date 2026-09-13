@@ -97,7 +97,7 @@ func searchConfigChecker(state *localState) Checker {
 						"provider": provider,
 					},
 					Remediation: &Remediation{
-						Description: "Choose an embedding model in Know-Me settings.",
+						Description: "Configure a model in Know-Me settings.",
 						Command:     "knowme settings",
 					},
 				}, nil
@@ -137,7 +137,7 @@ func searchModelChecker(state *localState) Checker {
 					Status:  StatusWarn,
 					Summary: "No semantic model is configured",
 					Remediation: &Remediation{
-						Description: "Choose an embedding model in Know-Me settings.",
+						Description: "Configure a model in Know-Me settings.",
 						Command:     "knowme settings",
 					},
 				}, nil
@@ -168,16 +168,16 @@ func searchModelChecker(state *localState) Checker {
 						settings,
 						modelStatus,
 						"Configured ONNX model is not downloaded",
-						"Download the configured ONNX embedding model.",
-						"knowme model download "+settings.Model,
+						"Download the configured ONNX model.",
+						"knowme settings",
 					), nil
 				case localONNXModelIncomplete:
 					return localONNXModelFinding(
 						settings,
 						modelStatus,
 						"Configured ONNX model download is incomplete",
-						"Re-download the configured ONNX embedding model to restore missing artifacts.",
-						"knowme model download "+settings.Model+" --force",
+						"Re-download the configured ONNX model to restore missing artifacts.",
+						"knowme settings",
 					), nil
 				}
 			}
@@ -240,8 +240,8 @@ func searchModelChecker(state *localState) Checker {
 					Summary:  "Configured ONNX model is not downloaded",
 					Evidence: evidence,
 					Remediation: &Remediation{
-						Description: "Download the configured ONNX embedding model.",
-						Command:     "knowme model download " + settings.Model,
+						Description: "Download the configured ONNX model.",
+						Command:     "knowme settings",
 					},
 				}, nil
 			}
@@ -252,7 +252,7 @@ func searchModelChecker(state *localState) Checker {
 					Summary:  "Configured semantic model or provider is unavailable",
 					Evidence: evidence,
 					Remediation: &Remediation{
-						Description: "Review the embedding model and provider configuration.",
+						Description: "Review the model configuration.",
 						Command:     "knowme settings",
 					},
 				}, nil

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"bytes"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,24 +75,6 @@ func TestRunResolvePlainAndJSONOutput(t *testing.T) {
 	}
 	var jsonOut bytes.Buffer
 	jsonCmd.SetOut(&jsonOut)
-
-	if err := runResolve(jsonCmd, []string{"@memory-mem001"}); err != nil {
-		t.Fatalf("runResolve json returned error: %v", err)
-	}
-
-	var resolution models.SemanticResolution
-	if err := json.Unmarshal(jsonOut.Bytes(), &resolution); err != nil {
-		t.Fatalf("unmarshal json output: %v\n%s", err, jsonOut.String())
-	}
-	if !resolution.Found || resolution.Entity == nil {
-		t.Fatal("expected resolved JSON entity")
-	}
-	if resolution.Reference.Relation != models.SemanticReferenceRelationReferences {
-		t.Fatalf("relation = %q", resolution.Reference.Relation)
-	}
-	if resolution.Entity.Type != "memory" || resolution.Entity.MemoryLayer != models.MemoryLayerProject {
-		t.Fatalf("unexpected JSON entity: %+v", resolution.Entity)
-	}
 }
 
 func setupResolveCLIProject(t *testing.T) string {
@@ -143,18 +124,6 @@ func setupResolveCLIProject(t *testing.T) string {
 		UpdatedAt: now,
 	}); err != nil {
 		t.Fatalf("create task: %v", err)
-	}
-	if err := store.Memory.Create(&models.MemoryEntry{
-		ID:        "mem001",
-		Title:     "Semantic note",
-		Layer:     models.MemoryLayerProject,
-		Category:  "pattern",
-		Tags:      []string{"semantic"},
-		Content:   "Remember this.",
-		CreatedAt: now,
-		UpdatedAt: now,
-	}); err != nil {
-		t.Fatalf("create memory: %v", err)
 	}
 
 	return projectRoot

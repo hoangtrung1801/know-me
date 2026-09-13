@@ -624,7 +624,7 @@ func TestEngineRetrieve_FiltersSourceTypes(t *testing.T) {
 
 	resp, err := engine.Retrieve(models.RetrievalOptions{
 		Query:       "retrieval foundation",
-		SourceTypes: []string{"task", "memory"},
+		SourceTypes: []string{"task"},
 	})
 	if err != nil {
 		t.Fatalf("Retrieve: %v", err)
@@ -673,7 +673,7 @@ func TestEngineRetrieve_ExpandsReferences(t *testing.T) {
 	}
 
 	foundExpanded := false
-	foundDecision := false
+	foundTask := false
 	for _, candidate := range resp.Candidates {
 		if len(candidate.ExpandedFrom) == 0 {
 			continue
@@ -681,35 +681,19 @@ func TestEngineRetrieve_ExpandsReferences(t *testing.T) {
 		if candidate.ExpandedFrom[0] != "doc:guides/doc-only-retrieval" {
 			continue
 		}
-		if candidate.Type == "decision" && candidate.ID == "20260618-1024-use-qdrant-as-default-vector-db" {
-			foundDecision = true
+		if candidate.Type == "task" && candidate.ID == "rag001" {
+			foundTask = true
 		}
 		foundExpanded = true
 	}
 	if !foundExpanded {
 		t.Fatal("expected at least one expanded candidate")
 	}
-	if !foundDecision {
-		t.Fatalf("expected decision expanded candidate, got %+v", resp.Candidates)
+	if !foundTask {
+		t.Fatalf("expected task expanded candidate, got %+v", resp.Candidates)
 	}
 }
 
-func TestMergeStoreMemoryResultsPreservesProjectAndGlobalHits(t *testing.T) {
-	results := mergeStoreMemoryResults([]models.SearchResult{
-		{Type: "memory", ID: "mem-project", Title: "Project memory", Score: 0.92, MemoryLayer: models.MemoryLayerProject, MemoryStore: memoryStoreProject},
-		{Type: "memory", ID: "mem-global", Title: "Global memory", Score: 0.88, MemoryLayer: models.MemoryLayerGlobal, MemoryStore: memoryStoreGlobal},
-	}, 10)
-
-	if len(results) != 2 {
-		t.Fatalf("results = %d, want 2", len(results))
-	}
-	if results[0].MemoryStore == results[1].MemoryStore {
-		t.Fatalf("expected distinct memory stores, got %q and %q", results[0].MemoryStore, results[1].MemoryStore)
-	}
-	if results[0].MemoryLayer == "" || results[1].MemoryLayer == "" {
-		t.Fatalf("expected memory layer provenance, got %+v", results)
-	}
-}
 
 func TestEngineSearch_HybridUsesBM25KeywordSideAndCompatibleMatchedBy(t *testing.T) {
 	store := newRetrievalTestStore(t)
@@ -745,7 +729,7 @@ func TestEngineSearch_HybridUsesBM25KeywordSideAndCompatibleMatchedBy(t *testing
 		switch {
 		case result.Type == "doc" && result.ID == "guides/retrieval-foundation":
 			mergedDoc = result
-		case result.Type == "memory" && result.ID == "mem001":
+		case result.Type == "task" && result.ID == "rag001":
 			lexicalOnly = result
 		case result.Type == "doc" && result.ID == "guides/semantic-only":
 			semanticOnly = result
@@ -758,7 +742,7 @@ func TestEngineSearch_HybridUsesBM25KeywordSideAndCompatibleMatchedBy(t *testing
 		t.Fatalf("merged MatchedBy = %q, want semantic,keyword", got)
 	}
 	if lexicalOnly == nil || strings.Join(lexicalOnly.MatchedBy, ",") != "keyword" {
-		t.Fatalf("expected BM25 lexical-only memory result with keyword MatchedBy, got %+v", lexicalOnly)
+		t.Fatalf("expected BM25 lexical-only task result with keyword MatchedBy, got %+v", lexicalOnly)
 	}
 	if semanticOnly == nil || strings.Join(semanticOnly.MatchedBy, ",") != "semantic" {
 		t.Fatalf("expected semantic-only result with semantic MatchedBy, got %+v", semanticOnly)
@@ -857,31 +841,6 @@ func newRetrievalTestStore(t *testing.T) *storage.Store {
 		UpdatedAt:   now,
 	}); err != nil {
 		t.Fatalf("create task: %v", err)
-	}
-	if err := store.Memory.Create(&models.MemoryEntry{
-		ID:        "mem001",
-		Title:     "Retrieval preference",
-		Layer:     models.MemoryLayerProject,
-		Category:  "pattern",
-		Content:   "Memories support retrieval foundation context.",
-		Tags:      []string{"rag", "retrieval"},
-		CreatedAt: now,
-		UpdatedAt: now,
-	}); err != nil {
-		t.Fatalf("create memory: %v", err)
-	}
-	verifiedAt := now
-	if err := store.Decisions.Create(&models.DecisionEntry{
-		ID:           "20260618-1024-use-qdrant-as-default-vector-db",
-		Title:        "Use Qdrant as default vector DB",
-		Status:       models.DecisionStatusAccepted,
-		VerifiedAt:   &verifiedAt,
-		Verification: []string{"task:@task-rag001:done"},
-		Sources:      []string{"@doc/guides/retrieval-foundation"},
-		CreatedAt:    now,
-		UpdatedAt:    now,
-	}, storage.DecisionCreateOptions{Now: now}); err != nil {
-		t.Fatalf("create decision: %v", err)
 	}
 
 	return store

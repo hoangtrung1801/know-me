@@ -9,7 +9,6 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 - [Repo Mental Model](#repo-mental-model)
 - [How Agents Should Read This File](#how-agents-should-read-this-file)
 - [Tool Selection](#tool-selection)
-- [Memory Usage](#memory-usage)
 - [Critical Rules](#critical-rules)
 - [Git Safety](#git-safety)
 - [Context Retrieval Strategy](#context-retrieval-strategy)
@@ -36,7 +35,7 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 
 ## TL;DR
 
-- Call `initial` at session start — it returns project readiness, knowledge counts, code intelligence rules, workflow guidance, and available tools.
+- Call `initial` at session start — it returns project readiness, knowledge counts, workflow guidance, and available tools.
 - Use `help("tool.action")`, `help("tool.*")`, or `help("workflow.*")` when a domain/action schema is not visible.
 - Use Know-Me as the memory layer for humans and the AI-friendly working layer for agents.
 - Search before reading; read only the sections and docs relevant to the current task.
@@ -68,10 +67,9 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 
 ## Tool Selection
 
-- Call `initial` at session start — it includes project readiness, capabilities, and code intelligence rules.
+- Call `initial` at session start — it includes project readiness and capabilities.
 - Use `help("tool.action")` or `help("tool.*")` for detailed per-action documentation on demand.
 - Use Know-Me MCP tools first for tasks, docs, templates, validation, and time tracking.
-- Use Know-Me `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.
 - Use shell commands for git, tests, builds, generators, and other terminal operations.
 - Prefer targeted retrieval over loading large files in full.
 - Use `knowme search` for discovery and quick relevance checks.
@@ -89,21 +87,6 @@ Human-readable repository guidance for agents working in this project. Runtime-c
 - `bash`: run git, builds, tests, package managers, or other terminal commands.
 - `apply_patch`: make small, explicit file edits.
 - `task`: delegate large research or multi-step exploration when useful.
-
-## Memory Usage
-
-- Session start: `memory({ action: "list", layer: "project" })` to load accumulated project knowledge.
-- After task: use `memory({ action: "add" })` for reusable patterns and conventions; use the first-class Decision tool for durable project decisions.
-- Cross-project: `memory({ action: "promote" })` to move project knowledge to global (`project→global`).
-- Memory complements docs: memory is for fast agent recall, docs are for structured human-readable reference.
-- Never duplicate the full doc content into memory — store a summary and reference the doc with `@doc/<path>`.
-- During any skill: save reusable patterns, conventions, or failures with `memory({ action: "add", layer: "project" })`. Memory category `decision` is legacy; create a first-class System Decision instead.
-- Proactively save durable memory without waiting for the user to say "save this" when confidence is high.
-- Use `project` Memory for repo-specific patterns, conventions, recurring failures, and implementation context; use System Decisions for durable architecture or workflow choices.
-- Use `global` for stable user preferences or workflow rules that should carry across repositories and future sessions.
-- Ask the user only when the information appears durable but the correct scope (`working`, `project`, or `global`) is genuinely ambiguous.
-- After any meaningful user instruction, correction, or newly discovered pattern, quickly evaluate whether it should be stored as memory and save it when appropriate.
-- If the user states a stable collaboration preference, default to saving it as `global` memory unless they clearly scoped it to this repository only.
 
 ## Critical Rules
 

@@ -68,20 +68,12 @@ Per-section git tracking toggles. Kiểm soát subdirectories nào trong `.know-
 
 Config cho semantic search: `enabled`, `model`, `provider`, `dimensions`.
 
-`provider` có thể là `local`, `ollama`, hoặc provider ID đã đăng ký bằng `knowme provider add`.
+`provider` có thể là `local` hoặc `ollama`.
 
 - `knowme init` set các giá trị này
 - `knowme settings` hiển thị Local ONNX models kèm trạng thái downloaded/not downloaded
 - Nếu chọn Local ONNX model chưa download trong `knowme settings`, Know-Me hỏi xác nhận rồi download trước khi lưu
-- `knowme provider add` và `knowme model add --provider <id> <model-name>` cấu hình API-backed embedding models
-- `knowme sync` re-apply semantic setup
 - `knowme search --reindex` rebuild local index
-
-### `settings.lsp`
-
-Config cho LSP-based code intelligence.
-
-- `enabled`: bật/tắt LSP servers cho code navigation
 
 ### `settings.platforms`
 
@@ -89,7 +81,7 @@ Khai báo platform integrations cần quản lý.
 
 Supported: `claude-code`, `opencode`, `codex`, `kiro`, `antigravity`, `cursor`, `gemini`, `copilot`, `agents`.
 
-Ảnh hưởng tới những gì `setup`, `sync`, `update` tạo hoặc refresh: instruction files, skills, MCP config, runtime hooks, platform-specific config.
+Ảnh hưởng tới những gì `setup`, `update` tạo hoặc refresh: instruction files, skills, MCP config, runtime hooks, platform-specific config.
 
 ## Khi nào edit config trực tiếp?
 
@@ -103,7 +95,7 @@ Có thể edit `.know-me/config.json` trực tiếp, nhưng flow thường là:
 - `knowme settings` để mở settings center tương tác cho project hiện tại
 - `knowme settings --global` để lưu defaults dùng lại cho các lần `knowme init` sau
 - `knowme config get/set/list/reset` cho script hoặc agent
-- `knowme sync` để re-apply config
+- `knowme setup` để re-apply integration files
 
 ## Settings và config shorthands
 

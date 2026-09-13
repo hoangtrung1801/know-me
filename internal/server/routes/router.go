@@ -98,10 +98,6 @@ func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadca
 		nr := &NotifyRoutes{store: store, mgr: manager, sse: sse}
 		nr.Register(r)
 
-		// Imports
-		ir := &ImportRoutes{store: store, mgr: manager, sse: sse}
-		ir.Register(r)
-
 		// Activities
 		ar := &ActivityRoutes{store: store, mgr: manager}
 		ar.Register(r)
@@ -115,23 +111,8 @@ func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadca
 			codexChat:   codexChat,
 		}
 		chr.Register(r)
-
-		// Graph
-		ggr := &GraphRoutes{store: store, mgr: manager}
-		ggr.Register(r)
-
-		// Embedding models (project-scoped, reads from global paths)
-		emr := &EmbeddingModelRoutes{}
-		emr.Register(r)
-
-		// Memory
-		mr := &MemoryRoutes{store: store, mgr: manager, sse: sse}
-		mr.Register(r)
-
-		// Decisions
-		der := &DecisionRoutes{store: store, mgr: manager, sse: sse}
-		der.Register(r)
 	})
+
 
 	// Skills (project-root based, not store-dependent)
 	skr := NewSkillRoutes(projectRoot)

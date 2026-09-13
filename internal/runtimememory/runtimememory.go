@@ -10,9 +10,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/hoangtrung1801/know-me/internal/memoryreview"
 	"github.com/hoangtrung1801/know-me/internal/models"
-	"github.com/hoangtrung1801/know-me/internal/search"
 	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
@@ -246,7 +244,7 @@ type CaptureOutcome struct {
 	Threshold    float64              `json:"threshold,omitempty"`
 	Trusted      bool                 `json:"trusted"`
 	TrustReason  string               `json:"trustReason,omitempty"`
-	Matches      []memoryreview.Match `json:"matches,omitempty"`
+	Matches      []any                `json:"matches,omitempty"`
 }
 
 type Adapter struct {
@@ -484,97 +482,12 @@ func Capture(store *storage.Store, input Input) (*models.MemoryEntry, bool, erro
 }
 
 func CaptureWithOutcome(store *storage.Store, input Input) (*models.MemoryEntry, CaptureOutcome, error) {
-	outcome := CaptureOutcome{Status: CaptureStatusSkipped}
-	if store == nil {
-		outcome.Reason = SkipReasonMissingStore
-		return nil, outcome, nil
-	}
-	captureMode := NormalizeCaptureMode(input.Capture)
-	switch NormalizeMode(input.Mode) {
-	case ModeOff:
-		outcome.Reason = SkipReasonModeOff
-		return nil, outcome, nil
-	case ModeDebug:
-		outcome.Reason = SkipReasonDebugMode
-		return nil, outcome, nil
-	}
-	if captureMode == CaptureDisabled {
-		outcome.Reason = SkipReasonCaptureDisabled
-		return nil, outcome, nil
-	}
-	if reason := promptSkipReason(input.UserPrompt); reason != "" {
-		outcome.Reason = reason
-		return nil, outcome, nil
-	}
-	candidate, ok := inferCaptureCandidate(input)
-	if !ok {
-		outcome.Reason = SkipReasonNoCaptureCandidate
-		return nil, outcome, nil
-	}
-	outcome.Score = candidate.Confidence
-	if captureMode == CaptureHighConfidence {
-		outcome.Threshold = minHighConfidenceCapture
-	}
-	if captureMode == CaptureHighConfidence && candidate.Confidence < minHighConfidenceCapture {
-		outcome.Reason = SkipReasonCaptureConfidence
-		return nil, outcome, nil
-	}
-	entries, err := store.Memory.List("")
-	if err != nil {
-		return nil, outcome, err
-	}
-	if hasDuplicateCapture(entries, candidate) {
-		outcome.Reason = SkipReasonDuplicateCapture
-		return nil, outcome, nil
-	}
-	entry := &models.MemoryEntry{
-		Title:    candidate.Title,
-		Layer:    candidate.Layer,
-		Category: candidate.Category,
-		Content:  candidate.Content,
-		Tags:     append([]string(nil), candidate.Tags...),
-	}
-	result, err := memoryreview.New(store).Add(entry, memoryreview.AddOptions{})
-	if err != nil {
-		return nil, outcome, err
-	}
-	if result.Status == memoryreview.ResultReviewRequired || result.Memory == nil {
-		outcome.Reason = SkipReasonReviewRequired
-		outcome.Matches = append([]memoryreview.Match(nil), result.Matches...)
-		return nil, outcome, nil
-	}
-	outcome.Status = CaptureStatusCreated
-	outcome.Created = true
-	outcome.MemoryID = result.Memory.ID
-	outcome.MemoryStatus = result.Memory.Status
-	outcome.Trusted = result.Memory.CurrentForDefaultRetrieval()
-	if !outcome.Trusted {
-		outcome.TrustReason = "memory_not_active_for_default_retrieval"
-	}
-	return result.Memory, outcome, nil
+	outcome := CaptureOutcome{Status: CaptureStatusSkipped, Reason: SkipReasonModeOff}
+	return nil, outcome, nil
 }
 
 func buildCandidates(store *storage.Store, input Input, maxItems int, baseline bool) ([]candidate, error) {
-	if baseline {
-		entries, err := store.Memory.List("")
-		if err != nil {
-			return nil, err
-		}
-		return buildBaselineItems(entries, input), nil
-	}
-	limit := max(maxItems*4, 20)
-	if hybrid, ok := lookupHybridCandidates(store, input, limit); ok {
-		candidates := buildHybridItems(hybrid, input)
-		if len(candidates) > 0 {
-			return candidates, nil
-		}
-	}
-
-	entries, err := store.Memory.List("")
-	if err != nil {
-		return nil, err
-	}
-	return buildHeuristicItems(entries, input), nil
+	return nil, nil
 }
 
 func memoryVisibleForRuntime(entry *models.MemoryEntry, input Input) bool {
@@ -849,49 +762,7 @@ func buildHybridItems(hits []hybridCandidate, input Input) []candidate {
 }
 
 func defaultHybridCandidates(store *storage.Store, input Input, limit int) ([]hybridCandidate, bool) {
-	if store == nil || strings.TrimSpace(input.UserPrompt) == "" {
-		return nil, false
-	}
-	embedder, vecStore, err := search.InitSemantic(store)
-	if err != nil {
-		return nil, false
-	}
-	if embedder != nil {
-		defer embedder.Close()
-	}
-	if vecStore != nil {
-		defer vecStore.Close()
-	}
-	engine := search.NewEngine(store, embedder, vecStore)
-	if !engine.SemanticAvailable() {
-		return nil, false
-	}
-	results, err := engine.Search(search.SearchOptions{
-		Query:             strings.TrimSpace(input.UserPrompt),
-		Type:              "memory",
-		Mode:              string(search.ModeHybrid),
-		Limit:             limit,
-		IncludeHistorical: NormalizeMode(input.Mode) == ModeDebug,
-	})
-	if err != nil {
-		return nil, true
-	}
-	hits := make([]hybridCandidate, 0, len(results))
-	for _, result := range results {
-		if result.Type != "memory" || strings.TrimSpace(result.ID) == "" {
-			continue
-		}
-		entry, err := store.Memory.Get(result.ID)
-		if err != nil || entry == nil {
-			continue
-		}
-		hits = append(hits, hybridCandidate{
-			entry:     entry,
-			score:     result.Score,
-			matchedBy: append([]string(nil), result.MatchedBy...),
-		})
-	}
-	return hits, true
+	return nil, true
 }
 
 func InjectSystemPrompt(existingSystem, serialized string) string {

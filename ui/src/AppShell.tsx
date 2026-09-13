@@ -42,15 +42,11 @@ const ConfigPage = lazyWithRetry(() => import("./pages/ConfigPage"));
 const DashboardPage = lazyWithRetry(() => import("./pages/DashboardPage"));
 const ProjectsPage = lazyWithRetry(() => import("./pages/ProjectsPage"));
 const DocsPage = lazyWithRetry(() => import("./pages/DocsPage"));
-const ImportsPage = lazyWithRetry(() => import("./pages/ImportsPage"));
 const KanbanPage = lazyWithRetry(() => import("./pages/KanbanPage"));
 const TasksPage = lazyWithRetry(() => import("./pages/TasksPage"));
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
-const GraphPage = lazyWithRetry(() => import("./pages/GraphPage"));
-const MemoryPage = lazyWithRetry(() => import("./pages/MemoryPage"));
 const LinksPage = lazyWithRetry(() => import("./pages/LinksPage"));
 const MemosPage = lazyWithRetry(() => import("./pages/MemosPage"));
-const DecisionPage = lazyWithRetry(() => import("./pages/DecisionPage"));
 const AuditPage = lazyWithRetry(() => import("./pages/AuditPage"));
 
 function PageLoading() {
@@ -352,13 +348,9 @@ export default function AppShell() {
 			},
 		},
 		{ id: "docs", component: DocsPage },
-		{ id: "graph", component: GraphPage },
-		{ id: "memory", component: MemoryPage },
 		{ id: "links", component: LinksPage },
 		{ id: "memos", component: MemosPage },
-		{ id: "decisions", component: DecisionPage },
 		{ id: "audit", component: AuditPage },
-		{ id: "imports", component: ImportsPage },
 		{ id: "chat", component: ChatPage },
 		{ id: "config", component: ConfigPage },
 	];

@@ -23,7 +23,7 @@ knowme doc create "..."
 knowme search "..." --plain
 knowme retrieve "..." --json
 knowme validate --plain
-knowme sync
+knowme setup
 ```
 
 ## Workflow do người điều khiển
@@ -68,7 +68,7 @@ Trước khi xem work là xong:
 
 ```bash
 knowme validate --plain
-knowme sync
+knowme setup
 ```
 
-Validation kiểm tra project integrity. Sync giữ generated shim files và platform artifacts khớp với Know-Me config hiện tại.
+Validation kiểm tra project integrity. Setup giữ generated shim files và platform artifacts khớp với Know-Me config hiện tại.

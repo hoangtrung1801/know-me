@@ -132,11 +132,15 @@ func findDoctorStore() (*storage.Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	root, err := storage.FindProjectRoot(cwd)
+	store, err := resolveProjectStore(cwd)
 	if err != nil {
-		return nil, nil
+		root, rootErr := storage.FindProjectRoot(cwd)
+		if rootErr != nil {
+			return nil, nil
+		}
+		return storage.NewStore(root), nil
 	}
-	return storage.NewStore(root), nil
+	return store, nil
 }
 
 func parseDoctorScopes(values []string) ([]doctor.Scope, error) {

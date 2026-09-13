@@ -61,10 +61,6 @@ func (s *IndexService) Reindex(progress ReindexProgress) error {
 	if err != nil {
 		return fmt.Errorf("list docs: %w", err)
 	}
-	decisions, err := s.store.Decisions.List()
-	if err != nil {
-		return fmt.Errorf("list decisions: %w", err)
-	}
 
 	// Split docs into local and imported.
 	var docs, importedDocs []*models.Doc
@@ -145,54 +141,6 @@ func (s *IndexService) Reindex(progress ReindexProgress) error {
 
 		s.vecStore.RemoveByPrefix(fmt.Sprintf("doc:%s:", doc.Path))
 		if err := s.embedAndStoreDoc(fullDoc); err != nil {
-			continue
-		}
-		s.vecStore.SetContentHash(sourceID, hash)
-	}
-
-	// Phase 4: Index memory entries.
-	memories, err := s.memoryEntriesForIndex()
-	if err != nil {
-		memories = nil // non-fatal
-	}
-	for i, entry := range memories {
-		if progress != nil {
-			progress("memories", i+1, len(memories))
-		}
-		sourceID := "memory:" + entry.ID
-		currentIDs[sourceID] = true
-
-		hash := contentHash(entry.Title + "\n" + entry.Category + "\n" + entry.Content)
-		if s.vecStore.GetContentHash(sourceID) == hash {
-			continue
-		}
-
-		s.vecStore.RemoveByPrefix(fmt.Sprintf("memory:%s:", entry.ID))
-		if err := s.embedAndStoreMemory(entry); err != nil {
-			continue
-		}
-		s.vecStore.SetContentHash(sourceID, hash)
-	}
-
-	// Phase 5: Index decisions.
-	for i, decision := range decisions {
-		if progress != nil {
-			progress("decisions", i+1, len(decisions))
-		}
-		sourceID := "decision:" + decision.ID
-		if !decision.CurrentForDefaultRetrieval() {
-			s.vecStore.RemoveByPrefix(fmt.Sprintf("decision:%s:", decision.ID))
-			continue
-		}
-		currentIDs[sourceID] = true
-
-		hash := contentHash(decisionContentForHash(decision))
-		if s.vecStore.GetContentHash(sourceID) == hash {
-			continue
-		}
-
-		s.vecStore.RemoveByPrefix(fmt.Sprintf("decision:%s:", decision.ID))
-		if err := s.embedAndStoreDecision(decision); err != nil {
 			continue
 		}
 		s.vecStore.SetContentHash(sourceID, hash)
@@ -434,19 +382,7 @@ func (s *IndexService) RemoveMemory(memoryID string) error {
 
 // IndexDecision incrementally indexes a single decision (removes old chunks first).
 func (s *IndexService) IndexDecision(decisionID string) error {
-	s.vecStore.RemoveByPrefix(fmt.Sprintf("decision:%s:", decisionID))
-
-	decision, err := s.store.Decisions.Get(decisionID)
-	if err != nil {
-		return err
-	}
-	if !decision.CurrentForDefaultRetrieval() {
-		return s.vecStore.Save()
-	}
-	if err := s.embedAndStoreDecision(decision); err != nil {
-		return err
-	}
-	return s.vecStore.Save()
+	return nil
 }
 
 // RemoveDecision removes all chunks for a decision from the vector store.
@@ -501,28 +437,12 @@ func (s *IndexService) embedAndStoreDecision(decision *models.DecisionEntry) err
 }
 
 func (s *IndexService) memoryEntriesForIndex() ([]*models.MemoryEntry, error) {
-	if s.store == nil || s.store.Memory == nil {
-		return nil, nil
-	}
-	if s.store.Root == storage.GlobalSemanticStoreRoot() {
-		return currentMemoryEntries(s.store.Memory.ListGlobalOnly())
-	}
-	return currentMemoryEntries(s.store.Memory.ListLocal())
+	return nil, nil
 }
 
 func (s *IndexService) memoryEntryForIndex(memoryID string) (*models.MemoryEntry, error) {
-	if s.store == nil || s.store.Memory == nil {
-		return nil, fmt.Errorf("memory store unavailable")
-	}
-	if s.store.Root == storage.GlobalSemanticStoreRoot() {
-		return s.store.Memory.GetInLayer(memoryID, models.MemoryLayerGlobal)
-	}
-	if entry, err := s.store.Memory.GetInLayer(memoryID, models.MemoryLayerProject); err == nil {
-		return entry, nil
-	}
-	return s.store.Memory.GetInLayer(memoryID, models.MemoryLayerGlobal)
+	return nil, fmt.Errorf("memory store unavailable")
 }
-
 func currentMemoryEntries(entries []*models.MemoryEntry, err error) ([]*models.MemoryEntry, error) {
 	if err != nil {
 		return nil, err

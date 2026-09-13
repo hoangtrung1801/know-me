@@ -52,33 +52,6 @@ func (s *Store) ResolveReference(ref models.SemanticReference) models.SemanticRe
 			Source:    doc.ImportSource,
 		}
 		result.Found = true
-	case "memory":
-		memory, err := s.Memory.ResolveReferenceTarget(ref.Target)
-		if err != nil {
-			return result
-		}
-		result.Entity = &models.ResolvedEntity{
-			Type:        "memory",
-			ID:          memory.ID,
-			Title:       memory.Title,
-			Tags:        memory.Tags,
-			MemoryLayer: memory.Layer,
-			Category:    memory.Category,
-		}
-		result.Found = true
-	case "decision":
-		decision, err := s.Decisions.Get(ref.Target)
-		if err != nil {
-			return result
-		}
-		result.Entity = &models.ResolvedEntity{
-			Type:   "decision",
-			ID:     decision.ID,
-			Title:  decision.Title,
-			Status: decision.Status,
-			Tags:   decision.Tags,
-		}
-		result.Found = true
 	case "template":
 		tmpl, err := s.Templates.Get(ref.Target)
 		if err != nil {

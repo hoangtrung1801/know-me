@@ -1,16 +1,12 @@
 package doctor
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
-	"sort"
 	"sync"
 
 	"github.com/hoangtrung1801/know-me/internal/codegen"
-	"github.com/hoangtrung1801/know-me/internal/lsp"
-	"github.com/hoangtrung1801/know-me/internal/lsp/adapters"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/readiness"
 	"github.com/hoangtrung1801/know-me/internal/runtimeinstall"
@@ -22,8 +18,6 @@ import (
 type localDependencies struct {
 	readiness       func(*storage.Store) (readiness.Payload, error)
 	services        func(*storage.Store) ([]services.ServiceStatus, error)
-	lspStatuses     func(context.Context, *storage.Store) ([]lsp.LanguageRuntimeStatus, error)
-	lspIDs          []string
 	runtimeHooks    func() ([]runtimeinstall.Status, error)
 	skillsOutOfSync func(string) bool
 	exists          func(string) bool
@@ -40,15 +34,11 @@ func defaultLocalDependencies() localDependencies {
 			if store == nil {
 				return readiness.InactivePayload(), nil
 			}
-			return readiness.BuildReadiness(store, readiness.Options{
-				LSP: []lsp.LanguageRuntimeStatus{},
-			}), nil
+			return readiness.BuildReadiness(store, readiness.Options{}), nil
 		},
 		services: func(store *storage.Store) ([]services.ServiceStatus, error) {
 			return services.DetectAllReadOnly(store), nil
 		},
-		lspStatuses: collectLocalLSPStatuses,
-		lspIDs:      localLSPIDs(),
 		runtimeHooks: func() ([]runtimeinstall.Status, error) {
 			return runtimeinstall.StatusAll(runtimeinstall.DefaultOptions())
 		},
@@ -96,12 +86,6 @@ func newLocalState(store *storage.Store, deps localDependencies) *localState {
 	}
 	if deps.services == nil {
 		deps.services = defaults.services
-	}
-	if deps.lspStatuses == nil {
-		deps.lspStatuses = defaults.lspStatuses
-	}
-	if len(deps.lspIDs) == 0 {
-		deps.lspIDs = append([]string(nil), defaults.lspIDs...)
 	}
 	if deps.runtimeHooks == nil {
 		deps.runtimeHooks = defaults.runtimeHooks
@@ -168,16 +152,10 @@ func LocalCheckers(store *storage.Store) []Checker {
 
 func localCheckersWithDependencies(store *storage.Store, deps localDependencies) []Checker {
 	state := newLocalState(store, deps)
-	project := &projectSnapshot{state: state}
 	service := &serviceSnapshot{state: state}
-	languageStatuses := &lspSnapshot{
-		store: store,
-		load:  state.deps.lspStatuses,
-	}
-	checkers := make([]Checker, 0, 10+len(state.deps.lspIDs))
+	checkers := make([]Checker, 0, 10)
 	checkers = append(checkers, searchCheckers(state)...)
 	checkers = append(checkers, runtimeCheckers(store, service)...)
-	checkers = append(checkers, lspCheckers(store, project, languageStatuses, state.deps.lspIDs)...)
 	checkers = append(checkers, aiCheckers(state)...)
 	return checkers
 }
@@ -198,50 +176,6 @@ func (s *serviceSnapshot) get() ([]services.ServiceStatus, error) {
 	return s.state.serviceSnapshot()
 }
 
-type lspSnapshot struct {
-	once     sync.Once
-	store    *storage.Store
-	load     func(context.Context, *storage.Store) ([]lsp.LanguageRuntimeStatus, error)
-	statuses []lsp.LanguageRuntimeStatus
-	err      error
-}
-
-func (s *lspSnapshot) get(ctx context.Context) ([]lsp.LanguageRuntimeStatus, error) {
-	s.once.Do(func() {
-		s.statuses, s.err = s.load(ctx, s.store)
-	})
-	return s.statuses, s.err
-}
-
-func collectLocalLSPStatuses(ctx context.Context, store *storage.Store) ([]lsp.LanguageRuntimeStatus, error) {
-	if store == nil {
-		return nil, nil
-	}
-	project, err := store.Config.Load()
-	if err != nil {
-		return nil, err
-	}
-	var defaults *storage.ProjectDefaults
-	if settings, loadErr := storage.NewEmbeddingSettingsStore().Load(); loadErr == nil {
-		defaults = settings.ProjectDefaults
-	}
-	return lsp.CollectRuntimeStatuses(ctx, lsp.RuntimeStatusOptions{
-		Root:     store.RepositoryRoot(),
-		Config:   lsp.ConfigFromProjectWithDefaults(project, defaults),
-		Adapters: adapters.All(),
-	}), nil
-}
-
-func localLSPIDs() []string {
-	all := adapters.All()
-	ids := make([]string, 0, len(all))
-	for _, adapter := range all {
-		ids = append(ids, adapter.ID())
-	}
-	sort.Strings(ids)
-	return ids
-}
-
 func subsystemDisabled(summary, reason string) CheckResult {
 	return CheckResult{
 		Status:     StatusSkip,
@@ -249,3 +183,4 @@ func subsystemDisabled(summary, reason string) CheckResult {
 		SkipReason: reason,
 	}
 }
+

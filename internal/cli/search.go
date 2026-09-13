@@ -695,9 +695,9 @@ func runSetup() error {
 	provider := semanticProviderForSettings(ss)
 	if provider == "api" || provider == "ollama" {
 		if ss.Model == "" {
-			fmt.Println(searchWarnStyle.Render("No embedding model configured."))
+			fmt.Println(searchWarnStyle.Render("No model configured."))
 			fmt.Println()
-			fmt.Println(RenderHint("Choose a remote embedding model with: " + RenderCmd("knowme settings")))
+			fmt.Println(RenderHint("Choose a model with: " + RenderCmd("knowme settings")))
 			fmt.Println()
 			return nil
 		}
@@ -736,10 +736,9 @@ func runSetup() error {
 
 	// Check if a model is set.
 	if ss == nil || ss.Model == "" {
-		fmt.Println(searchWarnStyle.Render("No embedding model configured."))
+		fmt.Println(searchWarnStyle.Render("No model configured."))
 		fmt.Println()
-		fmt.Println(RenderHint("Set a model first:"))
-		fmt.Println(RenderHint("  " + RenderCmd("knowme model set gte-small")))
+		fmt.Println(RenderHint("Configure a model with: " + RenderCmd("knowme settings")))
 		fmt.Println()
 		return nil
 	}
@@ -982,14 +981,12 @@ func runReindex() error {
 
 	tasks, _ := store.Tasks.List()
 	docs, _ := store.Docs.List()
-	decisions, _ := store.Decisions.List()
 	taskCount := len(tasks)
 	docCount := len(docs)
-	decisionCount := len(decisions)
-	total := taskCount + docCount + decisionCount
+	total := taskCount + docCount
 
 	if total == 0 {
-		fmt.Println(RenderWarning("No tasks, docs, or decisions to index."))
+		fmt.Println(RenderWarning("No tasks or docs to index."))
 		return nil
 	}
 
@@ -1018,7 +1015,7 @@ func runReindex() error {
 		if err != nil {
 			return fmt.Errorf("enqueue reindex: %w", err)
 		}
-		fmt.Printf("%s\n\n", RenderInfo(fmt.Sprintf("Queued runtime reindex (%d tasks, %d docs, %d decisions)...", taskCount, docCount, decisionCount)))
+		fmt.Printf("%s\n\n", RenderInfo(fmt.Sprintf("Queued runtime reindex (%d tasks, %d docs)...", taskCount, docCount)))
 		if err := runRuntimeReindexWithProgress(store.Root, job.ID); err != nil {
 			return fmt.Errorf("reindex failed: %w", err)
 		}
@@ -1026,7 +1023,7 @@ func runReindex() error {
 		vs := search.NewSQLiteVectorStore(searchDir, "", 0)
 		count, _, _ := vs.Stats()
 		fmt.Println(searchSuccessStyle.Render(
-			fmt.Sprintf("✓ Search index rebuilt via runtime (%d tasks, %d docs, %d decisions, %d chunks)", taskCount, docCount, decisionCount, count)))
+			fmt.Sprintf("✓ Search index rebuilt via runtime (%d tasks, %d docs, %d chunks)", taskCount, docCount, count)))
 		return nil
 	}
 
@@ -1078,12 +1075,12 @@ func runReindex() error {
 		fmt.Println(searchDimStyle.Render("Semantic search is not configured."))
 		fmt.Println()
 		fmt.Println(RenderNextSteps(
-			RenderCmd("knowme model download multilingual-e5-small"),
+			RenderCmd("knowme settings"),
 			RenderCmd("knowme search --reindex"),
 		))
 	}
 	fmt.Println(searchDimStyle.Render("Keyword search does not require indexing (scans tasks/docs on each query)."))
-	fmt.Println(RenderInfo(fmt.Sprintf("Found %d tasks, %d docs, and %d decisions available for keyword search.", taskCount, docCount, decisionCount)))
+	fmt.Println(RenderInfo(fmt.Sprintf("Found %d tasks and %d docs available for keyword search.", taskCount, docCount)))
 	return nil
 }
 

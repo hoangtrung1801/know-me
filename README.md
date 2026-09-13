@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <sub>Local-first memory layer · Tasks · Docs · Decisions · Git-friendly · MCP</sub>
+  <sub>Local-first memory layer · Tasks · Docs · Git-friendly · MCP</sub>
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 ---
 
 **Know-Me** is a local-first memory layer for AI-assisted software projects.
-Keep tasks, docs, decisions, and project context in files your team and AI
+Keep tasks, docs, and project context in files your team and AI
 agents can actually inspect.
 
 The product is called **Know-Me**. The command-line interface is `knowme`.
@@ -42,12 +42,11 @@ The product is called **Know-Me**. The command-line interface is `knowme`.
 
 | Resource               | What it holds                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------- |
-| **Projects**           | Centralized home per project; every task, doc, and decision links back to one         |
-| **Tasks & Kanban**     | Planned work with status, acceptance criteria, notes; `board` renders the Kanban view |
-| **Documents**          | Durable project knowledge — specs, architecture, onboarding, journals                 |
-| **Memos**              | Fast global notes and captures, no project required                                   |
-| **Links**              | Saved URLs with metadata for reading later or referencing from tasks/docs             |
-| **Memory & Decisions** | Reusable conventions plus recorded system decisions with evidence                     |
+| **Projects**       | Centralized home per project; every task and doc links back to one                    |
+| **Tasks & Kanban** | Planned work with status, acceptance criteria, notes; `board` renders the Kanban view |
+| **Documents**      | Durable project knowledge — specs, architecture, onboarding, journals                 |
+| **Memos**          | Fast global notes and captures, no project required                                   |
+| **Links**          | Saved URLs with metadata for reading later or referencing from tasks/docs             |
 
 Everything is human-readable on disk (Markdown + JSON), versionable with Git,
 and searchable from any interface. See [Philosophy](./PHILOSOPHY.md) for why.
@@ -57,7 +56,7 @@ and searchable from any interface. See [Philosophy](./PHILOSOPHY.md) for why.
 AI is a collection and recall assistant, not a black box:
 
 - **Collect** — capture a memo, link, task, or doc from the CLI, Web UI, or an agent; Know-Me files it in the right place.
-- **Search** — keyword, hybrid, semantic, and reference-aware lookup across tasks, docs, memories, and decisions.
+- **Search** — keyword and hybrid lookup across tasks and docs.
 - **Enrich** — `retrieve` pulls ranked context for the thing you're working on, so agents and humans see surrounding decisions, docs, and code references instead of guessing.
 
 Nothing important lives only in chat history. If it's worth keeping, it goes
@@ -144,7 +143,7 @@ knowme setup agents
 
 At the start of an AI session, the MCP server exposes `initial` for project
 operating context. Use `help` when an agent needs detailed tool schemas. Run
-`knowme sync` after changing platform configuration or updating the CLI.
+`knowme setup` after changing platform configuration or updating the CLI.
 
 See the [AI Workflow](./docs/en/guides/ai-workflow.md) and
 [MCP integration guide](./docs/en/guides/mcp-integration.md).
@@ -196,15 +195,11 @@ knowme --version
 | `knowme doc ...`      | Create and manage project documentation             |
 | `knowme memo ...`     | Capture and list fast global notes                  |
 | `knowme link ...`     | Save and list links for later                       |
-| `knowme memory ...`   | Store reusable project or global context            |
-| `knowme decision ...` | Record and review system decisions                  |
-| `knowme search ...`   | Search tasks, docs, memories, and decisions         |
+| `knowme search ...`   | Search tasks and docs                               |
 | `knowme retrieve ...` | Retrieve ranked context for an AI workflow          |
-| `knowme code ...`     | Inspect indexed symbols and dependencies            |
 | `knowme validate`     | Check project structure and configuration           |
 | `knowme browser`      | Start or open the local Web UI                      |
 | `knowme setup ...`    | Configure agent platforms and integrations          |
-| `knowme sync`         | Apply project configuration and generated artifacts |
 
 `knowme [command] --help` shows command-specific options. Most commands
 support `--plain` for automation-friendly output and `--json` for structured

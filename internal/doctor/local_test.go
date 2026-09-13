@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hoangtrung1801/know-me/internal/lsp"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/readiness"
 	"github.com/hoangtrung1801/know-me/internal/runtimeinstall"
@@ -59,7 +58,7 @@ func TestSearchChecksReportUnavailableModelAndEmptyIndex(t *testing.T) {
 
 	model := findCheck(t, result, "search.model")
 	if model.Status != StatusWarn || model.Remediation == nil ||
-		model.Remediation.Command != "knowme model download all-MiniLM-L6-v2" {
+		model.Remediation.Command != "knowme settings" {
 		t.Fatalf("model check = %#v", model)
 	}
 	index := findCheck(t, result, "search.project-index")
@@ -215,7 +214,7 @@ func TestSearchChecksReportLocalONNXDependencyStates(t *testing.T) {
 				MissingArtifacts: []string{"onnx_model"},
 			},
 			summary: "Configured ONNX model is not downloaded",
-			command: "knowme model download gte-small",
+			command: "knowme settings",
 		},
 		{
 			name: "model incomplete",
@@ -224,7 +223,7 @@ func TestSearchChecksReportLocalONNXDependencyStates(t *testing.T) {
 				MissingArtifacts: []string{"config.json", "tokenizer.json"},
 			},
 			summary: "Configured ONNX model download is incomplete",
-			command: "knowme model download gte-small --force",
+			command: "knowme settings",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -325,80 +324,6 @@ func TestInspectLocalONNXModelDetectsMissingIncompleteAndAvailable(t *testing.T)
 	}
 }
 
-func TestLSPChecksReportMissingAndDisabledLanguages(t *testing.T) {
-	store := newDoctorStore(t)
-	cfg, err := store.Config.Load()
-	if err != nil {
-		t.Fatalf("Load() error = %v", err)
-	}
-	disabled := false
-	cfg.Settings.LSP = &models.LSPSettings{
-		Languages: map[string]models.LSPLanguageSettings{
-			"go":     {},
-			"python": {Enabled: &disabled},
-		},
-	}
-	if err := store.Config.Save(cfg); err != nil {
-		t.Fatalf("Save() error = %v", err)
-	}
-
-	deps := localDependencies{
-		lspIDs: []string{"go", "java", "python"},
-		lspStatuses: func(context.Context, *storage.Store) ([]lsp.LanguageRuntimeStatus, error) {
-			return []lsp.LanguageRuntimeStatus{
-				{
-					ID:             "go",
-					Name:           "Go",
-					Enabled:        true,
-					Detected:       true,
-					InstallState:   lsp.RuntimeInstallNotInstalled,
-					RunningState:   lsp.RuntimeRunningStopped,
-					ReadinessState: lsp.RuntimeReadinessNotApplicable,
-					InstallCmd:     "knowme lsp install go",
-				},
-				{
-					ID:             "java",
-					Name:           "Java",
-					Enabled:        true,
-					Detected:       false,
-					InstallState:   lsp.RuntimeInstallNotInstalled,
-					RunningState:   lsp.RuntimeRunningStopped,
-					ReadinessState: lsp.RuntimeReadinessNotApplicable,
-					InstallCmd:     "knowme lsp install java",
-				},
-				{
-					ID:             "python",
-					Name:           "Python",
-					Enabled:        false,
-					Detected:       true,
-					InstallState:   lsp.RuntimeInstallDisabled,
-					RunningState:   lsp.RuntimeRunningDisabled,
-					ReadinessState: lsp.RuntimeReadinessNotApplicable,
-				},
-			}, nil
-		},
-	}
-	result, err := Run(context.Background(), RunOptions{
-		Project: ProjectFromStore(store),
-		Scopes:  []Scope{ScopeLSP},
-	}, localCheckersWithDependencies(store, deps))
-	if err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	goCheck := findCheck(t, result, "lsp.go")
-	if goCheck.Status != StatusWarn || goCheck.Remediation == nil ||
-		goCheck.Remediation.Command != "knowme lsp install go" {
-		t.Fatalf("Go check = %#v", goCheck)
-	}
-	javaCheck := findCheck(t, result, "lsp.java")
-	if javaCheck.Status != StatusSkip || javaCheck.SkipReason != "not_detected" {
-		t.Fatalf("Java check = %#v", javaCheck)
-	}
-	pythonCheck := findCheck(t, result, "lsp.python")
-	if pythonCheck.Status != StatusSkip || pythonCheck.SkipReason != "config_disabled" {
-		t.Fatalf("Python check = %#v", pythonCheck)
-	}
-}
 
 func TestManagedServiceProbeFailureDoesNotSuppressSearchChecks(t *testing.T) {
 	store := newDoctorStore(t)

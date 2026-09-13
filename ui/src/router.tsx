@@ -63,11 +63,6 @@ const docsPathRoute = createRoute({
 	component: EmptyRoute,
 });
 
-const importsRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/imports",
-	component: EmptyRoute,
-});
 
 const chatRoute = createRoute({
 	getParentRoute: () => rootRoute,
@@ -81,18 +76,6 @@ const chatSessionRoute = createRoute({
 	component: EmptyRoute,
 });
 
-const graphRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/graph",
-	component: EmptyRoute,
-});
-
-
-const memoryRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/memory",
-	component: EmptyRoute,
-});
 
 const linksRoute = createRoute({
 	getParentRoute: () => rootRoute,
@@ -106,35 +89,6 @@ const memosRoute = createRoute({
 	component: EmptyRoute,
 });
 
-const memoryReviewRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/memory/review",
-	component: EmptyRoute,
-});
-
-const memoryHistoryRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/memory/history",
-	component: EmptyRoute,
-});
-
-const decisionsRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/decisions",
-	component: EmptyRoute,
-});
-
-const decisionsReviewRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/decisions/review",
-	component: EmptyRoute,
-});
-
-const decisionsHistoryRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/decisions/history",
-	component: EmptyRoute,
-});
 
 const auditRoute = createRoute({
 	getParentRoute: () => rootRoute,
@@ -163,16 +117,8 @@ const routeTree = rootRoute.addChildren([
 	taskDetailRoute,
 	docsRoute,
 	docsPathRoute,
-	importsRoute,
-	graphRoute,
-	memoryRoute,
 	linksRoute,
 	memosRoute,
-	memoryReviewRoute,
-	memoryHistoryRoute,
-	decisionsRoute,
-	decisionsReviewRoute,
-	decisionsHistoryRoute,
 	auditRoute,
 	chatRoute,
 	chatSessionRoute,

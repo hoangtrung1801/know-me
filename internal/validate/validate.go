@@ -87,14 +87,7 @@ func Run(store *storage.Store, opts Options) *Result {
 	for _, d := range docs {
 		docPaths[d.Path] = true
 	}
-
-	// Load memory entries for cross-reference validation.
-	memories, _ := store.Memory.List("")
-	memoryIDs := make(map[string]bool, len(memories))
-	for _, m := range memories {
-		memoryIDs[m.ID] = true
-	}
-
+	memoryIDs := make(map[string]bool)
 	// Build parent map for circular detection.
 	parentMap := make(map[string]string, len(tasks))
 	for _, t := range tasks {
@@ -139,15 +132,6 @@ func Run(store *storage.Store, opts Options) *Result {
 		}
 	}
 
-	// --- Memory ---
-	if opts.Scope == "all" || opts.Scope == "memory" {
-		for _, m := range memories {
-			if opts.Entity != "" && opts.Entity != m.ID {
-				continue
-			}
-			issues = append(issues, validateMemory(m, taskIDs, docPaths, memoryIDs, store)...)
-		}
-	}
 
 	// --- Templates ---
 	if opts.Scope == "all" || opts.Scope == "templates" {
@@ -728,19 +712,6 @@ func brokenMemorySourceIssue(entityID, source string) Issue {
 }
 
 func validateMemoryDecisionSource(entityID, decisionID, source string, store *storage.Store) []Issue {
-	if store == nil || store.Decisions == nil {
-		return nil
-	}
-	decision, err := store.Decisions.Get(decisionID)
-	if err != nil {
-		return []Issue{brokenMemorySourceIssue(entityID, source)}
-	}
-	if decision.Status == models.DecisionStatusSuperseded || len(decision.SupersededBy) > 0 {
-		return []Issue{{
-			Level: "warning", Code: "MEMORY_SOURCE_DECISION_SUPERSEDED",
-			Message: fmt.Sprintf("Memory source decision is superseded: %s", strings.TrimSpace(source)), Entity: entityID,
-		}}
-	}
 	return nil
 }
 
@@ -873,23 +844,6 @@ func validateSemanticRefs(content, entityID, level string, taskIDs, docPaths, me
 				issues = append(issues, Issue{
 					Level: level, Code: "BROKEN_DOC_REF",
 					Message: fmt.Sprintf("Referenced doc %s not found", ref.Canonical), Entity: entityID,
-				})
-			}
-		case "memory":
-			if ref.Target != entityID && !memoryIDs[ref.Target] {
-				issues = append(issues, Issue{
-					Level: level, Code: "BROKEN_MEMORY_REF",
-					Message: fmt.Sprintf("Referenced memory %s not found", ref.Canonical), Entity: entityID,
-				})
-			}
-		case "decision":
-			if store == nil || store.Decisions == nil {
-				continue
-			}
-			if _, err := store.Decisions.Get(ref.Target); err != nil {
-				issues = append(issues, Issue{
-					Level: level, Code: "BROKEN_DECISION_REF",
-					Message: fmt.Sprintf("Referenced decision %s not found", ref.Canonical), Entity: entityID,
 				})
 			}
 		case "template":

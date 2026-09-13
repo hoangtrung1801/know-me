@@ -204,6 +204,10 @@ func (r *SemanticRuntime) Status() SemanticRuntimeStatus {
 	return status
 }
 
+func ObservedSemanticRuntimeStatus() SemanticRuntimeStatus {
+	return DefaultSemanticRuntime().Status()
+}
+
 func (r *SemanticRuntime) UnloadIdle() error {
 	now := r.now().UTC()
 	r.mu.Lock()
@@ -386,7 +390,7 @@ func loadSemanticRuntimeConfig(store *storage.Store) (semanticRuntimeConfig, err
 		provider = "local"
 	}
 	if provider == "api" || provider == "ollama" {
-		return semanticRuntimeAPIConfig(ss, provider)
+		return semanticRuntimeConfig{}, fmt.Errorf("provider %q not supported", provider)
 	}
 	if err := RequireLocalONNX(); err != nil {
 		return semanticRuntimeConfig{}, err
@@ -394,54 +398,11 @@ func loadSemanticRuntimeConfig(store *storage.Store) (semanticRuntimeConfig, err
 	return semanticRuntimeLocalConfig(ss, provider)
 }
 
-func semanticRuntimeAPIConfig(ss *models.SemanticSearchSettings, providerType string) (semanticRuntimeConfig, error) {
-	settings, err := storage.NewEmbeddingSettingsStore().Load()
-	if err != nil {
-		return semanticRuntimeConfig{}, fmt.Errorf("load embedding settings: %w", err)
-	}
-	model, err := settings.GetModel(ss.Model)
-	if err != nil {
-		return semanticRuntimeConfig{}, fmt.Errorf("resolve embedding model: %w", err)
-	}
-	provider, err := settings.GetProvider(model.Provider)
-	if err != nil {
-		return semanticRuntimeConfig{}, fmt.Errorf("resolve embedding provider: %w", err)
-	}
-	provider = provider.WithDefaults()
-	key := strings.Join([]string{
-		"provider=" + providerType,
-		"providerID=" + model.Provider,
-		"apiBase=" + provider.APIBase,
-		"apiKey=" + secretFingerprint(provider.APIKey),
-		"model=" + model.Model,
-		"dims=" + strconv.Itoa(model.Dimensions),
-		"timeout=" + strconv.Itoa(provider.Timeout),
-		"batch=" + strconv.Itoa(provider.BatchSize),
-		"retry=" + strconv.Itoa(provider.Retry.MaxRetries) + "/" + strconv.Itoa(provider.Retry.InitialDelay) + "/" + strconv.Itoa(provider.Retry.MaxDelay),
-	}, "|")
-	return semanticRuntimeConfig{
-		cacheKey:         key,
-		provider:         providerType,
-		providerIdentity: model.Provider + "@" + provider.APIBase,
-		modelID:          ss.Model,
-		modelName:        model.Model,
-		dimensions:       model.Dimensions,
-		apiConfig: APIEmbedderConfig{
-			APIBase:    provider.APIBase,
-			APIKey:     provider.APIKey,
-			Model:      model.Model,
-			Dimensions: model.Dimensions,
-			Timeout:    provider.Timeout,
-			BatchSize:  provider.BatchSize,
-			Retry:      provider.Retry,
-		},
-	}, nil
-}
 
 func semanticRuntimeLocalConfig(ss *models.SemanticSearchSettings, providerType string) (semanticRuntimeConfig, error) {
 	modelConfig, ok := EmbeddingModels[ss.Model]
 	if !ok {
-		return semanticRuntimeConfig{}, fmt.Errorf("unknown embedding model %q", ss.Model)
+		return semanticRuntimeConfig{}, fmt.Errorf("unknown model %q", ss.Model)
 	}
 	modelDir := filepath.Join(paths.GlobalStoreRoot(), "models", modelConfig.HuggingFaceID)
 	dims := ss.Dimensions
@@ -478,7 +439,7 @@ func openSemanticRuntimeEmbedder(cfg semanticRuntimeConfig) (EmbedderProvider, e
 	if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
 		onnxPath = filepath.Join(cfg.modelDir, "onnx", "model.onnx")
 		if _, err := os.Stat(onnxPath); os.IsNotExist(err) {
-			return nil, fmt.Errorf("embedding model %q not downloaded (run: knowme model download %s)", cfg.modelID, cfg.modelID)
+			return nil, fmt.Errorf("model %q not downloaded", cfg.modelID)
 		}
 	}
 	return NewEmbedder(EmbedderConfig{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/hoangtrung1801/know-me/internal/lsp"
 	"github.com/hoangtrung1801/know-me/internal/readiness"
 	"github.com/hoangtrung1801/know-me/internal/registry"
 	"github.com/hoangtrung1801/know-me/internal/storage"
@@ -17,9 +16,9 @@ func RegisterProjectTool(
 	getStore func() *storage.Store,
 	setStore func(*storage.Store, string),
 	getRoot func() string,
-	getLSPManager ...func() *lsp.Manager,
+	_ ...any,
 ) {
-	RegisterProjectToolWithStatusProvider(s, getStore, setStore, getRoot, nil, getLSPManager...)
+	RegisterProjectToolWithStatusProvider(s, getStore, setStore, getRoot, nil)
 }
 
 func RegisterProjectToolWithStatusProvider(
@@ -27,8 +26,7 @@ func RegisterProjectToolWithStatusProvider(
 	getStore func() *storage.Store,
 	setStore func(*storage.Store, string),
 	getRoot func() string,
-	getLSPStatuses func(context.Context) []lsp.LanguageRuntimeStatus,
-	getLSPManager ...func() *lsp.Manager,
+	_ ...any,
 ) {
 	s.AddTool(
 		mcp.NewTool("project",
@@ -61,11 +59,7 @@ func RegisterProjectToolWithStatusProvider(
 			case "set":
 				return handleProjectSet(setStore, req)
 			case "status":
-				var manager func() *lsp.Manager
-				if len(getLSPManager) > 0 {
-					manager = getLSPManager[0]
-				}
-				return handleProjectStatus(ctx, getStore, manager, getLSPStatuses)
+				return handleProjectStatus(ctx, getStore)
 			default:
 				return errResultf("unknown project action: %s", action)
 			}
@@ -120,7 +114,7 @@ func handleProjectSet(setStore func(*storage.Store, string), req mcp.CallToolReq
 	return mcp.NewToolResultText(string(out)), nil
 }
 
-func handleProjectStatus(ctx context.Context, getStore func() *storage.Store, getLSPManager func() *lsp.Manager, getLSPStatuses ...func(context.Context) []lsp.LanguageRuntimeStatus) (*mcp.CallToolResult, error) {
+func handleProjectStatus(ctx context.Context, getStore func() *storage.Store, _ ...any) (*mcp.CallToolResult, error) {
 	store := getStore()
 	if store == nil {
 		out, _ := json.MarshalIndent(readiness.InactivePayload(), "", "  ")
@@ -128,14 +122,6 @@ func handleProjectStatus(ctx context.Context, getStore func() *storage.Store, ge
 	}
 
 	opts := readiness.Options{}
-	if len(getLSPStatuses) > 0 && getLSPStatuses[0] != nil {
-		opts.LSP = getLSPStatuses[0](ctx)
-	}
-	if getLSPManager != nil {
-		if manager := getLSPManager(); manager != nil && len(opts.LSP) == 0 {
-			opts.LSP = manager.RuntimeStatuses(ctx)
-		}
-	}
 	payload := readiness.BuildReadiness(store, opts)
 	out, _ := json.MarshalIndent(payload, "", "  ")
 	return mcp.NewToolResultText(string(out)), nil

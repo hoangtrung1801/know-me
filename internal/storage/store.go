@@ -31,12 +31,9 @@ type Store struct {
 	Versions    *VersionStore
 	Workspaces  *WorkspaceStore
 	Chats       *ChatStore
-	Memory      *MemoryStore
-	Decisions   *DecisionStore
 	Agent       *AgentStore
 
 	taskLifecycleLock     *taskLifecycleLock
-	decisionMigrationLock *decisionMemoryMigrationLock
 }
 
 // NewStore creates a Store rooted at the given .know-me/ directory path.
@@ -59,12 +56,9 @@ func ProjectConfigRoot(globalRoot, projectID string) string {
 }
 
 func newStore(root, projectID, projectRoot string) *Store {
-	globalRoot := GlobalRootPath()
 
 	lifecycleLock := newTaskLifecycleLock(root)
-	decisionLock := newDecisionLifecycleLock(root)
-	migrationLock := newDecisionMemoryMigrationLock(root)
-	s := &Store{Root: root, ProjectID: projectID, ProjectRoot: projectRoot, taskLifecycleLock: lifecycleLock, decisionMigrationLock: migrationLock}
+	s := &Store{Root: root, ProjectID: projectID, ProjectRoot: projectRoot, taskLifecycleLock: lifecycleLock}
 	s.Tasks = &TaskStore{root: root, projectID: projectID, lifecycleLock: lifecycleLock}
 	s.Docs = &DocStore{root: root, projectID: projectID}
 	s.Config = &ConfigStore{root: root}
@@ -73,8 +67,6 @@ func newStore(root, projectID, projectRoot string) *Store {
 	s.Versions = &VersionStore{root: root, projectID: projectID, lifecycleLock: lifecycleLock}
 	s.Workspaces = &WorkspaceStore{root: root}
 	s.Chats = &ChatStore{root: root, projectID: projectID}
-	s.Memory = &MemoryStore{root: root, globalRoot: globalRoot}
-	s.Decisions = &DecisionStore{root: root, lifecycleLock: decisionLock}
 	s.Agent = &AgentStore{root: root, projectID: projectID}
 	return s
 }
@@ -97,17 +89,6 @@ func (s *Store) RepositoryRoot() string {
 	return ""
 }
 
-// WithDecisionMemoryMigrationLock serializes review-driven migration across
-// CLI, MCP, and server processes while individual stores keep their own locks.
-func (s *Store) WithDecisionMemoryMigrationLock(ctx context.Context, fn func() error) error {
-	if s == nil || s.decisionMigrationLock == nil {
-		return fmt.Errorf("decision memory migration lock is unavailable")
-	}
-	if fn == nil {
-		return fmt.Errorf("decision memory migration callback is required")
-	}
-	return s.decisionMigrationLock.with(ctx, fn)
-}
 
 // WithTaskLifecycleTransaction serializes a lifecycle mutation across all
 // Store instances and processes that point at the same project. The callback

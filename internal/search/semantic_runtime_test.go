@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -193,79 +192,6 @@ func TestSemanticRuntimeCacheKeySeparatesDimensions(t *testing.T) {
 	}
 }
 
-func TestSemanticRuntimeCacheKeySeparatesAPIProviderSettings(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	store := newSemanticRuntimeTestStoreWithProvider(t, "api-model", 384, "api")
-	saveEmbeddingSettings(t, "first-key")
-	openCount := 0
-	rt := NewSemanticRuntime(SemanticRuntimeOptions{
-		IdleTimeout: time.Hour,
-		openEmbedder: func(cfg semanticRuntimeConfig) (EmbedderProvider, error) {
-			openCount++
-			return &countingEmbedder{dimensions: cfg.dimensions}, nil
-		},
-	})
-	defer rt.Close()
-
-	first, err := rt.OpenSession(store)
-	if err != nil {
-		t.Fatalf("open first session: %v", err)
-	}
-	defer first.Close()
-	saveEmbeddingSettings(t, "second-key")
-	second, err := rt.OpenSession(store)
-	if err != nil {
-		t.Fatalf("open second session: %v", err)
-	}
-	defer second.Close()
-
-	if openCount != 2 {
-		t.Fatalf("openCount = %d, want 2 after API key change", openCount)
-	}
-	if strings.Contains(first.CacheKey, "first-key") || strings.Contains(second.CacheKey, "second-key") {
-		t.Fatalf("cache key leaked raw API key")
-	}
-}
-
-func TestSemanticRuntimeOllamaProviderUsesRuntimeConfig(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	store := newSemanticRuntimeTestStoreWithProvider(t, "api-model", 384, "ollama")
-	saveEmbeddingSettings(t, "ollama-key")
-	openCount := 0
-	rt := NewSemanticRuntime(SemanticRuntimeOptions{
-		IdleTimeout: time.Hour,
-		openEmbedder: func(cfg semanticRuntimeConfig) (EmbedderProvider, error) {
-			openCount++
-			if cfg.provider != "ollama" {
-				t.Fatalf("provider = %q, want ollama", cfg.provider)
-			}
-			if !strings.Contains(cfg.cacheKey, "provider=ollama") {
-				t.Fatalf("cache key = %q, want ollama provider identity", cfg.cacheKey)
-			}
-			return &countingEmbedder{dimensions: cfg.dimensions}, nil
-		},
-	})
-	defer rt.Close()
-
-	session, err := rt.OpenSession(store)
-	if err != nil {
-		t.Fatalf("open ollama session: %v", err)
-	}
-	defer session.Close()
-
-	if openCount != 1 {
-		t.Fatalf("openCount = %d, want 1", openCount)
-	}
-	status := rt.Status()
-	if len(status.Entries) != 1 {
-		t.Fatalf("status entries = %d, want 1", len(status.Entries))
-	}
-	if status.Entries[0].Provider != "ollama" {
-		t.Fatalf("status provider = %q, want ollama", status.Entries[0].Provider)
-	}
-}
 
 func TestSemanticRuntimeDisabledByEnv(t *testing.T) {
 	t.Setenv("KNOWNS_SEMANTIC_RUNTIME_DISABLED", "1")
@@ -286,80 +212,6 @@ func TestSemanticRuntimeDisabledByEnv(t *testing.T) {
 	}
 }
 
-func TestObservedSemanticRuntimeStatusUsesPersistedSnapshot(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	writeCurrentRuntimePIDForTest(t)
-	store := newSemanticRuntimeTestStore(t, "gte-small", 384)
-	rt := NewSemanticRuntime(SemanticRuntimeOptions{
-		IdleTimeout: time.Hour,
-		openEmbedder: func(cfg semanticRuntimeConfig) (EmbedderProvider, error) {
-			return &countingEmbedder{dimensions: cfg.dimensions}, nil
-		},
-	})
-	oldRuntime := defaultSemanticRuntime
-	defaultSemanticRuntime = rt
-	session, err := InitSemanticRuntimeSession(store)
-	if err != nil {
-		t.Fatalf("open runtime session: %v", err)
-	}
-	if err := session.Close(); err != nil {
-		t.Fatalf("close runtime session: %v", err)
-	}
-	if err := PersistDefaultSemanticRuntimeStatus(); err != nil {
-		t.Fatalf("persist runtime status: %v", err)
-	}
-	rt.Close()
-	defaultSemanticRuntime = NewSemanticRuntime(SemanticRuntimeOptions{})
-	defer func() {
-		defaultSemanticRuntime.Close()
-		defaultSemanticRuntime = oldRuntime
-	}()
-
-	status := ObservedSemanticRuntimeStatus()
-	if len(status.Entries) != 1 {
-		t.Fatalf("observed status entries = %d, want persisted daemon entry", len(status.Entries))
-	}
-	if !status.Entries[0].Loaded {
-		t.Fatalf("observed status entry should be loaded from persisted daemon snapshot")
-	}
-	if status.Entries[0].Model != "gte-small" {
-		t.Fatalf("observed status model = %q, want gte-small", status.Entries[0].Model)
-	}
-}
-
-func TestObservedSemanticRuntimeStatusIgnoresSnapshotWhenDaemonStopped(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	store := newSemanticRuntimeTestStore(t, "gte-small", 384)
-	rt := NewSemanticRuntime(SemanticRuntimeOptions{
-		IdleTimeout: time.Hour,
-		openEmbedder: func(cfg semanticRuntimeConfig) (EmbedderProvider, error) {
-			return &countingEmbedder{dimensions: cfg.dimensions}, nil
-		},
-	})
-	oldRuntime := defaultSemanticRuntime
-	defaultSemanticRuntime = rt
-	session, err := InitSemanticRuntimeSession(store)
-	if err != nil {
-		t.Fatalf("open runtime session: %v", err)
-	}
-	if err := session.Close(); err != nil {
-		t.Fatalf("close runtime session: %v", err)
-	}
-	if err := PersistDefaultSemanticRuntimeStatus(); err != nil {
-		t.Fatalf("persist runtime status: %v", err)
-	}
-	rt.Close()
-	defaultSemanticRuntime = NewSemanticRuntime(SemanticRuntimeOptions{})
-	defer func() {
-		defaultSemanticRuntime.Close()
-		defaultSemanticRuntime = oldRuntime
-	}()
-
-	status := ObservedSemanticRuntimeStatus()
-	if len(status.Entries) != 0 {
-		t.Fatalf("observed status entries = %d, want no stale daemon entries", len(status.Entries))
-	}
-}
 
 func TestSemanticRuntimeUnloadIdleClosesProvider(t *testing.T) {
 	store := newSemanticRuntimeTestStore(t, "gte-small", 384)
@@ -460,30 +312,6 @@ func newSemanticRuntimeTestStoreWithProvider(t *testing.T, model string, dimensi
 	return store
 }
 
-func saveEmbeddingSettings(t *testing.T, apiKey string) {
-	t.Helper()
-	settings := &storage.EmbeddingSettings{
-		Providers: map[string]storage.EmbeddingProvider{
-			"test-provider": {
-				Name:      "test-provider",
-				APIBase:   "https://embeddings.example.test/v1",
-				APIKey:    apiKey,
-				Timeout:   11,
-				BatchSize: 7,
-			},
-		},
-		Models: map[string]storage.EmbeddingModel{
-			"api-model": {
-				Provider:   "test-provider",
-				Model:      "text-embedding-test",
-				Dimensions: 384,
-			},
-		},
-	}
-	if err := storage.NewEmbeddingSettingsStore().Save(settings); err != nil {
-		t.Fatalf("save embedding settings: %v", err)
-	}
-}
 
 func writeCurrentRuntimePIDForTest(t *testing.T) {
 	t.Helper()

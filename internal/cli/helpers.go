@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hoangtrung1801/know-me/internal/lsp"
-	"github.com/hoangtrung1801/know-me/internal/lsp/adapters"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/registry"
 	"github.com/hoangtrung1801/know-me/internal/storage"
@@ -219,30 +217,6 @@ func unescapeText(s string) string {
 	s = strings.ReplaceAll(s, `\t`, "\t")
 	return s
 }
-
-func getLSPManagerForRoot(root string) *lsp.Manager {
-	store := storage.NewStore(root)
-	project, _ := store.Config.Load()
-	manager := lsp.NewManager(root, lspConfigWithGlobalDefaults(project))
-	for _, adapter := range adapters.All() {
-		if err := manager.RegisterAdapter(adapter); err != nil {
-			fmt.Fprintf(os.Stderr, "warn: could not register LSP adapter %s: %v\n", adapter.ID(), err)
-		}
-	}
-	for _, loadErr := range manager.RegisterPluginAdapters(lsp.PluginAdapterLoadOptions{}) {
-		fmt.Fprintf(os.Stderr, "warn: could not load LSP plugin adapter: %v\n", loadErr)
-	}
-	return manager
-}
-
-func lspConfigWithGlobalDefaults(project *models.Project) lsp.Config {
-	var defaults *storage.ProjectDefaults
-	if settings, err := storage.NewEmbeddingSettingsStore().Load(); err == nil {
-		defaults = settings.ProjectDefaults
-	}
-	return lsp.ConfigFromProjectWithDefaults(project, defaults)
-}
-
 // ResolveServerURL determines the remote server URL using precedence:
 // 1. --server-url CLI flag
 // 2. KNOWME_SERVER_URL environment variable

@@ -15,7 +15,7 @@ import (
 	ort "github.com/yalue/onnxruntime_go"
 )
 
-// ORTModelConfig describes an ONNX embedding model for the native runtime.
+// ORTModelConfig describes an ONNX model for the native runtime.
 type ORTModelConfig struct {
 	Name          string `json:"name"`
 	HuggingFaceID string `json:"huggingFaceId"`
@@ -341,7 +341,7 @@ func resolveModelArtifacts(baseDir, huggingFaceID string) (string, string, error
 		}
 	}
 
-	return "", "", fmt.Errorf("embedding model %q not found in %q", huggingFaceID, baseDir)
+	return "", "", fmt.Errorf("model %q not found in %q", huggingFaceID, baseDir)
 }
 
 func resolveONNXPath(modelDir string) string {

@@ -23,7 +23,7 @@ knowme doc create "..."
 knowme search "..." --plain
 knowme retrieve "..." --json
 knowme validate --plain
-knowme sync
+knowme setup
 ```
 
 ## Human-driven workflow
@@ -68,7 +68,7 @@ Before calling work complete:
 
 ```bash
 knowme validate --plain
-knowme sync
+knowme setup
 ```
 
-Validation checks project integrity. Sync keeps generated shim files and platform artifacts aligned with the current Know-Me config.
+Validation checks project integrity. Setup keeps generated shim files and platform artifacts aligned with the current Know-Me config.

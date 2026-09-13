@@ -768,7 +768,7 @@ func (s *SQLiteVectorStore) Close() error {
 	return nil
 }
 
-// Model returns the embedding model name.
+// Model returns the model name.
 func (s *SQLiteVectorStore) Model() string { return s.model }
 
 // GetContentHash returns the stored hash for a source ID, or empty if not found.

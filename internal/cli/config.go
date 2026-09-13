@@ -525,13 +525,13 @@ func runSettings(cmd *cobra.Command, args []string) error {
 }
 
 func runGlobalSettings() error {
-	embStore := storage.NewEmbeddingSettingsStore()
-	settings, err := embStore.Load()
+	prefsStore := storage.NewUserPrefsStore()
+	prefs, err := prefsStore.Load()
 	if err != nil {
 		return err
 	}
-	if settings.ProjectDefaults == nil {
-		settings.ProjectDefaults = &storage.ProjectDefaults{
+	if prefs.ProjectDefaults == nil {
+		prefs.ProjectDefaults = &storage.ProjectDefaults{
 			Settings: models.DefaultProjectSettings(),
 		}
 	}
@@ -565,10 +565,10 @@ func runGlobalSettings() error {
 			return err
 		}
 
-		defaults := settings.ProjectDefaults
+		defaults := prefs.ProjectDefaults
 		switch choice {
 		case "done":
-			if err := embStore.Save(settings); err != nil {
+			if err := prefsStore.Save(prefs); err != nil {
 				return err
 			}
 			fmt.Println(RenderSuccess("Global settings saved."))
@@ -620,7 +620,7 @@ func runGlobalSettings() error {
 			}
 			defaults.Settings.EnableChatUI = &enabled
 		}
-		if err := embStore.Save(settings); err != nil {
+		if err := prefsStore.Save(prefs); err != nil {
 			return err
 		}
 	}
@@ -724,7 +724,7 @@ func configurePlatforms(store *storage.Store, project *models.Project) error {
 	if err := store.Config.Save(project); err != nil {
 		return err
 	}
-	fmt.Println(RenderHint("Run: knowme sync to apply platform changes to generated files."))
+	fmt.Println(RenderHint("Run: knowme setup to apply platform changes to generated files."))
 	return nil
 }
 
@@ -886,7 +886,7 @@ func configureLSPSettings(settings *models.ProjectSettings) error {
 
 func showSettingsMaintenance(project *models.Project) error {
 	fmt.Println(RenderSectionHeader("Maintenance"))
-	fmt.Println(RenderHint("Run: knowme sync to apply generated files, git rules, models, and MCP configs."))
+	fmt.Println(RenderHint("Run: knowme setup to apply generated files, git rules, and MCP configs."))
 	if project.Settings.SemanticSearch != nil && project.Settings.SemanticSearch.Enabled {
 		fmt.Println(RenderHint("Run: knowme search --reindex after changing search settings."))
 	}
@@ -1129,7 +1129,7 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 		return nil
 	}
 
-	// Handle Ollama provider: detect and list embedding models
+	// Handle Ollama provider: detect and list models
 	if provider == "ollama" {
 		detector := search.NewOllamaDetector(search.OllamaDefaultBase)
 		running, version := detector.IsRunning()
@@ -1142,7 +1142,7 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 
 		embModels, err := detector.ListEmbeddingModels()
 		if err != nil || len(embModels) == 0 {
-			fmt.Println(StyleDim.Render("  No embedding models found in Ollama."))
+			fmt.Println(StyleDim.Render("  No models found in Ollama."))
 			fmt.Println(StyleDim.Render("  Pull one: ollama pull nomic-embed-text"))
 			return nil
 		}
@@ -1175,33 +1175,6 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 		_ = store.Config.Set("settings.semanticSearch.model", model)
 		*embeddingEnabled = true
 
-		// Register model in ~/.know-me/settings.json so sync can find it
-		embStore := storage.NewEmbeddingSettingsStore()
-		embSettings, _ := embStore.Load()
-		// Find dimensions from the selected model
-		var dims int
-		for _, m := range embModels {
-			if m.Name == model {
-				dims = m.Dimensions
-				break
-			}
-		}
-		embSettings.Models[model] = storage.EmbeddingModel{
-			Provider:   "ollama",
-			Model:      model,
-			Dimensions: dims,
-		}
-		// Ensure ollama provider is registered
-		if _, exists := embSettings.Providers["ollama"]; !exists {
-			embSettings.Providers["ollama"] = storage.EmbeddingProvider{
-				Name:      "Ollama Local",
-				APIBase:   search.OllamaDefaultBase + "/v1",
-				Timeout:   30,
-				BatchSize: 64,
-				Retry:     storage.RetryConfig{MaxRetries: 3, InitialDelay: 1000, MaxDelay: 30000},
-			}
-		}
-		_ = embStore.Save(embSettings)
 		return nil
 	}
 
@@ -1243,14 +1216,6 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 	apiBase := ""
 	apiKey := ""
 
-	// Load existing provider settings if available
-	embStore := storage.NewEmbeddingSettingsStore()
-	embSettings, _ := embStore.Load()
-	if p, err := embSettings.GetProvider("api"); err == nil {
-		apiBase = p.APIBase
-		apiKey = p.APIKey
-	}
-
 	for {
 		// Step 1: Ask for API base URL and key
 		apiForm := huh.NewForm(
@@ -1279,13 +1244,6 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 			continue
 		}
 
-		// Save API key to ~/.know-me/settings.json (never in project config)
-		embSettings.Providers["api"] = storage.EmbeddingProvider{
-			Name:    "API Provider",
-			APIBase: apiBase,
-			APIKey:  apiKey,
-		}
-		_ = embStore.Save(embSettings)
 
 		// Step 2: Try to list models, or ask manually
 		fmt.Println(StyleDim.Render("  Fetching models..."))
@@ -1353,12 +1311,6 @@ func toggleEmbedding(store *storage.Store, project *models.Project, embeddingEna
 		_ = store.Config.Set("settings.semanticSearch.provider", provider)
 		_ = store.Config.Set("settings.semanticSearch.model", model)
 
-		embSettings.Models[model] = storage.EmbeddingModel{
-			Provider:   "api",
-			Model:      model,
-			Dimensions: dims,
-		}
-		_ = embStore.Save(embSettings)
 		return nil
 	}
 }
@@ -1424,7 +1376,7 @@ func detectEmbeddingDimensions(baseURL, apiKey, model string) int {
 	return 0
 }
 
-// listAPIModels fetches available embedding models from an OpenAI-compatible API.
+// listAPIModels fetches available models from an OpenAI-compatible API.
 // Appends /models to the base URL.
 func listAPIModels(baseURL, apiKey string) ([]string, error) {
 	url := strings.TrimRight(baseURL, "/") + "/models"
@@ -1466,7 +1418,7 @@ func listAPIModels(baseURL, apiKey string) ([]string, error) {
 	names := make([]string, 0, len(result.Data))
 	for _, m := range result.Data {
 		id := strings.ToLower(m.ID)
-		// Filter: only embedding models
+		// Filter: only models
 		if m.Type == "embedding" ||
 			strings.Contains(id, "embed") ||
 			strings.Contains(id, "embedding") {

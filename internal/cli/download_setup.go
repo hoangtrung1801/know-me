@@ -14,9 +14,139 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/hoangtrung1801/know-me/internal/models"
+	"github.com/hoangtrung1801/know-me/internal/paths"
 	"github.com/hoangtrung1801/know-me/internal/search"
-	"github.com/hoangtrung1801/know-me/internal/storage"
 )
+
+type embeddingModel struct {
+	ID          string
+	Name        string
+	HuggingFace string
+	Dimensions  int
+	MaxTokens   int
+	SizeMB      int
+	Files       []string
+}
+
+var supportedModels = []embeddingModel{
+	{
+		ID:          "gte-small",
+		Name:        "GTE Small",
+		HuggingFace: "Xenova/gte-small",
+		Dimensions:  384,
+		MaxTokens:   512,
+		SizeMB:      67,
+		Files: []string{
+			"config.json",
+			"tokenizer.json",
+			"tokenizer_config.json",
+			"onnx/model_quantized.onnx",
+		},
+	},
+	{
+		ID:          "all-MiniLM-L6-v2",
+		Name:        "All MiniLM L6 v2",
+		HuggingFace: "Xenova/all-MiniLM-L6-v2",
+		Dimensions:  384,
+		MaxTokens:   256,
+		SizeMB:      86,
+		Files: []string{
+			"config.json",
+			"tokenizer.json",
+			"tokenizer_config.json",
+			"onnx/model_quantized.onnx",
+		},
+	},
+	{
+		ID:          "gte-base",
+		Name:        "GTE Base",
+		HuggingFace: "Xenova/gte-base",
+		Dimensions:  768,
+		MaxTokens:   512,
+		SizeMB:      220,
+		Files: []string{
+			"config.json",
+			"tokenizer.json",
+			"tokenizer_config.json",
+			"onnx/model_quantized.onnx",
+		},
+	},
+	{
+		ID:          "bge-small-en-v1.5",
+		Name:        "BGE Small EN v1.5",
+		HuggingFace: "Xenova/bge-small-en-v1.5",
+		Dimensions:  384,
+		MaxTokens:   512,
+		SizeMB:      67,
+		Files: []string{
+			"config.json",
+			"tokenizer.json",
+			"tokenizer_config.json",
+			"onnx/model_quantized.onnx",
+		},
+	},
+	{
+		ID:          "bge-base-en-v1.5",
+		Name:        "BGE Base EN v1.5",
+		HuggingFace: "Xenova/bge-base-en-v1.5",
+		Dimensions:  768,
+		MaxTokens:   512,
+		SizeMB:      220,
+		Files: []string{
+			"config.json",
+			"tokenizer.json",
+			"tokenizer_config.json",
+			"onnx/model_quantized.onnx",
+		},
+	},
+	{
+		ID:          "nomic-embed-text-v1.5",
+		Name:        "Nomic Embed Text v1.5",
+		HuggingFace: "Xenova/nomic-embed-text-v1.5",
+		Dimensions:  768,
+		MaxTokens:   8192,
+		SizeMB:      274,
+		Files: []string{
+			"config.json",
+			"tokenizer.json",
+			"tokenizer_config.json",
+			"onnx/model_quantized.onnx",
+		},
+	},
+	{
+		ID:          "multilingual-e5-small",
+		Name:        "Multilingual E5 Small",
+		HuggingFace: "Xenova/multilingual-e5-small",
+		Dimensions:  384,
+		MaxTokens:   512,
+		SizeMB:      470,
+		Files: []string{
+			"config.json",
+			"tokenizer.json",
+			"tokenizer_config.json",
+			"onnx/model_quantized.onnx",
+		},
+	},
+}
+
+func getModelsDir() string {
+	return filepath.Join(paths.GlobalStoreRoot(), "models")
+}
+
+func getModelDir(huggingFaceID string) string {
+	return filepath.Join(getModelsDir(), huggingFaceID)
+}
+
+func isModelInstalled(m *embeddingModel) bool {
+	dir := getModelDir(m.HuggingFace)
+	for _, name := range []string{"onnx/model_quantized.onnx", "onnx/model.onnx"} {
+		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
 
 // ─── download step ───────────────────────────────────────────────────
 
@@ -236,7 +366,7 @@ func (m *setupModel) startCurrentStep() tea.Cmd {
 			return setupStepDoneMsg{err: err}
 		}
 
-		resp, err := downloadGetWithRetry(client, url)
+		resp, err := client.Get(url)
 		if err != nil {
 			return setupStepDoneMsg{err: err}
 		}
@@ -293,7 +423,7 @@ func (m *setupModel) cleanup() {
 	}
 }
 
-// runSemanticSetup downloads ONNX Runtime (if needed) and the embedding model
+// runSemanticSetup downloads ONNX Runtime (if needed) and the model
 // using a unified bubbletea multi-step progress UI.
 // Pass force=true to re-download even if already installed.
 func runSemanticSetup(modelID string, force ...bool) error {
@@ -384,11 +514,6 @@ func runSemanticSetup(modelID string, force ...bool) error {
 	return nil
 }
 
-// ensureONNXRuntime reports whether the ONNX runtime library is available.
-func ensureONNXRuntime() bool {
-	avail, _ := search.IsONNXAvailable()
-	return avail
-}
 
 func semanticProviderForSettings(settings *models.SemanticSearchSettings) string {
 	if settings != nil && settings.Provider != "" {
@@ -406,72 +531,6 @@ func currentLocalONNXUnsupported(settings *models.SemanticSearchSettings) (searc
 	return capability, localONNXUnsupportedForCapability(settings, capability)
 }
 
-func ensureSemanticStoreReady(store *storage.Store, defaultModelID string) (bool, error) {
-	if store == nil {
-		return false, fmt.Errorf("store is required")
-	}
-	if err := ensureSemanticStoreInitialized(store); err != nil {
-		return false, err
-	}
-	changed, modelID, err := ensureSemanticConfig(store, defaultModelID)
-	if err != nil {
-		return false, err
-	}
-	if modelID == "" {
-		return changed, nil
-	}
-	if err := runSemanticSetup(modelID); err != nil {
-		return changed, err
-	}
-	return changed, nil
-}
-
-func ensureSemanticStoreInitialized(store *storage.Store) error {
-	if store == nil {
-		return fmt.Errorf("store is required")
-	}
-	if _, err := os.Stat(store.Root); err == nil {
-		return nil
-	}
-	return store.Init(filepath.Base(store.RepositoryRoot()))
-}
-
-func ensureSemanticConfig(store *storage.Store, defaultModelID string) (bool, string, error) {
-	if defaultModelID == "" {
-		defaultModelID = "multilingual-e5-small"
-	}
-	model := findSupportedModel(defaultModelID)
-	if model == nil {
-		return false, "", fmt.Errorf("unknown model %q", defaultModelID)
-	}
-	cfg, err := store.Config.Load()
-	if err != nil {
-		return false, "", err
-	}
-	changed := false
-	if cfg.Settings.SemanticSearch == nil {
-		cfg.Settings.SemanticSearch = &models.SemanticSearchSettings{}
-		changed = true
-	}
-	ss := cfg.Settings.SemanticSearch
-	if ss.Model == "" {
-		ss.Model = model.ID
-		ss.HuggingFaceID = model.HuggingFace
-		ss.Dimensions = model.Dimensions
-		ss.MaxTokens = model.MaxTokens
-		changed = true
-	}
-	if !ss.Enabled {
-		ss.Enabled = true
-		changed = true
-	}
-	if changed {
-		if err := store.Config.Save(cfg); err != nil {
-			return false, "", err
-		}
-	}
-	return changed, ss.Model, nil
-}
 
 func findSupportedModel(modelID string) *embeddingModel {
 	for i := range supportedModels {
@@ -482,16 +541,39 @@ func findSupportedModel(modelID string) *embeddingModel {
 	return nil
 }
 
-func ensureProjectAndGlobalSemanticReady(projectStore *storage.Store, defaultModelID string) (bool, bool, error) {
-	projectChanged, err := ensureSemanticStoreReady(projectStore, defaultModelID)
+
+func downloadSimple(url, dst string) (int64, error) {
+	client := &http.Client{Timeout: 30 * time.Minute}
+	resp, err := client.Get(url)
 	if err != nil {
-		return false, false, err
+		return 0, err
 	}
-	globalChanged, err := ensureSemanticStoreReady(storage.NewGlobalSemanticStore(), defaultModelID)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+	out, err := os.Create(dst)
 	if err != nil {
-		return projectChanged, false, err
+		return 0, err
 	}
-	// Print ready message once after both stores are set up.
-	fmt.Println(StyleSuccess.Render(fmt.Sprintf("✓ Semantic search ready (model: %s)", defaultModelID)))
-	return projectChanged, globalChanged, nil
+	defer out.Close()
+	n, err := io.Copy(out, resp.Body)
+	if err != nil {
+		_ = os.Remove(dst)
+		return 0, err
+	}
+	return n, nil
+}
+
+func formatBytes(b int64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }

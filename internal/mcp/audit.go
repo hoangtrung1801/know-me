@@ -147,10 +147,8 @@ var toolClassMap = map[string]string{
 	"docs":      "read",
 	"time":      "read",
 	"search":    "read",
-	"code":      "read",
 	"templates": "read",
 	"validate":  "read",
-	"memory":    "read",
 	"project":   "admin",
 }
 
@@ -173,12 +171,6 @@ func extractEntityRefs(tool string, args map[string]any) []string {
 	}
 	if p, ok := args["path"].(string); ok && p != "" {
 		refs = append(refs, "doc:"+p)
-	}
-	if id, ok := args["id"].(string); ok && id != "" && tool == "memory" {
-		refs = append(refs, "memory:"+id)
-	}
-	if name, ok := args["name"].(string); ok && name != "" && tool == "templates" {
-		refs = append(refs, "template:"+name)
 	}
 	if spec, ok := args["spec"].(string); ok && spec != "" {
 		refs = append(refs, "spec:"+spec)

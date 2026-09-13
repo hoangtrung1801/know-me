@@ -516,7 +516,7 @@ func runDocEdit(cmd *cobra.Command, args []string) error {
 		if err := store.Docs.Rename(oldPath, doc); err != nil {
 			return fmt.Errorf("rename doc: %w", err)
 		}
-		if err := store.Docs.RewriteDocReferences(oldPath, doc.Path, store.Tasks, store.Memory); err != nil {
+		if err := store.Docs.RewriteDocReferences(oldPath, doc.Path, store.Tasks); err != nil {
 			return fmt.Errorf("rewrite doc refs: %w", err)
 		}
 		search.BestEffortRemoveDoc(store, oldPath)

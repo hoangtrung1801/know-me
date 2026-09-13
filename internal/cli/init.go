@@ -16,74 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// embeddingModelInfo describes a supported embedding model for semantic search.
-type embeddingModelInfo struct {
-	ID            string
-	Title         string
-	Description   string
-	HuggingFaceID string
-	Dimensions    int
-	MaxTokens     int
-}
-
-var supportedEmbeddingModels = []embeddingModelInfo{
-	{
-		ID:            "gte-small",
-		Title:         "gte-small (recommended)",
-		Description:   "384 dims, 67MB — best balance",
-		HuggingFaceID: "Xenova/gte-small",
-		Dimensions:    384,
-		MaxTokens:     512,
-	},
-	{
-		ID:            "all-MiniLM-L6-v2",
-		Title:         "all-MiniLM-L6-v2",
-		Description:   "384 dims, 45MB — fastest",
-		HuggingFaceID: "Xenova/all-MiniLM-L6-v2",
-		Dimensions:    384,
-		MaxTokens:     256,
-	},
-	{
-		ID:            "gte-base",
-		Title:         "gte-base",
-		Description:   "768 dims, 220MB — highest quality",
-		HuggingFaceID: "Xenova/gte-base",
-		Dimensions:    768,
-		MaxTokens:     512,
-	},
-	{
-		ID:            "bge-small-en-v1.5",
-		Title:         "bge-small-en-v1.5",
-		Description:   "384 dims, 67MB — strong retrieval",
-		HuggingFaceID: "Xenova/bge-small-en-v1.5",
-		Dimensions:    384,
-		MaxTokens:     512,
-	},
-	{
-		ID:            "bge-base-en-v1.5",
-		Title:         "bge-base-en-v1.5",
-		Description:   "768 dims, 220MB — top retrieval quality",
-		HuggingFaceID: "Xenova/bge-base-en-v1.5",
-		Dimensions:    768,
-		MaxTokens:     512,
-	},
-	{
-		ID:            "nomic-embed-text-v1.5",
-		Title:         "nomic-embed-text-v1.5",
-		Description:   "768 dims, 274MB — long context (8192 tokens)",
-		HuggingFaceID: "nomic-ai/nomic-embed-text-v1.5",
-		Dimensions:    768,
-		MaxTokens:     8192,
-	},
-	{
-		ID:            "multilingual-e5-small",
-		Title:         "multilingual-e5-small",
-		Description:   "384 dims, 471MB — multilingual support",
-		HuggingFaceID: "Xenova/multilingual-e5-small",
-		Dimensions:    384,
-		MaxTokens:     512,
-	},
-}
 
 // instructionFile defines an agent instruction file to generate during init.
 type instructionFile struct {
@@ -676,6 +608,65 @@ func writeInstructionFile(projectRoot, relativePath, platform string, force bool
 
 	return nil
 }
+const (
+	guidelinesMarkerStart = "<!-- KNOWNS GUIDELINES START -->"
+	guidelinesMarkerEnd   = "<!-- KNOWNS GUIDELINES END -->"
+)
+
+// syncInstructionMarkerBlock replaces only the managed block (between the
+// KNOWNS GUIDELINES markers) in an existing instruction file, preserving any
+// user-added content outside the markers.  If the file has no markers the
+// entire file is overwritten with newContent (backwards-compatible).
+func syncInstructionMarkerBlock(filePath, newContent string) error {
+	existing, err := os.ReadFile(filePath)
+	if err != nil {
+		// File unreadable — fall back to full overwrite.
+		return os.WriteFile(filePath, []byte(newContent), 0644)
+	}
+
+	oldText := string(existing)
+	startIdx := strings.Index(oldText, guidelinesMarkerStart)
+	endIdx := strings.Index(oldText, guidelinesMarkerEnd)
+
+	if startIdx < 0 || endIdx < 0 || endIdx <= startIdx {
+		// No valid marker pair found — append the managed block to preserve
+		// existing user content instead of overwriting the whole file.
+		newStartIdx := strings.Index(newContent, guidelinesMarkerStart)
+		newEndIdx := strings.Index(newContent, guidelinesMarkerEnd)
+		if newStartIdx < 0 || newEndIdx < 0 || newEndIdx <= newStartIdx {
+			return os.WriteFile(filePath, []byte(newContent), 0644)
+		}
+		block := newContent[newStartIdx : newEndIdx+len(guidelinesMarkerEnd)]
+		separator := "\n\n"
+		if strings.HasSuffix(oldText, "\n\n") {
+			separator = ""
+		} else if strings.HasSuffix(oldText, "\n") {
+			separator = "\n"
+		}
+		return os.WriteFile(filePath, []byte(oldText+separator+block+"\n"), 0644)
+	}
+
+	// Extract the new managed block from the generated content.
+	newStartIdx := strings.Index(newContent, guidelinesMarkerStart)
+	newEndIdx := strings.Index(newContent, guidelinesMarkerEnd)
+
+	if newStartIdx < 0 || newEndIdx < 0 || newEndIdx <= newStartIdx {
+		// Generated content has no markers (unexpected) — overwrite.
+		return os.WriteFile(filePath, []byte(newContent), 0644)
+	}
+
+	newBlock := newContent[newStartIdx : newEndIdx+len(guidelinesMarkerEnd)]
+	oldBlock := oldText[startIdx : endIdx+len(guidelinesMarkerEnd)]
+
+	result := oldText[:startIdx] + newBlock + oldText[endIdx+len(guidelinesMarkerEnd):]
+
+	// Only write if something actually changed.
+	if newBlock == oldBlock {
+		return nil
+	}
+
+	return os.WriteFile(filePath, []byte(result), 0644)
+}
 
 func generateInstructionContent(relativePath, platform, projectRoot string) string {
 	if relativePath == canonicalInstructionFile {
@@ -695,7 +686,6 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("- [Repo Mental Model](#repo-mental-model)\n")
 	sb.WriteString("- [How Agents Should Read This File](#how-agents-should-read-this-file)\n")
 	sb.WriteString("- [Tool Selection](#tool-selection)\n")
-	sb.WriteString("- [Memory Usage](#memory-usage)\n")
 	sb.WriteString("- [Critical Rules](#critical-rules)\n")
 	sb.WriteString("- [Git Safety](#git-safety)\n")
 	sb.WriteString("- [Context Retrieval Strategy](#context-retrieval-strategy)\n")
@@ -718,7 +708,7 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("  6. Compatibility shim files\n")
 	sb.WriteString("  7. Other repository docs\n\n")
 	sb.WriteString("## TL;DR\n\n")
-	sb.WriteString("- Call `initial` at session start — it returns project readiness, knowledge counts, code intelligence rules, workflow guidance, and available tools.\n")
+	sb.WriteString("- Call `initial` at session start — it returns project readiness, knowledge counts, workflow guidance, and available tools.\n")
 	sb.WriteString("- Use `help(\"tool.action\")`, `help(\"tool.*\")`, or `help(\"workflow.*\")` when a domain/action schema is not visible.\n")
 	sb.WriteString("- Use Know-Me as the memory layer for humans and the AI-friendly working layer for agents.\n")
 	sb.WriteString("- Search before reading; read only the sections and docs relevant to the current task.\n")
@@ -744,10 +734,9 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("- For ambiguous requests, search the repo and related docs before asking the user.\n")
 	sb.WriteString("- Do not assume the entire file is present in context; retrieve the needed sections when required.\n\n")
 	sb.WriteString("## Tool Selection\n\n")
-	sb.WriteString("- Call `initial` at session start — it includes project readiness, capabilities, and code intelligence rules.\n")
+	sb.WriteString("- Call `initial` at session start — it includes project readiness and capabilities.\n")
 	sb.WriteString("- Use `help(\"tool.action\")` or `help(\"tool.*\")` for detailed per-action documentation on demand.\n")
 	sb.WriteString("- Use Know-Me MCP tools first for tasks, docs, templates, validation, and time tracking.\n")
-	sb.WriteString("- Use Know-Me `code` tools for code discovery, structure, and editing — not built-in Read/Grep/Edit.\n")
 	sb.WriteString("- Use shell commands for git, tests, builds, generators, and other terminal operations.\n")
 	sb.WriteString("- Prefer targeted retrieval over loading large files in full.\n")
 	sb.WriteString("- Use `knowme search` for discovery and quick relevance checks.\n")
@@ -763,19 +752,6 @@ func renderCanonicalInstructionContent() string {
 	sb.WriteString("- `bash`: run git, builds, tests, package managers, or other terminal commands.\n")
 	sb.WriteString("- `apply_patch`: make small, explicit file edits.\n")
 	sb.WriteString("- `task`: delegate large research or multi-step exploration when useful.\n\n")
-	sb.WriteString("## Memory Usage\n\n")
-	sb.WriteString("- Session start: `memory({ action: \"list\", layer: \"project\" })` to load accumulated project knowledge.\n")
-	sb.WriteString("- After task: use `memory({ action: \"add\" })` for reusable patterns and conventions; use the first-class Decision tool for durable project decisions.\n")
-	sb.WriteString("- Cross-project: `memory({ action: \"promote\" })` to move project knowledge to global (`project→global`).\n")
-	sb.WriteString("- Memory complements docs: memory is for fast agent recall, docs are for structured human-readable reference.\n")
-	sb.WriteString("- Never duplicate the full doc content into memory — store a summary and reference the doc with `@doc/<path>`.\n")
-	sb.WriteString("- During any skill: save reusable patterns, conventions, or failures with `memory({ action: \"add\", layer: \"project\" })`. Memory category `decision` is legacy; create a first-class System Decision instead.\n")
-	sb.WriteString("- Proactively save durable memory without waiting for the user to say \"save this\" when confidence is high.\n")
-	sb.WriteString("- Use `project` Memory for repo-specific patterns, conventions, recurring failures, and implementation context; use System Decisions for durable architecture or workflow choices.\n")
-	sb.WriteString("- Use `global` for stable user preferences or workflow rules that should carry across repositories and future sessions.\n")
-	sb.WriteString("- Ask the user only when the information appears durable but the correct scope (`working`, `project`, or `global`) is genuinely ambiguous.\n")
-	sb.WriteString("- After any meaningful user instruction, correction, or newly discovered pattern, quickly evaluate whether it should be stored as memory and save it when appropriate.\n")
-	sb.WriteString("- If the user states a stable collaboration preference, default to saving it as `global` memory unless they clearly scoped it to this repository only.\n\n")
 	sb.WriteString("## Critical Rules\n\n")
 	sb.WriteString("- Never manually edit Know-Me-managed task or doc markdown.\n")
 	sb.WriteString("- Search first, then read only relevant docs and code.\n")
@@ -861,11 +837,8 @@ func renderCompatibilityInstructionContent(relativePath, platform, projectRoot s
 	sb.WriteString("- Never manually edit Know-Me-managed task or doc markdown.\n")
 	sb.WriteString("- Search first, then read only relevant docs and code.\n")
 	sb.WriteString("- Use `search` for discovery; use MCP `retrieve` tool when a workflow needs structured context with citations. Fall back to CLI `knowme retrieve` if MCP is unavailable.\n")
-	sb.WriteString("- For code operations, use `code` tool: `find`/`symbols` for structure, `references`/`definition` for navigation, `rename`/`replace`/`replace_body`/`insert`/`delete` for editing. Use `help(\"code.*\")` or `help(\"workflow.code-edit\")` for details.\n")
 	sb.WriteString("- Plan before implementation unless the user explicitly overrides that workflow.\n")
 	sb.WriteString("- Validate before considering work complete.\n")
-	sb.WriteString("- Use memory tools: `memory({ action: \"list\" })` at session start, `memory({ action: \"add\" })` after tasks for reusable knowledge.\n")
-	sb.WriteString("- Proactively capture durable memory when scope and durability are clear.\n\n")
 	sb.WriteString("## Quick Reference\n\n")
 	sb.WriteString("```bash\n")
 	sb.WriteString("knowme doc list --plain               # List docs\n")

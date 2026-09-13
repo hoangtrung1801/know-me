@@ -39,13 +39,10 @@ func TestSearchRoute_ModeHybridKeepsKeywordOnlyCompatibility(t *testing.T) {
 	if len(resp.Docs) == 0 {
 		t.Fatal("expected doc search results")
 	}
-	if len(resp.Memories) == 0 {
-		t.Fatal("expected memory search results")
+	if len(resp.Tasks) == 0 {
+		t.Fatal("expected task search results")
 	}
-	if len(resp.Decisions) == 0 {
-		t.Fatal("expected decision search results")
-	}
-	for _, result := range append(append(append(resp.Docs, resp.Tasks...), resp.Memories...), resp.Decisions...) {
+	for _, result := range append(resp.Docs, resp.Tasks...) {
 		if strings.Join(result.MatchedBy, ",") != "keyword" {
 			t.Fatalf("HTTP /search MatchedBy = %v, want keyword", result.MatchedBy)
 		}
@@ -55,16 +52,6 @@ func TestSearchRoute_ModeHybridKeepsKeywordOnlyCompatibility(t *testing.T) {
 			t.Fatalf("tasks result type = %q, want task", result.Type)
 		}
 	}
-	for _, result := range resp.Memories {
-		if result.Type != "memory" {
-			t.Fatalf("memories result type = %q, want memory", result.Type)
-		}
-	}
-	for _, result := range resp.Decisions {
-		if result.Type != "decision" {
-			t.Fatalf("decisions result type = %q, want decision", result.Type)
-		}
-	}
 }
 
 func TestRetrieveRoute_ReturnsCandidatesAndContextPack(t *testing.T) {
@@ -72,7 +59,7 @@ func TestRetrieveRoute_ReturnsCandidatesAndContextPack(t *testing.T) {
 	r := chi.NewRouter()
 	(&SearchRoutes{store: store}).Register(r)
 
-	req := httptest.NewRequest("GET", "/retrieve?q=retrieval+foundation&sourceType=doc&sourceType=task&sourceType=memory&expandReferences=true", nil)
+	req := httptest.NewRequest("GET", "/retrieve?q=retrieval+foundation&sourceType=doc&sourceType=task&expandReferences=true", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -126,32 +113,6 @@ func newSearchRouteTestStore(t *testing.T) *storage.Store {
 		UpdatedAt:   now,
 	}); err != nil {
 		t.Fatalf("create task: %v", err)
-	}
-	if err := store.Memory.Create(&models.MemoryEntry{
-		ID:        "mem001",
-		Title:     "Retrieval preference",
-		Layer:     models.MemoryLayerProject,
-		Category:  "pattern",
-		Content:   "Memories support retrieval foundation context.",
-		Tags:      []string{"rag", "retrieval"},
-		CreatedAt: now,
-		UpdatedAt: now,
-	}); err != nil {
-		t.Fatalf("create memory: %v", err)
-	}
-	verifiedAt := now
-	if err := store.Decisions.Create(&models.DecisionEntry{
-		ID:           "20260723-1200-use-retrieval-foundation",
-		Title:        "Use retrieval foundation",
-		Status:       models.DecisionStatusAccepted,
-		VerifiedAt:   &verifiedAt,
-		Verification: []string{"task:@task-rag001:done"},
-		Sources:      []string{"@doc/guides/retrieval-foundation"},
-		Decision:     "Use the retrieval foundation for project search.",
-		CreatedAt:    now,
-		UpdatedAt:    now,
-	}, storage.DecisionCreateOptions{Now: now}); err != nil {
-		t.Fatalf("create decision: %v", err)
 	}
 
 	return store
