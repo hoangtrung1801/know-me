@@ -360,16 +360,6 @@ knowme search "api" --type doc --plain
 
 ---
 
-## template
-
-```bash
-knowme template list
-knowme template info <name>
-knowme template run <name> --name "X" --dry-run
-knowme template create <name>
-
----
-
 ## Multi-line Input
 
 ```bash

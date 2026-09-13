@@ -225,17 +225,6 @@ Spec Decisions are locked `D1`, `D2`, … implementation rules in an approved sp
 
 Legacy Decision Memory migration is preview-first, explicit per record, journaled, and reversible. Supported resolutions are `create_decision`, `link_existing`, `consolidate_duplicate`, `reclassify`, `archive_noise`, `reject_noise`, and `leave_unchanged`; there is no implicit bulk apply.
 
-## Templates
-
-```bash
-knowme template list
-knowme template get <name>
-knowme template run <name>
-knowme template create <name>
-```
-
-Use templates for repeatable scaffolding and standardized output.
-
 ## Code intelligence
 
 ### LSP management

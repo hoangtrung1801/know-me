@@ -10,7 +10,7 @@ import (
 
 var validateCmd = &cobra.Command{
 	Use:   "validate",
-	Short: "Validate tasks, docs, and templates",
+	Short: "Validate tasks and docs",
 	RunE:  runValidate,
 }
 

@@ -120,15 +120,6 @@ Spec Decision là các rule `D1`, `D2`, … được khóa trong spec đã appro
 
 Migration Decision Memory legacy luôn preview trước, explicit theo từng record, có journal và có thể rollback. Các resolution gồm `create_decision`, `link_existing`, `consolidate_duplicate`, `reclassify`, `archive_noise`, `reject_noise`, `leave_unchanged`; không có bulk apply ngầm.
 
-## Templates
-
-```bash
-knowme template list
-knowme template get <name>
-knowme template run <name>
-knowme template create <name>
-```
-
 ## Code intelligence
 
 ### Quản lý LSP
