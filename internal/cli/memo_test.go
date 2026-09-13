@@ -23,6 +23,8 @@ func runMemoCommand(t *testing.T, service *memos.Service, args ...string) string
 }
 
 func TestMemoCommandLifecycle(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Chdir(t.TempDir())
 	service := memos.NewService(t.TempDir())
 	var created models.Memo
 	if err := json.Unmarshal([]byte(runMemoCommand(t, service, "add", "# CLI memo", "--json")), &created); err != nil {

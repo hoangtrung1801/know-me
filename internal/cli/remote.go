@@ -47,10 +47,10 @@ func NewRemoteClient(serverURL string) (*RemoteClient, error) {
 // initialized. Precedence: --server-url flag > KNOWME_SERVER_URL env >
 // .know-me/config.json (walk-up) > local ("", false, nil).
 func RemoteForCommand(cmd *cobra.Command) (*RemoteClient, bool, error) {
-	if cmd != nil {
-		flagVal, err := cmd.Flags().GetString("server-url")
+	for curr := cmd; curr != nil; curr = curr.Parent() {
+		flagVal, err := curr.Flags().GetString("server-url")
 		if err != nil {
-			flagVal, err = cmd.PersistentFlags().GetString("server-url")
+			flagVal, err = curr.PersistentFlags().GetString("server-url")
 		}
 		if err == nil && strings.TrimSpace(flagVal) != "" {
 			client, err := NewRemoteClient(flagVal)
@@ -80,37 +80,51 @@ func RemoteForCommand(cmd *cobra.Command) (*RemoteClient, bool, error) {
 	return nil, false, nil
 }
 
-// serverURLFromConfigFile walks up from cwd looking for .know-me/config.json
-// and returns the configured serverUrl/server_url plus the file path for
-// error attribution. Read-only: it never initializes or mutates the store.
+// serverURLFromConfigFile searches for server_url:
+// 1. Repo-local or walk-up .know-me/config.json
+// 2. Main user-level configuration ~/.know-me/config.json
 func serverURLFromConfigFile() (string, string) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", ""
+	// 1. Walk up from working directory
+	if cwd, err := os.Getwd(); err == nil {
+		if dir, err := filepath.Abs(cwd); err == nil {
+			for {
+				path := filepath.Join(dir, ".know-me", "config.json")
+				if data, readErr := os.ReadFile(path); readErr == nil {
+					var project models.Project
+					if json.Unmarshal(data, &project) == nil {
+						if u := strings.TrimSpace(project.Settings.ServerURL); u != "" {
+							return u, path
+						}
+					}
+				}
+				parent := filepath.Dir(dir)
+				if parent == dir {
+					break
+				}
+				dir = parent
+			}
+		}
 	}
-	dir, err := filepath.Abs(cwd)
-	if err != nil {
-		return "", ""
+
+	// 2. Fall back to main ~/.know-me/config.json
+	home := os.Getenv("HOME")
+	if home == "" {
+		home, _ = os.UserHomeDir()
 	}
-	for {
-		path := filepath.Join(dir, ".know-me", "config.json")
-		if data, readErr := os.ReadFile(path); readErr == nil {
+	if home != "" {
+		globalPath := filepath.Join(home, ".know-me", "config.json")
+		if data, err := os.ReadFile(globalPath); err == nil {
 			var project models.Project
 			if json.Unmarshal(data, &project) == nil {
 				if u := strings.TrimSpace(project.Settings.ServerURL); u != "" {
-					return u, path
+					return u, globalPath
 				}
 			}
-			return "", ""
 		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", ""
-		}
-		dir = parent
 	}
-}
 
+	return "", ""
+}
 // buildURL joins the configured base (which may carry a sub-path) with an
 // /api/* path and query values.
 func (c *RemoteClient) buildURL(path string, query url.Values) string {

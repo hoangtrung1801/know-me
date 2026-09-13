@@ -195,6 +195,11 @@ func TestProviderSettingsForAPIAndOllamaRemainMinimal(t *testing.T) {
 }
 
 func TestResolveServerURLPrecedence(t *testing.T) {
+	tempHome := t.TempDir()
+	t.Setenv("HOME", tempHome)
+	t.Setenv("KNOWME_SERVER_URL", "")
+	t.Chdir(t.TempDir())
+
 	store, project := newConfigTestProject(t)
 
 	// Case 1: All empty -> local mode ("")
@@ -202,8 +207,6 @@ func TestResolveServerURLPrecedence(t *testing.T) {
 	if err != nil || url != "" {
 		t.Fatalf("expected empty url, got %q, err: %v", url, err)
 	}
-
-	// Case 2: Config set -> returns config value
 	project.Settings.ServerURL = "http://remote-config:8080"
 	if err := store.Config.Save(project); err != nil {
 		t.Fatalf("save config: %v", err)
@@ -302,6 +305,58 @@ func TestRemoteTaskListDoesNotAccessLocalStore(t *testing.T) {
 
 	if receivedPath != "/api/tasks" {
 		t.Fatalf("expected request to /api/tasks, got %q", receivedPath)
+	}
+}
+
+func TestRemoteMemoAndLinkRoutingAgainstStubServer(t *testing.T) {
+	receivedMemoPath := ""
+	receivedLinkPath := ""
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api/memos":
+			receivedMemoPath = r.URL.Path
+			w.Write([]byte(`[
+				{"id":"memo-1","content":"Test remote memo","createdAt":"2026-09-13T00:00:00Z","updatedAt":"2026-09-13T00:00:00Z"}
+			]`))
+		case "/api/links":
+			receivedLinkPath = r.URL.Path
+			w.Write([]byte(`[
+				{"id":"link-1","url":"https://example.com","title":"Example Title","createdAt":"2026-09-13T00:00:00Z","updatedAt":"2026-09-13T00:00:00Z"}
+			]`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer ts.Close()
+
+	cmd := rootCmd
+	if err := cmd.PersistentFlags().Set("server-url", ts.URL); err != nil {
+		t.Fatalf("set flag: %v", err)
+	}
+	defer cmd.PersistentFlags().Set("server-url", "")
+
+	// Test memo list
+	memoListCmd, _, err := rootCmd.Find([]string{"memo", "list"})
+	if err != nil {
+		t.Fatalf("find memo list cmd: %v", err)
+	}
+	if err := memoListCmd.RunE(memoListCmd, nil); err != nil {
+		t.Fatalf("run memo list failed: %v", err)
+	}
+	if receivedMemoPath != "/api/memos" {
+		t.Fatalf("expected request to /api/memos, got %q", receivedMemoPath)
+	}
+
+	linkListCmd, _, err := rootCmd.Find([]string{"link", "list"})
+	if err != nil {
+		t.Fatalf("find link list cmd: %v", err)
+	}
+	if err := linkListCmd.RunE(linkListCmd, nil); err != nil {
+		t.Fatalf("run link list failed: %v", err)
+	}
+	if receivedLinkPath != "/api/links" {
+		t.Fatalf("expected request to /api/links, got %q", receivedLinkPath)
 	}
 }
 

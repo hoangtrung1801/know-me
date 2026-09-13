@@ -11,6 +11,8 @@ import (
 )
 
 func TestLinkCommandAddAndUpdate(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Chdir(t.TempDir())
 	service := links.NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (links.Metadata, error) {
 		return links.Metadata{Title: "SEO title"}, nil
 	})
