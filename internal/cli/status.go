@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -24,6 +27,17 @@ Use --plain for clean text output suitable for piping.`,
 
 func runStatus(cmd *cobra.Command, args []string) error {
 	store, err := getStoreErr()
+
+	// Check for remote server configuration
+	serverURL, urlErr := ResolveServerURL(cmd, store)
+	if urlErr != nil {
+		return urlErr
+	}
+
+	if serverURL != "" {
+		return fetchAndRenderRemoteStatus(cmd, serverURL)
+	}
+
 	if err != nil {
 		if isJSON(cmd) {
 			printJSON(readiness.InactivePayload())
@@ -33,7 +47,6 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	payload := readiness.BuildReadiness(store, readiness.Options{})
-
 	if isJSON(cmd) {
 		printJSON(payload)
 		return nil
@@ -46,6 +59,110 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	renderStatusStyled(payload)
 	return nil
+}
+
+func fetchAndRenderRemoteStatus(cmd *cobra.Command, serverURL string) error {
+	client := &http.Client{Timeout: 3 * time.Second}
+	reqURL := fmt.Sprintf("%s/api/status", strings.TrimRight(serverURL, "/"))
+	req, err := http.NewRequest("GET", reqURL, nil)
+	if err != nil {
+		return fmt.Errorf("remote request creation failed: %w", err)
+	}
+	if token := strings.TrimSpace(os.Getenv("KNOWME_TOKEN")); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	var payload readiness.Payload
+	resp, err := client.Do(req)
+	if err == nil && resp.StatusCode == http.StatusOK {
+		defer resp.Body.Close()
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&payload); decodeErr == nil {
+			if isJSON(cmd) {
+				printJSON(payload)
+				return nil
+			}
+			if isPlain(cmd) {
+				renderStatusPlain(payload)
+				return nil
+			}
+			renderStatusStyled(payload)
+			return nil
+		}
+	}
+	if resp != nil {
+		resp.Body.Close()
+	}
+
+	// Fallback to synthesizing readiness from individual working endpoints
+	// (/api/config, /api/tasks, /api/docs) in case /api/status is hung on server-side LSP lock.
+	cfgReq, err := http.NewRequest("GET", fmt.Sprintf("%s/api/config", strings.TrimRight(serverURL, "/")), nil)
+	if err == nil {
+		if token := strings.TrimSpace(os.Getenv("KNOWME_TOKEN")); token != "" {
+			cfgReq.Header.Set("Authorization", "Bearer "+token)
+		}
+		if cfgResp, err := client.Do(cfgReq); err == nil && cfgResp.StatusCode == http.StatusOK {
+			defer cfgResp.Body.Close()
+			var cfgWrapper struct {
+				Config struct {
+					Name string `json:"name"`
+					ID   string `json:"id"`
+				} `json:"config"`
+			}
+			if json.NewDecoder(cfgResp.Body).Decode(&cfgWrapper) == nil && cfgWrapper.Config.Name != "" {
+				payload = readiness.Payload{
+					Active:      true,
+					ProjectName: cfgWrapper.Config.Name,
+					ProjectPath: fmt.Sprintf("%s (remote: %s)", cfgWrapper.Config.ID, serverURL),
+					Version:     "remote",
+					Knowledge:   &readiness.KnowledgeStatus{},
+				}
+
+				// Query task count
+				if tResp, err := client.Get(fmt.Sprintf("%s/api/tasks", strings.TrimRight(serverURL, "/"))); err == nil && tResp.StatusCode == http.StatusOK {
+					var tasks []any
+					if json.NewDecoder(tResp.Body).Decode(&tasks) == nil {
+						payload.Knowledge.Tasks = len(tasks)
+					}
+					tResp.Body.Close()
+				}
+				// Query doc count
+				if dResp, err := client.Get(fmt.Sprintf("%s/api/docs", strings.TrimRight(serverURL, "/"))); err == nil && dResp.StatusCode == http.StatusOK {
+					var docsWrapper struct {
+						Docs []any `json:"docs"`
+					}
+					if json.NewDecoder(dResp.Body).Decode(&docsWrapper) == nil {
+						payload.Knowledge.Docs = len(docsWrapper.Docs)
+					}
+					dResp.Body.Close()
+				}
+
+				if isJSON(cmd) {
+					printJSON(payload)
+					return nil
+				}
+				if isPlain(cmd) {
+					renderStatusPlain(payload)
+					return nil
+				}
+				renderStatusStyled(payload)
+				return nil
+			}
+		}
+	}
+
+	if isPlain(cmd) {
+		fmt.Printf("Remote Server: %s (unreachable or timed out)\n", serverURL)
+		return nil
+	}
+	if isJSON(cmd) {
+		printJSON(map[string]any{
+			"active":    false,
+			"serverUrl": serverURL,
+			"error":     "remote server unreachable or timed out",
+		})
+		return nil
+	}
+	return fmt.Errorf("remote server at %s unreachable or timed out", serverURL)
 }
 
 func renderStatusPlain(p readiness.Payload) {

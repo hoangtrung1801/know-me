@@ -242,3 +242,29 @@ func lspConfigWithGlobalDefaults(project *models.Project) lsp.Config {
 	}
 	return lsp.ConfigFromProjectWithDefaults(project, defaults)
 }
+
+// ResolveServerURL determines the remote server URL using precedence:
+// 1. --server-url CLI flag
+// 2. KNOWME_SERVER_URL environment variable
+// 3. settings.serverUrl / settings.server_url in .know-me/config.json
+// Returns empty string if no remote server is configured, meaning local mode.
+func ResolveServerURL(cmd *cobra.Command, store *storage.Store) (string, error) {
+	client, isRemote, err := RemoteForCommand(cmd)
+	if err != nil {
+		return "", err
+	}
+	if isRemote {
+		return client.BaseURL, nil
+	}
+	if store != nil {
+		project, err := store.Config.Load()
+		if err == nil && project != nil && strings.TrimSpace(project.Settings.ServerURL) != "" {
+			cfgURL := strings.TrimSpace(project.Settings.ServerURL)
+			if err := models.ValidateServerURL(cfgURL); err != nil {
+				return "", fmt.Errorf("config.json server_url: %w", err)
+			}
+			return strings.TrimRight(cfgURL, "/"), nil
+		}
+	}
+	return "", nil
+}

@@ -3,8 +3,10 @@ package cli
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -55,14 +57,16 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	}
 
 	query := strings.Join(args, " ")
-	store := getStore()
+	remote, isRemote, remoteErr := RemoteForCommand(cmd)
+	if remoteErr != nil {
+		return remoteErr
+	}
 
 	typeFilter, _ := cmd.Flags().GetString("type")
 	statusFilter, _ := cmd.Flags().GetString("status")
 	priorityFilter, _ := cmd.Flags().GetString("priority")
 	labelFilter, _ := cmd.Flags().GetString("label")
 	tagFilter, _ := cmd.Flags().GetString("tag")
-	projectID := projectIDFlagOrStore(cmd, store)
 	assigneeFilter, _ := cmd.Flags().GetString("assignee")
 	keywordOnly, _ := cmd.Flags().GetBool("keyword")
 	includeHistorical, _ := cmd.Flags().GetBool("include-historical")
@@ -71,9 +75,15 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		limit = 20
 	}
 
+	var projectID string
+	if !isRemote {
+		store := getStore()
+		projectID = projectIDFlagOrStore(cmd, store)
+	} else {
+		projectID, _ = cmd.Flags().GetString("project-id")
+	}
 	plain := isPlain(cmd)
 	jsonOut := isJSON(cmd)
-
 	// Determine search mode.
 	mode := "hybrid"
 	if keywordOnly {
@@ -94,9 +104,66 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		IncludeHistorical: includeHistorical,
 	}
 
-	response, err := search.SearchWithRuntime(store, opts)
-	if err != nil {
-		return err
+	var response *search.RuntimeSearchResponse
+	if isRemote {
+		q := url.Values{}
+		q.Set("q", query)
+		if typeFilter != "" {
+			q.Set("type", typeFilter)
+		}
+		if mode != "" {
+			q.Set("mode", mode)
+		}
+		if statusFilter != "" {
+			q.Set("status", statusFilter)
+		}
+		if priorityFilter != "" {
+			q.Set("priority", priorityFilter)
+		}
+		if assigneeFilter != "" {
+			q.Set("assignee", assigneeFilter)
+		}
+		if labelFilter != "" {
+			q.Set("label", labelFilter)
+		}
+		if tagFilter != "" {
+			q.Set("tag", tagFilter)
+		}
+		if projectID != "" {
+			q.Set("projectId", projectID)
+		}
+		q.Set("limit", strconv.Itoa(limit))
+		if includeHistorical {
+			q.Set("includeHistorical", "true")
+		}
+		var apiPayload struct {
+			Tasks     []models.SearchResult   `json:"tasks"`
+			Docs      []models.SearchResult   `json:"docs"`
+			Memories  []models.SearchResult   `json:"memories"`
+			Decisions []models.SearchResult   `json:"decisions"`
+			Code      []models.SearchResult   `json:"code"`
+			Runtime   *search.RuntimeMetadata `json:"_runtime,omitempty"`
+		}
+		if err := remote.GetJSON("/api/search", q, &apiPayload); err != nil {
+			return err
+		}
+		var allResults []models.SearchResult
+		allResults = append(allResults, apiPayload.Tasks...)
+		allResults = append(allResults, apiPayload.Docs...)
+		allResults = append(allResults, apiPayload.Memories...)
+		allResults = append(allResults, apiPayload.Decisions...)
+		allResults = append(allResults, apiPayload.Code...)
+		response = &search.RuntimeSearchResponse{
+			Results: allResults,
+			Runtime: apiPayload.Runtime,
+		}
+	} else {
+		store := getStore()
+		var err error
+		response, err = search.SearchWithRuntime(store, opts)
+		if err != nil {
+			return fmt.Errorf("search: %w", err)
+		}
 	}
 	results := response.Results
 

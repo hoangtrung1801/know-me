@@ -73,6 +73,10 @@ func GitTrackingModeDefaults(mode string) GitTracking {
 }
 
 type ProjectSettings struct {
+	// ServerURL points the CLI at a remote Know-Me server instead of the local
+	// .know-me store. Empty means local-first (default, backward compatible).
+	// Canonical JSON key is "serverUrl"; "server_url" is accepted on read.
+	ServerURL       string   `json:"serverUrl,omitempty"`
 	DefaultAssignee string   `json:"defaultAssignee,omitempty"`
 	DefaultPriority string   `json:"defaultPriority"`
 	DefaultLabels   []string `json:"defaultLabels,omitempty"`
@@ -111,7 +115,6 @@ type ProjectSettings struct {
 
 	// ServerPort overrides the default HTTP server port when non-zero.
 	ServerPort int `json:"serverPort,omitempty"`
-
 	// Platforms is the list of AI platforms enabled for this project.
 	// Supported values: "claude-code", "opencode", "gemini", "copilot", "agents".
 	// If empty, all platforms are treated as enabled (backwards-compatible default).
@@ -136,6 +139,37 @@ type ProjectSettings struct {
 
 	// LSP configures language server enable/disable and binary overrides.
 	LSP *LSPSettings `json:"lsp,omitempty"`
+}
+
+// UnmarshalJSON allows reading both "serverUrl" and snake_case "server_url" from .know-me/config.json.
+func (s *ProjectSettings) UnmarshalJSON(data []byte) error {
+	type alias ProjectSettings
+	var raw struct {
+		alias
+		ServerURLSnake string `json:"server_url,omitempty"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	*s = ProjectSettings(raw.alias)
+	if s.ServerURL == "" && raw.ServerURLSnake != "" {
+		s.ServerURL = strings.TrimSpace(raw.ServerURLSnake)
+	} else {
+		s.ServerURL = strings.TrimSpace(s.ServerURL)
+	}
+	return nil
+}
+
+// ValidateServerURL checks that a configured server_url is well-formed http or https.
+func ValidateServerURL(urlStr string) error {
+	trimmed := strings.TrimSpace(urlStr)
+	if trimmed == "" {
+		return nil
+	}
+	if !strings.HasPrefix(trimmed, "http://") && !strings.HasPrefix(trimmed, "https://") {
+		return fmt.Errorf("server_url must start with http:// or https:// (got %q)", urlStr)
+	}
+	return nil
 }
 
 // TaskLifecycleSettings configures Task visibility and retention. AutoArchive
@@ -201,8 +235,11 @@ func (s ProjectSettings) EffectiveTaskLifecycle() TaskLifecycleSettings {
 	return cloneTaskLifecycleSettings(*s.TaskLifecycle)
 }
 
-// Validate rejects malformed lifecycle durations while permitting zero delay.
+// Validate rejects malformed lifecycle durations and invalid server_url.
 func (s ProjectSettings) Validate() error {
+	if err := ValidateServerURL(s.ServerURL); err != nil {
+		return fmt.Errorf("settings.server_url: %w", err)
+	}
 	settings := s.EffectiveTaskLifecycle()
 	if _, err := ParseTaskLifecycleDuration(settings.ArchiveAfter); err != nil {
 		return fmt.Errorf("settings.taskLifecycle.archiveAfter: %w", err)

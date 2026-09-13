@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -189,6 +191,117 @@ func TestProviderSettingsForAPIAndOllamaRemainMinimal(t *testing.T) {
 		if ss.HuggingFaceID != "" || ss.Dimensions != 0 || ss.MaxTokens != 0 {
 			t.Fatalf("expected %s provider config to remain provider/model only, got %#v", provider, ss)
 		}
+	}
+}
+
+func TestResolveServerURLPrecedence(t *testing.T) {
+	store, project := newConfigTestProject(t)
+
+	// Case 1: All empty -> local mode ("")
+	url, err := ResolveServerURL(nil, store)
+	if err != nil || url != "" {
+		t.Fatalf("expected empty url, got %q, err: %v", url, err)
+	}
+
+	// Case 2: Config set -> returns config value
+	project.Settings.ServerURL = "http://remote-config:8080"
+	if err := store.Config.Save(project); err != nil {
+		t.Fatalf("save config: %v", err)
+	}
+	url, err = ResolveServerURL(nil, store)
+	if err != nil || url != "http://remote-config:8080" {
+		t.Fatalf("expected config url, got %q, err: %v", url, err)
+	}
+
+	// Case 3: KNOWME_SERVER_URL env var overrides config
+	t.Setenv("KNOWME_SERVER_URL", "https://env-server.example.com/")
+	url, err = ResolveServerURL(nil, store)
+	if err != nil || url != "https://env-server.example.com" {
+		t.Fatalf("expected env url (trimmed), got %q, err: %v", url, err)
+	}
+
+	// Case 4: CLI flag overrides env var and config
+	cmd := rootCmd
+	if err := cmd.PersistentFlags().Set("server-url", "http://flag-server:9000/"); err != nil {
+		t.Fatalf("set flag: %v", err)
+	}
+	defer cmd.PersistentFlags().Set("server-url", "")
+
+	url, err = ResolveServerURL(cmd, store)
+	if err != nil || url != "http://flag-server:9000" {
+		t.Fatalf("expected flag url, got %q, err: %v", url, err)
+	}
+
+	// Case 5: Invalid URL fails validation
+	if err := cmd.PersistentFlags().Set("server-url", "ftp://invalid-proto"); err != nil {
+		t.Fatalf("set flag: %v", err)
+	}
+	_, err = ResolveServerURL(cmd, store)
+	if err == nil {
+		t.Fatal("expected validation error for ftp://, got nil")
+	}
+}
+
+func TestRemoteStatusRoutingAgainstStubServer(t *testing.T) {
+	receivedAuth := ""
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/status" {
+			http.NotFound(w, r)
+			return
+		}
+		receivedAuth = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{
+			"active": true,
+			"projectName": "remote-stub-proj",
+			"projectPath": "/remote/path",
+			"version": "1.7.0"
+		}`))
+	}))
+	defer ts.Close()
+
+	t.Setenv("KNOWME_TOKEN", "secret-test-token")
+	cmd := rootCmd
+	if err := cmd.PersistentFlags().Set("server-url", ts.URL); err != nil {
+		t.Fatalf("set flag: %v", err)
+	}
+	defer cmd.PersistentFlags().Set("server-url", "")
+
+	err := fetchAndRenderRemoteStatus(cmd, ts.URL)
+	if err != nil {
+		t.Fatalf("fetchAndRenderRemoteStatus failed: %v", err)
+	}
+
+	if receivedAuth != "Bearer secret-test-token" {
+		t.Fatalf("expected Bearer secret-test-token, got %q", receivedAuth)
+	}
+}
+
+func TestRemoteTaskListDoesNotAccessLocalStore(t *testing.T) {
+	receivedPath := ""
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedPath = r.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`[
+			{"id":"task-remote-1","title":"Remote Task 1","status":"todo","priority":"high"}
+		]`))
+	}))
+	defer ts.Close()
+
+	// Run task list pointing to remote server
+	cmd := rootCmd
+	if err := cmd.PersistentFlags().Set("server-url", ts.URL); err != nil {
+		t.Fatalf("set flag: %v", err)
+	}
+	defer cmd.PersistentFlags().Set("server-url", "")
+
+	err := runTaskList(cmd, nil)
+	if err != nil {
+		t.Fatalf("runTaskList remote failed: %v", err)
+	}
+
+	if receivedPath != "/api/tasks" {
+		t.Fatalf("expected request to /api/tasks, got %q", receivedPath)
 	}
 }
 

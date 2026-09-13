@@ -131,10 +131,11 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	case key == "embedding" || key == "semanticSearch":
 		// "embedding true" or "semanticSearch true" → semantic search toggle
 		actualKey = "settings.semanticSearch.enabled"
+	case key == "server_url" || key == "serverUrl":
+		actualKey = "settings.serverUrl"
 	case !strings.Contains(key, ".") && key != "name" && key != "id":
 		actualKey = "settings." + key
 	}
-
 	project, err := store.Config.Load()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
@@ -227,6 +228,9 @@ func runConfigList(cmd *cobra.Command, args []string) error {
 		fmt.Printf("settings.defaultAssignee: %s\n", project.Settings.DefaultAssignee)
 		fmt.Printf("settings.defaultPriority: %s\n", project.Settings.DefaultPriority)
 		fmt.Printf("settings.statuses: %s\n", strings.Join(project.Settings.Statuses, ", "))
+		if project.Settings.ServerURL != "" {
+			fmt.Printf("settings.serverUrl: %s\n", project.Settings.ServerURL)
+		}
 		if project.Settings.ServerPort != 0 {
 			fmt.Printf("settings.serverPort: %d\n", project.Settings.ServerPort)
 		}
@@ -282,6 +286,9 @@ func runConfigList(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  %s %s\n", StyleDim.Render("defaultAssignee:"), project.Settings.DefaultAssignee)
 		fmt.Printf("  %s %s\n", StyleDim.Render("defaultPriority:"), project.Settings.DefaultPriority)
 		fmt.Printf("  %s %s\n", StyleDim.Render("statuses:       "), strings.Join(project.Settings.Statuses, ", "))
+		if project.Settings.ServerURL != "" {
+			fmt.Printf("  %s %s\n", StyleDim.Render("serverUrl:      "), project.Settings.ServerURL)
+		}
 		if project.Settings.ServerPort != 0 {
 			fmt.Printf("  %s %d\n", StyleDim.Render("serverPort:     "), project.Settings.ServerPort)
 		}

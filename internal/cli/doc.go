@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -38,15 +39,61 @@ var docListCmd = &cobra.Command{
 }
 
 func runDocList(cmd *cobra.Command, args []string) error {
-	store := getStore()
-	tagFilter, _ := cmd.Flags().GetString("tag")
-	projectID := projectIDFlagOrStore(cmd, store)
-
-	docs, err := store.Docs.List(projectID)
-	if err != nil {
-		return fmt.Errorf("list docs: %w", err)
+	remote, isRemote, remoteErr := RemoteForCommand(cmd)
+	if remoteErr != nil {
+		return remoteErr
 	}
 
+	var docs []*models.Doc
+	if isRemote {
+		q := url.Values{}
+		if projectID, _ := cmd.Flags().GetString("project-id"); projectID != "" {
+			q.Set("projectId", projectID)
+		}
+		var wrapper struct {
+			Docs []struct {
+				Path     string `json:"path"`
+				Folder   string `json:"folder"`
+				Content  string `json:"content"`
+				Metadata struct {
+					Title       string   `json:"title"`
+					Description string   `json:"description"`
+					Tags        []string `json:"tags"`
+					CreatedAt   string   `json:"createdAt"`
+					UpdatedAt   string   `json:"updatedAt"`
+					Order       *int     `json:"order"`
+				} `json:"metadata"`
+			} `json:"docs"`
+		}
+		if err := remote.GetJSON("/api/docs", q, &wrapper); err != nil {
+			return err
+		}
+		for _, d := range wrapper.Docs {
+			created, _ := time.Parse(time.RFC3339, d.Metadata.CreatedAt)
+			updated, _ := time.Parse(time.RFC3339, d.Metadata.UpdatedAt)
+			docs = append(docs, &models.Doc{
+				Path:        d.Path,
+				Title:       d.Metadata.Title,
+				Description: d.Metadata.Description,
+				Folder:      d.Folder,
+				Content:     d.Content,
+				Tags:        d.Metadata.Tags,
+				CreatedAt:   created,
+				UpdatedAt:   updated,
+				Order:       d.Metadata.Order,
+			})
+		}
+	} else {
+		store := getStore()
+		projectID := projectIDFlagOrStore(cmd, store)
+		var err error
+		docs, err = store.Docs.List(projectID)
+		if err != nil {
+			return fmt.Errorf("list docs: %w", err)
+		}
+	}
+
+	tagFilter, _ := cmd.Flags().GetString("tag")
 	// Apply tag filter
 	if tagFilter != "" {
 		filtered := docs[:0]
@@ -113,11 +160,12 @@ func runDocList(cmd *cobra.Command, args []string) error {
 			}
 		}
 	} else {
-		if !isTTY() || isPagerDisabled(cmd) {
+		if !isTTY() || isPagerDisabled(cmd) || isRemote {
 			content := renderDocList(docs)
 			fmt.Print(content)
 			return nil
 		}
+		store := getStore()
 		items := buildDocListItems(store, docs)
 		if err := RunListView("Documents", items); err != nil {
 			content := renderDocList(docs)
@@ -126,7 +174,6 @@ func runDocList(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
-
 // --- doc view ---
 
 var docViewCmd = &cobra.Command{
@@ -139,13 +186,94 @@ var docViewCmd = &cobra.Command{
 }
 
 func runDocView(cmd *cobra.Command, path string) error {
-	store := getStore()
-
-	doc, err := store.Docs.Get(path)
-	if err != nil {
-		return fmt.Errorf("doc %q not found", path)
+	remote, isRemote, remoteErr := RemoteForCommand(cmd)
+	if remoteErr != nil {
+		return remoteErr
 	}
 
+	var doc *models.Doc
+	if isRemote {
+		cleanPath := strings.TrimPrefix(path, "/")
+		cleanPath = strings.TrimSuffix(cleanPath, ".md")
+		cleanPath = strings.Trim(cleanPath, "/")
+
+		// First try fetching all docs since /api/docs already returns full content
+		// for each doc, avoiding server-side wildcard path matching quirks.
+		var listWrapper struct {
+			Docs []struct {
+				Path     string `json:"path"`
+				Folder   string `json:"folder"`
+				Content  string `json:"content"`
+				Metadata struct {
+					Title       string   `json:"title"`
+					Description string   `json:"description"`
+					Tags        []string `json:"tags"`
+					CreatedAt   string   `json:"createdAt"`
+					UpdatedAt   string   `json:"updatedAt"`
+					Order       *int     `json:"order"`
+				} `json:"metadata"`
+			} `json:"docs"`
+		}
+		if err := remote.GetJSON("/api/docs", nil, &listWrapper); err == nil {
+			for _, d := range listWrapper.Docs {
+				if d.Path == cleanPath || strings.EqualFold(d.Path, cleanPath) {
+					created, _ := time.Parse(time.RFC3339, d.Metadata.CreatedAt)
+					updated, _ := time.Parse(time.RFC3339, d.Metadata.UpdatedAt)
+					doc = &models.Doc{
+						Path:        d.Path,
+						Title:       d.Metadata.Title,
+						Description: d.Metadata.Description,
+						Folder:      d.Folder,
+						Content:     d.Content,
+						Tags:        d.Metadata.Tags,
+						CreatedAt:   created,
+						UpdatedAt:   updated,
+						Order:       d.Metadata.Order,
+					}
+					break
+				}
+			}
+		}
+
+		if doc == nil {
+			var wrapper struct {
+				Path     string `json:"path"`
+				Folder   string `json:"folder"`
+				Content  string `json:"content"`
+				Metadata struct {
+					Title       string   `json:"title"`
+					Description string   `json:"description"`
+					Tags        []string `json:"tags"`
+					CreatedAt   string   `json:"createdAt"`
+					UpdatedAt   string   `json:"updatedAt"`
+					Order       *int     `json:"order"`
+				} `json:"metadata"`
+			}
+			if err := remote.GetJSON("/api/docs/"+cleanPath, nil, &wrapper); err != nil {
+				return fmt.Errorf("doc %q not found: %w", path, err)
+			}
+			created, _ := time.Parse(time.RFC3339, wrapper.Metadata.CreatedAt)
+			updated, _ := time.Parse(time.RFC3339, wrapper.Metadata.UpdatedAt)
+			doc = &models.Doc{
+				Path:        wrapper.Path,
+				Title:       wrapper.Metadata.Title,
+				Description: wrapper.Metadata.Description,
+				Folder:      wrapper.Folder,
+				Content:     wrapper.Content,
+				Tags:        wrapper.Metadata.Tags,
+				CreatedAt:   created,
+				UpdatedAt:   updated,
+				Order:       wrapper.Metadata.Order,
+			}
+		}
+	} else {
+		store := getStore()
+		var err error
+		doc, err = store.Docs.Get(path)
+		if err != nil {
+			return fmt.Errorf("doc %q not found", path)
+		}
+	}
 	plain := isPlain(cmd)
 	jsonOut := isJSON(cmd)
 	tocOnly, _ := cmd.Flags().GetBool("toc")
@@ -153,7 +281,6 @@ func runDocView(cmd *cobra.Command, path string) error {
 	section, _ := cmd.Flags().GetString("section")
 	lineParam, _ := cmd.Flags().GetString("line")
 	smart, _ := cmd.Flags().GetBool("smart")
-
 	if jsonOut {
 		printJSON(doc)
 		return nil

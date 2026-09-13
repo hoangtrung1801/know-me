@@ -219,4 +219,5 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-pager", false, "Disable TUI pager (print styled output directly)")
 	rootCmd.PersistentFlags().Int("page", 0, "Page number for paginated output (e.g. --page 2)")
 	rootCmd.PersistentFlags().Int("page-size", 0, "Lines per page (default 50)")
+	rootCmd.PersistentFlags().String("server-url", "", "Remote Know-Me server URL (overrides .know-me/config.json and KNOWME_SERVER_URL)")
 }

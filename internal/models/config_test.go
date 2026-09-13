@@ -93,3 +93,61 @@ func TestParseTaskLifecycleDuration(t *testing.T) {
 		})
 	}
 }
+
+func TestProjectSettingsServerURLUnmarshalBothKeys(t *testing.T) {
+	cases := []struct {
+		name    string
+		jsonStr string
+		wantURL string
+	}{
+		{
+			name:    "snake_case",
+			jsonStr: `{"settings": {"server_url": "https://api.example.com"}}`,
+			wantURL: "https://api.example.com",
+		},
+		{
+			name:    "camelCase",
+			jsonStr: `{"settings": {"serverUrl": "http://localhost:8080"}}`,
+			wantURL: "http://localhost:8080",
+		},
+		{
+			name:    "empty_default",
+			jsonStr: `{"settings": {}}`,
+			wantURL: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var p Project
+			if err := json.Unmarshal([]byte(tc.jsonStr), &p); err != nil {
+				t.Fatalf("unmarshal error: %v", err)
+			}
+			if p.Settings.ServerURL != tc.wantURL {
+				t.Fatalf("got ServerURL %q, want %q", p.Settings.ServerURL, tc.wantURL)
+			}
+			if err := p.Settings.Validate(); err != nil {
+				t.Fatalf("unexpected validation error: %v", err)
+			}
+		})
+	}
+}
+
+func TestProjectSettingsServerURLValidationRejectsInvalid(t *testing.T) {
+	invalids := []string{
+		"ftp://example.com",
+		"file:///tmp/server",
+		"notaurl",
+		"://localhost",
+	}
+
+	for _, inv := range invalids {
+		t.Run(inv, func(t *testing.T) {
+			s := DefaultProjectSettings()
+			s.ServerURL = inv
+			if err := s.Validate(); err == nil {
+				t.Fatalf("expected error for %q, got nil", inv)
+			}
+		})
+	}
+}

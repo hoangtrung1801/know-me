@@ -81,3 +81,39 @@ func TestConfigStoreSetRejectsInvalidLifecycleWithoutMutation(t *testing.T) {
 		t.Fatalf("invalid Set mutated config:\nbefore=%s\nafter=%s", before, after)
 	}
 }
+
+func TestConfigStoreServerURLValidationAndDotNotation(t *testing.T) {
+	root := t.TempDir()
+	store := NewStore(root)
+	if err := store.Init("test-project"); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+
+	// Set valid URL
+	if err := store.Config.Set("settings.server_url", "https://api.knowns.dev"); err != nil {
+		t.Fatalf("Set server_url: %v", err)
+	}
+	val, err := store.Config.Get("settings.server_url")
+	if err != nil || val != "https://api.knowns.dev" {
+		t.Fatalf("Get server_url = %v, %v", val, err)
+	}
+
+	// Reject invalid URL via Set
+	if err := store.Config.Set("settings.server_url", "ftp://example.com"); err == nil {
+		t.Fatal("expected error setting invalid server_url, got nil")
+	}
+
+	// Read config directly with snake_case
+	configPath := filepath.Join(root, "config.json")
+	snakeJSON := `{"name":"custom","id":"custom","settings":{"server_url":"http://localhost:3000"}}`
+	if err := os.WriteFile(configPath, []byte(snakeJSON), 0644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+	proj, err := store.Config.Load()
+	if err != nil {
+		t.Fatalf("Load snake_case config: %v", err)
+	}
+	if proj.Settings.ServerURL != "http://localhost:3000" {
+		t.Fatalf("got ServerURL %q, want http://localhost:3000", proj.Settings.ServerURL)
+	}
+}

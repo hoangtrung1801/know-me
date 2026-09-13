@@ -41,10 +41,30 @@ const defaultBrowserPort = 6420
 const maxBrowserPortAttempts = 10
 
 func runBrowser(cmd *cobra.Command, args []string) error {
-	host, _ := cmd.Flags().GetString("host")
-	port, _ := cmd.Flags().GetInt("port")
+	remote, isRemote, remoteErr := RemoteForCommand(cmd)
+	if remoteErr != nil {
+		return remoteErr
+	}
+
 	openFlag, _ := cmd.Flags().GetBool("open")
 	noOpen, _ := cmd.Flags().GetBool("no-open")
+	shouldOpen := openFlag && !noOpen
+
+	if isRemote {
+		fmt.Println()
+		fmt.Printf("  %s  %s %s\n", StyleSuccess.Render("●"), StyleBold.Render("Know-Me"), StyleDim.Render("v"+util.Version))
+		fmt.Println()
+		fmt.Printf("  %s  %s\n", StyleInfo.Render("→"), StyleBold.Render(remote.BaseURL))
+		fmt.Printf("  %s  %s\n", StyleInfo.Render("◇"), StyleDim.Render("remote server"))
+		fmt.Println()
+		if shouldOpen {
+			openBrowser(remote.BaseURL)
+		}
+		return nil
+	}
+
+	host, _ := cmd.Flags().GetString("host")
+	port, _ := cmd.Flags().GetInt("port")
 	restart, _ := cmd.Flags().GetBool("restart")
 	dev, _ := cmd.Flags().GetBool("dev")
 	watchFlag, _ := cmd.Flags().GetBool("watch")
@@ -56,7 +76,6 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	if port == 0 {
 		port = defaultBrowserPort
 	}
@@ -76,8 +95,6 @@ func runBrowser(cmd *cobra.Command, args []string) error {
 	}
 	port = selectedPort
 
-	// Determine whether to open browser: --open enables, --no-open disables
-	shouldOpen := openFlag && !noOpen
 
 	srv := server.NewServer(store, projectRoot, port, server.Options{Dev: dev, Tunnel: tunnelFlag, Password: passwordFlag, AllowTaskHardDelete: allowTaskHardDelete, DisableLSP: true, DisableOpenCode: true})
 

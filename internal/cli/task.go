@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -138,19 +139,35 @@ var taskListCmd = &cobra.Command{
 }
 
 func runTaskList(cmd *cobra.Command, args []string) error {
-	store := getStore()
+	remote, isRemote, remoteErr := RemoteForCommand(cmd)
+	if remoteErr != nil {
+		return remoteErr
+	}
+
+	var tasks []*models.Task
+	if isRemote {
+		q := url.Values{}
+		if projectID, _ := cmd.Flags().GetString("project-id"); projectID != "" {
+			q.Set("projectId", projectID)
+		}
+		if err := remote.GetJSON("/api/tasks", q, &tasks); err != nil {
+			return err
+		}
+	} else {
+		store := getStore()
+		projectID := projectIDFlagOrStore(cmd, store)
+		var err error
+		tasks, err = store.Tasks.List(projectID)
+		if err != nil {
+			return fmt.Errorf("list tasks: %w", err)
+		}
+	}
 
 	statusFilter, _ := cmd.Flags().GetString("status")
 	assigneeFilter, _ := cmd.Flags().GetString("assignee")
 	priorityFilter, _ := cmd.Flags().GetString("priority")
 	labelFilter, _ := cmd.Flags().GetString("label")
-	projectID := projectIDFlagOrStore(cmd, store)
 	treeMode, _ := cmd.Flags().GetBool("tree")
-
-	tasks, err := store.Tasks.List(projectID)
-	if err != nil {
-		return fmt.Errorf("list tasks: %w", err)
-	}
 
 	// Apply filters
 	filtered := make([]*models.Task, 0, len(tasks))
@@ -250,16 +267,26 @@ var taskViewCmd = &cobra.Command{
 }
 
 func runTaskView(cmd *cobra.Command, id string) error {
-	store := getStore()
-
-	task, err := store.Tasks.Get(id)
-	if err != nil {
-		return fmt.Errorf("task %q not found", id)
+	remote, isRemote, remoteErr := RemoteForCommand(cmd)
+	if remoteErr != nil {
+		return remoteErr
 	}
 
-	// Load active timer if any.
-	task.ActiveTimer = store.Time.GetActiveTimer(task.ID)
-
+	var task *models.Task
+	if isRemote {
+		task = &models.Task{}
+		if err := remote.GetJSON("/api/tasks/"+url.PathEscape(id), nil, task); err != nil {
+			return err
+		}
+	} else {
+		store := getStore()
+		var err error
+		task, err = store.Tasks.Get(id)
+		if err != nil {
+			return fmt.Errorf("task %q not found", id)
+		}
+		task.ActiveTimer = store.Time.GetActiveTimer(task.ID)
+	}
 	jsonOut := isJSON(cmd)
 	plain := isPlain(cmd)
 
