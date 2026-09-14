@@ -516,7 +516,7 @@ jobs:
           rm -rf "$macho_dir"
 
       - name: Ensure GitHub release exists
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.meta.outputs.tag }}
@@ -525,7 +525,7 @@ jobs:
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes
 
       - name: Upload binaries to release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.meta.outputs.tag }}
