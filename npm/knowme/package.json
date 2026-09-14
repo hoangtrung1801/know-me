@@ -1,6 +1,6 @@
 {
   "name": "@hoangtrung1801/knowme",
-  "version": "1.10.1",
+  "version": "1.11.0",
   "description": "Local-first memory layer for AI-assisted software projects",
   "bin": {
     "knowme": "bin/knowme.js",
@@ -12,12 +12,12 @@
     "test": "bun test"
   },
   "optionalDependencies": {
-    "@hoangtrung1801/knowme-darwin-arm64": "1.10.0",
-    "@hoangtrung1801/knowme-darwin-x64": "1.10.0",
-    "@hoangtrung1801/knowme-linux-arm64": "1.10.0",
-    "@hoangtrung1801/knowme-linux-x64": "1.10.0",
-    "@hoangtrung1801/knowme-win-arm64": "1.10.0",
-    "@hoangtrung1801/knowme-win-x64": "1.10.0"
+    "@hoangtrung1801/knowme-darwin-arm64": "1.11.0",
+    "@hoangtrung1801/knowme-darwin-x64": "1.11.0",
+    "@hoangtrung1801/knowme-linux-arm64": "1.11.0",
+    "@hoangtrung1801/knowme-linux-x64": "1.11.0",
+    "@hoangtrung1801/knowme-win-arm64": "1.11.0",
+    "@hoangtrung1801/knowme-win-x64": "1.11.0"
   },
   "license": "MIT",
   "repository": {
