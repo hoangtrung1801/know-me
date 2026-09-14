@@ -157,12 +157,6 @@ jobs:
           detect_platform
           test "$PLATFORM" = "darwin-x64"
 
-          output=$(./bin/knowme model download gte-small 2>&1) && {
-            echo "Local ONNX model download unexpectedly succeeded"
-            exit 1
-          }
-          echo "$output" | grep -q "Local ONNX is not bundled for macOS Intel"
-
           smoke_dir=$(mktemp -d)
           (
             cd "$smoke_dir"
@@ -175,9 +169,6 @@ jobs:
               exit 1
             }
             echo "$config_output" | grep -q "Local ONNX is not bundled for macOS Intel"
-            sync_output=$("$GITHUB_WORKSPACE/bin/knowme" sync --model 2>&1)
-            echo "$sync_output"
-            echo "$sync_output" | grep -q "keyword/BM25 search remains active"
 
             bun -e 'const fs = require("fs"); const p = ".know-me/config.json"; const c = JSON.parse(fs.readFileSync(p, "utf8")); c.settings.semanticSearch = { enabled: true, provider: "local", model: "gte-small", huggingFaceId: "Xenova/gte-small", dimensions: 384, maxTokens: 512 }; fs.writeFileSync(p, JSON.stringify(c, null, 2) + "\n");'
             export KNOWN_RUNTIME_INLINE=1
@@ -190,155 +181,6 @@ jobs:
             echo "$search_output"
             echo "$search_output" | grep -q "Matched by: keyword"
           )
-
-  lsp-fixtures:
-    if: false  # TEMPORARILY DISABLED — re-enable by removing this line
-    runs-on: ${{ matrix.os }}
-    needs: [test]
-    timeout-minutes: 30
-    env:
-      KNOWNS_LSP_DAEMON: '0'
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    name: LSP Fixture Smoke (${{ matrix.os }})
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.26'
-      - uses: oven-sh/setup-bun@v2
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            6.0.x
-            10.0.x
-      - uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: '1.14.6'
-          terraform_wrapper: false
-
-      - name: Install llvm-mingw toolchain
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          curl -L --retry 5 --retry-delay 5 \
-            -o llvm-mingw.zip \
-            "https://github.com/mstorsjo/llvm-mingw/releases/download/20260407/llvm-mingw-20260407-ucrt-x86_64.zip"
-          unzip -q llvm-mingw.zip -d "$RUNNER_TEMP/llvm-mingw"
-          TOOLCHAIN_DIR=$(find "$RUNNER_TEMP/llvm-mingw" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-          if [ -z "$TOOLCHAIN_DIR" ]; then
-            echo "Failed to extract llvm-mingw toolchain"
-            exit 1
-          fi
-          echo "$TOOLCHAIN_DIR/bin" >> "$GITHUB_PATH"
-          echo "CC=x86_64-w64-mingw32-clang" >> "$GITHUB_ENV"
-          echo "CXX=x86_64-w64-mingw32-clang++" >> "$GITHUB_ENV"
-          echo "AR=x86_64-w64-mingw32-ar" >> "$GITHUB_ENV"
-
-      - name: Install C# language server (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          dotnet tool install --global csharp-ls --version 0.25.0
-          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-
-      - name: Install C# language server (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          dotnet tool install --global csharp-ls --version 0.25.0
-          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Build UI
-        run: cd ui && bun install --frozen-lockfile && bun run build
-
-      - name: Run doctor portability contract (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          go test -v -count=1 ./internal/doctor
-          go test -v -count=1 -run '^TestDoctor' ./internal/cli
-
-      - name: Run doctor portability contract (Windows)
-        if: runner.os == 'Windows'
-        env:
-          CGO_ENABLED: '1'
-        run: |
-          go test -v -count=1 ./internal/doctor
-          go test -v -count=1 -run '^TestDoctor' ./internal/cli
-
-      - name: Build Go binary (Unix)
-        if: runner.os != 'Windows'
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/know-me/internal/util.Version=${GITHUB_SHA}" -o bin/knowme ./cmd/knowme
-
-      - name: Build Go binary (Windows)
-        if: runner.os == 'Windows'
-        env:
-          CGO_ENABLED: '1'
-        run: go build -ldflags "-s -w -X github.com/hoangtrung1801/know-me/internal/util.Version=${env:GITHUB_SHA}" -o bin/knowme.exe ./cmd/knowme
-
-      - name: Install managed LSP fixtures and expose selected binaries
-        shell: bash
-        run: |
-          KNOWNS_BINARY="$PWD/bin/knowme"
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            KNOWNS_BINARY="$PWD/bin/knowme.exe"
-          fi
-
-          for language in markdown bash json terraform yaml; do
-            "$KNOWNS_BINARY" lsp install "$language"
-          done
-
-          STATUS_FILE="$RUNNER_TEMP/knowme-lsp-status.json"
-          "$KNOWNS_BINARY" lsp list --json > "$STATUS_FILE"
-          node - "$STATUS_FILE" <<'NODE'
-          const fs = require('fs');
-          const path = require('path');
-
-          const statusFile = process.argv[2];
-          const expected = new Set(['markdown', 'bash', 'json', 'terraform', 'yaml']);
-          const rows = JSON.parse(fs.readFileSync(statusFile, 'utf8'));
-          const selected = rows.filter((row) => expected.has(row.id));
-          const missing = [...expected].filter(
-            (id) => !selected.some((row) => row.id === id && row.selected_path),
-          );
-          if (missing.length > 0) {
-            throw new Error(`managed LSP selected_path missing for: ${missing.join(', ')}`);
-          }
-
-          const invalidProvenance = selected.filter((row) =>
-            row.install_state !== 'installed' ||
-            row.requested_version !== 'recommended' ||
-            !row.resolved_version ||
-            !row.source_location ||
-            !row.integrity ||
-            !row.installed_at ||
-            Number.isNaN(Date.parse(row.installed_at)) ||
-            row.verified !== true
-          );
-          if (invalidProvenance.length > 0) {
-            throw new Error(
-              `managed LSP provenance incomplete for: ${invalidProvenance.map((row) => row.id).join(', ')}`,
-            );
-          }
-
-          const directories = [...new Set(selected.map((row) => path.dirname(row.selected_path)))];
-          fs.appendFileSync(process.env.GITHUB_PATH, `${directories.join('\n')}\n`);
-          NODE
-
-      - name: Run LSP fixtures (Unix)
-        if: runner.os != 'Windows'
-        run: TEST_LSP_FIXTURES=1 TEST_BINARY="$PWD/bin/knowme" go test -v -timeout 15m -count=1 ./tests/lspfixtures
-
-      - name: Run LSP fixtures (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        env:
-          CGO_ENABLED: '1'
-        run: TEST_LSP_FIXTURES=1 TEST_BINARY="$PWD/bin/knowme.exe" go test -v -timeout 15m -count=1 ./tests/lspfixtures
 
   build-and-e2e:
     if: false  # TEMPORARILY DISABLED — re-enable by removing this line

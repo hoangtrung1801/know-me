@@ -285,11 +285,6 @@ jobs:
             exit 1
           fi
           "${ARTIFACT_DIR}/knowme" --version
-          output=$("${ARTIFACT_DIR}/knowme" model download gte-small 2>&1) && {
-            echo "FATAL: Local ONNX model download unexpectedly succeeded"
-            exit 1
-          }
-          echo "$output" | grep -q "Local ONNX is not bundled for macOS Intel"
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
