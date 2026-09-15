@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/hoangtrung1801/know-me/internal/agents/codex"
+	"github.com/hoangtrung1801/know-me/internal/agents/omp"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/storage"
 )
@@ -23,11 +23,12 @@ type agentInfo struct {
 	Available   bool   `json:"available"`
 }
 
-type CodexChatRunner interface {
+type OMPChatRunner interface {
 	StartChat(context.Context, *storage.Store, string, string) error
 	StopChat(context.Context, *storage.Store, string) error
 }
 
+type CodexChatRunner = OMPChatRunner
 // ChatRoutes handles /api/chats endpoints.
 type ChatRoutes struct {
 	store       *storage.Store
@@ -50,7 +51,7 @@ func (cr *ChatRoutes) sessionForRequest(id string) (*models.ChatSession, error) 
 	if err != nil {
 		return nil, err
 	}
-	if session.AgentType == "codex" && session.TaskID != "" && session.ProjectID != store.ProjectID {
+	if (session.AgentType == "omp" || session.AgentType == "codex") && session.TaskID != "" && session.ProjectID != store.ProjectID {
 		return nil, fmt.Errorf("%w: %q", storage.ErrChatNotFound, id)
 	}
 	return session, nil
@@ -65,6 +66,7 @@ func (cr *ChatRoutes) Register(r chi.Router) {
 	r.Patch("/chats/{id}", cr.updateSession)
 	r.Delete("/chats/{id}", cr.deleteSession)
 	r.Post("/chats/{id}/send", cr.sendMessage)
+	r.Post("/chats/{id}/messages", cr.sendMessage)
 	r.Post("/chats/{id}/stop", cr.stopChat)
 	r.Get("/chats/{id}/queue", cr.getQueue)
 	r.Post("/chats/{id}/process-queue", cr.processQueue)
@@ -80,7 +82,7 @@ func (cr *ChatRoutes) listSessions(w http.ResponseWriter, r *http.Request) {
 	if projectID := cr.getStore().ProjectID; projectID != "" {
 		filtered := sessions[:0]
 		for _, session := range sessions {
-			if session.AgentType == "codex" && session.TaskID != "" && session.ProjectID != projectID {
+			if (session.AgentType == "omp" || session.AgentType == "codex") && session.TaskID != "" && session.ProjectID != projectID {
 				continue
 			}
 			filtered = append(filtered, session)
@@ -109,20 +111,28 @@ func (cr *ChatRoutes) createSession(w http.ResponseWriter, r *http.Request) {
 	if input.AgentType == "" {
 		input.AgentType = "claude"
 	}
-	if input.AgentType != "claude" && input.AgentType != "opencode" && input.AgentType != "codex" {
-		respondError(w, http.StatusBadRequest, fmt.Sprintf("unsupported agent type %q (use claude, opencode, or codex)", input.AgentType))
+	if input.AgentType != "claude" && input.AgentType != "opencode" && input.AgentType != "codex" && input.AgentType != "omp" {
+		respondError(w, http.StatusBadRequest, fmt.Sprintf("unsupported agent type %q (use claude, opencode, or omp)", input.AgentType))
 		return
 	}
-	if input.AgentType == "codex" {
+	if input.AgentType == "omp" || input.AgentType == "codex" {
 		if input.TaskID == "" {
-			respondError(w, http.StatusBadRequest, "taskId is required for Codex sessions")
+			respondError(w, http.StatusBadRequest, "taskId is required for task agent sessions")
 			return
 		}
 		if _, err := cr.getStore().Tasks.Get(input.TaskID); err != nil {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
 		}
+		if existing, err := cr.getStore().Chats.FindTaskSession(cr.getStore().ProjectID, input.TaskID, "omp"); err == nil {
+			respondJSON(w, http.StatusOK, existing)
+			return
+		}
 		if existing, err := cr.getStore().Chats.FindTaskSession(cr.getStore().ProjectID, input.TaskID, "codex"); err == nil {
+			if input.AgentType == "omp" {
+				existing.AgentType = "omp"
+				_ = cr.getStore().Chats.Save(existing)
+			}
 			respondJSON(w, http.StatusOK, existing)
 			return
 		}
@@ -235,8 +245,8 @@ func (cr *ChatRoutes) deleteSession(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	if session.AgentType == "codex" && session.TaskID != "" {
-		respondError(w, http.StatusConflict, "task-bound Codex chats are deleted with their task")
+	if (session.AgentType == "omp" || session.AgentType == "codex") && session.TaskID != "" {
+		respondError(w, http.StatusConflict, "task-bound agent chats are deleted with their task")
 		return
 	}
 
@@ -274,13 +284,13 @@ func (cr *ChatRoutes) sendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.AgentType == "codex" {
+	if session.AgentType == "omp" || session.AgentType == "codex" {
 		if session.TaskID == "" {
-			respondError(w, http.StatusConflict, "Codex chat is not linked to a task")
+			respondError(w, http.StatusConflict, "agent chat is not linked to a task")
 			return
 		}
 		if cr.codexChat == nil {
-			respondError(w, http.StatusServiceUnavailable, "Codex chat integration is not available")
+			respondError(w, http.StatusServiceUnavailable, "task agent chat integration is not available")
 			return
 		}
 		store := cr.getStore()
@@ -340,9 +350,9 @@ func (cr *ChatRoutes) stopChat(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	if session.AgentType == "codex" {
+	if session.AgentType == "omp" || session.AgentType == "codex" {
 		if cr.codexChat == nil {
-			respondError(w, http.StatusServiceUnavailable, "Codex chat integration is not available")
+			respondError(w, http.StatusServiceUnavailable, "task agent chat integration is not available")
 			return
 		}
 		if err := cr.codexChat.StopChat(r.Context(), cr.getStore(), session.TaskID); err != nil {
@@ -390,9 +400,8 @@ func (cr *ChatRoutes) processQueue(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	if session.AgentType == "codex" {
+	if session.AgentType == "omp" || session.AgentType == "codex" {
 		respondJSON(w, http.StatusAccepted, map[string]interface{}{
-			"hasMore":   len(session.MessageQueue) > 0,
 			"message":   "",
 			"queueSize": len(session.MessageQueue),
 		})
@@ -426,11 +435,11 @@ func (cr *ChatRoutes) processQueue(w http.ResponseWriter, r *http.Request) {
 func respondCodexChatError(w http.ResponseWriter, err error) {
 	status := http.StatusInternalServerError
 	switch {
-	case errors.Is(err, codex.ErrInvalid):
+	case errors.Is(err, omp.ErrInvalid):
 		status = http.StatusBadRequest
-	case errors.Is(err, codex.ErrNotFound):
+	case errors.Is(err, omp.ErrNotFound):
 		status = http.StatusNotFound
-	case errors.Is(err, codex.ErrConflict):
+	case errors.Is(err, omp.ErrConflict):
 		status = http.StatusConflict
 	}
 	respondError(w, status, err.Error())

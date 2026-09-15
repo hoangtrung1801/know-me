@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -148,16 +149,16 @@ func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, task
 	active, isActive := m.active[root]
 	if isActive && active.taskID == taskID {
 		snapshot.AdapterState = "running"
-	} else if snapshot.Workflow.Phase == models.AgentPhaseInterrupted {
-		snapshot.AdapterState = "interrupted"
+	} else {
+		snapshot.AdapterState = "stopped"
+	}
+	if snapshot.Workflow.Phase == models.AgentPhaseInterrupted {
 		snapshot.Interrupted = true
 		sessionID := snapshot.Workflow.OMPSessionID
 		if sessionID == "" {
 			sessionID = snapshot.Workflow.CodexSessionID
 		}
 		snapshot.Resumable = sessionID != "" && snapshot.Workflow.ResumePhase != ""
-	} else {
-		snapshot.AdapterState = "stopped"
 	}
 	return snapshot, nil
 }
@@ -632,6 +633,36 @@ func (m *Manager) setActiveSession(root, runID string, session acpSession) {
 		a.session = session
 		m.active[root] = a
 	}
+}
+func (m *Manager) ReadLog(store *storage.Store, taskID, runID string) (string, error) {
+	if store == nil || store.Agent == nil {
+		return "", errors.New("agent store is unavailable")
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	state, err := store.Agent.Load()
+	if err != nil {
+		return "", err
+	}
+	var run *models.AgentRun
+	for i := range state.Runs {
+		candidate := &state.Runs[i]
+		if candidate.ProjectID == store.ProjectID && candidate.ID == runID {
+			if candidate.TaskID != taskID {
+				return "", fmt.Errorf("%w: run %q belongs to another task", ErrConflict, runID)
+			}
+			run = candidate
+			break
+		}
+	}
+	if run == nil {
+		return "", fmt.Errorf("%w: run %q", ErrNotFound, runID)
+	}
+	data, err := os.ReadFile(store.Agent.LogPath(run.ID))
+	if errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("%w: run log %q", ErrNotFound, runID)
+	}
+	return string(data), err
 }
 
 func (m *Manager) Close() error {
