@@ -37,6 +37,7 @@ type AgentWorkflow struct {
 	TaskID         string        `json:"taskId"`
 	Phase          AgentPhase    `json:"phase"`
 	ActiveRunID    string        `json:"activeRunId,omitempty"`
+	OMPSessionID   string        `json:"ompSessionId,omitempty"`
 	CodexSessionID string        `json:"codexSessionId,omitempty"`
 	ChatSessionID  string        `json:"chatSessionId,omitempty"`
 	WorktreePath   string        `json:"worktreePath,omitempty"`
@@ -52,6 +53,7 @@ type AgentRun struct {
 	Phase          AgentRunPhase  `json:"phase"`
 	Status         AgentRunStatus `json:"status"`
 	CodexThreadID  string         `json:"codexThreadId,omitempty"`
+	OMPSessionID   string         `json:"ompSessionId,omitempty"`
 	CodexSessionID string         `json:"codexSessionId,omitempty"`
 	StartedAt      time.Time      `json:"startedAt"`
 	FinishedAt     *time.Time     `json:"finishedAt,omitempty"`
@@ -84,6 +86,7 @@ type AgentTaskSnapshot struct {
 	Runs           []AgentRun      `json:"runs"`
 	ReviewComments []ReviewComment `json:"reviewComments"`
 	DirtyFiles     []string        `json:"dirtyFiles"`
+	Diff           string          `json:"diff,omitempty"`
 	AdapterState   string          `json:"adapterState"`
 	Resumable      bool            `json:"resumable"`
 	Interrupted    bool            `json:"interrupted"`
