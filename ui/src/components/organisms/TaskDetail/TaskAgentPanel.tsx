@@ -218,8 +218,8 @@ export function TaskAgentPanel({
                 size="icon"
                 className="ml-auto h-8 w-8"
                 onClick={onCollapse}
-                aria-label="Collapse Codex panel"
-                title="Collapse Codex panel"
+                aria-label="Collapse agent panel"
+                title="Collapse agent panel"
               >
                 <PanelRightClose />
               </Button>
@@ -250,8 +250,8 @@ export function TaskAgentPanel({
                 <AlertTriangle className="mt-0.5 shrink-0" />
                 <span>
                   {codexStatus.installed
-                    ? "Sign in to Codex before starting a run."
-                    : "Install codex-acp before starting a run."}
+                    ? "Sign in to Oh My Pi (omp auth-broker) before starting a run."
+                    : "Install Oh My Pi (omp) before starting a run."}
                 </span>
               </div>
             )}
@@ -267,7 +267,7 @@ export function TaskAgentPanel({
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                 <div className="min-w-0">
                   <p className="font-medium text-destructive">
-                    Codex workflow error
+                    Agent workflow error
                   </p>
                   <p className="mt-1 max-h-24 overflow-y-auto break-words whitespace-pre-wrap text-sm leading-5 text-destructive/80">
                     {error}
@@ -277,7 +277,7 @@ export function TaskAgentPanel({
             )}
             {phase === "idle" && task.status !== "in-progress" && (
               <p className="text-sm text-muted-foreground">
-                Move this task to in-progress to start Codex.
+                Move this task to in-progress to start the agent.
               </p>
             )}
 
@@ -303,6 +303,15 @@ export function TaskAgentPanel({
                   )}
                 </div>
               )}
+
+            {phase === "code-review" && snapshot?.diff && (
+              <div className="rounded-md border border-border p-3 text-sm">
+                <p className="font-medium mb-2">Implementation Changes (Diff)</p>
+                <pre className="max-h-60 overflow-auto rounded bg-muted/40 p-2 font-mono text-xs text-foreground/90 whitespace-pre-wrap">
+                  {snapshot.diff}
+                </pre>
+              </div>
+            )}
 
             <div className="space-y-4 max-h-24 overflow-y-auto">
               {isReviewPhase(phase) && (

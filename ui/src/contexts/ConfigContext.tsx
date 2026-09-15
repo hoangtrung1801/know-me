@@ -80,6 +80,7 @@ export interface Config {
 	capabilities?: {
 		taskHardDelete?: boolean;
 	};
+	workspacePath?: string;
 }
 
 export type ConfigPatch = Omit<Partial<Config>, "taskLifecycle"> & {

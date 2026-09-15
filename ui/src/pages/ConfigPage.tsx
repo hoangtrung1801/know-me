@@ -451,6 +451,14 @@ export default function ConfigPage() {
 				/>
 			</FieldRow>
 
+			<FieldRow label="Workspace path" hint="Local project directory where background coding agents (OMP) execute">
+				<Input
+					value={config.workspacePath || ""}
+					onChange={(e) => update({ workspacePath: e.target.value })}
+					placeholder="/path/to/project"
+				/>
+			</FieldRow>
+
 			<Separator className="my-1" />
 
 			<SectionHeader icon={User} title="Defaults" description="Default values for new tasks" />
@@ -712,9 +720,9 @@ export default function ConfigPage() {
 
 		return (
 			<div>
-				<SectionHeader icon={Bot} title="Codex" description="Local codex-acp adapter used by task workflows" />
+				<SectionHeader icon={Bot} title="Oh My Pi (OMP)" description="Local ACP background coding agent used by task workflows" />
 
-				<FieldRow label="Connection" hint="Know-Me detects codex-acp but never installs it or changes credentials">
+				<FieldRow label="Connection" hint="Know-Me detects omp via ACP but never installs it or changes credentials automatically">
 					<div className="space-y-3">
 						<div className={`flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${codexTone}`} aria-live="polite">
 							{codexStatusLoading ? (
@@ -727,10 +735,10 @@ export default function ConfigPage() {
 							<div className="min-w-0">
 								<div className="font-medium">
 									{codexStatusLoading
-										? "Checking Codex ACP..."
+										? "Checking Oh My Pi..."
 										: codexStatus?.installed
-											? codexStatus.loggedIn ? "Codex connected" : "Codex needs sign-in"
-											: "codex-acp is not installed"}
+											? codexStatus.loggedIn ? "Oh My Pi connected" : "Oh My Pi needs sign-in"
+											: "omp executable is not installed"}
 								</div>
 								{codexStatus?.version && <div className="mt-1 text-xs opacity-80">{codexStatus.version}</div>}
 								{codexStatusError && <div className="mt-1 text-xs text-destructive">{codexStatusError}</div>}
