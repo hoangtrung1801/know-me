@@ -344,6 +344,11 @@ func applySettingsUpdate(settings *models.ProjectSettings, payload map[string]js
 		}
 		settings.EnableChatUI = &v
 	}
+	if raw, ok := payload["workspacePath"]; ok {
+		if err := json.Unmarshal(raw, &settings.WorkspacePath); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

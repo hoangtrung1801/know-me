@@ -139,6 +139,9 @@ type ProjectSettings struct {
 
 	// LSP configures language server enable/disable and binary overrides.
 	LSP *LSPSettings `json:"lsp,omitempty"`
+
+	// WorkspacePath is the local directory path where background coding agents (OMP) execute.
+	WorkspacePath string `json:"workspacePath,omitempty"`
 }
 
 // UnmarshalJSON allows reading both "serverUrl" and snake_case "server_url" from .know-me/config.json.
