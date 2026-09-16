@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
+  ChevronDown,
   CircleStop,
   GitBranch,
   Loader2,
@@ -284,8 +285,14 @@ export function TaskAgentPanel({
             {(phase === "fix-ready" || canCreateWorktree) &&
               snapshot &&
               (snapshot.dirtyFiles?.length ?? 0) > 0 && (
-                <div className="rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
-                  <p className="font-medium">Workspace changes to review</p>
+                <details className="group rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 font-medium [&::-webkit-details-marker]:hidden">
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+                    <span>Workspace changes to review</span>
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                      {snapshot.dirtyFiles?.length ?? 0}
+                    </span>
+                  </summary>
                   <ul className="mt-2 max-h-40 list-disc overflow-y-auto pl-5 text-muted-foreground">
                     {snapshot.dirtyFiles?.map((file) => (
                       <li key={file} className="truncate" title={file}>{file}</li>
@@ -301,7 +308,7 @@ export function TaskAgentPanel({
                       <GitBranch /> Create isolated worktree & retry
                     </Button>
                   )}
-                </div>
+                </details>
               )}
 
             {phase === "code-review" && snapshot?.diff && (
