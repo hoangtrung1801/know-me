@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	instructionskills "github.com/hoangtrung1801/know-me/internal/instructions/skills"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/registry"
 	"github.com/hoangtrung1801/know-me/internal/storage"
@@ -886,9 +887,21 @@ func (m *Manager) updateTask(ctx context.Context, store *storage.Store, taskID s
 	service := tasklifecycle.New(store)
 	return service.UpdateTask(ctx, taskID, tasklifecycle.TaskUpdateOptions{Actor: "omp-agent", Mutate: mutate})
 }
+func loadWorkflowSkillInstructions() string {
+	data, err := instructionskills.Files.ReadFile("kn-workflow/SKILL.md")
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
+}
+
 
 func (m *Manager) buildPrompt(task *models.Task, state *models.AgentState, workflow *models.AgentWorkflow, phase models.AgentRunPhase) string {
 	var sb strings.Builder
+	if skill := loadWorkflowSkillInstructions(); skill != "" {
+		sb.WriteString(skill)
+		sb.WriteString("\n\n---\n\n")
+	}
 	sb.WriteString(fmt.Sprintf("Task: %s\n", task.Title))
 	if task.Description != "" {
 		sb.WriteString(fmt.Sprintf("Description:\n%s\n", task.Description))
@@ -909,11 +922,11 @@ func (m *Manager) buildPrompt(task *models.Task, state *models.AgentState, workf
 	}
 	switch phase {
 	case models.AgentRunPhaseInvestigation:
-		sb.WriteString("\nPlease investigate this task and codebase. Output a detailed implementation plan in markdown, proposing files to modify and tests to run. Provide a fenced ```json block with fields 'summary', 'implementationPlan', and 'tests'.")
+		sb.WriteString("\nActive Phase: INVESTIGATION\nPlease investigate this task and codebase. Output a detailed implementation plan in markdown, proposing files to modify and tests to run. Propose only; do not edit files. End your response with the required fenced ```json block with fields 'summary', 'implementationPlan', and 'tests'.")
 	case models.AgentRunPhaseImplementation:
-		sb.WriteString("\nPlease implement the approved plan. Modify files, run tests, and verify the changes.")
+		sb.WriteString("\nActive Phase: IMPLEMENTATION\nPlease implement the approved plan. Modify files, run tests, and verify the changes. End your response with the required fenced ```json block with fields 'summary', 'implementationNotes', and 'tests'.")
 	case models.AgentRunPhaseFix:
-		sb.WriteString("\nPlease fix the implementation based on the review feedback. Modify files, run tests, and verify.")
+		sb.WriteString("\nActive Phase: FIX\nPlease fix the implementation based on the review feedback. Modify files, run tests, and verify. End your response with the required fenced ```json block with fields 'summary', 'implementationNotes', and 'tests'.")
 	}
 	return sb.String()
 }

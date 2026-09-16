@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -165,6 +166,77 @@ func TestInvestigationFinishEmitsTaskChanged(t *testing.T) {
 		}
 	}
 	t.Fatalf("no updated event with taskChanged for t1 in %d events", len(events))
+}
+func TestWorkflowSkillLoadsFromEmbeddedFS(t *testing.T) {
+	skill := loadWorkflowSkillInstructions()
+	if skill == "" {
+		t.Fatal("expected kn-workflow/SKILL.md to load from embedded FS, got empty")
+	}
+	if !strings.Contains(skill, "Know-Me Task Run Protocol") {
+		t.Fatalf("skill missing title header: %q", skill[:min(len(skill), 100)])
+	}
+	if !strings.Contains(skill, "```json") || !strings.Contains(skill, "implementationPlan") {
+		t.Fatal("skill missing json output contract")
+	}
+}
+
+func TestBuildPromptIncludesWorkflowSkillAndPhaseInstruction(t *testing.T) {
+	mgr := NewManager("fake-omp", nil)
+	task := &models.Task{
+		ID:          "t42",
+		Title:       "Ship feature",
+		Description: "Detailed task description",
+		AcceptanceCriteria: []models.AcceptanceCriterion{
+			{Text: "AC 1"},
+		},
+	}
+	state := &models.AgentState{
+		ReviewComments: []models.ReviewComment{
+			{TaskID: "t42", Stage: "plan", Body: "Add unit tests"},
+		},
+	}
+	wf := &models.AgentWorkflow{TaskID: "t42"}
+
+	for _, tc := range []struct {
+		phase       models.AgentRunPhase
+		mustContain []string
+	}{
+		{
+			phase: models.AgentRunPhaseInvestigation,
+			mustContain: []string{
+				"Know-Me Task Run Protocol",
+				"Active Phase: INVESTIGATION",
+				"Task: Ship feature",
+				"Description:\nDetailed task description",
+				"AC 1",
+				"Add unit tests",
+				"implementationPlan",
+			},
+		},
+		{
+			phase: models.AgentRunPhaseImplementation,
+			mustContain: []string{
+				"Know-Me Task Run Protocol",
+				"Active Phase: IMPLEMENTATION",
+				"implementationNotes",
+			},
+		},
+		{
+			phase: models.AgentRunPhaseFix,
+			mustContain: []string{
+				"Know-Me Task Run Protocol",
+				"Active Phase: FIX",
+				"Review Feedback",
+			},
+		},
+	} {
+		prompt := mgr.buildPrompt(task, state, wf, tc.phase)
+		for _, expected := range tc.mustContain {
+			if !strings.Contains(prompt, expected) {
+				t.Errorf("phase %v prompt missing %q:\n%s", tc.phase, expected, prompt)
+			}
+		}
+	}
 }
 
 func waitForPhase(t *testing.T, manager *Manager, store *storage.Store, taskID string, want models.AgentPhase) models.AgentTaskSnapshot {
