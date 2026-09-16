@@ -520,7 +520,7 @@ export function TaskDetailSheet({
 										onClick={() => setSmallScreenTab("codex")}
 										className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${smallScreenTab === "codex" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
 									>
-										Codex
+										Agent
 									</button>
 								</div>
 								{smallScreenTab === "task" ? (
@@ -529,7 +529,7 @@ export function TaskDetailSheet({
 										<ScrollArea className="flex-1">{MainContent}</ScrollArea>
 									</div>
 								) : (
-									<div id="task-detail-codex-panel" role="tabpanel" aria-label="Codex task agent" className="min-h-0 flex-1 overflow-hidden">
+									<div id="task-detail-codex-panel" role="tabpanel" aria-label="Agent task panel" className="min-h-0 flex-1 overflow-hidden">
 										<TaskAgentPanel task={task} onTaskUpdated={onUpdate} embedded />
 									</div>
 								)}
