@@ -25,11 +25,16 @@ const (
 type ACPMode string
 
 type ACPUpdate struct {
-	Kind  string
-	Text  string
-	Phase string
+	Kind       string // "agent_message_chunk", "tool_call", "tool_call_update"
+	Text       string
+	Phase      string
+	ToolCallID string
+	ToolKind   string
+	ToolTitle  string
+	ToolStatus string // "loading" | "success" | "error"
+	ToolInput  map[string]interface{}
+	ToolOutput string
 }
-
 type acpUpdateContent struct {
 	Text string `json:"text"`
 }
@@ -569,15 +574,20 @@ func (p *ACPProcess) handleInboundRequest(req acpRPCMessage) {
 func (p *ACPProcess) handleNotification(msg acpRPCMessage) {
 	var update ACPUpdate
 
-	// Decode session/update with varied content structures (text, update.text, update.content.text, update.content[].text)
 	var payload struct {
 		Type   string `json:"type"`
 		Text   string `json:"text"`
 		Update struct {
-			Type    string `json:"type"`
-			SessionUpdate string `json:"sessionUpdate"`
-			Text    string `json:"text"`
-			Content any    `json:"content"`
+			Type          string                 `json:"type"`
+			SessionUpdate string                 `json:"sessionUpdate"`
+			Text          string                 `json:"text"`
+			Content       any                    `json:"content"`
+			ToolCallID    string                 `json:"toolCallId"`
+			Title         string                 `json:"title"`
+			Kind          string                 `json:"kind"`
+			Status        string                 `json:"status"`
+			RawInput      map[string]interface{} `json:"rawInput"`
+			RawOutput     any                    `json:"rawOutput"`
 		} `json:"update"`
 	}
 	if err := json.Unmarshal(msg.Params, &payload); err == nil {
@@ -589,32 +599,37 @@ func (p *ACPProcess) handleNotification(msg acpRPCMessage) {
 			update.Kind = payload.Type
 		}
 
+		// Handle tool calls and updates
+		if payload.Update.ToolCallID != "" {
+			update.ToolCallID = payload.Update.ToolCallID
+			update.ToolKind = payload.Update.Kind
+			if update.ToolKind == "" {
+				update.ToolKind = payload.Update.Type
+			}
+			update.ToolTitle = payload.Update.Title
+			update.ToolInput = payload.Update.RawInput
+			if payload.Update.Status == "completed" {
+				update.ToolStatus = "success"
+			} else if payload.Update.Status == "failed" {
+				update.ToolStatus = "error"
+			} else {
+				update.ToolStatus = "loading"
+			}
+			if payload.Update.RawOutput != nil {
+				update.ToolOutput = extractTextContent(payload.Update.RawOutput)
+			}
+		}
+
+		// Handle message text
 		if payload.Text != "" {
 			update.Text = payload.Text
 		} else if payload.Update.Text != "" {
 			update.Text = payload.Update.Text
 		} else if payload.Update.Content != nil {
-			switch c := payload.Update.Content.(type) {
-			case string:
-				update.Text = c
-			case map[string]any:
-				if t, ok := c["text"].(string); ok {
-					update.Text = t
-				}
-			case []any:
-				var sb strings.Builder
-				for _, item := range c {
-					if m, ok := item.(map[string]any); ok {
-						if t, ok := m["text"].(string); ok {
-							sb.WriteString(t)
-						}
-					}
-				}
-				update.Text = sb.String()
-			}
+			update.Text = extractTextContent(payload.Update.Content)
 		}
 	}
-	if update.Text != "" {
+	if update.Text != "" || update.ToolCallID != "" {
 		p.updateMu.Lock()
 		cb := p.updateCallback
 		p.updateMu.Unlock()
@@ -622,6 +637,36 @@ func (p *ACPProcess) handleNotification(msg acpRPCMessage) {
 			cb(update)
 		}
 	}
+}
+
+func extractTextContent(v any) string {
+	if v == nil {
+		return ""
+	}
+	switch val := v.(type) {
+	case string:
+		return val
+	case map[string]any:
+		if txt, ok := val["text"].(string); ok {
+			return txt
+		}
+		if c, ok := val["content"]; ok {
+			return extractTextContent(c)
+		}
+	case []any:
+		var sb strings.Builder
+		for _, item := range val {
+			txt := extractTextContent(item)
+			if txt != "" {
+				if sb.Len() > 0 {
+					sb.WriteString("\n")
+				}
+				sb.WriteString(txt)
+			}
+		}
+		return sb.String()
+	}
+	return ""
 }
 
 func (p *ACPProcess) setUpdateCallback(cb func(ACPUpdate)) {

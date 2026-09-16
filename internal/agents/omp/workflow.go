@@ -560,6 +560,7 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 
 	session, runErr := m.ensureSession(ctx, store, taskID, root)
 	var streamed strings.Builder
+	var toolCalls []models.ChatToolCall
 	if runErr == nil {
 		m.setActiveSession(root, runID, session)
 		if setter, ok := session.(sessionLogPathSetter); ok {
@@ -572,27 +573,66 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 		_ = session.SetMode(ctx, mode)
 
 		_, runErr = session.Prompt(ctx, prompt, func(update ACPUpdate) {
-			if update.Text != "" {
-				streamed.WriteString(update.Text)
-				m.emitProgress(Event{Type: "progress", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Message: update.Text})
-				if assistantID != "" {
-					_ = m.saveChatMessage(store, taskID, assistantID, streamed.String(), runID)
-					m.emitChatMessage(ChatEvent{
-						Type:      "message",
-						ProjectID: store.ProjectID,
-						TaskID:    taskID,
-						ChatID:    taskID,
-						Message: &models.ChatMessage{
-							ID:        assistantID,
-							Role:      "assistant",
-							Content:   streamed.String(),
-							Model:     "omp",
-							RunID:     runID,
-							Phase:     runPhase,
-							CreatedAt: formatChatTime(m.now().UTC()),
-						},
+			hasChange := false
+			if update.ToolCallID != "" {
+				hasChange = true
+				found := false
+				for i := range toolCalls {
+					if toolCalls[i].ID == update.ToolCallID {
+						if update.ToolStatus != "" {
+							toolCalls[i].Status = update.ToolStatus
+						}
+						if update.ToolOutput != "" {
+							toolCalls[i].Output = update.ToolOutput
+						}
+						if update.ToolTitle != "" {
+							toolCalls[i].Title = update.ToolTitle
+						}
+						if update.ToolInput != nil {
+							toolCalls[i].Input = update.ToolInput
+						}
+						found = true
+						break
+					}
+				}
+				if !found {
+					toolName := update.ToolKind
+					if toolName == "" {
+						toolName = "tool"
+					}
+					toolCalls = append(toolCalls, models.ChatToolCall{
+						ID:     update.ToolCallID,
+						Name:   toolName,
+						Title:  update.ToolTitle,
+						Input:  update.ToolInput,
+						Output: update.ToolOutput,
+						Status: update.ToolStatus,
 					})
 				}
+			}
+			if update.Text != "" {
+				hasChange = true
+				streamed.WriteString(update.Text)
+				m.emitProgress(Event{Type: "progress", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Message: update.Text})
+			}
+			if hasChange && assistantID != "" {
+				_ = m.saveChatMessage(store, taskID, assistantID, streamed.String(), runID, toolCalls)
+				m.emitChatMessage(ChatEvent{
+					Type:      "message",
+					ProjectID: store.ProjectID,
+					TaskID:    taskID,
+					ChatID:    taskID,
+					Message: &models.ChatMessage{
+						ID:        assistantID,
+						Role:      "assistant",
+						Content:   streamed.String(),
+						Model:     "omp",
+						RunID:     runID,
+						Phase:     runPhase,
+						ToolCalls: toolCalls,
+						CreatedAt: formatChatTime(m.now().UTC()),
+					},
+				})
 			}
 		})
 		if runErr == nil && streamed.Len() > 0 {
@@ -603,10 +643,10 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 		}
 	}
 
-	m.finishRun(store, taskID, root, runID, runPhase, restorePhase, assistantID, streamed.String(), session, runErr)
+	m.finishRun(store, taskID, root, runID, runPhase, restorePhase, assistantID, streamed.String(), session, toolCalls, runErr)
 }
 
-func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, assistantID, streamedText string, session acpSession, runErr error) {
+func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, assistantID, streamedText string, session acpSession, toolCalls []models.ChatToolCall, runErr error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.active, root)
@@ -656,7 +696,7 @@ func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, ru
 		if runErr != nil {
 			status = "error"
 		}
-		_ = m.finalizeChatMessage(store, taskID, assistantID, streamedText, status, runErr)
+		_ = m.finalizeChatMessage(store, taskID, assistantID, streamedText, status, runErr, toolCalls)
 	}
 	m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID})
 }
