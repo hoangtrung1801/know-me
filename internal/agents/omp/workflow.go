@@ -126,9 +126,43 @@ func (m *Manager) Snapshot(ctx context.Context, store *storage.Store, taskID str
 	if store == nil || store.Agent == nil {
 		return models.AgentTaskSnapshot{}, errors.New("agent store is unavailable")
 	}
+	_ = m.ensureSnapshotChatLocked(store, taskID)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.snapshotLocked(ctx, store, taskID)
+}
+
+func (m *Manager) ensureSnapshotChatLocked(store *storage.Store, taskID string) error {
+	if store == nil || store.Chats == nil {
+		return nil
+	}
+	state, err := store.Agent.Load()
+	if err != nil {
+		return err
+	}
+	task, err := store.Tasks.Get(taskID)
+	if err != nil {
+		return err
+	}
+	now := m.now().UTC()
+	workflow := ensureWorkflow(&state, store.ProjectID, taskID, now)
+	previousID := workflow.ChatSessionID
+	session, created, err := ensureTaskChatLocked(store, task, workflow, now)
+	if err != nil {
+		return err
+	}
+	if created {
+		if err := store.Chats.Save(session); err != nil {
+			return err
+		}
+		m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: taskID, Session: session})
+	}
+	if previousID != workflow.ChatSessionID {
+		if err := store.Agent.Save(state); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, taskID string) (models.AgentTaskSnapshot, error) {
@@ -462,16 +496,45 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 		_ = runLock.Close()
 		return models.AgentTaskSnapshot{}, false, err
 	}
-
-	chat, _ := store.Chats.FindTaskSession(store.ProjectID, task.ID, "omp")
-	if chat == nil {
-		chat, _ = store.Chats.FindTaskSession(store.ProjectID, task.ID, "codex")
-	}
-	if chat != nil {
-		chat.AgentType = "omp"
+	var chat *models.ChatSession
+	var chatCreated bool
+	var assistantID string
+	if store.Chats != nil {
+		chat, chatCreated, err = ensureTaskChatLocked(store, task, workflow, now)
+		if err != nil {
+			_ = runLock.Close()
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		assistantID = uuid.NewString()
+		chat.Messages = append(chat.Messages,
+			models.ChatMessage{
+				ID:        uuid.NewString(),
+				Role:      "user",
+				Content:   visibleMessage,
+				Model:     "omp",
+				CreatedAt: formatChatTime(now),
+				Phase:     runPhase,
+			},
+			models.ChatMessage{
+				ID:        assistantID,
+				Role:      "assistant",
+				Content:   "",
+				Model:     "omp",
+				CreatedAt: formatChatTime(now),
+				RunID:     runID,
+				Phase:     runPhase,
+			},
+		)
 		chat.Status = "streaming"
-		chat.UpdatedAt = now.Format(time.RFC3339)
-		_ = store.Chats.Save(chat)
+		chat.UpdatedAt = formatChatTime(now)
+		if err := store.Chats.Save(chat); err != nil {
+			_ = runLock.Close()
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		if chatCreated {
+			m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: task.ID, Session: chat})
+		}
+		m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: task.ID, Session: chat})
 	}
 
 	prompt := m.buildPrompt(task, state, workflow, runPhase)
@@ -482,18 +545,19 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 		runID: runID, phase: runPhase, store: store, done: activeDone,
 	}
 
-	go m.executeSession(runCtx, store, runID, task.ID, root, prompt, runPhase, restorePhase, runLock, activeDone)
+	go m.executeSession(runCtx, store, runID, task.ID, root, prompt, runPhase, restorePhase, assistantID, runLock, activeDone)
 
 	m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: task.ID, RunID: runID, Message: visibleMessage})
 	snapshot, err := m.snapshotLocked(ctx, store, task.ID)
 	return snapshot, true, err
 }
 
-func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runID, taskID, root, prompt string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, runLock *storage.AgentRunLock, activeDone chan struct{}) {
+func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runID, taskID, root, prompt string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, assistantID string, runLock *storage.AgentRunLock, activeDone chan struct{}) {
 	defer runLock.Close()
 	defer close(activeDone)
 
 	session, runErr := m.ensureSession(ctx, store, taskID, root)
+	var streamed strings.Builder
 	if runErr == nil {
 		m.setActiveSession(root, runID, session)
 		if setter, ok := session.(sessionLogPathSetter); ok {
@@ -505,11 +569,28 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 		}
 		_ = session.SetMode(ctx, mode)
 
-		var streamed strings.Builder
 		_, runErr = session.Prompt(ctx, prompt, func(update ACPUpdate) {
 			if update.Text != "" {
 				streamed.WriteString(update.Text)
 				m.emitProgress(Event{Type: "progress", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Message: update.Text})
+				if assistantID != "" {
+					_ = m.saveChatMessage(store, taskID, assistantID, streamed.String(), runID)
+					m.emitChatMessage(ChatEvent{
+						Type:      "message",
+						ProjectID: store.ProjectID,
+						TaskID:    taskID,
+						ChatID:    taskID,
+						Message: &models.ChatMessage{
+							ID:        assistantID,
+							Role:      "assistant",
+							Content:   streamed.String(),
+							Model:     "omp",
+							RunID:     runID,
+							Phase:     runPhase,
+							CreatedAt: formatChatTime(m.now().UTC()),
+						},
+					})
+				}
 			}
 		})
 		if runErr == nil && streamed.Len() > 0 {
@@ -520,14 +601,13 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 		}
 	}
 
-	m.finishRun(store, taskID, root, runID, runPhase, restorePhase, session, runErr)
+	m.finishRun(store, taskID, root, runID, runPhase, restorePhase, assistantID, streamed.String(), session, runErr)
 }
 
-func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, session acpSession, runErr error) {
+func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, assistantID, streamedText string, session acpSession, runErr error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.active, root)
-
 	state, err := store.Agent.Load()
 	if err != nil {
 		return
@@ -569,6 +649,13 @@ func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, ru
 	}
 
 	_ = store.Agent.Save(state)
+	if assistantID != "" {
+		status := "idle"
+		if runErr != nil {
+			status = "error"
+		}
+		_ = m.finalizeChatMessage(store, taskID, assistantID, streamedText, status, runErr)
+	}
 	m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID})
 }
 
