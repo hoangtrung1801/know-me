@@ -96,16 +96,7 @@ func TestWorkflowInvestigationAndApproval(t *testing.T) {
 		t.Fatalf("phase = %q, want %q", snap.Workflow.Phase, models.AgentPhaseInvestigating)
 	}
 
-	// Wait briefly for background execution
-	time.Sleep(50 * time.Millisecond)
-
-	snap, err = mgr.Snapshot(context.Background(), store, "t1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if snap.Workflow.Phase != models.AgentPhasePlanReview {
-		t.Fatalf("phase after investigation = %q, want %q", snap.Workflow.Phase, models.AgentPhasePlanReview)
-	}
+	snap = waitForPhase(t, mgr, store, "t1", models.AgentPhasePlanReview)
 
 	// 2. Approve plan
 	snap, started, err = mgr.Act(context.Background(), store, "t1", ActionApprovePlan, "")
@@ -116,15 +107,7 @@ func TestWorkflowInvestigationAndApproval(t *testing.T) {
 		t.Fatalf("phase = %q, want %q", snap.Workflow.Phase, models.AgentPhaseImplementing)
 	}
 
-	time.Sleep(50 * time.Millisecond)
-
-	snap, err = mgr.Snapshot(context.Background(), store, "t1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if snap.Workflow.Phase != models.AgentPhaseCodeReview {
-		t.Fatalf("phase after implementation = %q, want %q", snap.Workflow.Phase, models.AgentPhaseCodeReview)
-	}
+	snap = waitForPhase(t, mgr, store, "t1", models.AgentPhaseCodeReview)
 
 	// 3. Approve implementation
 	snap, started, err = mgr.Act(context.Background(), store, "t1", ActionApproveImplementation, "")
@@ -139,6 +122,21 @@ func TestWorkflowInvestigationAndApproval(t *testing.T) {
 	if task.Status != "done" {
 		t.Fatalf("task status = %q, want done", task.Status)
 	}
+}
+
+func waitForPhase(t *testing.T, manager *Manager, store *storage.Store, taskID string, want models.AgentPhase) models.AgentTaskSnapshot {
+	t.Helper()
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		snap, err := manager.Snapshot(context.Background(), store, taskID)
+		if err == nil && snap.Workflow.Phase == want {
+			return snap
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	snap, _ := manager.Snapshot(context.Background(), store, taskID)
+	t.Fatalf("phase did not reach %q, got %q", want, snap.Workflow.Phase)
+	return snap
 }
 
 func TestWorkflowApprovePlanRejectsDirtyWorkspace(t *testing.T) {

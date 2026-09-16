@@ -126,7 +126,6 @@ func (m *Manager) Snapshot(ctx context.Context, store *storage.Store, taskID str
 	if store == nil || store.Agent == nil {
 		return models.AgentTaskSnapshot{}, errors.New("agent store is unavailable")
 	}
-	_ = m.ensureSnapshotChatLocked(store, taskID)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.snapshotLocked(ctx, store, taskID)
@@ -144,9 +143,14 @@ func (m *Manager) ensureSnapshotChatLocked(store *storage.Store, taskID string) 
 	if err != nil {
 		return err
 	}
+	workflow := findWorkflow(&state, store.ProjectID, taskID)
+	if workflow != nil && workflow.ChatSessionID != "" {
+		return nil
+	}
 	now := m.now().UTC()
-	workflow := ensureWorkflow(&state, store.ProjectID, taskID, now)
-	previousID := workflow.ChatSessionID
+	if workflow == nil {
+		workflow = ensureWorkflow(&state, store.ProjectID, taskID, now)
+	}
 	session, created, err := ensureTaskChatLocked(store, task, workflow, now)
 	if err != nil {
 		return err
@@ -157,12 +161,7 @@ func (m *Manager) ensureSnapshotChatLocked(store *storage.Store, taskID string) 
 		}
 		m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: taskID, Session: session})
 	}
-	if previousID != workflow.ChatSessionID {
-		if err := store.Agent.Save(state); err != nil {
-			return err
-		}
-	}
-	return nil
+	return store.Agent.Save(state)
 }
 
 func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, taskID string) (models.AgentTaskSnapshot, error) {
@@ -494,10 +493,6 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 	workflow.ResumePhase = ""
 	workflow.UpdatedAt = now
 	state.Runs = append(state.Runs, run)
-	if err := store.Agent.Save(*state); err != nil {
-		_ = runLock.Close()
-		return models.AgentTaskSnapshot{}, false, err
-	}
 	var chat *models.ChatSession
 	var chatCreated bool
 	var assistantID string
@@ -537,6 +532,11 @@ func (m *Manager) startRunLocked(ctx context.Context, store *storage.Store, task
 			m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: task.ID, Session: chat})
 		}
 		m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: task.ID, Session: chat})
+	}
+
+	if err := store.Agent.Save(*state); err != nil {
+		_ = runLock.Close()
+		return models.AgentTaskSnapshot{}, false, err
 	}
 
 	prompt := m.buildPrompt(task, state, workflow, runPhase)
@@ -616,7 +616,8 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 				m.emitProgress(Event{Type: "progress", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, Message: update.Text})
 			}
 			if hasChange && assistantID != "" {
-				_ = m.saveChatMessage(store, taskID, assistantID, streamed.String(), runID, toolCalls)
+				displayContent := shortPreview(streamed.String(), 120)
+				_ = m.saveChatMessage(store, taskID, assistantID, displayContent, runID, toolCalls)
 				m.emitChatMessage(ChatEvent{
 					Type:      "message",
 					ProjectID: store.ProjectID,
@@ -625,7 +626,7 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 					Message: &models.ChatMessage{
 						ID:        assistantID,
 						Role:      "assistant",
-						Content:   streamed.String(),
+						Content:   displayContent,
 						Model:     "omp",
 						RunID:     runID,
 						Phase:     runPhase,
@@ -645,11 +646,11 @@ func (m *Manager) executeSession(ctx context.Context, store *storage.Store, runI
 
 	m.finishRun(store, taskID, root, runID, runPhase, restorePhase, assistantID, streamed.String(), session, toolCalls, runErr)
 }
-
 func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, runPhase models.AgentRunPhase, restorePhase models.AgentPhase, assistantID, streamedText string, session acpSession, toolCalls []models.ChatToolCall, runErr error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.active, root)
+
 	state, err := store.Agent.Load()
 	if err != nil {
 		return
@@ -659,7 +660,6 @@ func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, ru
 	if workflow == nil || run == nil {
 		return
 	}
-
 	now := m.now().UTC()
 	run.FinishedAt = &now
 	workflow.ActiveRunID = ""
@@ -690,15 +690,58 @@ func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, ru
 		}
 	}
 
+	finalContent := streamedText
+	if result, parseErr := parseResult(runPhase, streamedText); parseErr == nil {
+		if runPhase == models.AgentRunPhaseInvestigation {
+			if result.ImplementationPlan != "" {
+				finalContent = fmt.Sprintf("### Summary\n%s\n\n%s", result.Summary, result.ImplementationPlan)
+			} else {
+				finalContent = result.Summary
+			}
+		} else if runPhase == models.AgentRunPhaseImplementation || runPhase == models.AgentRunPhaseFix {
+			if result.ImplementationNotes != "" {
+				finalContent = fmt.Sprintf("### Summary\n%s\n\n%s", result.Summary, result.ImplementationNotes)
+			} else {
+				finalContent = result.Summary
+			}
+		}
+	}
+	const maxFinalChatChars = 6000
+	if len(finalContent) > maxFinalChatChars {
+		finalContent = finalContent[:maxFinalChatChars] + "\n\n... [truncated — full plan is shown in the review panel above]"
+	}
+
 	_ = store.Agent.Save(state)
+
 	if assistantID != "" {
 		status := "idle"
 		if runErr != nil {
 			status = "error"
 		}
-		_ = m.finalizeChatMessage(store, taskID, assistantID, streamedText, status, runErr, toolCalls)
+		_ = m.finalizeChatMessage(store, taskID, assistantID, finalContent, status, runErr, toolCalls)
 	}
 	m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID})
+}
+
+func shortPreview(text string, maxLen int) string {
+	trimmed := strings.TrimSpace(text)
+	if trimmed == "" {
+		return ""
+	}
+	lines := strings.Split(trimmed, "\n")
+	for _, line := range lines {
+		l := strings.TrimSpace(line)
+		if l != "" && !strings.HasPrefix(l, "```") && !strings.HasPrefix(l, "{") && !strings.HasPrefix(l, "}") && !strings.HasPrefix(l, "#") {
+			if len(l) > maxLen {
+				return l[:maxLen] + "..."
+			}
+			return l
+		}
+	}
+	if len(trimmed) > maxLen {
+		return trimmed[:maxLen] + "..."
+	}
+	return trimmed
 }
 
 func (m *Manager) applyResult(store *storage.Store, taskID string, phase models.AgentRunPhase, result PhaseResult) {

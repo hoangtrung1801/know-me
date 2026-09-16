@@ -165,14 +165,13 @@ func (m *Manager) startChatLocked(ctx context.Context, store *storage.Store, tas
 	}
 
 	if created {
-		m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: task.ID, Session: session})
+		m.emitChatSession(ChatEvent{Type: "created", ProjectID: store.ProjectID, TaskID: task.ID, ChatID: session.ID, Session: session})
 	}
-	m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: task.ID, Session: session})
-	go m.executeChatSession(runCtx, store, task.ID, root, content, runID, assistant.ID, workflow.Phase, runLock, activeDone)
+	m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: task.ID, ChatID: session.ID, Session: session})
+	go m.executeChatSession(runCtx, store, task.ID, root, content, runID, assistant.ID, session.ID, workflow.Phase, runLock, activeDone)
 	return nil
 }
-
-func (m *Manager) executeChatSession(ctx context.Context, store *storage.Store, taskID, root, content, runID, assistantID string, restorePhase models.AgentPhase, runLock *storage.AgentRunLock, activeDone chan struct{}) {
+func (m *Manager) executeChatSession(ctx context.Context, store *storage.Store, taskID, root, content, runID, assistantID, chatID string, restorePhase models.AgentPhase, runLock *storage.AgentRunLock, activeDone chan struct{}) {
 	defer func() {
 		_ = runLock.Close()
 		close(activeDone)
@@ -191,50 +190,22 @@ func (m *Manager) executeChatSession(ctx context.Context, store *storage.Store, 
 			hasChange := false
 			if update.ToolCallID != "" {
 				hasChange = true
-				found := false
-				for i := range toolCalls {
-					if toolCalls[i].ID == update.ToolCallID {
-						if update.ToolStatus != "" {
-							toolCalls[i].Status = update.ToolStatus
-						}
-						if update.ToolOutput != "" {
-							toolCalls[i].Output = update.ToolOutput
-						}
-						if update.ToolTitle != "" {
-							toolCalls[i].Title = update.ToolTitle
-						}
-						if update.ToolInput != nil {
-							toolCalls[i].Input = update.ToolInput
-						}
-						found = true
-						break
-					}
-				}
-				if !found {
-					toolName := update.ToolKind
-					if toolName == "" {
-						toolName = "tool"
-					}
-					toolCalls = append(toolCalls, models.ChatToolCall{
-						ID:     update.ToolCallID,
-						Name:   toolName,
-						Title:  update.ToolTitle,
-						Input:  update.ToolInput,
-						Output: update.ToolOutput,
-						Status: update.ToolStatus,
-					})
-				}
+				toolCalls = applyToolCallUpdate(toolCalls, update)
 			}
 			if update.Text != "" {
 				hasChange = true
 				streamed.WriteString(update.Text)
 			}
 			if hasChange {
-				_ = m.saveChatMessage(store, taskID, assistantID, streamed.String(), runID, toolCalls)
+				displayContent := streamed.String()
+				if len(toolCalls) > 0 {
+					displayContent = shortPreview(streamed.String(), 120)
+				}
+				_ = m.saveChatMessage(store, taskID, assistantID, displayContent, runID, toolCalls)
 				m.emitChatMessage(ChatEvent{
-					Type: "message", ProjectID: store.ProjectID, TaskID: taskID,
+					Type: "message", ProjectID: store.ProjectID, TaskID: taskID, ChatID: chatID,
 					Message: &models.ChatMessage{
-						ID: assistantID, Role: "assistant", Content: streamed.String(), Model: "omp",
+						ID: assistantID, Role: "assistant", Content: displayContent, Model: "omp",
 						RunID: runID, Phase: models.AgentRunPhaseChat, ToolCalls: toolCalls,
 					},
 				})
@@ -244,7 +215,6 @@ func (m *Manager) executeChatSession(ctx context.Context, store *storage.Store, 
 
 	m.finishChatRun(store, taskID, root, runID, assistantID, restorePhase, session, response, toolCalls, runErr)
 }
-
 func (m *Manager) finishChatRun(store *storage.Store, taskID, root, runID, assistantID string, restorePhase models.AgentPhase, session acpSession, response string, toolCalls []models.ChatToolCall, runErr error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -285,11 +255,12 @@ func (m *Manager) finishChatRun(store *storage.Store, taskID, root, runID, assis
 	} else {
 		run.Status = models.AgentRunStatusSucceeded
 	}
-
-	_ = store.Agent.Save(state)
-	_ = m.finalizeChatMessage(store, taskID, assistantID, response, status, runErr, toolCalls)
+	finalResponse := response
+	if finalResponse == "" {
+		finalResponse = "Done."
+	}
+	_ = m.finalizeChatMessage(store, taskID, assistantID, finalResponse, status, runErr, toolCalls)
 }
-
 func (m *Manager) queueChatLocked(store *storage.Store, workflow *models.AgentWorkflow, content string) error {
 	chat, err := store.Chats.FindTaskSession(store.ProjectID, workflow.TaskID, "omp")
 	if err != nil {
@@ -354,7 +325,7 @@ func (m *Manager) finalizeChatMessage(store *storage.Store, taskID, messageID, c
 		}
 	}
 	_ = store.Chats.Save(session)
-	m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, Session: session})
+	m.emitChatSession(ChatEvent{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, ChatID: session.ID, Session: session})
 	return nil
 }
 
@@ -389,6 +360,38 @@ func ensureTaskChatLocked(store *storage.Store, task *models.Task, workflow *mod
 	}
 	workflow.ChatSessionID = session.ID
 	return session, true, store.Chats.Save(session)
+}
+
+func applyToolCallUpdate(toolCalls []models.ChatToolCall, update ACPUpdate) []models.ChatToolCall {
+	for i := range toolCalls {
+		if toolCalls[i].ID == update.ToolCallID {
+			if update.ToolStatus != "" {
+				toolCalls[i].Status = update.ToolStatus
+			}
+			if update.ToolOutput != "" {
+				toolCalls[i].Output = update.ToolOutput
+			}
+			if update.ToolTitle != "" {
+				toolCalls[i].Title = update.ToolTitle
+			}
+			if update.ToolInput != nil {
+				toolCalls[i].Input = update.ToolInput
+			}
+			return toolCalls
+		}
+	}
+	toolName := update.ToolKind
+	if toolName == "" {
+		toolName = "tool"
+	}
+	return append(toolCalls, models.ChatToolCall{
+		ID:     update.ToolCallID,
+		Name:   toolName,
+		Title:  update.ToolTitle,
+		Input:  update.ToolInput,
+		Output: update.ToolOutput,
+		Status: update.ToolStatus,
+	})
 }
 
 func (m *Manager) emitChatSession(event ChatEvent) {
