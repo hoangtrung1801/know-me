@@ -898,6 +898,7 @@ func loadWorkflowSkillInstructions() string {
 
 func (m *Manager) buildPrompt(task *models.Task, state *models.AgentState, workflow *models.AgentWorkflow, phase models.AgentRunPhase) string {
 	var sb strings.Builder
+	sb.WriteString("/knowme-workflow\n\n")
 	if skill := loadWorkflowSkillInstructions(); skill != "" {
 		sb.WriteString(skill)
 		sb.WriteString("\n\n---\n\n")

@@ -204,6 +204,7 @@ func TestBuildPromptIncludesWorkflowSkillAndPhaseInstruction(t *testing.T) {
 		{
 			phase: models.AgentRunPhaseInvestigation,
 			mustContain: []string{
+				"/knowme-workflow",
 				"Know-Me Task Run Protocol",
 				"Active Phase: INVESTIGATION",
 				"Task: Ship feature",
