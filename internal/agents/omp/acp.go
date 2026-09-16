@@ -620,13 +620,16 @@ func (p *ACPProcess) handleNotification(msg acpRPCMessage) {
 			}
 		}
 
-		// Handle message text
-		if payload.Text != "" {
-			update.Text = payload.Text
-		} else if payload.Update.Text != "" {
-			update.Text = payload.Update.Text
-		} else if payload.Update.Content != nil {
-			update.Text = extractTextContent(payload.Update.Content)
+		// Handle message text (only agent_message_chunk carries user-facing response;
+		// agent_thought_chunk contains reasoning scratchpad that must not leak into chat or output parser)
+		if update.Kind == "agent_message_chunk" || update.Kind == "text" || update.Kind == "" {
+			if payload.Text != "" {
+				update.Text = payload.Text
+			} else if payload.Update.Text != "" {
+				update.Text = payload.Update.Text
+			} else if payload.Update.Content != nil {
+				update.Text = extractTextContent(payload.Update.Content)
+			}
 		}
 	}
 	if update.Text != "" || update.ToolCallID != "" {

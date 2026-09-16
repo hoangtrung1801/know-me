@@ -54,6 +54,41 @@ func TestParseResultFencedJSON(t *testing.T) {
 		t.Fatalf("tests = %v", res.Tests)
 	}
 }
+func TestParseResultPrefersLastFencedJSON(t *testing.T) {
+	raw := "Intermediate scratchpad:\n```json\n{\n  \"summary\": \"generic placeholder\",\n  \"implementationPlan\": \"generic\"\n}\n```\n\nFinal response:\n```json\n{\n  \"summary\": \"Refactor auth for real\",\n  \"implementationPlan\": \"1. Update actual code\",\n  \"tests\": [\"vitest\"]\n}\n```"
+	res, err := parseResult(models.AgentRunPhaseInvestigation, raw)
+	if err != nil {
+		t.Fatalf("parseResult failed: %v", err)
+	}
+	if res.Summary != "Refactor auth for real" {
+		t.Fatalf("summary = %q, want Refactor auth for real", res.Summary)
+	}
+	if res.ImplementationPlan != "1. Update actual code" {
+		t.Fatalf("plan = %q", res.ImplementationPlan)
+	}
+}
+
+func TestHandleNotificationIgnoresAgentThoughtChunks(t *testing.T) {
+	p := &ACPProcess{}
+	var received []ACPUpdate
+	p.updateCallback = func(u ACPUpdate) {
+		received = append(received, u)
+	}
+
+	// agent_thought_chunk should be ignored
+	thoughtJSON := []byte(`{"sessionId":"s1","update":{"sessionUpdate":"agent_thought_chunk","content":{"type":"text","text":"thinking scratchpad"}}}`)
+	p.handleNotification(acpRPCMessage{Method: "session/update", Params: thoughtJSON})
+	if len(received) != 0 {
+		t.Fatalf("expected 0 updates for agent_thought_chunk, got %d", len(received))
+	}
+
+	// agent_message_chunk should be processed
+	msgJSON := []byte(`{"sessionId":"s1","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"hello world"}}}`)
+	p.handleNotification(acpRPCMessage{Method: "session/update", Params: msgJSON})
+	if len(received) != 1 || received[0].Text != "hello world" {
+		t.Fatalf("expected 1 update with 'hello world', got %#v", received)
+	}
+}
 
 func TestParseResultRawJSON(t *testing.T) {
 	raw := `{"summary":"Fix bug","implementationPlan":"apply patch","tests":[]}`

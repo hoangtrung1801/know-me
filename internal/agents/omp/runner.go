@@ -266,18 +266,29 @@ func parseResult(phase models.AgentRunPhase, raw string) (PhaseResult, error) {
 		return PhaseResult{}, errors.New("empty agent response")
 	}
 
-	// Try extracting from fenced json block
-	if idx := strings.Index(trimmed, "```json"); idx >= 0 {
-		end := strings.Index(trimmed[idx+7:], "```")
-		if end >= 0 {
-			jsonBlock := strings.TrimSpace(trimmed[idx+7 : idx+7+end])
-			var parsed PhaseResult
-			if err := json.Unmarshal([]byte(jsonBlock), &parsed); err == nil && parsed.Summary != "" {
-				return parsed, nil
-			}
+	// Try extracting from fenced json block (find the LAST block in the response,
+	// so any scratchpad/intermediate json blocks in the body are ignored in favor of the final contract)
+	searchFrom := 0
+	lastBlock := ""
+	for {
+		idx := strings.Index(trimmed[searchFrom:], "```json")
+		if idx < 0 {
+			break
+		}
+		start := searchFrom + idx + 7
+		end := strings.Index(trimmed[start:], "```")
+		if end < 0 {
+			break
+		}
+		lastBlock = strings.TrimSpace(trimmed[start : start+end])
+		searchFrom = start + end + 3
+	}
+	if lastBlock != "" {
+		var parsed PhaseResult
+		if err := json.Unmarshal([]byte(lastBlock), &parsed); err == nil && parsed.Summary != "" {
+			return parsed, nil
 		}
 	}
-
 	var parsed PhaseResult
 	if err := json.Unmarshal([]byte(trimmed), &parsed); err == nil && parsed.Summary != "" {
 		return parsed, nil
