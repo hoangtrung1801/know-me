@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -122,6 +123,48 @@ func TestWorkflowInvestigationAndApproval(t *testing.T) {
 	if task.Status != "done" {
 		t.Fatalf("task status = %q, want done", task.Status)
 	}
+}
+func TestInvestigationFinishEmitsTaskChanged(t *testing.T) {
+	store := testStore(t, "in-progress")
+	fake := &fakeSession{}
+	var mu sync.Mutex
+	var events []Event
+	mgr := NewManager("fake-omp", func(e Event) {
+		mu.Lock()
+		events = append(events, e)
+		mu.Unlock()
+	})
+	mgr.sessionFactory = func(ctx context.Context, root string, command []string) (acpSession, error) {
+		return fake, nil
+	}
+	mgr.detect = func(ctx context.Context, exe string) Status {
+		return Status{Installed: true, LoggedIn: true}
+	}
+	mgr.dirtyFiles = func(ctx context.Context, root string) ([]string, error) {
+		return []string{}, nil
+	}
+
+	if _, started, err := mgr.Act(context.Background(), store, "t1", ActionStartInvestigation, ""); err != nil || !started {
+		t.Fatalf("start investigation error: %v, started: %v", err, started)
+	}
+	waitForPhase(t, mgr, store, "t1", models.AgentPhasePlanReview)
+
+	task, err := store.Tasks.Get("t1")
+	if err != nil {
+		t.Fatalf("get task: %v", err)
+	}
+	if task.ImplementationPlan != "do it" {
+		t.Fatalf("implementationPlan = %q, want %q", task.ImplementationPlan, "do it")
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	for _, e := range events {
+		if e.Type == "updated" && e.TaskID == "t1" && e.TaskChanged {
+			return
+		}
+	}
+	t.Fatalf("no updated event with taskChanged for t1 in %d events", len(events))
 }
 
 func waitForPhase(t *testing.T, manager *Manager, store *storage.Store, taskID string, want models.AgentPhase) models.AgentTaskSnapshot {

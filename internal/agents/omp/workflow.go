@@ -692,24 +692,38 @@ func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, ru
 	}
 
 	finalContent := streamedText
+	taskChanged := false
+	savedField := ""
 	if result, parseErr := parseResult(runPhase, streamedText); parseErr == nil {
 		if runPhase == models.AgentRunPhaseInvestigation {
 			if result.ImplementationPlan != "" {
 				finalContent = fmt.Sprintf("### Summary\n%s\n\n%s", result.Summary, result.ImplementationPlan)
+				savedField = "Implementation Plan"
 			} else {
 				finalContent = result.Summary
 			}
+			taskChanged = result.ImplementationPlan != "" || result.ImplementationNotes != ""
 		} else if runPhase == models.AgentRunPhaseImplementation || runPhase == models.AgentRunPhaseFix {
 			if result.ImplementationNotes != "" {
 				finalContent = fmt.Sprintf("### Summary\n%s\n\n%s", result.Summary, result.ImplementationNotes)
+				savedField = "Implementation Notes"
 			} else {
 				finalContent = result.Summary
 			}
+			taskChanged = result.ImplementationNotes != ""
 		}
+	}
+	if runErr != nil {
+		taskChanged = false
+		savedField = ""
 	}
 	const maxFinalChatChars = 6000
 	if len(finalContent) > maxFinalChatChars {
-		finalContent = finalContent[:maxFinalChatChars] + "\n\n... [truncated — full plan is shown in the review panel above]"
+		marker := "\n\n... [truncated]"
+		if savedField != "" {
+			marker = fmt.Sprintf("\n\n... [truncated — full text saved to the task's %s]", savedField)
+		}
+		finalContent = finalContent[:maxFinalChatChars] + marker
 	}
 
 	_ = store.Agent.Save(state)
@@ -721,7 +735,7 @@ func (m *Manager) finishRun(store *storage.Store, taskID, root, runID string, ru
 		}
 		_ = m.finalizeChatMessage(store, taskID, assistantID, finalContent, status, runErr, toolCalls)
 	}
-	m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID})
+	m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID, TaskChanged: taskChanged})
 }
 
 func shortPreview(text string, maxLen int) string {

@@ -283,14 +283,20 @@ func parseResult(phase models.AgentRunPhase, raw string) (PhaseResult, error) {
 		return parsed, nil
 	}
 
-	// Best-effort fallback
+	// Best-effort fallback: keep the raw response as the plan, capped so
+	// exploration dumps cannot bloat the task store.
 	lines := strings.Split(trimmed, "\n")
 	summary := lines[0]
 	if len(summary) > 120 {
 		summary = summary[:120] + "..."
 	}
+	const maxFallbackPlanChars = 12000
+	plan := trimmed
+	if len(plan) > maxFallbackPlanChars {
+		plan = plan[:maxFallbackPlanChars] + "\n\n... [truncated]"
+	}
 	return PhaseResult{
-		ImplementationPlan: trimmed,
+		ImplementationPlan: plan,
 		Summary:            summary,
 		Tests:              []string{},
 	}, nil
