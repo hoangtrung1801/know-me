@@ -135,7 +135,7 @@ export function TaskAgentPanel({
       : "request-implementation-changes";
   const canCreateWorktree =
     phase === "plan-review" &&
-    Boolean(snapshot?.dirtyFiles.length) &&
+    Boolean(snapshot?.dirtyFiles?.length) &&
     !snapshot?.workflow.worktreePath;
   const busy = action !== null;
 
@@ -283,11 +283,11 @@ export function TaskAgentPanel({
 
             {(phase === "fix-ready" || canCreateWorktree) &&
               snapshot &&
-              snapshot.dirtyFiles.length > 0 && (
+              (snapshot.dirtyFiles?.length ?? 0) > 0 && (
                 <div className="rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
                   <p className="font-medium">Workspace changes to review</p>
                   <ul className="mt-2 list-disc pl-5 text-muted-foreground">
-                    {snapshot.dirtyFiles.map((file) => (
+                    {snapshot.dirtyFiles?.map((file) => (
                       <li key={file}>{file}</li>
                     ))}
                   </ul>

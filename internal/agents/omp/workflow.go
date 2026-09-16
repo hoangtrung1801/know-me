@@ -194,9 +194,11 @@ func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, task
 		}
 		snapshot.Resumable = sessionID != "" && snapshot.Workflow.ResumePhase != ""
 	}
+	if snapshot.DirtyFiles == nil {
+		snapshot.DirtyFiles = []string{}
+	}
 	return snapshot, nil
 }
-
 func (m *Manager) Diff(ctx context.Context, store *storage.Store, taskID string) (string, error) {
 	if store == nil {
 		return "", errors.New("store is required")
