@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CircleStop, Loader2, Send, WifiOff } from "lucide-react";
+import { Bot, CircleStop, Loader2, Send } from "lucide-react";
 import { chatApi } from "../../../api/client";
 import { useSSEEvent } from "../../../contexts/SSEContext";
 import type { ChatMessage, ChatSession } from "../../../models/chat";
@@ -13,11 +13,11 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 
-interface TaskCodexChatProps {
+interface TaskAgentChatProps {
     taskId: string;
     taskStatus: Task["status"];
     snapshot: AgentTaskSnapshot | null;
-    codexStatus: CodexStatus | null;
+    agentStatus: CodexStatus | null;
     onRefresh: () => Promise<void>;
 }
 
@@ -40,13 +40,13 @@ function mergeChatMessages(
     return messages;
 }
 
-export function TaskCodexChat({
+export function TaskAgentChat({
     taskId,
     taskStatus,
     snapshot,
-    codexStatus,
+    agentStatus: codexStatus,
     onRefresh,
-}: TaskCodexChatProps) {
+}: TaskAgentChatProps) {
     const [session, setSession] = useState<ChatSession | null>(null);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
@@ -100,14 +100,9 @@ export function TaskCodexChat({
                     ),
                 };
             });
-            setError(null);
-        } catch (reason) {
+        } catch {
             if (requestId === loadRequestRef.current) {
-                setError(
-                    reason instanceof Error
-                        ? reason.message
-                        : "Unable to load OMP chat",
-                );
+                setError("Couldn't load the task conversation. Check your connection and try again.");
             }
         } finally {
             if (requestId === loadRequestRef.current) setLoading(false);
@@ -263,7 +258,8 @@ export function TaskCodexChat({
                             className="h-7 w-7"
                             onClick={() => void handleStop()}
                             disabled={sending}
-                            title="Stop Auto chat"
+                            title="Stop OMP chat"
+                            aria-label="Stop OMP chat"
                         >
                             <CircleStop className="h-3.5 w-3.5" />
                         </Button>
@@ -287,10 +283,23 @@ export function TaskCodexChat({
                             replies stay here.
                         </div>
                     )
+                ) : error ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Couldn&apos;t load the task conversation.
+                        </p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void loadSession()}
+                        >
+                            Try again
+                        </Button>
+                    </div>
                 ) : (
                     <div className="flex h-full items-center justify-center gap-2 px-8 text-center text-sm text-muted-foreground">
-                        <WifiOff className="h-4 w-4" /> Task chat is not
-                        available yet.
+                        <Bot className="h-4 w-4 shrink-0" /> No messages yet.
+                        Ask OMP anything about this task.
                     </div>
                 )}
             </div>
@@ -319,11 +328,7 @@ export function TaskCodexChat({
                                 void handleSend();
                             }
                         }}
-                        placeholder={
-                            autoEligible
-                                ? "Message OMP about this task…"
-                                : "Auto chat unavailable while OMP is working"
-                        }
+                        placeholder="Message OMP about this task…"
                         rows={3}
                         disabled={!autoEligible || sending || !session}
                         aria-label="Message OMP about this task"

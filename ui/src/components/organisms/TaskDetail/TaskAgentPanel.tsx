@@ -22,7 +22,7 @@ import type {
   CodexStatus,
 } from "../../../models/agent";
 import type { Task } from "@/ui/models/task";
-import { TaskCodexChat } from "./TaskCodexChat";
+import { TaskAgentChat } from "./TaskAgentChat";
 
 interface TaskAgentPanelProps {
   task: Task;
@@ -236,11 +236,11 @@ export function TaskAgentPanel({
               <RefreshCw className={loading ? "animate-spin" : ""} />
             </Button>
           </div>
-          <TaskCodexChat
+          <TaskAgentChat
             taskId={task.id}
             taskStatus={task.status}
             snapshot={snapshot}
-            codexStatus={codexStatus}
+            agentStatus={codexStatus}
             onRefresh={load}
           />
 
