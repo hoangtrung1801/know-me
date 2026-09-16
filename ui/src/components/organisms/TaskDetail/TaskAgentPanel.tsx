@@ -152,7 +152,7 @@ export function TaskAgentPanel({
     >
       {loading && !snapshot ? (
         <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="animate-spin" /> Loading Codex workflow…
+          <Loader2 className="animate-spin" /> Loading agent workflow…
         </div>
       ) : (
         <>
@@ -244,7 +244,7 @@ export function TaskAgentPanel({
             onRefresh={load}
           />
 
-          <div className="shrink-0 space-y-4 px-4 pb-4">
+          <div className="min-h-0 shrink space-y-4 overflow-y-auto px-4 pb-4">
             {codexStatus && !codexReady && (
               <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
                 <AlertTriangle className="mt-0.5 shrink-0" />
@@ -286,9 +286,9 @@ export function TaskAgentPanel({
               (snapshot.dirtyFiles?.length ?? 0) > 0 && (
                 <div className="rounded-md border border-amber-200 p-3 text-sm dark:border-amber-900">
                   <p className="font-medium">Workspace changes to review</p>
-                  <ul className="mt-2 list-disc pl-5 text-muted-foreground">
+                  <ul className="mt-2 max-h-40 list-disc overflow-y-auto pl-5 text-muted-foreground">
                     {snapshot.dirtyFiles?.map((file) => (
-                      <li key={file}>{file}</li>
+                      <li key={file} className="truncate" title={file}>{file}</li>
                     ))}
                   </ul>
                   {canCreateWorktree && (
@@ -313,20 +313,20 @@ export function TaskAgentPanel({
               </div>
             )}
 
-            <div className="space-y-4 max-h-24 overflow-y-auto">
+            <div className="space-y-4">
               {isReviewPhase(phase) && (
                 <div className="space-y-2 border-t border-border/40 pt-3">
                   <label
-                    htmlFor="codex-review-comment"
+                    htmlFor="agent-review-comment"
                     className="text-sm font-semibold"
                   >
                     Review comment
                   </label>
                   <Textarea
-                    id="codex-review-comment"
+                    id="agent-review-comment"
                     value={comment}
                     onChange={(event) => setComment(event.target.value)}
-                    placeholder="Describe what Codex should change"
+                    placeholder="Describe what OMP should change"
                     rows={2}
                     disabled={busy}
                   />
@@ -353,7 +353,7 @@ export function TaskAgentPanel({
                   </h4>
                   <ul
                     aria-label="Review history"
-                    className="max-h-64 space-y-2 pr-1"
+                    className="max-h-64 space-y-2 overflow-y-auto pr-1"
                   >
                     {snapshot.reviewComments.map((review) => (
                       <li

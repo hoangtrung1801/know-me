@@ -304,7 +304,7 @@ export function TaskAgentChat({
                 )}
             </div>
 
-            <div className="border-t border-border/40 p-3">
+            <div className="shrink-0 border-t border-border/40 p-3">
                 {error && (
                     <p
                         className="mb-2 max-h-20 overflow-y-auto break-words whitespace-pre-wrap text-xs leading-4 text-destructive"
