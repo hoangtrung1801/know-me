@@ -1716,6 +1716,7 @@ export async function getProjectStatus(): Promise<ProjectStatus> {
 export interface WorkspaceProject {
 	id: string;
 	name: string;
+	path?: string;
 	lastUsed: string;
 }
 
@@ -1726,13 +1727,29 @@ export const workspaceApi = {
 		return res.json();
 	},
 
-	async create(project: { name: string }): Promise<WorkspaceProject> {
+	async create(project: { name: string; path?: string }): Promise<WorkspaceProject> {
 		const res = await apiFetch(`${API_BASE}/api/workspaces`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(project),
 		});
 		if (!res.ok) throw new Error("Failed to add workspace");
+		return res.json();
+	},
+
+	async get(id: string): Promise<WorkspaceProject> {
+		const res = await apiFetch(`${API_BASE}/api/workspaces/${encodeURIComponent(id)}`);
+		if (!res.ok) throw new Error("Failed to fetch workspace");
+		return res.json();
+	},
+
+	async update(id: string, patch: { name?: string; path?: string }): Promise<WorkspaceProject> {
+		const res = await apiFetch(`${API_BASE}/api/workspaces/${encodeURIComponent(id)}`, {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(patch),
+		});
+		if (!res.ok) throw new Error("Failed to update workspace");
 		return res.json();
 	},
 
