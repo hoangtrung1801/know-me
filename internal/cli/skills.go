@@ -118,10 +118,12 @@ func installSkillsToDir(destDir string, filter string) ([]string, error) {
 		return names, nil
 	}
 
-	// Normalized matching: allow "knowme-workflow", "kn-workflow", or partial matches
+	// Normalized matching: allow "knowme-workflow", "kn-workflow", "known-me", or "know-me"
 	matchDir := filter
 	if matchDir == "knowme-workflow" {
 		matchDir = "kn-workflow"
+	} else if matchDir == "know-me" {
+		matchDir = "known-me"
 	}
 
 	// Ensure destination directory exists
@@ -152,11 +154,13 @@ func installSkillsToDir(destDir string, filter string) ([]string, error) {
 			continue
 		}
 		name := e.Name()
-		if name == matchDir || (filter == "knowme-workflow" && name == "kn-workflow") {
+		if name == matchDir || (filter == "knowme-workflow" && name == "kn-workflow") || (filter == "know-me" && name == "known-me") {
 			foundSource = filepath.Join(tmpDir, name)
 			destSkillName = name
 			if filter == "knowme-workflow" {
 				destSkillName = "knowme-workflow"
+			} else if filter == "know-me" {
+				destSkillName = "know-me"
 			}
 			break
 		}

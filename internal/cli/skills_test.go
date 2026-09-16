@@ -15,12 +15,19 @@ func TestSkillsInstallAllToCustomDir(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("skills install failed: %v", err)
 	}
-
-	// Verify targetDir exists and contains kn-workflow and others
-	for _, expected := range []string{"kn-workflow", "kn-plan", "kn-implement", "kn-verify"} {
+	// Verify targetDir contains ONLY allowed skills: kn-workflow and known-me
+	for _, expected := range []string{"kn-workflow", "known-me"} {
 		skillFile := filepath.Join(targetDir, expected, "SKILL.md")
 		if _, err := os.Stat(skillFile); err != nil {
 			t.Errorf("expected %s to exist: %v", skillFile, err)
+		}
+	}
+
+	// Verify legacy/other skills are NOT installed
+	for _, forbidden := range []string{"kn-plan", "kn-implement", "kn-verify", "kn-review", "kn-spec"} {
+		forbiddenDir := filepath.Join(targetDir, forbidden)
+		if _, err := os.Stat(forbiddenDir); !os.IsNotExist(err) {
+			t.Errorf("expected %s NOT to be installed, but it was", forbiddenDir)
 		}
 	}
 }
