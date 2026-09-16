@@ -165,6 +165,7 @@ func (m *Manager) ensureSnapshotChatLocked(store *storage.Store, taskID string) 
 }
 
 func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, taskID string) (models.AgentTaskSnapshot, error) {
+	_ = m.ensureSnapshotChatLocked(store, taskID)
 	snapshot, err := store.Agent.TaskSnapshot(taskID)
 	if err != nil {
 		return models.AgentTaskSnapshot{}, err
