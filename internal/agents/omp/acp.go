@@ -289,10 +289,9 @@ func (p *ACPProcess) SetMode(ctx context.Context, mode ACPMode) error {
 
 	_, err := p.request(modeCtx, "session/set_mode", map[string]any{
 		"sessionId": sessionID,
-		"mode":      string(mode),
+		"modeId":    string(mode),
 	})
 	if err != nil {
-		// Tolerant fallback if OMP uses options or config
 		return nil
 	}
 	return nil
