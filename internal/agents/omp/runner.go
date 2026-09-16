@@ -300,9 +300,12 @@ func DirtyFiles(ctx context.Context, root string) ([]string, error) {
 	if root == "" {
 		return nil, errors.New("Git workspace root is required")
 	}
-	out, err := exec.CommandContext(ctx, "git", "-C", root, "status", "--porcelain=v1", "--untracked-files=all").Output()
+	out, err := exec.CommandContext(ctx, "git", "-C", root, "status", "--porcelain=v1", "--untracked-files=all").CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("read Git status: %w", err)
+		if strings.Contains(string(out), "not a git repository") {
+			return nil, errors.New("workspace directory is not a Git repository (run 'git init')")
+		}
+		return nil, fmt.Errorf("read Git status: %w (%s)", err, strings.TrimSpace(string(out)))
 	}
 	var files []string
 	for _, line := range strings.Split(string(out), "\n") {

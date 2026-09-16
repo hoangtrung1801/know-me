@@ -569,22 +569,49 @@ func (p *ACPProcess) handleInboundRequest(req acpRPCMessage) {
 func (p *ACPProcess) handleNotification(msg acpRPCMessage) {
 	var update ACPUpdate
 
-	// Decode session/update or direct chunks
+	// Decode session/update with varied content structures (text, update.text, update.content.text, update.content[].text)
 	var payload struct {
 		Type   string `json:"type"`
 		Text   string `json:"text"`
 		Update struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
+			Type    string `json:"type"`
+			SessionUpdate string `json:"sessionUpdate"`
+			Text    string `json:"text"`
+			Content any    `json:"content"`
 		} `json:"update"`
 	}
 	if err := json.Unmarshal(msg.Params, &payload); err == nil {
+		update.Kind = payload.Update.SessionUpdate
+		if update.Kind == "" {
+			update.Kind = payload.Update.Type
+		}
+		if update.Kind == "" {
+			update.Kind = payload.Type
+		}
+
 		if payload.Text != "" {
 			update.Text = payload.Text
-			update.Kind = payload.Type
 		} else if payload.Update.Text != "" {
 			update.Text = payload.Update.Text
-			update.Kind = payload.Update.Type
+		} else if payload.Update.Content != nil {
+			switch c := payload.Update.Content.(type) {
+			case string:
+				update.Text = c
+			case map[string]any:
+				if t, ok := c["text"].(string); ok {
+					update.Text = t
+				}
+			case []any:
+				var sb strings.Builder
+				for _, item := range c {
+					if m, ok := item.(map[string]any); ok {
+						if t, ok := m["text"].(string); ok {
+							sb.WriteString(t)
+						}
+					}
+				}
+				update.Text = sb.String()
+			}
 		}
 	}
 	if update.Text != "" {
