@@ -127,7 +127,7 @@ export interface ChatSession {
 	sessionId: string;
 	title: string;
 	directory?: string;
-	agentType: "claude" | "opencode" | "codex";
+	agentType: "claude" | "opencode" | "codex" | "omp";
 	model?: ModelRef | null;
 	variant?: string | null;
 	modelSource?: "session" | "project-default" | "opencode-default" | "auto";

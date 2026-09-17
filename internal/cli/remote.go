@@ -52,8 +52,12 @@ func RemoteForCommand(cmd *cobra.Command) (*RemoteClient, bool, error) {
 		if err != nil {
 			flagVal, err = curr.PersistentFlags().GetString("server-url")
 		}
-		if err == nil && strings.TrimSpace(flagVal) != "" {
-			client, err := NewRemoteClient(flagVal)
+		if err == nil && (curr.Flags().Changed("server-url") || curr.PersistentFlags().Changed("server-url")) {
+			trimmed := strings.TrimSpace(flagVal)
+			if trimmed == "" || strings.EqualFold(trimmed, "local") {
+				return nil, false, nil
+			}
+			client, err := NewRemoteClient(trimmed)
 			if err != nil {
 				return nil, false, fmt.Errorf("--server-url: %w", err)
 			}
@@ -62,13 +66,15 @@ func RemoteForCommand(cmd *cobra.Command) (*RemoteClient, bool, error) {
 	}
 
 	if envVal := strings.TrimSpace(os.Getenv("KNOWME_SERVER_URL")); envVal != "" {
+		if strings.EqualFold(envVal, "local") {
+			return nil, false, nil
+		}
 		client, err := NewRemoteClient(envVal)
 		if err != nil {
 			return nil, false, fmt.Errorf("KNOWME_SERVER_URL: %w", err)
 		}
 		return client, true, nil
 	}
-
 	if fileURL, src := serverURLFromConfigFile(); strings.TrimSpace(fileURL) != "" {
 		client, err := NewRemoteClient(fileURL)
 		if err != nil {

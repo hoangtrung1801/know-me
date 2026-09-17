@@ -2,11 +2,14 @@ package storage
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/hoangtrung1801/know-me/internal/models"
@@ -125,6 +128,46 @@ func (as *AgentStore) AcquireRunLock(ctx context.Context) (*AgentRunLock, error)
 	if err := lockTaskLifecycleFile(ctx, file); err != nil {
 		_ = file.Close()
 		return nil, fmt.Errorf("Codex run lock: acquire: %w", err)
+	}
+	return &AgentRunLock{file: file}, nil
+}
+
+// WorkspaceRunLockPath derives a canonical lock path for an execution root.
+func WorkspaceRunLockPath(executionRoot string) string {
+	cleaned := filepath.Clean(executionRoot)
+	canonical, err := filepath.EvalSymlinks(cleaned)
+	if err != nil {
+		canonical = cleaned
+	}
+	hash := sha256.Sum256([]byte(canonical))
+	hexHash := hex.EncodeToString(hash[:16])
+	return filepath.Join(GlobalRootPath(), "locks", "workspace-"+hexHash+".lock")
+}
+
+// AcquireWorkspaceRunLock serializes agent runs across server processes for a given
+// execution workspace root. The returned handle must stay alive until the run exits.
+func (as *AgentStore) AcquireWorkspaceRunLock(ctx context.Context, executionRoot string) (*AgentRunLock, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(executionRoot) == "" {
+		return nil, errors.New("execution root is required for workspace run lock")
+	}
+	lockPath := WorkspaceRunLockPath(executionRoot)
+	lockDir := filepath.Dir(lockPath)
+	if err := os.MkdirAll(lockDir, 0o755); err != nil {
+		return nil, fmt.Errorf("workspace run lock: create directory: %w", err)
+	}
+	file, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, fmt.Errorf("workspace run lock: open: %w", err)
+	}
+	if err := lockTaskLifecycleFile(ctx, file); err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("workspace run lock: acquire: %w", err)
 	}
 	return &AgentRunLock{file: file}, nil
 }

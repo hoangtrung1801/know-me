@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CircleStop, Loader2, Send, WifiOff } from "lucide-react";
+import { Bot, CircleStop, Loader2, Send } from "lucide-react";
 import { chatApi } from "../../../api/client";
 import { useSSEEvent } from "../../../contexts/SSEContext";
 import type { ChatMessage, ChatSession } from "../../../models/chat";
@@ -13,16 +13,16 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 
-interface TaskCodexChatProps {
+interface TaskAgentChatProps {
     taskId: string;
     taskStatus: Task["status"];
     snapshot: AgentTaskSnapshot | null;
-    codexStatus: CodexStatus | null;
+    agentStatus: CodexStatus | null;
     onRefresh: () => Promise<void>;
 }
 
-function isCodexSession(session: ChatSession | null, taskId: string): boolean {
-    return session?.agentType === "codex" && session.taskId === taskId;
+function isTaskAgentSession(session: ChatSession | null, taskId: string): boolean {
+    return (session?.agentType === "omp" || session?.agentType === "codex") && session.taskId === taskId;
 }
 
 function mergeChatMessages(
@@ -40,13 +40,13 @@ function mergeChatMessages(
     return messages;
 }
 
-export function TaskCodexChat({
+export function TaskAgentChat({
     taskId,
     taskStatus,
     snapshot,
-    codexStatus,
+    agentStatus: codexStatus,
     onRefresh,
-}: TaskCodexChatProps) {
+}: TaskAgentChatProps) {
     const [session, setSession] = useState<ChatSession | null>(null);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
@@ -100,14 +100,9 @@ export function TaskCodexChat({
                     ),
                 };
             });
-            setError(null);
-        } catch (reason) {
+        } catch {
             if (requestId === loadRequestRef.current) {
-                setError(
-                    reason instanceof Error
-                        ? reason.message
-                        : "Unable to load Codex chat",
-                );
+                setError("Couldn't load the task conversation. Check your connection and try again.");
             }
         } finally {
             if (requestId === loadRequestRef.current) setLoading(false);
@@ -120,7 +115,7 @@ export function TaskCodexChat({
 
     const handleChatSession = useCallback(
         ({ session: next }: { session: ChatSession }) => {
-            if (!isCodexSession(next, taskId)) return;
+            if (!isTaskAgentSession(next, taskId)) return;
             const hydrated = applyPendingMessages(next);
             setSession((current) =>
                 current?.id === hydrated.id
@@ -178,12 +173,12 @@ export function TaskCodexChat({
         !gatedPhase;
     const disabledReason = !codexReady
         ? codexStatus?.installed === false
-            ? "Install codex-acp to chat with Codex."
-            : "Sign in to Codex to chat."
+            ? "Install Oh My Pi (omp) to chat with OMP."
+            : "Sign in to Oh My Pi (omp auth-broker) to chat."
         : taskStatus !== "in-progress"
           ? "Move this task to in-progress to use Auto chat."
           : gatedRunActive || gatedPhase
-            ? "Auto chat is paused while Codex is investigating or implementing."
+            ? "Auto chat is paused while OMP is investigating or implementing."
             : null;
 
     const handleSend = useCallback(async () => {
@@ -220,7 +215,7 @@ export function TaskCodexChat({
             setError(
                 reason instanceof Error
                     ? reason.message
-                    : "Unable to stop Codex chat",
+                    : "Unable to stop OMP chat",
             );
         } finally {
             setSending(false);
@@ -235,7 +230,7 @@ export function TaskCodexChat({
             <div className="flex items-center justify-between gap-2 border-b border-border/40 px-4 py-3">
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Codex chat</span>
+                        <span className="text-sm font-medium">OMP chat</span>
                         <Badge variant="outline" className="text-[10px]">
                             Auto
                         </Badge>
@@ -253,7 +248,7 @@ export function TaskCodexChat({
                     {session?.status === "streaming" && (
                         <Loader2
                             className="h-3.5 w-3.5 animate-spin text-muted-foreground"
-                            aria-label="Codex is working"
+                            aria-label="OMP is working"
                         />
                     )}
                     {session?.status === "streaming" && (
@@ -263,7 +258,8 @@ export function TaskCodexChat({
                             className="h-7 w-7"
                             onClick={() => void handleStop()}
                             disabled={sending}
-                            title="Stop Auto chat"
+                            title="Stop OMP chat"
+                            aria-label="Stop OMP chat"
                         >
                             <CircleStop className="h-3.5 w-3.5" />
                         </Button>
@@ -283,19 +279,32 @@ export function TaskCodexChat({
                         <ChatThread session={session} bubble showAllMessages />
                     ) : (
                         <div className="flex h-full items-center justify-center px-8 text-center text-sm text-muted-foreground">
-                            Ask Codex about this task. Messages and workflow
+                            Ask OMP about this task. Messages and workflow
                             replies stay here.
                         </div>
                     )
+                ) : error ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Couldn&apos;t load the task conversation.
+                        </p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void loadSession()}
+                        >
+                            Try again
+                        </Button>
+                    </div>
                 ) : (
                     <div className="flex h-full items-center justify-center gap-2 px-8 text-center text-sm text-muted-foreground">
-                        <WifiOff className="h-4 w-4" /> Task chat is not
-                        available yet.
+                        <Bot className="h-4 w-4 shrink-0" /> No messages yet.
+                        Ask OMP anything about this task.
                     </div>
                 )}
             </div>
 
-            <div className="border-t border-border/40 p-3">
+            <div className="shrink-0 border-t border-border/40 p-3">
                 {error && (
                     <p
                         className="mb-2 max-h-20 overflow-y-auto break-words whitespace-pre-wrap text-xs leading-4 text-destructive"
@@ -319,14 +328,10 @@ export function TaskCodexChat({
                                 void handleSend();
                             }
                         }}
-                        placeholder={
-                            autoEligible
-                                ? "Message Codex about this task…"
-                                : "Auto chat unavailable while Codex is working"
-                        }
+                        placeholder="Message OMP about this task…"
                         rows={3}
                         disabled={!autoEligible || sending || !session}
-                        aria-label="Message Codex about this task"
+                        aria-label="Message OMP about this task"
                     />
                     <Button
                         onClick={() => void handleSend()}

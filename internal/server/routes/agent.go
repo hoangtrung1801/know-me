@@ -7,17 +7,17 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/know-me/internal/agents/codex"
+	"github.com/hoangtrung1801/know-me/internal/agents/omp"
 	"github.com/hoangtrung1801/know-me/internal/storage"
 )
 
 type AgentRoutes struct {
 	store *storage.Store
 	mgr   *storage.Manager
-	agent *codex.Manager
+	agent *omp.Manager
 }
 
-func NewAgentRoutes(store *storage.Store, mgr *storage.Manager, agent *codex.Manager) *AgentRoutes {
+func NewAgentRoutes(store *storage.Store, mgr *storage.Manager, agent *omp.Manager) *AgentRoutes {
 	return &AgentRoutes{store: store, mgr: mgr, agent: agent}
 }
 
@@ -38,8 +38,10 @@ func (ar *AgentRoutes) taskStore(r *http.Request, id string) (*storage.Store, st
 }
 
 func (ar *AgentRoutes) Register(r chi.Router) {
-	r.Get("/codex/status", ar.status)
+	r.Get("/omp/status", ar.status)
+	r.Get("/codex/status", ar.status) // backward compatibility alias
 	r.Get("/tasks/{id}/agent", ar.snapshot)
+	r.Get("/tasks/{id}/agent/diff", ar.diff)
 	r.Post("/tasks/{id}/agent/{action}", ar.action)
 	r.Get("/tasks/{id}/agent/runs/{runID}/log", ar.log)
 }
@@ -47,7 +49,7 @@ func (ar *AgentRoutes) Register(r chi.Router) {
 func (ar *AgentRoutes) status(w http.ResponseWriter, r *http.Request) {
 	store := ar.getStore()
 	if store == nil || ar.agent == nil {
-		respondError(w, http.StatusServiceUnavailable, "Codex agent is unavailable")
+		respondError(w, http.StatusServiceUnavailable, "OMP agent is unavailable")
 		return
 	}
 	respondJSON(w, http.StatusOK, ar.agent.Status(r.Context(), store))
@@ -60,7 +62,7 @@ func (ar *AgentRoutes) snapshot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if store == nil || ar.agent == nil {
-		respondError(w, http.StatusServiceUnavailable, "Codex agent is unavailable")
+		respondError(w, http.StatusServiceUnavailable, "OMP agent is unavailable")
 		return
 	}
 	snapshot, err := ar.agent.Snapshot(r.Context(), store, taskID)
@@ -71,6 +73,24 @@ func (ar *AgentRoutes) snapshot(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, snapshot)
 }
 
+func (ar *AgentRoutes) diff(w http.ResponseWriter, r *http.Request) {
+	store, taskID, err := ar.taskStore(r, chi.URLParam(r, "id"))
+	if err != nil {
+		respondAgentError(w, err)
+		return
+	}
+	if store == nil || ar.agent == nil {
+		respondError(w, http.StatusServiceUnavailable, "OMP agent is unavailable")
+		return
+	}
+	diffText, err := ar.agent.Diff(r.Context(), store, taskID)
+	if err != nil {
+		respondAgentError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"diff": diffText})
+}
+
 func (ar *AgentRoutes) action(w http.ResponseWriter, r *http.Request) {
 	store, taskID, err := ar.taskStore(r, chi.URLParam(r, "id"))
 	if err != nil {
@@ -78,7 +98,7 @@ func (ar *AgentRoutes) action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if store == nil || ar.agent == nil {
-		respondError(w, http.StatusServiceUnavailable, "Codex agent is unavailable")
+		respondError(w, http.StatusServiceUnavailable, "OMP agent is unavailable")
 		return
 	}
 	var body struct {
@@ -91,7 +111,7 @@ func (ar *AgentRoutes) action(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	snapshot, started, err := ar.agent.Act(r.Context(), store, taskID, codex.Action(chi.URLParam(r, "action")), body.Comment)
+	snapshot, started, err := ar.agent.Act(r.Context(), store, taskID, omp.Action(chi.URLParam(r, "action")), body.Comment)
 	if err != nil {
 		respondAgentError(w, err)
 		return
@@ -110,7 +130,7 @@ func (ar *AgentRoutes) log(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if store == nil || ar.agent == nil {
-		respondError(w, http.StatusServiceUnavailable, "Codex agent is unavailable")
+		respondError(w, http.StatusServiceUnavailable, "OMP agent is unavailable")
 		return
 	}
 	content, err := ar.agent.ReadLog(store, taskID, chi.URLParam(r, "runID"))
@@ -124,11 +144,11 @@ func (ar *AgentRoutes) log(w http.ResponseWriter, r *http.Request) {
 func respondAgentError(w http.ResponseWriter, err error) {
 	status := http.StatusInternalServerError
 	switch {
-	case errors.Is(err, codex.ErrInvalid):
+	case errors.Is(err, omp.ErrInvalid):
 		status = http.StatusBadRequest
-	case errors.Is(err, codex.ErrNotFound):
+	case errors.Is(err, omp.ErrNotFound):
 		status = http.StatusNotFound
-	case errors.Is(err, codex.ErrConflict):
+	case errors.Is(err, omp.ErrConflict):
 		status = http.StatusConflict
 	case errors.Is(err, io.EOF):
 		status = http.StatusNotFound

@@ -6,6 +6,7 @@ export type AgentPhase =
 	| "interrupted"
 	| "code-review"
 	| "fix-ready"
+	| "ready-to-merge"
 	| "completed";
 
 export type AgentRunPhase = "investigation" | "implementation" | "fix" | "chat";
@@ -19,6 +20,10 @@ export type AgentAction =
 	| "request-implementation-changes"
 	| "start-fix"
 	| "create-worktree"
+	| "start-agent"
+	| "commit-worktree"
+	| "merge-worktree"
+	| "complete-without-merge"
 	| "resume"
 	| "cancel";
 
@@ -27,10 +32,12 @@ export interface AgentWorkflow {
 	taskId: string;
 	phase: AgentPhase;
 	activeRunId?: string;
+	ompSessionId?: string;
 	codexSessionId?: string;
 	chatSessionId?: string;
 	worktreePath?: string;
 	worktreeBranch?: string;
+	worktreeCommit?: string;
 	resumePhase?: AgentRunPhase;
 	updatedAt: string;
 }
@@ -42,8 +49,8 @@ export interface AgentRun {
 	phase: AgentRunPhase;
 	status: AgentRunStatus;
 	codexThreadId?: string;
+	ompSessionId?: string;
 	codexSessionId?: string;
-	startedAt: string;
 	finishedAt?: string;
 	exitCode?: number;
 	summary?: string;
@@ -68,8 +75,8 @@ export interface AgentTaskSnapshot {
 	runs: AgentRun[];
 	reviewComments: ReviewComment[];
 	dirtyFiles: string[];
+	diff?: string;
 	adapterState: "running" | "stopped";
-	resumable: boolean;
 	interrupted: boolean;
 }
 
@@ -82,6 +89,9 @@ export interface CodexStatus {
 	loginCommand: string;
 	docsUrl: string;
 }
+
+export type AgentStatus = CodexStatus;
+export type OMPStatus = CodexStatus;
 
 export interface AgentEvent {
 	type?: string;

@@ -3,9 +3,10 @@ package routes
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-
+	"os"
 	"github.com/go-chi/chi/v5"
 	"github.com/hoangtrung1801/know-me/internal/agents/opencode"
 	"github.com/hoangtrung1801/know-me/internal/models"
@@ -123,7 +124,9 @@ func (cr *ConfigRoutes) configResponse(project *models.Project) map[string]inter
 	if s.Editor != "" {
 		flat["editor"] = s.Editor
 	}
-
+	if s.WorkspacePath != "" {
+		flat["workspacePath"] = s.WorkspacePath
+	}
 	return map[string]interface{}{
 		"config": flat,
 	}
@@ -135,8 +138,16 @@ func (cr *ConfigRoutes) configResponse(project *models.Project) map[string]inter
 func (cr *ConfigRoutes) save(w http.ResponseWriter, r *http.Request) {
 	project, err := cr.getStore().Config.Load()
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "load config: "+err.Error())
-		return
+		if errors.Is(err, os.ErrNotExist) {
+			project = &models.Project{
+				ID:       cr.getStore().ProjectID,
+				Name:     "knowns",
+				Settings: models.DefaultProjectSettings(),
+			}
+		} else {
+			respondError(w, http.StatusInternalServerError, "load config: "+err.Error())
+			return
+		}
 	}
 
 	var payload map[string]json.RawMessage
@@ -343,6 +354,11 @@ func applySettingsUpdate(settings *models.ProjectSettings, payload map[string]js
 			return err
 		}
 		settings.EnableChatUI = &v
+	}
+	if raw, ok := payload["workspacePath"]; ok {
+		if err := json.Unmarshal(raw, &settings.WorkspacePath); err != nil {
+			return err
+		}
 	}
 	return nil
 }

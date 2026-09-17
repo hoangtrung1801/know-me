@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hoangtrung1801/know-me/internal/agents/codex"
+	"github.com/hoangtrung1801/know-me/internal/agents/omp"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/registry"
 	"github.com/hoangtrung1801/know-me/internal/storage"
@@ -35,6 +35,17 @@ func TestAgentRoutesReturnSnapshotAndLog(t *testing.T) {
 	router, store, _ := setupAgentRoutes(t)
 	seedCompletedAgentRun(t, store, "task01", "run01", "log line\n")
 	for _, path := range []string{"/tasks/task01/agent", "/tasks/task01/agent/runs/run01/log"} {
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("%s status = %d body = %s", path, w.Code, w.Body.String())
+		}
+	}
+}
+
+func TestAgentRoutesStatusEndpointsAndDiff(t *testing.T) {
+	router, _, _ := setupAgentRoutes(t)
+	for _, path := range []string{"/omp/status", "/codex/status", "/tasks/task01/agent/diff"} {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
 		if w.Code != http.StatusOK {
@@ -93,7 +104,7 @@ func TestAgentRoutesExposeACPResumeStateAndStartResume(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &snapshot); err != nil {
 		t.Fatal(err)
 	}
-	if snapshot.Workflow.CodexSessionID != "session-1" || !snapshot.Resumable || !snapshot.Interrupted || snapshot.AdapterState != "stopped" {
+	if snapshot.Workflow.OMPSessionID != "session-1" || !snapshot.Resumable || !snapshot.Interrupted || snapshot.AdapterState != "stopped" {
 		t.Fatalf("snapshot = %#v", snapshot)
 	}
 
@@ -104,7 +115,7 @@ func TestAgentRoutesExposeACPResumeStateAndStartResume(t *testing.T) {
 	}
 }
 
-func setupAgentRoutes(t *testing.T) (http.Handler, *storage.Store, *codex.Manager) {
+func setupAgentRoutes(t *testing.T) (http.Handler, *storage.Store, *omp.Manager) {
 	t.Helper()
 	store := storage.NewProjectStore(t.TempDir(), "project01", t.TempDir())
 	root := store.RepositoryRoot()
@@ -123,9 +134,10 @@ func setupAgentRoutes(t *testing.T) (http.Handler, *storage.Store, *codex.Manage
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("KNOWS_CODEX_ACP_COMMAND", string(command))
+	t.Setenv("KNOWME_OMP_COMMAND", string(command))
 	t.Setenv("GO_WANT_AGENT_ACP_HELPER_PROCESS", "1")
-	manager := codex.NewManager("", nil)
+	manager := omp.NewManager("", nil)
+	t.Cleanup(func() { _ = manager.Close() })
 	router := chi.NewRouter()
 	(&AgentRoutes{store: store, agent: manager}).Register(router)
 	return router, store, manager
@@ -135,7 +147,7 @@ func seedAgentResumeWorkflow(t *testing.T, store *storage.Store) {
 	t.Helper()
 	if err := store.Agent.Save(models.AgentState{Workflows: []models.AgentWorkflow{{
 		ProjectID: store.ProjectID, TaskID: "task01", Phase: models.AgentPhaseInterrupted,
-		CodexSessionID: "session-1", ResumePhase: models.AgentRunPhaseInvestigation,
+		OMPSessionID: "session-1", ResumePhase: models.AgentRunPhaseInvestigation,
 	}}}); err != nil {
 		t.Fatal(err)
 	}
@@ -147,8 +159,8 @@ func TestAgentACPHelperProcess(t *testing.T) {
 	}
 	for _, arg := range os.Args[1:] {
 		if arg == "--version" {
-			fmt.Fprintln(os.Stdout, "codex-acp test")
-			return
+			fmt.Fprintln(os.Stdout, "omp 18.2.0")
+			os.Exit(0)
 		}
 	}
 	scanner := bufio.NewScanner(os.Stdin)
@@ -166,25 +178,23 @@ func TestAgentACPHelperProcess(t *testing.T) {
 		}
 		switch message.Method {
 		case "initialize":
-			write(map[string]any{"protocolVersion": 1})
+			write(map[string]any{"protocolVersion": 1, "authMethods": []map[string]any{{"id": "agent"}}})
+		case "authenticate":
+			write(map[string]any{})
 		case "session/load", "session/new":
 			write(map[string]any{"sessionId": "session-1"})
 		case "session/set_mode":
 			write(map[string]any{})
 		case "session/prompt":
-			var params struct {
-				SessionID string `json:"sessionId"`
-			}
-			_ = json.Unmarshal(message.Params, &params)
 			_ = json.NewEncoder(os.Stdout).Encode(map[string]any{
 				"jsonrpc": "2.0", "method": "session/update",
-				"params": map[string]any{"sessionId": params.SessionID, "update": map[string]any{
-					"sessionUpdate": "agent_message_chunk",
-					"content":       map[string]any{"type": "text", "text": `{"implementationPlan":"plan","implementationNotes":"notes","summary":"resumed","tests":[]}`},
-				}},
+				"params": map[string]any{
+					"type": "agent_message_chunk",
+					"text": `{"implementationPlan":"plan","implementationNotes":"notes","summary":"resumed","tests":[]}`,
+				},
 			})
 			write(map[string]any{"stopReason": "completed"})
-		case "session/close":
+		case "session/cancel", "session/close":
 			write(map[string]any{})
 			return
 		}

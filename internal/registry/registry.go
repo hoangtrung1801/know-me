@@ -171,6 +171,48 @@ func (r *Registry) SetPath(id, path string) error {
 		return r.saveUnlocked()
 	})
 }
+
+// Update modifies project name and optional path in the registry.
+func (r *Registry) Update(id, name, path string) (*Project, error) {
+	name = strings.TrimSpace(name)
+	return r.withWriteLockResult(func() (*Project, error) {
+		if err := r.refreshForMutationUnlocked(); err != nil {
+			return nil, err
+		}
+		idx := -1
+		for i := range r.Projects {
+			if r.Projects[i].ID == id {
+				idx = i
+				break
+			}
+		}
+		if idx == -1 {
+			return nil, fmt.Errorf("project %s not found", id)
+		}
+		if name != "" {
+			r.Projects[idx].Name = name
+		}
+		if strings.TrimSpace(path) != "" {
+			canonical, err := canonicalProjectPath(path)
+			if err != nil {
+				return nil, err
+			}
+			r.Projects[idx].Path = canonical
+		}
+		r.Projects[idx].LastUsed = time.Now().UTC()
+		if err := r.saveUnlocked(); err != nil {
+			return nil, err
+		}
+		proj := r.Projects[idx]
+		return &proj, nil
+	})
+}
+
+func (r *Registry) withWriteLockResult(fn func() (*Project, error)) (*Project, error) {
+	registryProcessMu.Lock()
+	defer registryProcessMu.Unlock()
+	return fn()
+}
 func (r *Registry) Remove(id string) error {
 	return r.withWriteLock(func() error {
 		if err := r.refreshForMutationUnlocked(); err != nil {

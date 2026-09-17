@@ -209,9 +209,15 @@ func listSkillDirs() ([]string, error) {
 		return nil, err
 	}
 
+	// Only knowme-workflow (kn-workflow) and known-me are enabled for installation.
+	allowed := map[string]bool{
+		"kn-workflow": true,
+		"known-me":    true,
+	}
+
 	var skillDirs []string
 	for _, entry := range entries {
-		if !entry.IsDir() {
+		if !entry.IsDir() || !allowed[entry.Name()] {
 			continue
 		}
 		if _, err := fs.Stat(instructionskills.Files, filepath.ToSlash(filepath.Join(entry.Name(), "SKILL.md"))); err == nil {

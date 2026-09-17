@@ -81,7 +81,7 @@ export function TaskCodexRail({
 			<div className={collapsed ? "hidden" : "h-full"}>
 				<button
 					type="button"
-					aria-label="Resize Codex panel"
+					aria-label="Resize agent panel"
 					aria-valuemin={MIN_RAIL_WIDTH}
 					aria-valuemax={MAX_RAIL_WIDTH}
 					aria-valuenow={clampRailWidth(width)}
@@ -108,8 +108,8 @@ export function TaskCodexRail({
 						size="icon"
 						className="h-8 w-8"
 						onClick={onToggleCollapse}
-						aria-label="Expand Codex panel"
-						title="Expand Codex panel"
+						aria-label="Expand agent panel"
+						title="Expand agent panel"
 					>
 						<PanelRightOpen />
 					</Button>

@@ -329,9 +329,9 @@ async function agentFetch<T>(path: string, init?: RequestInit): Promise<T> {
 	return data as T;
 }
 
-export const codexAgentApi = {
+export const ompAgentApi = {
 	status(): Promise<CodexStatus> {
-		return agentFetch<CodexStatus>("/api/codex/status");
+		return agentFetch<CodexStatus>("/api/omp/status").catch(() => agentFetch<CodexStatus>("/api/codex/status"));
 	},
 	snapshot(taskId: string): Promise<AgentTaskSnapshot> {
 		return agentFetch<AgentTaskSnapshot>(`/api/tasks/${encodeURIComponent(taskId)}/agent`);
@@ -343,11 +343,15 @@ export const codexAgentApi = {
 			body: JSON.stringify({ comment }),
 		});
 	},
+	diff(taskId: string): Promise<{ diff: string }> {
+		return agentFetch<{ diff: string }>(`/api/tasks/${encodeURIComponent(taskId)}/agent/diff`);
+	},
 	log(taskId: string, runId: string): Promise<{ content: string }> {
 		return agentFetch<{ content: string }>(`/api/tasks/${encodeURIComponent(taskId)}/agent/runs/${encodeURIComponent(runId)}/log`);
 	},
 };
 
+export const codexAgentApi = ompAgentApi;
 // Config API
 export interface LSPLanguageInfo {
 	id: string;
@@ -1712,6 +1716,7 @@ export async function getProjectStatus(): Promise<ProjectStatus> {
 export interface WorkspaceProject {
 	id: string;
 	name: string;
+	path?: string;
 	lastUsed: string;
 }
 
@@ -1722,13 +1727,29 @@ export const workspaceApi = {
 		return res.json();
 	},
 
-	async create(project: { name: string }): Promise<WorkspaceProject> {
+	async create(project: { name: string; path?: string }): Promise<WorkspaceProject> {
 		const res = await apiFetch(`${API_BASE}/api/workspaces`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(project),
 		});
 		if (!res.ok) throw new Error("Failed to add workspace");
+		return res.json();
+	},
+
+	async get(id: string): Promise<WorkspaceProject> {
+		const res = await apiFetch(`${API_BASE}/api/workspaces/${encodeURIComponent(id)}`);
+		if (!res.ok) throw new Error("Failed to fetch workspace");
+		return res.json();
+	},
+
+	async update(id: string, patch: { name?: string; path?: string }): Promise<WorkspaceProject> {
+		const res = await apiFetch(`${API_BASE}/api/workspaces/${encodeURIComponent(id)}`, {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(patch),
+		});
+		if (!res.ok) throw new Error("Failed to update workspace");
 		return res.json();
 	},
 

@@ -253,3 +253,22 @@ func assertStoredLifecycleSettings(t *testing.T, store *storage.Store, want mode
 		t.Fatalf("stored purgeAfter = %v, want %v", got.PurgeAfter, want.PurgeAfter)
 	}
 }
+
+func TestConfigLifecyclePATCHWorkspacePath(t *testing.T) {
+	store := newTaskLifecycleRouteStore(t)
+	router := configLifecycleRouter(store, true)
+	request := httptest.NewRequest(http.MethodPatch, "/api/config", strings.NewReader(`{"workspacePath":"/tmp/test-workspace"}`))
+	request.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, request)
+	if w.Code != http.StatusOK {
+		t.Fatalf("PATCH status=%d body=%s", w.Code, w.Body.String())
+	}
+	project, err := store.Config.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if project.Settings.WorkspacePath != "/tmp/test-workspace" {
+		t.Fatalf("got WorkspacePath %q, want /tmp/test-workspace", project.Settings.WorkspacePath)
+	}
+}

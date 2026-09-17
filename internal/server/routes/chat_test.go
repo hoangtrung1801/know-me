@@ -138,3 +138,38 @@ func TestCodexChatStopDelegatesToManager(t *testing.T) {
 		t.Fatalf("body = %s", w.Body.String())
 	}
 }
+
+func TestOMPChatCreateAndMessagesEndpoint(t *testing.T) {
+	runner := &recordingCodexChatRunner{}
+	router, store, _ := setupCodexChatRouteTest(t, runner)
+
+	// Create an OMP chat session
+	createReq := httptest.NewRequest(http.MethodPost, "/chats", bytes.NewBufferString(`{"agentType":"omp","taskId":"task01","title":"OMP Chat"}`))
+	createReq.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, createReq)
+	if w.Code != http.StatusCreated && w.Code != http.StatusOK {
+		t.Fatalf("create chat status = %d body = %s", w.Code, w.Body.String())
+	}
+
+	var created models.ChatSession
+	if err := json.Unmarshal(w.Body.Bytes(), &created); err != nil {
+		t.Fatal(err)
+	}
+	if created.AgentType != "omp" {
+		t.Fatalf("created.AgentType = %q, want omp", created.AgentType)
+	}
+
+	// Send message using /messages alias
+	msgReq := httptest.NewRequest(http.MethodPost, "/chats/"+created.ID+"/messages", bytes.NewBufferString(`{"content":"hello from messages alias"}`))
+	msgReq.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, msgReq)
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("send messages status = %d body = %s", w.Code, w.Body.String())
+	}
+	if runner.lastContent != "hello from messages alias" {
+		t.Fatalf("runner content = %q", runner.lastContent)
+	}
+	_ = store
+}

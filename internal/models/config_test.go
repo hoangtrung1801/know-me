@@ -151,3 +151,20 @@ func TestProjectSettingsServerURLValidationRejectsInvalid(t *testing.T) {
 		})
 	}
 }
+
+func TestProjectSettingsWorkspacePathJSON(t *testing.T) {
+	settings := ProjectSettings{
+		WorkspacePath: "/Users/alice/projects/demo",
+	}
+	data, err := json.Marshal(settings)
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
+	var decoded ProjectSettings
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal error: %v", err)
+	}
+	if decoded.WorkspacePath != "/Users/alice/projects/demo" {
+		t.Fatalf("got WorkspacePath %q, want %q", decoded.WorkspacePath, "/Users/alice/projects/demo")
+	}
+}

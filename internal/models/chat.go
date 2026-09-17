@@ -20,16 +20,27 @@ type ChatSession struct {
 // ChatMessage is a summary of a single message in the chat.
 // Full conversation context is managed by the agent's --session-id.
 type ChatMessage struct {
-	ID           string        `json:"id"`
-	Role         string        `json:"role"` // "user" | "assistant"
-	Content      string        `json:"content"`
-	Model        string        `json:"model"`
-	CreatedAt    string        `json:"createdAt"`
-	RunID        string        `json:"runId,omitempty"`
-	Phase        AgentRunPhase `json:"phase,omitempty"`
-	Cost         float64       `json:"cost,omitempty"`
-	Duration     int           `json:"duration,omitempty"` // milliseconds
-	Tokens       int           `json:"tokens,omitempty"`   // total tokens used
-	InputTokens  int           `json:"inputTokens,omitempty"`
-	OutputTokens int           `json:"outputTokens,omitempty"`
+	ID           string         `json:"id"`
+	Role         string         `json:"role"` // "user" | "assistant"
+	Content      string         `json:"content"`
+	Model        string         `json:"model"`
+	CreatedAt    string         `json:"createdAt"`
+	RunID        string         `json:"runId,omitempty"`
+	Phase        AgentRunPhase  `json:"phase,omitempty"`
+	Cost         float64        `json:"cost,omitempty"`
+	Duration     int            `json:"duration,omitempty"` // milliseconds
+	Tokens       int            `json:"tokens,omitempty"`   // total tokens used
+	InputTokens  int            `json:"inputTokens,omitempty"`
+	OutputTokens int            `json:"outputTokens,omitempty"`
+	ToolCalls    []ChatToolCall `json:"toolCalls,omitempty"`
+}
+
+type ChatToolCall struct {
+	ID       string                 `json:"id"`
+	Name     string                 `json:"name"`
+	Input    map[string]interface{} `json:"input,omitempty"`
+	Output   string                 `json:"output,omitempty"`
+	Status   string                 `json:"status"` // "loading" | "success" | "error"
+	Title    string                 `json:"title,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }

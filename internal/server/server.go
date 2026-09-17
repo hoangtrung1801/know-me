@@ -28,7 +28,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/websocket"
 
-	"github.com/hoangtrung1801/know-me/internal/agents/codex"
+	"github.com/hoangtrung1801/know-me/internal/agents/omp"
 	"github.com/hoangtrung1801/know-me/internal/agents/opencode"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	serverreadiness "github.com/hoangtrung1801/know-me/internal/readiness"
@@ -65,7 +65,7 @@ type Server struct {
 	projectRoot       string
 	opts              Options
 	opencodeDaemon    *opencode.Daemon // Shared OpenCode daemon (may be nil if not configured)
-	codexManager      *codex.Manager
+	ompManager        *omp.Manager
 	runtimeOpenCode   *opencode.Config
 	opencodeProxy     *httputil.ReverseProxy // Shared proxy singleton — reused across requests
 	opencodeProxyMu   sync.RWMutex
@@ -355,7 +355,7 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 		log.Printf("warn: could not load project registry: %v", err)
 	}
 	s.manager = storage.NewManager(store, reg)
-	s.codexManager = codex.NewManager("", func(event codex.Event) {
+	s.ompManager = omp.NewManager("", func(event omp.Event) {
 		eventType := "agent:updated"
 		if event.Type == "progress" {
 			eventType = "agent:progress"
@@ -364,7 +364,7 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 		if event.TaskChanged {
 			s.sse.Broadcast(routes.SSEEvent{Type: "tasks:refresh", Data: map[string]any{}})
 		}
-	}, func(event codex.ChatEvent) {
+	}, func(event omp.ChatEvent) {
 		switch event.Type {
 		case "created":
 			if event.Session != nil {
@@ -380,7 +380,6 @@ func NewServer(store *storage.Store, projectRoot string, port int, opts Options)
 			}
 		}
 	})
-
 
 	// Build shared proxy singleton once at startup.
 	if runtimeOpenCode != nil {
@@ -496,8 +495,8 @@ func (s *Server) serve(listener net.Listener) error {
 	if s.cancelTaskSweep != nil {
 		s.cancelTaskSweep()
 	}
-	if s.codexManager != nil {
-		s.codexManager.Close()
+	if s.ompManager != nil {
+		_ = s.ompManager.Close()
 	}
 	s.cleanupOpenCodeServer()
 
@@ -970,11 +969,11 @@ func (s *Server) buildRouter() chi.Router {
 			s.manager,
 			routes.TaskRouteCapabilities{HardDelete: s.opts.AllowTaskHardDelete},
 			nil,
-			s.codexManager,
+			s.ompManager,
 			s.reinitOpenCode,
 		)
-		if s.codexManager != nil {
-			routes.NewAgentRoutes(s.store, s.manager, s.codexManager).Register(r)
+		if s.ompManager != nil {
+			routes.NewAgentRoutes(s.store, s.manager, s.ompManager).Register(r)
 		}
 	})
 
