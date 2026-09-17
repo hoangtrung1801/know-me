@@ -15,6 +15,7 @@ const (
 	AgentPhaseInterrupted   AgentPhase = "interrupted"
 	AgentPhaseCodeReview    AgentPhase = "code-review"
 	AgentPhaseFixReady      AgentPhase = "fix-ready"
+	AgentPhaseReadyToMerge  AgentPhase = "ready-to-merge"
 	AgentPhaseCompleted     AgentPhase = "completed"
 
 	AgentRunPhaseInvestigation  AgentRunPhase = "investigation"
@@ -42,6 +43,7 @@ type AgentWorkflow struct {
 	ChatSessionID  string        `json:"chatSessionId,omitempty"`
 	WorktreePath   string        `json:"worktreePath,omitempty"`
 	WorktreeBranch string        `json:"worktreeBranch,omitempty"`
+	WorktreeCommit string        `json:"worktreeCommit,omitempty"`
 	ResumePhase    AgentRunPhase `json:"resumePhase,omitempty"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
 }

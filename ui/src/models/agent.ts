@@ -6,6 +6,7 @@ export type AgentPhase =
 	| "interrupted"
 	| "code-review"
 	| "fix-ready"
+	| "ready-to-merge"
 	| "completed";
 
 export type AgentRunPhase = "investigation" | "implementation" | "fix" | "chat";
@@ -19,6 +20,10 @@ export type AgentAction =
 	| "request-implementation-changes"
 	| "start-fix"
 	| "create-worktree"
+	| "start-agent"
+	| "commit-worktree"
+	| "merge-worktree"
+	| "complete-without-merge"
 	| "resume"
 	| "cancel";
 
@@ -30,7 +35,9 @@ export interface AgentWorkflow {
 	ompSessionId?: string;
 	codexSessionId?: string;
 	chatSessionId?: string;
+	worktreePath?: string;
 	worktreeBranch?: string;
+	worktreeCommit?: string;
 	resumePhase?: AgentRunPhase;
 	updatedAt: string;
 }

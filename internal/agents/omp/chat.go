@@ -185,8 +185,15 @@ func (m *Manager) executeChatSession(ctx context.Context, store *storage.Store, 
 		if setter, ok := session.(sessionLogPathSetter); ok {
 			_ = setter.SetLogPath(store.Agent.LogPath(runID))
 		}
+		mode := ACPModePlan
+		if restorePhase == models.AgentPhaseImplementing || restorePhase == models.AgentPhaseCodeReview || restorePhase == models.AgentPhaseFixReady {
+			mode = ACPModeDefault
+		}
+		_ = session.SetMode(ctx, mode)
+
+		prompt := m.buildChatPrompt(store, taskID, content, restorePhase)
 		var streamed strings.Builder
-		response, runErr = session.PromptText(ctx, content, func(update ACPUpdate) {
+		response, runErr = session.PromptText(ctx, prompt, func(update ACPUpdate) {
 			hasChange := false
 			if update.ToolCallID != "" {
 				hasChange = true
@@ -214,6 +221,37 @@ func (m *Manager) executeChatSession(ctx context.Context, store *storage.Store, 
 	}
 
 	m.finishChatRun(store, taskID, root, runID, assistantID, restorePhase, session, response, toolCalls, runErr)
+}
+
+func (m *Manager) buildChatPrompt(store *storage.Store, taskID, content string, currentPhase models.AgentPhase) string {
+	var task *models.Task
+	if store != nil && store.Tasks != nil {
+		task, _ = store.Tasks.Get(taskID)
+	}
+
+	var sb strings.Builder
+	if currentPhase == models.AgentPhasePlanReview || currentPhase == models.AgentPhaseIdle || currentPhase == models.AgentPhaseInvestigating {
+		sb.WriteString("You are in PLAN REVIEW mode")
+		if task != nil {
+			sb.WriteString(fmt.Sprintf(" for task: %s", task.Title))
+		}
+		sb.WriteString(".\nIMPORTANT: The implementation plan has NOT been approved yet. Do NOT modify, create, or delete any files in the workspace. Do NOT implement anything. Only answer questions, explain concepts, or propose revisions to the plan.\n\n")
+		if task != nil && task.ImplementationPlan != "" {
+			sb.WriteString("Current Implementation Plan:\n")
+			sb.WriteString(task.ImplementationPlan)
+			sb.WriteString("\n\n")
+		}
+	} else if currentPhase == models.AgentPhaseCodeReview || currentPhase == models.AgentPhaseReadyToMerge {
+		sb.WriteString("You are in CODE REVIEW mode")
+		if task != nil {
+			sb.WriteString(fmt.Sprintf(" for task: %s", task.Title))
+		}
+		sb.WriteString(".\nThe implementation is under review. Answer the user's questions or discuss the code changes.\n\n")
+	}
+
+	sb.WriteString("User message:\n")
+	sb.WriteString(content)
+	return sb.String()
 }
 func (m *Manager) finishChatRun(store *storage.Store, taskID, root, runID, assistantID string, restorePhase models.AgentPhase, session acpSession, response string, toolCalls []models.ChatToolCall, runErr error) {
 	m.mu.Lock()
@@ -259,6 +297,8 @@ func (m *Manager) finishChatRun(store *storage.Store, taskID, root, runID, assis
 	if finalResponse == "" {
 		finalResponse = "Done."
 	}
+	_ = store.Agent.Save(state)
+	m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, RunID: runID})
 	_ = m.finalizeChatMessage(store, taskID, assistantID, finalResponse, status, runErr, toolCalls)
 }
 func (m *Manager) queueChatLocked(store *storage.Store, workflow *models.AgentWorkflow, content string) error {

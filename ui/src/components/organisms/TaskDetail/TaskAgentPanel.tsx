@@ -2,10 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
+  CheckCircle2,
   ChevronDown,
   CircleStop,
   GitBranch,
+  GitCommit,
+  GitMerge,
   Loader2,
+  MessageSquareQuote,
   PanelRightClose,
   Play,
   RefreshCw,
@@ -24,6 +28,7 @@ import type {
 } from "../../../models/agent";
 import type { Task } from "@/ui/models/task";
 import { TaskAgentChat } from "./TaskAgentChat";
+import { GitDiffViewer } from "./GitDiffViewer";
 
 interface TaskAgentPanelProps {
   task: Task;
@@ -33,7 +38,7 @@ interface TaskAgentPanelProps {
 }
 
 function isReviewPhase(phase: AgentPhase): boolean {
-  return phase === "plan-review" || phase === "code-review";
+  return phase === "plan-review" || phase === "code-review" || phase === "ready-to-merge";
 }
 
 export function TaskAgentPanel({
@@ -45,6 +50,11 @@ export function TaskAgentPanel({
   const [snapshot, setSnapshot] = useState<AgentTaskSnapshot | null>(null);
   const [codexStatus, setCodexStatus] = useState<CodexStatus | null>(null);
   const [comment, setComment] = useState("");
+  const [commitMessage, setCommitMessage] = useState("");
+
+  useEffect(() => {
+    setCommitMessage(`feat(${task.id}): ${task.title}`);
+  }, [task.id, task.title]);
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<AgentAction | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -103,12 +113,18 @@ export function TaskAgentPanel({
   useSSEEvent("agent:progress", handleAgentEvent, [handleAgentEvent]);
 
   const runAction = useCallback(
-    async (nextAction: AgentAction) => {
+    async (nextAction: AgentAction, actionComment?: string) => {
       setAction(nextAction);
       setError(null);
       setProgress(null);
       try {
-        setSnapshot(await codexAgentApi.action(task.id, nextAction, comment));
+        const payload =
+          actionComment !== undefined
+            ? actionComment
+            : nextAction === "commit-worktree"
+            ? commitMessage
+            : comment;
+        setSnapshot(await codexAgentApi.action(task.id, nextAction, payload));
         void refreshTask();
         if (
           nextAction === "request-plan-changes" ||
@@ -118,13 +134,13 @@ export function TaskAgentPanel({
         }
       } catch (reason) {
         setError(
-          reason instanceof Error ? reason.message : "Codex action failed",
+          reason instanceof Error ? reason.message : "OMP action failed",
         );
       } finally {
         setAction(null);
       }
     },
-    [comment, refreshTask, task.id],
+    [comment, commitMessage, refreshTask, task.id],
   );
 
   const phase = snapshot?.workflow.phase || "idle";
@@ -168,13 +184,42 @@ export function TaskAgentPanel({
               </Button>
             )}
             {phase === "idle" && (
-              <Button
-                size="sm"
-                onClick={() => void runAction("start-investigation")}
-                disabled={busy || !codexReady || task.status !== "in-progress"}
-              >
-                <Play /> Start investigation
-              </Button>
+              <>
+                {!snapshot?.workflow.worktreePath ? (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => void runAction("start-agent")}
+                      disabled={busy || !codexReady || task.status !== "in-progress"}
+                      title="Create isolated worktree and start agent"
+                    >
+                      <Play /> Start OMP agent
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void runAction("start-investigation")}
+                      disabled={busy || !codexReady || task.status !== "in-progress"}
+                    >
+                      <Play /> Start investigation
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Badge variant="outline" className="flex items-center gap-1 font-mono text-xs">
+                      <GitBranch className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                      <span>{snapshot.workflow.worktreeBranch || "worktree"}</span>
+                    </Badge>
+                    <Button
+                      size="sm"
+                      onClick={() => void runAction("start-investigation")}
+                      disabled={busy || !codexReady || task.status !== "in-progress"}
+                    >
+                      <Play /> Start investigation
+                    </Button>
+                  </>
+                )}
+              </>
             )}
             {(phase === "investigating" || phase === "implementing") && (
               <Button
@@ -205,13 +250,48 @@ export function TaskAgentPanel({
               </Button>
             )}
             {phase === "code-review" && (
-              <Button
-                size="sm"
-                onClick={() => void runAction("approve-implementation")}
-                disabled={busy}
-              >
-                <Check /> Approve implementation
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => void runAction("commit-worktree")}
+                  disabled={busy}
+                >
+                  <GitCommit /> Commit changes
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void runAction("approve-implementation")}
+                  disabled={busy}
+                >
+                  <Check /> Approve implementation
+                </Button>
+              </>
+            )}
+            {phase === "ready-to-merge" && (
+              <>
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => void runAction("merge-worktree")}
+                  disabled={busy}
+                >
+                  <GitMerge /> Merge to main
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void runAction("complete-without-merge")}
+                  disabled={busy}
+                >
+                  <Check /> Complete without merge
+                </Button>
+              </>
+            )}
+            {phase === "completed" && (
+              <Badge variant="outline" className="flex items-center gap-1 text-emerald-700 border-emerald-500/30 bg-emerald-500/10 dark:text-emerald-300">
+                <Check className="h-3 w-3" /> Completed
+              </Badge>
             )}
             {onCollapse && (
               <Button
@@ -237,25 +317,28 @@ export function TaskAgentPanel({
               <RefreshCw className={loading ? "animate-spin" : ""} />
             </Button>
           </div>
-          <TaskAgentChat
-            taskId={task.id}
-            taskStatus={task.status}
-            snapshot={snapshot}
-            agentStatus={codexStatus}
-            onRefresh={load}
-          />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-b border-border/40">
+              <TaskAgentChat
+                taskId={task.id}
+                taskStatus={task.status}
+                snapshot={snapshot}
+                agentStatus={codexStatus}
+                onRefresh={load}
+              />
+            </div>
 
-          <div className="min-h-0 shrink space-y-4 overflow-y-auto px-4 pb-4">
-            {codexStatus && !codexReady && (
-              <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                <AlertTriangle className="mt-0.5 shrink-0" />
-                <span>
-                  {codexStatus.installed
-                    ? "Sign in to Oh My Pi (omp auth-broker) before starting a run."
-                    : "Install Oh My Pi (omp) before starting a run."}
-                </span>
-              </div>
-            )}
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-3">
+              {codexStatus && !codexReady && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                  <AlertTriangle className="mt-0.5 shrink-0" />
+                  <span>
+                    {codexStatus.installed
+                      ? "Sign in to Oh My Pi (omp auth-broker) before starting a run."
+                      : "Install Oh My Pi (omp) before starting a run."}
+                  </span>
+                </div>
+              )}
 
             {progress && (
               <p className="text-sm text-muted-foreground">{progress}</p>
@@ -311,12 +394,86 @@ export function TaskAgentPanel({
                 </details>
               )}
 
-            {phase === "code-review" && snapshot?.diff && (
-              <div className="rounded-md border border-border p-3 text-sm">
-                <p className="font-medium mb-2">Implementation Changes (Diff)</p>
-                <pre className="max-h-60 overflow-auto rounded bg-muted/40 p-2 font-mono text-xs text-foreground/90 whitespace-pre-wrap">
-                  {snapshot.diff}
-                </pre>
+            {phase === "ready-to-merge" && (
+              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
+                <div className="flex items-center gap-2 font-medium text-emerald-800 dark:text-emerald-200">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>
+                    Changes committed on {snapshot?.workflow.worktreeBranch || "worktree branch"}
+                  </span>
+                  {snapshot?.workflow.worktreeCommit && (
+                    <code className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                      {snapshot.workflow.worktreeCommit}
+                    </code>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Changes are committed on the isolated worktree branch and ready to merge into your base repository branch.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={() => void runAction("merge-worktree")}
+                    disabled={busy}
+                  >
+                    <GitMerge className="mr-1.5 h-3.5 w-3.5" /> Merge to main & complete task
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void runAction("complete-without-merge")}
+                    disabled={busy}
+                  >
+                    <Check className="mr-1.5 h-3.5 w-3.5" /> Complete without merge
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {(phase === "code-review" || phase === "ready-to-merge") && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-foreground">Implementation Changes (Diff)</h4>
+                  {snapshot?.workflow.worktreeBranch && (
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {snapshot.workflow.worktreeBranch}
+                    </span>
+                  )}
+                </div>
+                <GitDiffViewer diff={snapshot?.diff} dirtyFiles={snapshot?.dirtyFiles} />
+              </div>
+            )}
+
+            {phase === "code-review" && (
+              <div className="rounded-md border border-border bg-card p-3 space-y-3">
+                <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                  <GitCommit className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                  <span>Commit worktree changes</span>
+                </h4>
+                <div className="space-y-2">
+                  <label htmlFor="commit-message" className="text-xs text-muted-foreground">
+                    Commit message
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      id="commit-message"
+                      type="text"
+                      value={commitMessage}
+                      onChange={(e) => setCommitMessage(e.target.value)}
+                      placeholder={`feat(${task.id}): ${task.title}`}
+                      disabled={busy}
+                      className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-mono placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => void runAction("commit-worktree")}
+                      disabled={busy || !commitMessage.trim()}
+                    >
+                      <GitCommit className="mr-1.5 h-3.5 w-3.5" /> Commit
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -325,15 +482,24 @@ export function TaskAgentPanel({
                 <div className="space-y-2 border-t border-border/40 pt-3">
                   <label
                     htmlFor="agent-review-comment"
-                    className="text-sm font-semibold"
+                    className="text-sm font-semibold flex items-center gap-1.5"
                   >
-                    Review comment
+                    <MessageSquareQuote className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {phase === "plan-review"
+                        ? "Plan review feedback"
+                        : "Need adjustments? Request changes"}
+                    </span>
                   </label>
                   <Textarea
                     id="agent-review-comment"
                     value={comment}
                     onChange={(event) => setComment(event.target.value)}
-                    placeholder="Describe what OMP should change"
+                    placeholder={
+                      phase === "plan-review"
+                        ? "Describe what OMP should adjust in the plan..."
+                        : "Describe what OMP should adjust in the code..."
+                    }
                     rows={2}
                     disabled={busy}
                   />
@@ -344,7 +510,7 @@ export function TaskAgentPanel({
                       disabled={busy || !comment.trim()}
                       className="w-full sm:w-auto"
                     >
-                      Request changes
+                      <MessageSquareQuote className="mr-1.5 h-3.5 w-3.5" /> Request changes
                     </Button>
                   </div>
                 </div>
@@ -386,6 +552,7 @@ export function TaskAgentPanel({
                 </div>
               )}
             </div>
+          </div>
           </div>
         </>
       )}

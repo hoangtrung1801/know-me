@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +29,10 @@ const (
 	ActionCreateWorktree               Action = "create-worktree"
 	ActionResume                       Action = "resume"
 	ActionCancel                       Action = "cancel"
+	ActionStartAgent                   Action = "start-agent"
+	ActionCommitWorktree               Action = "commit-worktree"
+	ActionMergeWorktree                Action = "merge-worktree"
+	ActionCompleteWithoutMerge         Action = "complete-without-merge"
 )
 
 var (
@@ -167,6 +172,7 @@ func (m *Manager) ensureSnapshotChatLocked(store *storage.Store, taskID string) 
 
 func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, taskID string) (models.AgentTaskSnapshot, error) {
 	_ = m.ensureSnapshotChatLocked(store, taskID)
+	_ = m.reconcileWorkflowLocked(ctx, store, taskID)
 	snapshot, err := store.Agent.TaskSnapshot(taskID)
 	if err != nil {
 		return models.AgentTaskSnapshot{}, err
@@ -178,6 +184,12 @@ func (m *Manager) snapshotLocked(ctx context.Context, store *storage.Store, task
 		}
 		if diffText, diffErr := m.diff(ctx, root); diffErr == nil {
 			snapshot.Diff = diffText
+		}
+		if strings.TrimSpace(snapshot.Diff) == "" && snapshot.Workflow.Phase == models.AgentPhaseReadyToMerge && snapshot.Workflow.WorktreePath != "" {
+			cmd := exec.CommandContext(ctx, "git", "-C", snapshot.Workflow.WorktreePath, "show", "--format=", "HEAD")
+			if out, showErr := cmd.CombinedOutput(); showErr == nil && len(out) > 0 {
+				snapshot.Diff = string(out)
+			}
 		}
 	}
 
@@ -216,7 +228,14 @@ func (m *Manager) Diff(ctx context.Context, store *storage.Store, taskID string)
 	if err != nil {
 		return "", err
 	}
-	return m.diff(ctx, root)
+	diffText, err := m.diff(ctx, root)
+	if err == nil && strings.TrimSpace(diffText) == "" && workflow != nil && workflow.Phase == models.AgentPhaseReadyToMerge && workflow.WorktreePath != "" {
+		cmd := exec.CommandContext(ctx, "git", "-C", workflow.WorktreePath, "show", "--format=", "HEAD")
+		if out, showErr := cmd.CombinedOutput(); showErr == nil && len(out) > 0 {
+			diffText = string(out)
+		}
+	}
+	return diffText, err
 }
 
 func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, action Action, comment string) (models.AgentTaskSnapshot, bool, error) {
@@ -236,11 +255,55 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 	}
 	now := m.now().UTC()
 	workflow := ensureWorkflow(&state, store.ProjectID, taskID, now)
+	_ = m.reconcileWorkflowLocked(ctx, store, taskID, task, &state, workflow)
 
 	switch action {
+	case ActionStartAgent:
+		if task.Status != "in-progress" || workflow.Phase != models.AgentPhaseIdle || workflow.ActiveRunID != "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: starting agent requires an idle in-progress task", ErrConflict)
+		}
+		baseRoot, err := ResolveExecutionRoot(store, m.registry, nil)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		if !IsGitRepository(ctx, baseRoot) {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: repository root %q is not a Git repository", ErrConflict, baseRoot)
+		}
+		path, branch, err := EnsureTaskWorktree(ctx, baseRoot, store.ProjectID, taskID)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: %v", ErrConflict, err)
+		}
+		workflow.WorktreePath = path
+		workflow.WorktreeBranch = branch
+		workflow.UpdatedAt = now
+		if err := store.Agent.Save(state); err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, TaskChanged: false})
+		snapshot, err := m.snapshotLocked(ctx, store, taskID)
+		return snapshot, false, err
+
 	case ActionStartInvestigation:
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhaseIdle || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: investigation requires an idle in-progress task", ErrConflict)
+		}
+		if workflow.WorktreePath == "" {
+			baseRoot, err := ResolveExecutionRoot(store, m.registry, nil)
+			if err != nil {
+				return models.AgentTaskSnapshot{}, false, err
+			}
+			if IsGitRepository(ctx, baseRoot) {
+				path, branch, err := EnsureTaskWorktree(ctx, baseRoot, store.ProjectID, taskID)
+				if err != nil {
+					return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: %v", ErrConflict, err)
+				}
+				workflow.WorktreePath = path
+				workflow.WorktreeBranch = branch
+				workflow.UpdatedAt = now
+				if err := store.Agent.Save(state); err != nil {
+					return models.AgentTaskSnapshot{}, false, err
+				}
+			}
 		}
 		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseInvestigation, models.AgentPhaseInvestigating, models.AgentPhaseIdle, "Start investigation")
 
@@ -254,7 +317,7 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		}
 		runPhase := workflow.ResumePhase
 		if runPhase == models.AgentRunPhaseChat {
-			workflow.Phase = models.AgentPhaseIdle
+			workflow.Phase = defaultPhaseForTask(task, workflow)
 			workflow.ResumePhase = ""
 			if err := m.startChatLocked(ctx, store, task, &state, workflow, "Resume interrupted OMP chat", true); err != nil {
 				return models.AgentTaskSnapshot{}, false, err
@@ -268,19 +331,38 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for approval", ErrConflict)
 		}
+		if workflow.WorktreePath == "" {
+			baseRoot, err := ResolveExecutionRoot(store, m.registry, nil)
+			if err != nil {
+				return models.AgentTaskSnapshot{}, false, err
+			}
+			if IsGitRepository(ctx, baseRoot) {
+				path, branch, err := EnsureTaskWorktree(ctx, baseRoot, store.ProjectID, taskID)
+				if err != nil {
+					return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: %v", ErrConflict, err)
+				}
+				workflow.WorktreePath = path
+				workflow.WorktreeBranch = branch
+				workflow.UpdatedAt = now
+				if err := store.Agent.Save(state); err != nil {
+					return models.AgentTaskSnapshot{}, false, err
+				}
+			}
+		}
 		root, err := ResolveExecutionRoot(store, m.registry, workflow)
 		if err != nil {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: inspect implementation workspace: %v", ErrConflict, err)
 		}
-		files, err := m.dirtyFiles(ctx, root)
-		if err != nil {
-			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: inspect implementation workspace: %v", ErrConflict, err)
-		}
-		if len(files) > 0 {
-			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation workspace is dirty: %s", ErrConflict, strings.Join(files, ", "))
+		if workflow.WorktreePath == "" {
+			files, err := m.dirtyFiles(ctx, root)
+			if err != nil {
+				return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: inspect implementation workspace: %v", ErrConflict, err)
+			}
+			if len(files) > 0 {
+				return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation workspace is dirty: %s", ErrConflict, strings.Join(files, ", "))
+			}
 		}
 		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseImplementation, models.AgentPhaseImplementing, models.AgentPhasePlanReview, "Approve plan and implement")
-
 	case ActionCreateWorktree:
 		if task.Status != "in-progress" || workflow.Phase != models.AgentPhasePlanReview || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: plan is not ready for an isolated implementation", ErrConflict)
@@ -339,9 +421,76 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		}
 		return m.startRunLocked(ctx, store, task, &state, workflow, models.AgentRunPhaseInvestigation, models.AgentPhaseInvestigating, models.AgentPhaseIdle, "Revise investigation plan")
 
-	case ActionApproveImplementation:
+	case ActionCommitWorktree:
 		if workflow.Phase != models.AgentPhaseCodeReview || workflow.ActiveRunID != "" {
-			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation is not ready for approval", ErrConflict)
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: workflow is not in code review", ErrConflict)
+		}
+		if workflow.WorktreePath == "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: task has no isolated worktree to commit", ErrConflict)
+		}
+		msg := strings.TrimSpace(comment)
+		if msg == "" {
+			msg = fmt.Sprintf("feat(%s): %s", task.ID, task.Title)
+		}
+		commitHash, err := CommitTaskWorktree(ctx, workflow.WorktreePath, msg)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: commit worktree: %v", ErrConflict, err)
+		}
+		workflow.WorktreeCommit = commitHash
+		workflow.Phase = models.AgentPhaseReadyToMerge
+		workflow.UpdatedAt = now
+		if err := store.Agent.Save(state); err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, TaskChanged: false})
+		snapshot, err := m.snapshotLocked(ctx, store, taskID)
+		return snapshot, false, err
+
+	case ActionMergeWorktree:
+		if workflow.Phase != models.AgentPhaseReadyToMerge || workflow.ActiveRunID != "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: workflow is not ready to merge", ErrConflict)
+		}
+		if workflow.WorktreePath == "" || workflow.WorktreeBranch == "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: task worktree information is incomplete", ErrConflict)
+		}
+		baseRoot, err := ResolveExecutionRoot(store, m.registry, nil)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		mergeHash, err := MergeTaskWorktree(ctx, baseRoot, workflow.WorktreePath, workflow.WorktreeBranch)
+		if err != nil {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: merge worktree: %v", ErrConflict, err)
+		}
+		previousStatus := task.Status
+		if _, err := m.updateTask(ctx, store, taskID, func(task *models.Task) error {
+			task.Status = "done"
+			return nil
+		}); err != nil {
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		workflow.Phase = models.AgentPhaseCompleted
+		if mergeHash != "" {
+			workflow.WorktreeCommit = mergeHash
+		}
+		workflow.WorktreePath = ""
+		workflow.UpdatedAt = now
+		if err := store.Agent.Save(state); err != nil {
+			_, _ = m.updateTask(ctx, store, taskID, func(task *models.Task) error {
+				task.Status = previousStatus
+				return nil
+			})
+			return models.AgentTaskSnapshot{}, false, err
+		}
+		if session := m.removeSessionLocked(store.ProjectID, taskID); session != nil {
+			_ = session.Close(context.Background())
+		}
+		m.emitUpdated(Event{Type: "updated", ProjectID: store.ProjectID, TaskID: taskID, TaskChanged: true})
+		snapshot, err := m.snapshotLocked(ctx, store, taskID)
+		return snapshot, false, err
+
+	case ActionCompleteWithoutMerge, ActionApproveImplementation:
+		if (workflow.Phase != models.AgentPhaseCodeReview && workflow.Phase != models.AgentPhaseReadyToMerge) || workflow.ActiveRunID != "" {
+			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: workflow cannot be completed in current phase", ErrConflict)
 		}
 		root, err := ResolveExecutionRoot(store, m.registry, workflow)
 		if err != nil {
@@ -380,7 +529,7 @@ func (m *Manager) Act(ctx context.Context, store *storage.Store, taskID string, 
 		return snapshot, false, err
 
 	case ActionRequestImplementationChanges:
-		if workflow.Phase != models.AgentPhaseCodeReview || workflow.ActiveRunID != "" {
+		if (workflow.Phase != models.AgentPhaseCodeReview && workflow.Phase != models.AgentPhaseReadyToMerge) || workflow.ActiveRunID != "" {
 			return models.AgentTaskSnapshot{}, false, fmt.Errorf("%w: implementation is not ready for feedback", ErrConflict)
 		}
 		if strings.TrimSpace(comment) == "" {
@@ -988,4 +1137,118 @@ func restorePhaseForRun(phase models.AgentRunPhase) models.AgentPhase {
 	default:
 		return models.AgentPhaseIdle
 	}
+}
+
+func defaultPhaseForTask(task *models.Task, workflow *models.AgentWorkflow) models.AgentPhase {
+	if task == nil {
+		return models.AgentPhaseIdle
+	}
+	if task.Status == "done" {
+		return models.AgentPhaseCompleted
+	}
+	if task.Status == "in-review" {
+		return models.AgentPhaseCodeReview
+	}
+	if workflow != nil {
+		if workflow.WorktreeCommit != "" {
+			return models.AgentPhaseReadyToMerge
+		}
+		if workflow.Phase == models.AgentPhaseCodeReview || workflow.Phase == models.AgentPhaseFixReady || workflow.Phase == models.AgentPhasePlanReview {
+			return workflow.Phase
+		}
+	}
+	if task.ImplementationNotes != "" {
+		return models.AgentPhaseCodeReview
+	}
+	if task.ImplementationPlan != "" {
+		return models.AgentPhasePlanReview
+	}
+	return models.AgentPhaseIdle
+}
+
+func (m *Manager) reconcileWorkflowLocked(ctx context.Context, store *storage.Store, taskID string, optArgs ...any) error {
+	if store == nil || store.Agent == nil {
+		return nil
+	}
+	var task *models.Task
+	var state *models.AgentState
+	var workflow *models.AgentWorkflow
+
+	if len(optArgs) >= 3 {
+		if t, ok := optArgs[0].(*models.Task); ok {
+			task = t
+		}
+		if s, ok := optArgs[1].(*models.AgentState); ok {
+			state = s
+		}
+		if w, ok := optArgs[2].(*models.AgentWorkflow); ok {
+			workflow = w
+		}
+	}
+	if task == nil && store.Tasks != nil {
+		task, _ = store.Tasks.Get(taskID)
+	}
+	if state == nil {
+		loadedState, loadErr := store.Agent.Load()
+		if loadErr != nil {
+			return loadErr
+		}
+		state = &loadedState
+		now := m.now().UTC()
+		workflow = ensureWorkflow(state, store.ProjectID, taskID, now)
+	}
+	if workflow == nil {
+		return nil
+	}
+
+	root, _ := ResolveExecutionRoot(store, m.registry, workflow)
+	active, isActive := m.active[root]
+
+	changed := false
+	now := m.now().UTC()
+
+	// 1. Reconcile ActiveRunID if run is not active
+	if workflow.ActiveRunID != "" {
+		isTrulyRunning := isActive && active.taskID == taskID && active.runID == workflow.ActiveRunID
+		if !isTrulyRunning {
+			run := findRun(state, store.ProjectID, workflow.ActiveRunID)
+			if run != nil && run.Status == models.AgentRunStatusRunning {
+				run.Status = models.AgentRunStatusInterrupted
+				run.FinishedAt = &now
+				if run.Error == "" {
+					run.Error = "run was interrupted or completed without state flush"
+				}
+			}
+			workflow.ActiveRunID = ""
+			workflow.UpdatedAt = now
+			changed = true
+		}
+	}
+
+	// 2. Reconcile transient running phases when no run is active
+	if workflow.ActiveRunID == "" {
+		if workflow.Phase == models.AgentPhaseInvestigating || workflow.Phase == models.AgentPhaseImplementing {
+			workflow.Phase = defaultPhaseForTask(task, workflow)
+			workflow.UpdatedAt = now
+			changed = true
+		}
+	}
+
+	// 3. Reconcile Phase if task already has an ImplementationPlan or Status
+	if task != nil {
+		if task.Status == "done" && workflow.Phase != models.AgentPhaseCompleted {
+			workflow.Phase = models.AgentPhaseCompleted
+			workflow.UpdatedAt = now
+			changed = true
+		} else if workflow.ActiveRunID == "" && workflow.Phase == models.AgentPhaseIdle && task.ImplementationPlan != "" {
+			workflow.Phase = models.AgentPhasePlanReview
+			workflow.UpdatedAt = now
+			changed = true
+		}
+	}
+
+	if changed {
+		return store.Agent.Save(*state)
+	}
+	return nil
 }

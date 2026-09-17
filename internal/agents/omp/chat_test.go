@@ -2,6 +2,7 @@ package omp
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -82,5 +83,27 @@ func TestStartChatFindsLegacyCodexSession(t *testing.T) {
 	}
 	if chat.AgentType != "omp" {
 		t.Fatalf("expected legacy chat to be migrated to omp, got %q", chat.AgentType)
+	}
+}
+
+func TestBuildChatPromptRestrictsPlanReview(t *testing.T) {
+	mgr := NewManager("fake-omp", nil)
+	store := testStore(t, "in-progress")
+	task, _ := store.Tasks.Get("t1")
+	task.ImplementationPlan = "Do not edit until approved"
+	_ = store.Tasks.Update(task)
+
+	prompt := mgr.buildChatPrompt(store, "t1", "write script to say hello", models.AgentPhasePlanReview)
+	if !strings.Contains(prompt, "PLAN REVIEW mode") {
+		t.Fatalf("expected PLAN REVIEW mode in prompt, got: %s", prompt)
+	}
+	if !strings.Contains(prompt, "Do NOT modify, create, or delete any files") {
+		t.Fatalf("expected prohibition against file edits in prompt, got: %s", prompt)
+	}
+	if !strings.Contains(prompt, "Do not edit until approved") {
+		t.Fatalf("expected current implementation plan in prompt, got: %s", prompt)
+	}
+	if !strings.Contains(prompt, "write script to say hello") {
+		t.Fatalf("expected user message in prompt, got: %s", prompt)
 	}
 }
