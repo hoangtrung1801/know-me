@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { Eye, EyeOff, ClipboardList, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { Eye, EyeOff, ClipboardList, ChevronDown, ChevronUp, FileText, ArrowUpDown } from "lucide-react";
 import type { Task, TaskStatus } from "@/ui/models/task";
 import { api } from "../../api/client";
 import { navigateTo } from "../../lib/navigation";
@@ -29,6 +29,7 @@ import { useIsMobile } from "@/ui/hooks/useMobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { toast } from "../ui/sonner";
 import { TaskLifecycleBadge } from "../molecules/TaskLifecycleBadge";
+import { sortKanbanTasks, getSortOptionMeta, type KanbanSortOption } from "../../utils/kanbanSort";
 
 // Default column labels (can be overridden by config)
 const DEFAULT_COLUMN_LABELS: Record<string, string> = {
@@ -70,9 +71,17 @@ interface BoardProps {
 	tasks: Task[];
 	loading: boolean;
 	onTasksUpdate: (tasks: Task[]) => void;
+	sortBy?: KanbanSortOption;
+	onSortByChange?: (sortBy: KanbanSortOption) => void;
 }
 
-export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
+export default function Board({
+	tasks,
+	loading,
+	onTasksUpdate,
+	sortBy = "manual",
+	onSortByChange,
+}: BoardProps) {
 	const location = useRouterState({ select: (state) => state.location });
 	const { config, updateConfig } = useConfig();
 	const newTaskIds = useNewTaskIds(tasks);
@@ -108,32 +117,9 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 			}));
 	}, [availableStatuses, visibleColumns, statusColors]);
 
-	// Priority order for sorting (lower number = higher priority)
-	const priorityOrder: Record<string, number> = {
-		high: 0,
-		medium: 1,
-		low: 2,
-	};
-
 	// Convert tasks to kanban items with sorting
 	const kanbanDataFromTasks: KanbanTaskItem[] = useMemo(() => {
-		const sortedTasks = [...tasks].sort((a, b) => {
-			const hasOrderA = a.order != null;
-			const hasOrderB = b.order != null;
-
-			if (hasOrderA && hasOrderB) {
-				return a.order! - b.order!;
-			}
-			if (hasOrderA) return -1;
-			if (hasOrderB) return 1;
-
-			const priorityA = priorityOrder[a.priority] ?? 2;
-			const priorityB = priorityOrder[b.priority] ?? 2;
-			if (priorityA !== priorityB) {
-				return priorityA - priorityB;
-			}
-			return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-		});
+		const sortedTasks = sortKanbanTasks(tasks, sortBy);
 
 		return sortedTasks.map((task) => ({
 			id: task.id,
@@ -141,7 +127,7 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 			column: task.status,
 			task,
 		}));
-	}, [tasks]);
+	}, [tasks, sortBy]);
 	const [kanbanData, setKanbanData] = useState<KanbanTaskItem[]>(kanbanDataFromTasks);
 
 	// Get selected task from URL hash
@@ -227,6 +213,23 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 			const orig = originalTasks.find((t) => t.id === item.id);
 			return orig && orig.status !== item.column;
 		});
+
+		// If user manually reordered cards within a column while non-manual sort was active, switch to manual
+		if (sortBy !== "manual") {
+			const hasOrderReorder = columns.some((col) => {
+				const colItemsBefore = preDragTasksRef.current.filter((t) => t.status === col.id);
+				const colItemsAfter = newData.filter((item) => item.column === col.id);
+				if (colItemsBefore.length !== colItemsAfter.length) return false;
+				return colItemsBefore.some((t, i) => colItemsAfter[i]?.id !== t.id);
+			});
+
+			if (hasOrderReorder && statusChanges.length === 0) {
+				onSortByChange?.("manual");
+				toast.info("Switched to manual order", {
+					description: "Custom card arrangement saved",
+				});
+			}
+		}
 
 		// Order changes - update ALL tasks in each column to ensure consistent ordering
 		const orderUpdates: Array<{ id: string; order: number }> = [];
@@ -329,9 +332,16 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 					className="shrink-0 mb-4"
 				>
 					<CollapsibleTrigger className="flex items-center justify-between w-full py-2">
-						<span className="text-sm text-muted-foreground">
-							Columns ({visibleColumns.size}/{availableStatuses.length})
-						</span>
+						<div className="flex items-center gap-2">
+							<span className="text-sm text-muted-foreground">
+								Columns ({visibleColumns.size}/{availableStatuses.length})
+							</span>
+							{sortBy !== "manual" && (
+								<span className="text-xs text-muted-foreground font-medium">
+									• {getSortOptionMeta(sortBy).shortLabel}
+								</span>
+							)}
+						</div>
 						{columnControlsOpen ? (
 							<ChevronUp className="w-4 h-4 text-muted-foreground" />
 						) : (
@@ -365,7 +375,8 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 				</Collapsible>
 			) : (
 				<div className="shrink-0 mb-4">
-					<div className="flex items-center gap-1.5 flex-wrap">
+					<div className="flex items-center justify-between gap-2 flex-wrap">
+						<div className="flex items-center gap-1.5 flex-wrap">
 						<span className="text-sm text-muted-foreground mr-1">Columns</span>
 						{availableStatuses.map((column) => {
 							const isVisible = visibleColumns.has(column);
@@ -387,6 +398,13 @@ export default function Board({ tasks, loading, onTasksUpdate }: BoardProps) {
 								</button>
 							);
 						})}
+					</div>
+						{sortBy !== "manual" && (
+							<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+								<ArrowUpDown className="w-3.5 h-3.5" />
+								<span>Sorted by <span className="font-medium text-foreground">{getSortOptionMeta(sortBy).shortLabel}</span></span>
+							</div>
+						)}
 					</div>
 				</div>
 			)}

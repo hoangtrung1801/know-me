@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, Archive, ChevronDown, FolderKanban, ListTodo, RefreshCw, X } from "lucide-react";
+import { Plus, Archive, ChevronDown, FolderKanban, ListTodo, RefreshCw, X, ArrowUpDown, ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
 import type { Task } from "@/ui/models/task";
 import { Board } from "../components/organisms";
 import { Button } from "../components/ui/button";
 import {
 	Select,
 	SelectContent,
+	SelectGroup,
 	SelectItem,
+	SelectLabel,
+	SelectSeparator,
 	SelectTrigger,
 	SelectValue,
 } from "../components/ui/select";
@@ -32,6 +35,12 @@ import {
 	PageLoading,
 	PageShell,
 } from "../components/templates/PageShell";
+import {
+	type KanbanSortOption,
+	isValidSortOption,
+	getSortOptionMeta,
+	toggleSortDirection,
+} from "../utils/kanbanSort";
 
 // Time duration options for batch archive (in milliseconds)
 const BATCH_ARCHIVE_OPTIONS = [
@@ -61,6 +70,17 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 	const visibleTasks = projectScope === "all"
 		? tasks
 		: tasks.filter((task) => projectScope === "global" ? !task.projectId : task.projectId === projectScope);
+	const [sortBy, setSortBy] = usePersistentPageState<KanbanSortOption>(
+		"kanban",
+		"sortBy",
+		"manual",
+		{
+			encode: (value) => value,
+			decode: (value) => isValidSortOption(value) ? value : undefined,
+		},
+	);
+	const isSorted = sortBy !== "manual";
+	const sortMeta = getSortOptionMeta(sortBy);
 	const [mobileWarningDismissed, setMobileWarningDismissed] = useState(() => {
 		return sessionStorage.getItem("kanban-mobile-warning-dismissed") === "true";
 	});
@@ -170,14 +190,23 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 			<PageHeader
 				size="full"
 				title="Kanban Board"
-				description="Move active work through your configured delivery stages."
 				context="Project work"
 				status={
-					<span className="tabular-nums">
-						{isProjectFiltered
-							? `Showing ${visibleTasks.length} of ${tasks.length} tasks`
-							: `${visibleTasks.length} ${visibleTasks.length === 1 ? "task" : "tasks"}`}
-					</span>
+					<div className="flex flex-wrap items-center gap-2 text-xs">
+						<span className="tabular-nums">
+							{isProjectFiltered
+								? `Showing ${visibleTasks.length} of ${tasks.length} tasks`
+								: `${visibleTasks.length} ${visibleTasks.length === 1 ? "task" : "tasks"}`}
+						</span>
+						{isSorted && (
+							<>
+								<span className="text-muted-foreground/50">•</span>
+								<span className="text-muted-foreground">
+									Sorted by <span className="font-medium text-foreground">{sortMeta.shortLabel}</span>
+								</span>
+							</>
+						)}
+					</div>
 				}
 				actions={
 					<div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -208,6 +237,77 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 									<X className="h-3.5 w-3.5" />
 									<span className="hidden sm:inline">Clear</span>
 								</Button>
+							)}
+						</div>
+						<div className="flex min-w-0 basis-full items-center gap-2 sm:basis-auto">
+							<span className="shrink-0 text-xs font-medium text-muted-foreground">Sort</span>
+							<div className="relative min-w-0 flex-1 sm:flex-none">
+								<ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+								<Select value={sortBy} onValueChange={(val) => setSortBy(val as KanbanSortOption)}>
+									<SelectTrigger aria-label="Sort Kanban tasks" className="h-11 w-full min-w-0 border-border/70 bg-muted/30 pl-8 pr-2 text-xs font-medium shadow-none transition-colors hover:bg-muted/55 focus:ring-1 sm:h-8 sm:min-w-48">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent align="start">
+										<SelectItem value="manual">Manual order</SelectItem>
+										<SelectSeparator />
+										<SelectGroup>
+											<SelectLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+												Severity / Priority
+											</SelectLabel>
+											<SelectItem value="priority-desc">Severity: High to Low</SelectItem>
+											<SelectItem value="priority-asc">Severity: Low to High</SelectItem>
+										</SelectGroup>
+										<SelectSeparator />
+										<SelectGroup>
+											<SelectLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+												Date
+											</SelectLabel>
+											<SelectItem value="created-desc">Created: Newest first</SelectItem>
+											<SelectItem value="created-asc">Created: Oldest first</SelectItem>
+											<SelectItem value="updated-desc">Updated: Newest first</SelectItem>
+											<SelectItem value="updated-asc">Updated: Oldest first</SelectItem>
+										</SelectGroup>
+										<SelectSeparator />
+										<SelectGroup>
+											<SelectLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+												Title
+											</SelectLabel>
+											<SelectItem value="title-asc">Title: A to Z</SelectItem>
+											<SelectItem value="title-desc">Title: Z to A</SelectItem>
+										</SelectGroup>
+									</SelectContent>
+								</Select>
+							</div>
+							{isSorted && (
+								<>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onClick={() => setSortBy(toggleSortDirection(sortBy))}
+										aria-label="Toggle sort direction"
+										title={sortBy.endsWith("-desc") ? "Sort descending (click to sort ascending)" : "Sort ascending (click to sort descending)"}
+										className="h-11 w-11 shrink-0 px-2 text-muted-foreground hover:text-foreground sm:h-8 sm:w-auto sm:px-2.5"
+									>
+										{sortBy.endsWith("-desc") ? (
+											<ArrowDownWideNarrow className="h-3.5 w-3.5" />
+										) : (
+											<ArrowUpNarrowWide className="h-3.5 w-3.5" />
+										)}
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onClick={() => setSortBy("manual")}
+										aria-label="Reset sort"
+										title="Reset to manual order"
+										className="h-11 shrink-0 gap-1 px-2 text-muted-foreground hover:text-foreground sm:h-8"
+									>
+										<X className="h-3.5 w-3.5" />
+										<span className="hidden sm:inline">Reset</span>
+									</Button>
+								</>
 							)}
 						</div>
 						<Button
@@ -294,7 +394,7 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 						className="flex-1"
 					/>
 				) : (
-					<Board tasks={visibleTasks} loading={false} onTasksUpdate={onTasksUpdate} />
+					<Board tasks={visibleTasks} loading={false} onTasksUpdate={onTasksUpdate} sortBy={sortBy} onSortByChange={setSortBy} />
 				)}
 			</PageContent>
 
