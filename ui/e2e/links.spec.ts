@@ -89,3 +89,44 @@ test("saved links can be filtered by tag", async ({ page }) => {
 	await page.getByRole("button", { name: "All tags" }).click();
 	await expect(page.getByText("Design notes")).toBeVisible();
 });
+
+test("saved links can be searched by title and url", async ({ page }) => {
+	await page.route("**/api/links", (route) => route.fulfill({ json: [
+		{ id: "link1", url: "https://golang.org/doc/devel", title: "Go release notes", description: "", tags: ["golang"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+		{ id: "link2", url: "https://example.com/design-tokens", title: "Design tokens", description: "", tags: ["design"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+		{ id: "link3", url: "https://github.com/hoangtrung1801/know-me", title: "", description: "", tags: ["workspace"], createdAt: "2026-08-03T00:00:00Z", updatedAt: "2026-08-03T00:00:00Z" },
+	] }));
+	await page.goto(`${server.baseURL}/links`);
+
+	const searchInput = page.getByLabel("Search links");
+	await expect(searchInput).toBeVisible();
+
+	// Search by title
+	await searchInput.fill("release");
+	await expect(page.getByText("Go release notes")).toBeVisible();
+	await expect(page.getByText("Design tokens")).not.toBeVisible();
+	await expect(page.getByText("github.com/hoangtrung1801/know-me")).not.toBeVisible();
+
+	// Search by URL
+	await searchInput.fill("design-tokens");
+	await expect(page.getByText("Design tokens")).toBeVisible();
+	await expect(page.getByText("Go release notes")).not.toBeVisible();
+
+	// Search by URL for link without title
+	await searchInput.fill("github.com");
+	await expect(page.getByRole("heading", { name: /github\.com/ })).toBeVisible();
+	await expect(page.getByText("Design tokens")).not.toBeVisible();
+
+	// Clear search via clear button
+	await page.getByLabel("Clear search").click();
+	await expect(searchInput).toHaveValue("");
+	await expect(page.getByText("Go release notes")).toBeVisible();
+	await expect(page.getByText("Design tokens")).toBeVisible();
+	await expect(page.getByRole("heading", { name: /github\.com/ })).toBeVisible();
+
+	// No match empty state
+	await searchInput.fill("nonexistent");
+	await expect(page.getByText("No links match your search.")).toBeVisible();
+	await page.locator(".border-dashed").getByRole("button", { name: "Clear search" }).click();
+	await expect(page.getByText("Go release notes")).toBeVisible();
+});
