@@ -38,7 +38,6 @@ import {
 import {
 	type KanbanSortOption,
 	isValidSortOption,
-	getSortOptionMeta,
 	toggleSortDirection,
 } from "../utils/kanbanSort";
 
@@ -80,7 +79,6 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 		},
 	);
 	const isSorted = sortBy !== "manual";
-	const sortMeta = getSortOptionMeta(sortBy);
 	const [mobileWarningDismissed, setMobileWarningDismissed] = useState(() => {
 		return sessionStorage.getItem("kanban-mobile-warning-dismissed") === "true";
 	});
@@ -192,21 +190,11 @@ export default function KanbanPage({ tasks, loading, error, onRetry, onTasksUpda
 				title="Kanban Board"
 				context="Project work"
 				status={
-					<div className="flex flex-wrap items-center gap-2 text-xs">
-						<span className="tabular-nums">
-							{isProjectFiltered
-								? `Showing ${visibleTasks.length} of ${tasks.length} tasks`
-								: `${visibleTasks.length} ${visibleTasks.length === 1 ? "task" : "tasks"}`}
-						</span>
-						{isSorted && (
-							<>
-								<span className="text-muted-foreground/50">•</span>
-								<span className="text-muted-foreground">
-									Sorted by <span className="font-medium text-foreground">{sortMeta.shortLabel}</span>
-								</span>
-							</>
-						)}
-					</div>
+					<span className="tabular-nums">
+						{isProjectFiltered
+							? `Showing ${visibleTasks.length} of ${tasks.length} tasks`
+							: `${visibleTasks.length} ${visibleTasks.length === 1 ? "task" : "tasks"}`}
+					</span>
 				}
 				actions={
 					<div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
