@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, Hash, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { memoApi, type Memo } from "@/ui/api/client";
-import { MDRender } from "@/ui/components/editor";
+import { MDRender, useImagePaste } from "@/ui/components/editor";
 import { PageContent, PageHeader, PageLoading, PageShell } from "@/ui/components/templates/PageShell";
 import { Button } from "@/ui/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/ui/components/ui/dialog";
@@ -61,6 +61,8 @@ export default function MemosPage() {
 	const memosRef = useRef(memos);
 	isActiveRef.current = isActive;
 	memosRef.current = memos;
+	const newMemoPaste = useImagePaste({ onChange: setNewContent, disabled: busy });
+	const editMemoPaste = useImagePaste({ onChange: setEditContent, disabled: busy });
 
 	const load = useCallback(async (search: string) => {
 		if (!isActiveRef.current) return;
@@ -154,7 +156,7 @@ export default function MemosPage() {
 							<div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Capture</p><h2 className="mt-1 text-xl">What’s on your mind?</h2></div>
 							<Hash className="mt-1 h-5 w-5 text-muted-foreground" aria-hidden="true" />
 						</div>
-						<Textarea aria-label="New memo" value={newContent} onChange={(event) => setNewContent(event.target.value)} placeholder="Write a quick note in Markdown..." rows={5} className="mt-4 resize-none bg-background" />
+						<Textarea aria-label="New memo" value={newContent} onChange={(event) => setNewContent(event.target.value)} onPaste={newMemoPaste.onPaste} placeholder="Write a quick note in Markdown..." rows={5} className="mt-4 resize-none bg-background" />
 						<div className="mt-3 flex items-center justify-between gap-3"><span className="text-xs text-muted-foreground">Markdown supported</span><Button type="submit" disabled={busy || !newContent.trim()}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}Add memo</Button></div>
 					</form>
 					<div className="rounded-lg border border-border bg-muted/30 p-5">
@@ -171,7 +173,7 @@ export default function MemosPage() {
 						<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 							{group.items.map((memo) => <article key={memo.id} className="group flex min-h-52 flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:border-foreground/20 hover:bg-accent/20">
 								{editingID === memo.id ? <div>
-									<Textarea aria-label="Edit memo" value={editContent} onChange={(event) => setEditContent(event.target.value)} rows={6} />
+									<Textarea aria-label="Edit memo" value={editContent} onChange={(event) => setEditContent(event.target.value)} onPaste={editMemoPaste.onPaste} rows={6} />
 									<div className="mt-3 flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={() => setEditingID(null)}>Cancel</Button><Button type="button" disabled={busy || !editContent.trim()} onClick={() => void save(memo)}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save memo</Button></div>
 								</div> : <>
 									<MDRender markdown={memo.content} className="prose max-w-none text-sm leading-6 dark:prose-invert" />

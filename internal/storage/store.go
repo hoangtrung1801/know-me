@@ -32,6 +32,7 @@ type Store struct {
 	Workspaces  *WorkspaceStore
 	Chats       *ChatStore
 	Agent       *AgentStore
+	Assets      *AssetStore
 
 	taskLifecycleLock     *taskLifecycleLock
 }
@@ -68,6 +69,7 @@ func newStore(root, projectID, projectRoot string) *Store {
 	s.Workspaces = &WorkspaceStore{root: root}
 	s.Chats = &ChatStore{root: root, projectID: projectID}
 	s.Agent = &AgentStore{root: root, projectID: projectID}
+	s.Assets = &AssetStore{root: root}
 	return s
 }
 

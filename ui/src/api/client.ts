@@ -10,7 +10,7 @@ import type {
 } from "@/ui/models/taskLifecycle";
 
 // Use env vars from Vite, fallback to relative paths for production
-const API_BASE = import.meta.env.API_URL || "";
+export const API_BASE = import.meta.env.API_URL || "";
 
 // Wrapper that always sends credentials (cookies) with requests
 function apiFetch(input: string, init?: RequestInit): Promise<Response> {
@@ -2137,4 +2137,35 @@ export const memoApi = {
 			throw new Error(body.error || "Failed to delete memo");
 		}
 	},
+};
+
+// Assets API
+export interface Asset {
+	filename: string;
+	url: string;
+	name?: string;
+	size: number;
+	contentType: string;
+}
+
+export async function uploadAsset(file: File | Blob, filename?: string): Promise<Asset> {
+	const formData = new FormData();
+	if (file instanceof File) {
+		formData.append("file", file, filename || file.name);
+	} else {
+		formData.append("file", file, filename || "pasted-image.png");
+	}
+	const res = await apiFetch(`${API_BASE}/api/assets`, {
+		method: "POST",
+		body: formData,
+	});
+	if (!res.ok) {
+		const body = await res.json().catch(() => ({}));
+		throw new Error(body.error || "Failed to upload asset");
+	}
+	return res.json();
+}
+
+export const assetApi = {
+	upload: uploadAsset,
 };

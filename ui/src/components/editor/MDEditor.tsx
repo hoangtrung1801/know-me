@@ -1,9 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { Crepe } from "@milkdown/crepe";
 import { replaceAll } from "@milkdown/kit/utils";
+import { uploadConfig } from "@milkdown/plugin-upload";
+import { toast } from "sonner";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import { useTheme } from "../../App";
+import { uploadAsset, API_BASE } from "../../api/client";
 
 interface MDEditorComponentProps {
 	markdown: string;
@@ -58,7 +61,30 @@ const MDEditorComponent = forwardRef<MDEditorRef, MDEditorComponentProps>(
 				defaultValue: markdownRef.current,
 				featureConfigs: {
 					[Crepe.Feature.Placeholder]: { text: placeholder, mode: "block" },
+					[Crepe.Feature.ImageBlock]: {
+						proxyDomURL: (url: string) =>
+							url.startsWith("/api/") && API_BASE ? `${API_BASE}${url}` : url,
+						onUpload: async (file: File) => {
+							const toastId = toast.loading(`Uploading ${file.name || "image"}...`);
+							try {
+								const asset = await uploadAsset(file);
+								toast.success("Image uploaded", { id: toastId });
+								return asset.url;
+							} catch (err) {
+								const msg = err instanceof Error ? err.message : "Failed to upload image";
+								toast.error(msg, { id: toastId });
+								throw err;
+							}
+						},
+					},
 				},
+			});
+
+			editor.editor.config((ctx) => {
+				ctx.update(uploadConfig.key, (prev) => ({
+					...prev,
+					enableHtmlFileUploader: true,
+				}));
 			});
 
 			editor.on((listener) => {
@@ -119,10 +145,52 @@ const MDEditorComponent = forwardRef<MDEditorRef, MDEditorComponentProps>(
 		const editorStyle = {
 			height: isFullHeight ? "100%" : typeof height === "number" ? `${height}px` : height,
 		};
+		const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
+			if (readOnlyRef.current || event.defaultPrevented) return;
+			const files = event.clipboardData?.files;
+			const items = event.clipboardData?.items;
+			let imageFile: File | null = null;
+			if (files && files.length > 0) {
+				for (let i = 0; i < files.length; i++) {
+					if (files[i].type.startsWith("image/")) {
+						imageFile = files[i];
+						break;
+					}
+				}
+			}
+			if (!imageFile && items) {
+				for (let i = 0; i < items.length; i++) {
+					if (items[i].type.startsWith("image/")) {
+						imageFile = items[i].getAsFile();
+						if (imageFile) break;
+					}
+				}
+			}
+			if (!imageFile) return;
+
+			event.preventDefault();
+			const toastId = toast.loading(`Uploading ${imageFile.name || "image"}...`);
+			try {
+				const asset = await uploadAsset(imageFile);
+				toast.success("Image uploaded", { id: toastId });
+				const imageMd = `\n\n![${asset.name || "image"}](${asset.url})\n\n`;
+				const current = editorRef.current?.getMarkdown() ?? markdownRef.current;
+				const updated = current + imageMd;
+				if (editorRef.current) {
+					pendingSyncRef.current = updated;
+					editorRef.current.editor.action(replaceAll(updated));
+				}
+				onChangeRef.current(updated);
+			} catch (err) {
+				const msg = err instanceof Error ? err.message : "Failed to upload image";
+				toast.error(msg, { id: toastId });
+			}
+		};
 
 		return (
 			<div
 				ref={rootRef}
+				onPaste={handlePaste}
 				className={`milkdown-editor-wrapper ${className} ${isDark ? "dark-mode" : ""} ${isFullHeight ? "h-full" : ""}`}
 				data-color-mode={isDark ? "dark" : "light"}
 				data-editor-readonly={readOnly || preview === "preview" ? "true" : "false"}

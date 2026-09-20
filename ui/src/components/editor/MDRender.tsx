@@ -13,6 +13,8 @@ import hljs from "highlight.js";
 import { Check } from "lucide-react";
 import { useTheme } from "../../App";
 import { cn } from "../../lib/utils";
+import { API_BASE } from "../../api/client";
+
 
 import {
   transformMentions,
@@ -101,6 +103,19 @@ const MDRender = forwardRef<MDRenderRef, MDRenderProps>(
 
           return <a href={href} className="text-primary hover:underline">{children}</a>;
         },
+        img: ({ src, alt, ...props }: { src?: string; alt?: string }) => {
+          const resolvedSrc = src && src.startsWith("/api/") && API_BASE ? `${API_BASE}${src}` : src;
+          return (
+            <img
+              src={resolvedSrc}
+              alt={alt}
+              className="rounded-md max-w-full h-auto my-2 border border-border/40"
+              loading="lazy"
+              {...props}
+            />
+          );
+        },
+
 
         code: ({
           className: codeClassName,

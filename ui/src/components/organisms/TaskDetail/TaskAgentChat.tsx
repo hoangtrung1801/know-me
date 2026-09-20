@@ -12,6 +12,7 @@ import { ChatThread } from "../../chat/ChatThread";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
+import { useImagePaste } from "../../editor";
 
 interface TaskAgentChatProps {
     taskId: string;
@@ -51,6 +52,10 @@ export function TaskAgentChat({
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [content, setContent] = useState("");
+    const imagePaste = useImagePaste({
+        onChange: setContent,
+        disabled: sending || !session,
+    });
     const [error, setError] = useState<string | null>(null);
     const [queueNotice, setQueueNotice] = useState<string | null>(null);
     const pendingMessagesRef = useRef(
@@ -322,6 +327,7 @@ export function TaskAgentChat({
                     <Textarea
                         value={content}
                         onChange={(event) => setContent(event.target.value)}
+                        onPaste={imagePaste.onPaste}
                         onKeyDown={(event) => {
                             if (event.key === "Enter" && !event.shiftKey) {
                                 event.preventDefault();

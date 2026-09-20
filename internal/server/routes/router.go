@@ -132,6 +132,9 @@ func setupRoutesWithCapabilities(r chi.Router, store *storage.Store, sse Broadca
 	// Audit trail (global, not project-scoped)
 	audr := &AuditRoutes{auditStore: storage.NewGlobalAuditStore()}
 	audr.Register(r)
+	// Assets (uploaded images and attachments)
+	(&AssetRoutes{store: store, mgr: manager}).Register(r)
+
 
 	// Workspaces (multi-project management, always available)
 	if manager != nil {
