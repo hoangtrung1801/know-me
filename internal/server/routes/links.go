@@ -1,11 +1,13 @@
 package routes
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"mime"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hoangtrung1801/know-me/internal/links"
@@ -59,6 +61,7 @@ func (lr *LinkRoutes) list(w http.ResponseWriter, r *http.Request) {
 
 func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 	var urlValue, note string
+	var tags []string
 	var image io.Reader
 	mediaType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if mediaType == "multipart/form-data" {
@@ -69,6 +72,12 @@ func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 		}
 		urlValue = r.FormValue("url")
 		note = r.FormValue("note")
+		if r.Form.Has("tags") {
+			tags = append(tags, r.Form["tags"]...)
+		}
+		if r.Form.Has("tag") {
+			tags = append(tags, r.Form["tag"]...)
+		}
 		file, _, err := r.FormFile("image")
 		if err == nil {
 			defer file.Close()
@@ -76,8 +85,10 @@ func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var input struct {
-			URL  string `json:"url"`
-			Note string `json:"note"`
+			URL  string          `json:"url"`
+			Note string          `json:"note"`
+			Tags json.RawMessage `json:"tags"`
+			Tag  json.RawMessage `json:"tag"`
 		}
 		if err := decodeJSON(r, &input); err != nil {
 			respondError(w, http.StatusBadRequest, "invalid JSON body")
@@ -85,8 +96,10 @@ func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 		}
 		urlValue = input.URL
 		note = input.Note
+		tags = append(tags, parseTagsFromRaw(input.Tags)...)
+		tags = append(tags, parseTagsFromRaw(input.Tag)...)
 	}
-	link, err := lr.service.AddWithNote(r.Context(), urlValue, note, image)
+	link, err := lr.service.AddWithTags(r.Context(), urlValue, note, tags, image)
 	if err != nil {
 		linkError(w, err)
 		return
@@ -96,6 +109,8 @@ func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {
 
 func (lr *LinkRoutes) update(w http.ResponseWriter, r *http.Request) {
 	var title, description, note *string
+	var tags []string
+	var hasTags bool
 	var image io.Reader
 	mediaType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if mediaType == "multipart/form-data" {
@@ -116,6 +131,14 @@ func (lr *LinkRoutes) update(w http.ResponseWriter, r *http.Request) {
 			value := r.FormValue("note")
 			note = &value
 		}
+		if r.Form.Has("tags") {
+			tags = append(tags, r.Form["tags"]...)
+			hasTags = true
+		}
+		if r.Form.Has("tag") {
+			tags = append(tags, r.Form["tag"]...)
+			hasTags = true
+		}
 		file, _, err := r.FormFile("image")
 		if err == nil {
 			defer file.Close()
@@ -123,22 +146,53 @@ func (lr *LinkRoutes) update(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var input struct {
-			Title       *string `json:"title"`
-			Description *string `json:"description"`
-			Note        *string `json:"note"`
+			Title       *string         `json:"title"`
+			Description *string         `json:"description"`
+			Note        *string         `json:"note"`
+			Tags        json.RawMessage `json:"tags"`
+			Tag         json.RawMessage `json:"tag"`
 		}
 		if err := decodeJSON(r, &input); err != nil {
 			respondError(w, http.StatusBadRequest, "invalid JSON body")
 			return
 		}
 		title, description, note = input.Title, input.Description, input.Note
+		if len(input.Tags) > 0 && string(input.Tags) != "null" {
+			tags = append(tags, parseTagsFromRaw(input.Tags)...)
+			hasTags = true
+		}
+		if len(input.Tag) > 0 && string(input.Tag) != "null" {
+			tags = append(tags, parseTagsFromRaw(input.Tag)...)
+			hasTags = true
+		}
 	}
-	link, err := lr.service.UpdateWithNote(r.Context(), chi.URLParam(r, "id"), title, description, note, image)
+	var updateTags []string
+	if hasTags {
+		updateTags = tags
+	} else {
+		updateTags = nil
+	}
+	link, err := lr.service.UpdateWithTags(r.Context(), chi.URLParam(r, "id"), title, description, note, updateTags, image)
 	if err != nil {
 		linkError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, link)
+}
+
+func parseTagsFromRaw(raw json.RawMessage) []string {
+	if len(raw) == 0 || string(raw) == "null" {
+		return nil
+	}
+	var arr []string
+	if err := json.Unmarshal(raw, &arr); err == nil {
+		return arr
+	}
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		return strings.Split(s, ",")
+	}
+	return nil
 }
 
 func (lr *LinkRoutes) image(w http.ResponseWriter, r *http.Request) {

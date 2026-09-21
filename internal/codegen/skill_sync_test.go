@@ -96,9 +96,15 @@ func TestSyncSkillsToTargetsIncludesKnownMeSkill(t *testing.T) {
 	if !strings.Contains(string(data), "name: known-me") {
 		t.Fatal("synced known-me has invalid frontmatter")
 	}
-	for _, section := range []string{"## Tasks", "## Links", "## Memos", "## Projects"} {
+	for _, section := range []string{"## Start and route", "## Feature references", "## Shared safeguards"} {
 		if !strings.Contains(string(data), section) {
 			t.Fatalf("synced known-me is missing %q", section)
+		}
+	}
+	for _, ref := range []string{"tasks.md", "links.md", "memos.md", "projects.md"} {
+		refPath := filepath.Join(target, "known-me", "references", ref)
+		if _, err := os.Stat(refPath); err != nil {
+			t.Fatalf("synced known-me is missing reference %q: %v", ref, err)
 		}
 	}
 }

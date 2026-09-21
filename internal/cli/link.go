@@ -35,9 +35,14 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 				return remoteErr
 			}
 			note, _ := cmd.Flags().GetString("note")
+			tags, _ := cmd.Flags().GetStringSlice("tag")
+			if cmd.Flags().Changed("tags") {
+				extra, _ := cmd.Flags().GetStringSlice("tags")
+				tags = append(tags, extra...)
+			}
 			if isRemote {
 				var link models.Link
-				body := map[string]string{"url": args[0], "note": note}
+				body := map[string]any{"url": args[0], "note": note, "tags": tags}
 				if err := remote.DoJSON("POST", "/api/links", nil, body, &link); err != nil {
 					return fmt.Errorf("add link: %w", err)
 				}
@@ -56,7 +61,7 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 				defer imageFile.Close()
 				image = imageFile
 			}
-			link, err := getService().AddWithNote(cmd.Context(), args[0], note, image)
+			link, err := getService().AddWithTags(cmd.Context(), args[0], note, tags, image)
 			if err != nil {
 				return fmt.Errorf("add link: %w", err)
 			}
@@ -65,7 +70,9 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 	}
 	add.Flags().String("image", "", "Import a local image")
 	add.Flags().String("note", "", "Add a note")
-
+	add.Flags().StringSliceP("tag", "t", nil, "Tag for the link (repeatable or comma-separated)")
+	add.Flags().StringSlice("tags", nil, "Alias for --tag")
+	_ = add.Flags().MarkHidden("tags")
 	list := &cobra.Command{
 		Use:   "list",
 		Short: "List saved links",
@@ -168,6 +175,17 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 				value, _ := cmd.Flags().GetString("note")
 				note = &value
 			}
+			var tags []string
+			var hasTags bool
+			if cmd.Flags().Changed("tag") {
+				tags, _ = cmd.Flags().GetStringSlice("tag")
+				hasTags = true
+			}
+			if cmd.Flags().Changed("tags") {
+				extra, _ := cmd.Flags().GetStringSlice("tags")
+				tags = append(tags, extra...)
+				hasTags = true
+			}
 
 			remote, isRemote, remoteErr := RemoteForCommand(cmd)
 			if remoteErr != nil {
@@ -175,10 +193,13 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 			}
 			if isRemote {
 				var link models.Link
-				body := map[string]*string{
+				body := map[string]any{
 					"title":       title,
 					"description": description,
 					"note":        note,
+				}
+				if hasTags {
+					body["tags"] = tags
 				}
 				if err := remote.DoJSON("PATCH", "/api/links/"+url.PathEscape(args[0]), nil, body, &link); err != nil {
 					return fmt.Errorf("update link: %w", err)
@@ -198,7 +219,13 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 				defer imageFile.Close()
 				image = imageFile
 			}
-			link, err := getService().UpdateWithNote(cmd.Context(), args[0], title, description, note, image)
+			var updateTags []string
+			if hasTags {
+				updateTags = tags
+			} else {
+				updateTags = nil
+			}
+			link, err := getService().UpdateWithTags(cmd.Context(), args[0], title, description, note, updateTags, image)
 			if err != nil {
 				return fmt.Errorf("update link: %w", err)
 			}
@@ -209,7 +236,9 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 	update.Flags().String("description", "", "New description")
 	update.Flags().String("note", "", "New note")
 	update.Flags().String("image", "", "Replace with a local image")
-
+	update.Flags().StringSlice("tag", nil, "New tags for the link (repeatable or comma-separated)")
+	update.Flags().StringSlice("tags", nil, "Alias for --tag")
+	_ = update.Flags().MarkHidden("tags")
 	cmd.AddCommand(add, list, update)
 	return cmd
 }

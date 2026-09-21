@@ -158,3 +158,84 @@ func TestLinkRoutesSearch(t *testing.T) {
 }
 
 var tinyRoutePNG = []byte{0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a}
+
+func TestLinkRoutesTagsCreateAndUpdate(t *testing.T) {
+	service := links.NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (links.Metadata, error) {
+		return links.Metadata{Title: "Tags Test", Description: "Description"}, nil
+	})
+	r := chi.NewRouter()
+	(&LinkRoutes{service: service}).Register(r)
+
+	// 1. Create with JSON array tags
+	body, _ := json.Marshal(map[string]any{
+		"url":  "https://example.com/tags-array",
+		"tags": []string{"golang", "tools"},
+	})
+	createReq := httptest.NewRequest(http.MethodPost, "/links", bytes.NewReader(body))
+	createReq.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, createReq)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create array status = %d", rec.Code)
+	}
+	var link1 models.Link
+	_ = json.NewDecoder(rec.Body).Decode(&link1)
+	if len(link1.Tags) != 2 || link1.Tags[0] != "golang" || link1.Tags[1] != "tools" {
+		t.Fatalf("link1.Tags = %#v", link1.Tags)
+	}
+
+	// 2. Create with JSON comma-separated string tag
+	body2, _ := json.Marshal(map[string]any{
+		"url":  "https://example.com/tags-string",
+		"tags": "devops,infra",
+	})
+	createReq2 := httptest.NewRequest(http.MethodPost, "/links", bytes.NewReader(body2))
+	createReq2.Header.Set("Content-Type", "application/json")
+	rec2 := httptest.NewRecorder()
+	r.ServeHTTP(rec2, createReq2)
+	if rec2.Code != http.StatusCreated {
+		t.Fatalf("create string status = %d", rec2.Code)
+	}
+	var link2 models.Link
+	_ = json.NewDecoder(rec2.Body).Decode(&link2)
+	if len(link2.Tags) != 2 || link2.Tags[0] != "devops" || link2.Tags[1] != "infra" {
+		t.Fatalf("link2.Tags = %#v", link2.Tags)
+	}
+
+	// 3. Update link1 tags via JSON
+	patchBody, _ := json.Marshal(map[string]any{
+		"tags": []string{"updated-tag"},
+	})
+	patchReq := httptest.NewRequest(http.MethodPatch, "/links/"+link1.ID, bytes.NewReader(patchBody))
+	patchReq.Header.Set("Content-Type", "application/json")
+	patchRec := httptest.NewRecorder()
+	r.ServeHTTP(patchRec, patchReq)
+	if patchRec.Code != http.StatusOK {
+		t.Fatalf("patch status = %d", patchRec.Code)
+	}
+	var updated1 models.Link
+	_ = json.NewDecoder(patchRec.Body).Decode(&updated1)
+	if len(updated1.Tags) != 1 || updated1.Tags[0] != "updated-tag" {
+		t.Fatalf("updated1.Tags = %#v", updated1.Tags)
+	}
+
+	// 4. Create with multipart form tags
+	var mpBody bytes.Buffer
+	w := multipart.NewWriter(&mpBody)
+	_ = w.WriteField("url", "https://example.com/tags-mp")
+	_ = w.WriteField("tag", "frontend")
+	_ = w.WriteField("tag", "react,ui")
+	_ = w.Close()
+	createMpReq := httptest.NewRequest(http.MethodPost, "/links", &mpBody)
+	createMpReq.Header.Set("Content-Type", w.FormDataContentType())
+	recMp := httptest.NewRecorder()
+	r.ServeHTTP(recMp, createMpReq)
+	if recMp.Code != http.StatusCreated {
+		t.Fatalf("create mp status = %d", recMp.Code)
+	}
+	var link3 models.Link
+	_ = json.NewDecoder(recMp.Body).Decode(&link3)
+	if len(link3.Tags) != 3 || link3.Tags[0] != "frontend" || link3.Tags[1] != "react" || link3.Tags[2] != "ui" {
+		t.Fatalf("link3.Tags = %#v", link3.Tags)
+	}
+}

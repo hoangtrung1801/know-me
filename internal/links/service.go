@@ -57,10 +57,14 @@ func NewServiceWithFetcherAndClassifier(root string, fetch FetchFunc, classify C
 }
 
 func (s *Service) Add(ctx context.Context, rawURL string, image io.Reader) (*models.Link, error) {
-	return s.AddWithNote(ctx, rawURL, "", image)
+	return s.AddWithTags(ctx, rawURL, "", nil, image)
 }
 
 func (s *Service) AddWithNote(ctx context.Context, rawURL, note string, image io.Reader) (*models.Link, error) {
+	return s.AddWithTags(ctx, rawURL, note, nil, image)
+}
+
+func (s *Service) AddWithTags(ctx context.Context, rawURL, note string, tags []string, image io.Reader) (*models.Link, error) {
 	target, err := validateLinkURL(rawURL)
 	if err != nil {
 		return nil, err
@@ -85,10 +89,14 @@ func (s *Service) AddWithNote(ctx context.Context, rawURL, note string, image io
 	}
 	link.Description = metadata.Description
 	link.Image = metadata.Image
-	if fetchErr == nil && s.classify != nil {
+
+	cleanedTags := cleanUserTags(tags)
+	if len(cleanedTags) > 0 {
+		link.Tags = cleanedTags
+	} else if fetchErr == nil && s.classify != nil {
 		if existing, err := s.store.Tags(); err == nil {
-			if tags, err := s.classify(ctx, link.URL, metadata, existing); err == nil {
-				link.Tags = normalizeTags(tags)
+			if classified, err := s.classify(ctx, link.URL, metadata, existing); err == nil {
+				link.Tags = normalizeTags(classified)
 			}
 		}
 	}
@@ -128,10 +136,14 @@ func (s *Service) Search(query, mode string) ([]RankedLink, bool, error) {
 }
 
 func (s *Service) Update(ctx context.Context, id string, title, description *string, image io.Reader) (*models.Link, error) {
-	return s.UpdateWithNote(ctx, id, title, description, nil, image)
+	return s.UpdateWithTags(ctx, id, title, description, nil, nil, image)
 }
 
 func (s *Service) UpdateWithNote(ctx context.Context, id string, title, description, note *string, image io.Reader) (*models.Link, error) {
+	return s.UpdateWithTags(ctx, id, title, description, note, nil, image)
+}
+
+func (s *Service) UpdateWithTags(ctx context.Context, id string, title, description, note *string, tags []string, image io.Reader) (*models.Link, error) {
 	_ = ctx
 	link, err := s.store.Get(id)
 	if err != nil {
@@ -145,6 +157,9 @@ func (s *Service) UpdateWithNote(ctx context.Context, id string, title, descript
 	}
 	if note != nil {
 		link.Note = strings.TrimSpace(*note)
+	}
+	if tags != nil {
+		link.Tags = cleanUserTags(tags)
 	}
 	oldImage := link.Image
 	newImage := ""
@@ -212,4 +227,23 @@ func (s *Service) importImage(linkID string, reader io.Reader) (string, error) {
 		return "", fmt.Errorf("%w: unsupported MIME type %s", models.ErrInvalidLinkImage, mimeType)
 	}
 	return s.store.SaveImage(linkID, data, extension)
+}
+
+func cleanUserTags(tags []string) []string {
+	seen := make(map[string]struct{}, len(tags))
+	result := make([]string, 0, len(tags))
+	for _, raw := range tags {
+		for _, tag := range strings.Split(raw, ",") {
+			tag = strings.ToLower(strings.TrimSpace(tag))
+			if tag == "" {
+				continue
+			}
+			if _, exists := seen[tag]; exists {
+				continue
+			}
+			seen[tag] = struct{}{}
+			result = append(result, tag)
+		}
+	}
+	return result
 }

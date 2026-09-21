@@ -137,3 +137,43 @@ func TestServiceAddSavesWithoutTagsWhenClassifierFails(t *testing.T) {
 		t.Fatalf("link=%#v err=%v", link, err)
 	}
 }
+
+func TestServiceAddWithTagsOverridesClassifier(t *testing.T) {
+	classifierCalled := false
+	service := NewServiceWithFetcherAndClassifier(t.TempDir(),
+		func(context.Context, string) (Metadata, error) {
+			return Metadata{Title: "Go release", Description: "Language news"}, nil
+		},
+		func(context.Context, string, Metadata, []string) ([]string, error) {
+			classifierCalled = true
+			return []string{"ai-tag"}, nil
+		})
+	link, err := service.AddWithTags(context.Background(), "https://example.com", "Note", []string{"Golang", "docs,reference", "golang", "extra-1", "extra-2"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if classifierCalled {
+		t.Fatal("classifier should not be called when user explicitly provides tags")
+	}
+	expectedTags := []string{"golang", "docs", "reference", "extra-1", "extra-2"}
+	if !reflect.DeepEqual(link.Tags, expectedTags) {
+		t.Fatalf("tags = %#v, want %#v", link.Tags, expectedTags)
+	}
+}
+
+func TestServiceUpdateWithTags(t *testing.T) {
+	service := NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (Metadata, error) {
+		return Metadata{Title: "Fetched"}, nil
+	})
+	link, err := service.AddWithTags(context.Background(), "https://example.com", "", []string{"initial"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	updated, err := service.UpdateWithTags(context.Background(), link.ID, nil, nil, nil, []string{"updated,fresh"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(updated.Tags, []string{"updated", "fresh"}) {
+		t.Fatalf("updated tags = %#v", updated.Tags)
+	}
+}
