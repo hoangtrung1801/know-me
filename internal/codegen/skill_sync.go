@@ -209,10 +209,10 @@ func listSkillDirs() ([]string, error) {
 		return nil, err
 	}
 
-	// Only knowme-workflow (kn-workflow) and known-me are enabled for installation.
+	// Only knowme-workflow (kn-workflow) and know-me are enabled for installation.
 	allowed := map[string]bool{
 		"kn-workflow": true,
-		"known-me":    true,
+		"know-me":     true,
 	}
 
 	var skillDirs []string

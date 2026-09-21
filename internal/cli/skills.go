@@ -122,8 +122,8 @@ func installSkillsToDir(destDir string, filter string) ([]string, error) {
 	matchDir := filter
 	if matchDir == "knowme-workflow" {
 		matchDir = "kn-workflow"
-	} else if matchDir == "know-me" {
-		matchDir = "known-me"
+	} else if matchDir == "known-me" {
+		matchDir = "know-me"
 	}
 
 	// Ensure destination directory exists
@@ -154,12 +154,12 @@ func installSkillsToDir(destDir string, filter string) ([]string, error) {
 			continue
 		}
 		name := e.Name()
-		if name == matchDir || (filter == "knowme-workflow" && name == "kn-workflow") || (filter == "know-me" && name == "known-me") {
+		if name == matchDir || (filter == "knowme-workflow" && name == "kn-workflow") || (filter == "known-me" && name == "know-me") {
 			foundSource = filepath.Join(tmpDir, name)
 			destSkillName = name
 			if filter == "knowme-workflow" {
 				destSkillName = "knowme-workflow"
-			} else if filter == "know-me" {
+			} else if filter == "known-me" {
 				destSkillName = "know-me"
 			}
 			break
@@ -178,21 +178,36 @@ func installSkillsToDir(destDir string, filter string) ([]string, error) {
 		return nil, err
 	}
 
-	skillFiles, err := os.ReadDir(foundSource)
-	if err != nil {
+	if err := copyLocalDir(foundSource, destPath); err != nil {
 		return nil, err
 	}
-	for _, f := range skillFiles {
-		srcFile := filepath.Join(foundSource, f.Name())
-		dstFile := filepath.Join(destPath, f.Name())
-		content, err := os.ReadFile(srcFile)
-		if err != nil {
-			return nil, err
+	return []string{destSkillName}, nil
+}
+
+func copyLocalDir(src, dst string) error {
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dst, 0o755); err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+		if entry.IsDir() {
+			if err := copyLocalDir(srcPath, dstPath); err != nil {
+				return err
+			}
+			continue
 		}
-		if err := os.WriteFile(dstFile, content, 0o644); err != nil {
-			return nil, err
+		content, err := os.ReadFile(srcPath)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(dstPath, content, 0o644); err != nil {
+			return err
 		}
 	}
-
-	return []string{destSkillName}, nil
+	return nil
 }

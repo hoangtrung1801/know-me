@@ -1,5 +1,5 @@
 ---
-name: known-me
+name: know-me
 description: Use when working with Know-Me to capture tasks, links, or memos; manage project docs; retrieve context; or discover CLI setup, validation, and runtime workflows.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: known-me
+name: know-me
 description: Use when working in a Know-Me-managed project and needing to discover, inspect, or operate any Know-Me CLI command, task, document, template, memory, decision, search, validation, setup, or runtime workflow.
 ---
 

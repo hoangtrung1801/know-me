@@ -15,8 +15,8 @@ func TestSkillsInstallAllToCustomDir(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("skills install failed: %v", err)
 	}
-	// Verify targetDir contains ONLY allowed skills: kn-workflow and known-me
-	for _, expected := range []string{"kn-workflow", "known-me"} {
+	// Verify targetDir contains ONLY allowed skills: kn-workflow and know-me
+	for _, expected := range []string{"kn-workflow", "know-me"} {
 		skillFile := filepath.Join(targetDir, expected, "SKILL.md")
 		if _, err := os.Stat(skillFile); err != nil {
 			t.Errorf("expected %s to exist: %v", skillFile, err)
@@ -56,6 +56,46 @@ func TestSkillsInstallSpecificSkill(t *testing.T) {
 	otherSkill := filepath.Join(targetDir, "kn-plan")
 	if _, err := os.Stat(otherSkill); !os.IsNotExist(err) {
 		t.Errorf("expected %s NOT to be installed when specific skill requested", otherSkill)
+	}
+}
+
+func TestSkillsInstallKnowMeSkill(t *testing.T) {
+	temp := t.TempDir()
+	targetDir := filepath.Join(temp, "custom-skills")
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"skills", "install", "know-me", "--target", targetDir})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("skills install know-me failed: %v", err)
+	}
+
+	skillFile := filepath.Join(targetDir, "know-me", "SKILL.md")
+	data, err := os.ReadFile(skillFile)
+	if err != nil {
+		t.Fatalf("expected %s to exist: %v", skillFile, err)
+	}
+	if len(data) == 0 {
+		t.Fatal("expected non-empty SKILL.md")
+	}
+}
+
+func TestSkillsInstallKnownMeAlias(t *testing.T) {
+	temp := t.TempDir()
+	targetDir := filepath.Join(temp, "custom-skills")
+
+	cmd := rootCmd
+	cmd.SetArgs([]string{"skills", "install", "known-me", "--target", targetDir})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("skills install known-me alias failed: %v", err)
+	}
+
+	skillFile := filepath.Join(targetDir, "know-me", "SKILL.md")
+	data, err := os.ReadFile(skillFile)
+	if err != nil {
+		t.Fatalf("expected %s to exist: %v", skillFile, err)
+	}
+	if len(data) == 0 {
+		t.Fatal("expected non-empty SKILL.md")
 	}
 }
 
