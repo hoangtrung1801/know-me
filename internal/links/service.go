@@ -112,6 +112,21 @@ func (s *Service) List() ([]*models.Link, error) {
 	return s.store.List()
 }
 
+func (s *Service) Search(query, mode string) ([]RankedLink, bool, error) {
+	stored, err := s.store.List()
+	if err != nil {
+		return nil, false, err
+	}
+	items := make([]models.Link, 0, len(stored))
+	for _, l := range stored {
+		if l != nil {
+			items = append(items, *l)
+		}
+	}
+	results, fallback := SearchLinks(items, query, mode)
+	return results, fallback, nil
+}
+
 func (s *Service) Update(ctx context.Context, id string, title, description *string, image io.Reader) (*models.Link, error) {
 	return s.UpdateWithNote(ctx, id, title, description, nil, image)
 }

@@ -8,23 +8,70 @@ import { Input } from "@/ui/components/ui/input";
 import { Textarea } from "@/ui/components/ui/textarea";
 import { usePageLifecycle, usePersistentPageState } from "@/ui/contexts/PageWorkspaceContext";
 
+const WEIGHT_TITLE = 5.0;
+const WEIGHT_TAGS = 4.0;
+const WEIGHT_URL = 3.0;
+const WEIGHT_DESCRIPTION = 2.0;
+const WEIGHT_NOTE = 1.5;
+const BONUS_EXACT_PHRASE = 3.0;
+
 export function filterLinks(
 	links: SavedLink[],
 	searchQuery: string,
 	selectedTags: string[] = [],
 ): SavedLink[] {
-	const normalizedQuery = searchQuery.trim().toLowerCase();
-	return links.filter((link) => {
-		const matchesTags =
-			selectedTags.length === 0 ||
-			(link.tags ?? []).some((tag) => selectedTags.includes(tag));
-		if (!matchesTags) return false;
-
-		if (!normalizedQuery) return true;
-		const matchesTitle = Boolean(link.title && link.title.toLowerCase().includes(normalizedQuery));
-		const matchesUrl = Boolean(link.url && link.url.toLowerCase().includes(normalizedQuery));
-		return matchesTitle || matchesUrl;
+	const tagFiltered = links.filter((link) => {
+		if (selectedTags.length === 0) return true;
+		return (link.tags ?? []).some((tag) => selectedTags.includes(tag));
 	});
+
+	const normalizedQuery = searchQuery.trim().toLowerCase();
+	if (!normalizedQuery) return tagFiltered;
+
+	const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+	const scored: { link: SavedLink; score: number }[] = [];
+
+	for (const link of tagFiltered) {
+		const titleLower = (link.title ?? "").toLowerCase();
+		const urlLower = (link.url ?? "").toLowerCase();
+		const descLower = (link.description ?? "").toLowerCase();
+		const noteLower = (link.note ?? "").toLowerCase();
+		const tagLowers = (link.tags ?? []).map((t) => t.toLowerCase());
+
+		let score = 0;
+
+		const exactInTitle = titleLower.includes(normalizedQuery);
+		const exactInUrl = urlLower.includes(normalizedQuery);
+		const exactInDesc = descLower.includes(normalizedQuery);
+		const exactInNote = noteLower.includes(normalizedQuery);
+		const exactInTags = tagLowers.some((t) => t.includes(normalizedQuery));
+
+		if (exactInTitle || exactInUrl || exactInDesc || exactInNote || exactInTags) {
+			score += BONUS_EXACT_PHRASE;
+		}
+
+		for (const token of tokens) {
+			if (titleLower.includes(token)) score += WEIGHT_TITLE;
+			if (tagLowers.some((t) => t.includes(token))) score += WEIGHT_TAGS;
+			if (urlLower.includes(token)) score += WEIGHT_URL;
+			if (descLower.includes(token)) score += WEIGHT_DESCRIPTION;
+			if (noteLower.includes(token)) score += WEIGHT_NOTE;
+		}
+
+		if (score > 0) {
+			scored.push({ link, score });
+		}
+	}
+
+	scored.sort((a, b) => {
+		if (a.score !== b.score) return b.score - a.score;
+		const timeA = new Date(a.link.updatedAt).getTime() || 0;
+		const timeB = new Date(b.link.updatedAt).getTime() || 0;
+		if (timeA !== timeB) return timeB - timeA;
+		return b.link.id.localeCompare(a.link.id);
+	});
+
+	return scored.map((item) => item.link);
 }
 
 export default function LinksPage() {
@@ -50,13 +97,88 @@ export default function LinksPage() {
 		decode: (value) => Array.isArray(value) && value.every((tag) => typeof tag === "string") ? value : undefined,
 	});
 	const [searchQuery, setSearchQuery] = usePersistentPageState("links", "searchQuery", "");
+	const [searchMode, setSearchMode] = usePersistentPageState<"keyword" | "semantic">("links", "searchMode", "semantic", {
+		encode: (value) => value,
+		decode: (value) => (value === "keyword" || value === "semantic" ? value : "semantic"),
+	});
+	const [serverSearchResult, setServerSearchResult] = useState<{
+		query: string;
+		mode: string;
+		links: SavedLink[];
+		fallback: boolean;
+	} | null>(null);
+	const [isSearching, setIsSearching] = useState(false);
+	const [searchError, setSearchError] = useState<string | null>(null);
 	const isActiveRef = useRef(isActive);
 	isActiveRef.current = isActive;
 	const availableTags = useMemo(() => [...new Set(links.flatMap((link) => link.tags ?? []))].sort(), [links]);
-	const visibleLinks = useMemo(
-		() => filterLinks(links, searchQuery, selectedTags),
-		[links, searchQuery, selectedTags],
+
+	useEffect(() => {
+		const trimmed = searchQuery.trim();
+		if (!trimmed) {
+			setServerSearchResult(null);
+			setIsSearching(false);
+			setSearchError(null);
+			return;
+		}
+
+		setIsSearching(true);
+		setSearchError(null);
+		const controller = new AbortController();
+
+		const timer = setTimeout(async () => {
+			try {
+				const res = await linkApi.search(trimmed, searchMode, controller.signal);
+				if (!controller.signal.aborted) {
+					setServerSearchResult({
+						query: trimmed,
+						mode: searchMode,
+						links: res.links,
+						fallback: res.fallback,
+					});
+					setIsSearching(false);
+				}
+			} catch (err: unknown) {
+				if (!controller.signal.aborted) {
+					setServerSearchResult(null);
+					setSearchError("Link search failed — showing keyword results.");
+					setIsSearching(false);
+				}
+			}
+		}, 250);
+
+		return () => {
+			clearTimeout(timer);
+			controller.abort();
+		};
+	}, [searchQuery, searchMode]);
+
+	const isFallback = Boolean(
+		searchMode === "semantic" &&
+		searchQuery.trim() &&
+		(searchError !== null || serverSearchResult?.fallback)
 	);
+
+	const visibleLinks = useMemo(() => {
+		const trimmed = searchQuery.trim();
+		if (!trimmed) {
+			return filterLinks(links, "", selectedTags);
+		}
+		if (
+			serverSearchResult &&
+			serverSearchResult.query === trimmed &&
+			serverSearchResult.mode === searchMode &&
+			!serverSearchResult.fallback
+		) {
+			if (selectedTags.length === 0) {
+				return serverSearchResult.links;
+			}
+			return serverSearchResult.links.filter((link) =>
+				(link.tags ?? []).some((tag) => selectedTags.includes(tag))
+			);
+		}
+		return filterLinks(links, trimmed, selectedTags);
+	}, [links, searchQuery, selectedTags, searchMode, serverSearchResult]);
 
 	const load = useCallback(async () => {
 		if (!isActiveRef.current) return;
@@ -117,32 +239,61 @@ export default function LinksPage() {
 	return <PageShell>
 		<PageHeader size="full" title="Saved links" description="Your global link library, available across every project." context="Library" status={visibleLinks.length !== links.length ? `${visibleLinks.length} of ${links.length} ${links.length === 1 ? "link" : "links"}` : `${links.length} ${links.length === 1 ? "link" : "links"}`} actions={<><Button onClick={() => { setURL(""); setAddNote(""); setAddImage(undefined); setAdding(true); }}><Plus className="mr-2 h-4 w-4" />Add Link</Button><Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button></>} />
 		<div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-3 px-6 pt-4">
-			<div className="relative w-full max-w-sm">
-				<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-				<Input
-					aria-label="Search links"
-					value={searchQuery}
-					onChange={(event) => setSearchQuery(event.target.value)}
-					onKeyDown={(event) => {
-						if (event.key === "Escape" && searchQuery) {
-							event.preventDefault();
-							setSearchQuery("");
-						}
-					}}
-					placeholder="Search links by title or URL..."
-					className="bg-background pl-9 pr-9"
-				/>
-				{searchQuery && (
+			<div className="flex flex-wrap items-center gap-3">
+				<div className="relative w-full max-w-sm">
+					{isSearching ? (
+						<Loader2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+					) : (
+						<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+					)}
+					<Input
+						aria-label="Search links"
+						value={searchQuery}
+						onChange={(event) => setSearchQuery(event.target.value)}
+						onKeyDown={(event) => {
+							if (event.key === "Escape" && searchQuery) {
+								event.preventDefault();
+								setSearchQuery("");
+							}
+						}}
+						placeholder="Search links by title or URL..."
+						className="bg-background pl-9 pr-9"
+					/>
+					{searchQuery && (
+						<button
+							type="button"
+							onClick={() => setSearchQuery("")}
+							className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+							aria-label="Clear search"
+						>
+							<X className="h-4 w-4" />
+						</button>
+					)}
+				</div>
+				<div className="flex items-center rounded-md border border-input bg-muted/40 p-0.5 text-xs">
 					<button
 						type="button"
-						onClick={() => setSearchQuery("")}
-						className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
-						aria-label="Clear search"
+						className={`rounded px-2.5 py-1 font-medium transition-colors ${searchMode === "keyword" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+						onClick={() => setSearchMode("keyword")}
+						aria-pressed={searchMode === "keyword"}
 					>
-						<X className="h-4 w-4" />
+						Keyword
 					</button>
-				)}
+					<button
+						type="button"
+						className={`rounded px-2.5 py-1 font-medium transition-colors ${searchMode === "semantic" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+						onClick={() => setSearchMode("semantic")}
+						aria-pressed={searchMode === "semantic"}
+					>
+						Semantic
+					</button>
+				</div>
 			</div>
+			{searchMode === "semantic" && searchQuery.trim() && isFallback && !isSearching && (
+				<p className="text-xs text-muted-foreground">
+					Semantic search unavailable — using keyword results
+				</p>
+			)}
 			{availableTags.length > 0 && (
 				<div
 					className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1.5 pt-0.5"
@@ -181,7 +332,7 @@ export default function LinksPage() {
 			)}
 		</div>
 		<PageContent size="full">
-			{loading ? <PageLoading label="Loading saved links" /> : error && links.length === 0 ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : links.length === 0 ? <div className="rounded-lg border border-dashed px-6 py-12 text-center"><Link2 className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 text-sm font-medium">No saved links yet</p><p className="mt-1 text-sm text-muted-foreground">Use the CLI, MCP, or API to save a URL.</p></div> : visibleLinks.length === 0 ? <div className="rounded-lg border border-dashed px-6 py-12 text-center"><p className="text-sm text-muted-foreground">{searchQuery.trim() && selectedTags.length > 0 ? "No links match the search query and selected tags." : searchQuery.trim() ? "No links match your search." : "No links match the selected tags."}</p>{(searchQuery.trim() || selectedTags.length > 0) && <div className="mt-3 flex justify-center gap-2">{searchQuery.trim() && <Button size="sm" variant="outline" onClick={() => setSearchQuery("")}>Clear search</Button>}{selectedTags.length > 0 && <Button size="sm" variant="outline" onClick={() => setSelectedTags([])}>Clear tags</Button>}</div>}</div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+			{loading ? <PageLoading label="Loading saved links" /> : error && links.length === 0 ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : links.length === 0 ? <div className="rounded-lg border border-dashed px-6 py-12 text-center"><Link2 className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 text-sm font-medium">No saved links yet</p><p className="mt-1 text-sm text-muted-foreground">Use the CLI, MCP, or API to save a URL.</p></div> : visibleLinks.length === 0 ? <div className="rounded-lg border border-dashed px-6 py-12 text-center"><p className="text-sm text-muted-foreground">{searchQuery.trim() && selectedTags.length > 0 ? "No links match the search query and selected tags." : searchQuery.trim() ? (isFallback ? "No links match your search. Keyword fallback returned no matches." : "No links match your search.") : "No links match the selected tags."}</p>{(searchQuery.trim() || selectedTags.length > 0) && <div className="mt-3 flex justify-center gap-2">{searchQuery.trim() && <Button size="sm" variant="outline" onClick={() => setSearchQuery("")}>Clear search</Button>}{selectedTags.length > 0 && <Button size="sm" variant="outline" onClick={() => setSelectedTags([])}>Clear tags</Button>}</div>}</div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 				{visibleLinks.map((link) => { const src = imageSrc(link); return <article key={link.id} tabIndex={0} aria-label={`Open details for ${link.title || link.url}`} onClick={(event) => handleCardClick(event, link)} onKeyDown={(event) => handleCardKeyDown(event, link)} className="group overflow-hidden rounded-lg border border-border bg-transparent shadow-none transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
 					{src ? <img src={src} alt="" className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-muted/40"><Link2 className="h-8 w-8 text-muted-foreground/50" /></div>}
 					<div className="p-4"><div className="flex items-start justify-between gap-3"><h2 className="line-clamp-2 font-semibold leading-tight">{link.title || link.url}</h2><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Edit ${link.title || link.url}`} onClick={() => openEditor(link)}><Pencil className="h-4 w-4" /></Button></div>
@@ -191,7 +342,7 @@ export default function LinksPage() {
 						<a href={link.url} target="_blank" rel="noreferrer" className="mt-4 flex items-center gap-1 truncate text-xs text-primary hover:underline" title={link.url}>{link.url}<ExternalLink className="h-3 w-3 shrink-0" /></a>
 					</div></article>; })}
 			</div>}
-			{error && links.length > 0 && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
+			{(error || searchError) && links.length > 0 && <p role="alert" className="mt-4 text-sm text-destructive">{error || searchError}</p>}
 		</PageContent>
 		<Dialog open={Boolean(selectedLink)} onOpenChange={(open) => { if (!open) { setSelectedLink(null); setSelectedLinkId(null); } }}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{selectedLink?.title || selectedLink?.url}</DialogTitle><DialogDescription>{selectedLink?.description || "Saved link details"}</DialogDescription></DialogHeader>{selectedLink && <div className="space-y-5">{imageSrc(selectedLink) ? <img src={imageSrc(selectedLink)} alt="" className="max-h-72 w-full rounded-md object-cover" /> : <div className="flex h-48 items-center justify-center rounded-md bg-muted/40"><Link2 className="h-10 w-10 text-muted-foreground/50" /></div>}{selectedLink.note && <div><h3 className="text-sm font-medium">Note</h3><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-foreground/80">{selectedLink.note}</p></div>}{selectedLink.tags?.length ? <div><h3 className="text-sm font-medium">Tags</h3><div className="mt-2 flex flex-wrap gap-1.5">{selectedLink.tags.map((tag) => <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-xs">{tag}</span>)}</div></div> : null}{selectedLink.url && <a href={selectedLink.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 break-all text-sm text-primary hover:underline" title={selectedLink.url}>{selectedLink.url}<ExternalLink className="h-3.5 w-3.5 shrink-0" /></a>}</div>}<DialogFooter><Button type="button" variant="outline" onClick={() => { if (!selectedLink) return; const link = selectedLink; setSelectedLink(null); setSelectedLinkId(null); openEditor(link); }}>Edit link</Button>{selectedLink && <Button asChild><a href={selectedLink.url} target="_blank" rel="noreferrer">Open link<ExternalLink className="ml-2 h-4 w-4" /></a></Button>}</DialogFooter></DialogContent></Dialog>
 		<Dialog open={adding} onOpenChange={(open) => !busy && setAdding(open)}><DialogContent><DialogHeader><DialogTitle>Add Link</DialogTitle><DialogDescription>Save a URL now. Its title, description, and image are fetched automatically.</DialogDescription></DialogHeader><form onSubmit={add} className="space-y-4"><Input aria-label="URL" type="url" required autoFocus value={url} onChange={(event) => setURL(event.target.value)} placeholder="https://example.com/article" /><Textarea aria-label="Note" value={addNote} onChange={(event) => setAddNote(event.target.value)} rows={3} placeholder="Why is this link useful?" /><Input aria-label="Image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={(event) => setAddImage(event.target.files?.[0])} /><DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={() => setAdding(false)}>Cancel</Button><Button type="submit" disabled={busy || !url.trim()}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save link</Button></DialogFooter></form></DialogContent></Dialog>

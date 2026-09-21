@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/hoangtrung1801/know-me/internal/links"
 	"github.com/hoangtrung1801/know-me/internal/models"
@@ -73,6 +75,56 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 				return remoteErr
 			}
 
+			searchQuery, _ := cmd.Flags().GetString("search")
+			searchQuery = strings.TrimSpace(searchQuery)
+			mode, _ := cmd.Flags().GetString("mode")
+			if mode == "" {
+				mode = "keyword"
+			}
+
+			if searchQuery != "" {
+				var ranked []links.RankedLink
+				if isRemote {
+					searchPath := fmt.Sprintf("/api/links?q=%s&mode=%s", url.QueryEscape(searchQuery), url.QueryEscape(mode))
+					var raw json.RawMessage
+					if err := remote.GetJSON(searchPath, nil, &raw); err != nil {
+						return fmt.Errorf("list links: %w", err)
+					}
+					trimmed := bytes.TrimSpace(raw)
+					if len(trimmed) > 0 && trimmed[0] == '[' {
+						var bare []models.Link
+						if err := json.Unmarshal(trimmed, &bare); err != nil {
+							return fmt.Errorf("decode links: %w", err)
+						}
+						for _, l := range bare {
+							ranked = append(ranked, links.RankedLink{Link: l})
+						}
+					} else {
+						var env struct {
+							Links []links.RankedLink `json:"links"`
+						}
+						if err := json.Unmarshal(trimmed, &env); err != nil {
+							return fmt.Errorf("decode links: %w", err)
+						}
+						ranked = env.Links
+					}
+				} else {
+					var err error
+					ranked, _, err = getService().Search(searchQuery, mode)
+					if err != nil {
+						return fmt.Errorf("list links: %w", err)
+					}
+				}
+
+				if isJSON(cmd) {
+					return json.NewEncoder(cmd.OutOrStdout()).Encode(ranked)
+				}
+				for _, link := range ranked {
+					fmt.Fprintf(cmd.OutOrStdout(), "%s\t%s\t%s\n", link.ID, link.Title, link.URL)
+				}
+				return nil
+			}
+
 			var items []*models.Link
 			if isRemote {
 				if err := remote.GetJSON("/api/links", nil, &items); err != nil {
@@ -95,6 +147,8 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 			return nil
 		},
 	}
+	list.Flags().String("search", "", "Search links by title, url, description, note, or tag")
+	list.Flags().String("mode", "keyword", "Search mode (keyword, semantic, hybrid)")
 
 	update := &cobra.Command{
 		Use:   "update <id>",

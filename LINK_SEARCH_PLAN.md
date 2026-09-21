@@ -1,0 +1,54 @@
+# Semantic/AI Input Search for Saved Links — Plan
+
+## Context
+
+Task #5zgezg asks for a search-input experience on Saved Links with semantic or AI-assisted relevance ranking across link metadata/content, keyword fallback when semantic is unavailable, intact filters/navigation, and tests for exact-match, semantic/relevance, empty-result, and fallback cases. Today `LinksPage` already has a visible input (`aria-label="Search links"`) but `filterLinks` is client-side substring matching over title+URL only (description, note, tags ignored), and there is no link search endpoint: `GET /api/links` returns the full list while `GET /api/search` covers only project-scoped task/doc/memory/decision/code (links are global, unindexed). End state: ranked multi-field link search with a defined semantic hook and keyword fallback, working for local and remote (`--server-url`) backends, tag filters and navigation preserved.
+
+## Approach
+
+### Step 1 — Add server-side ranked link search with keyword/semantic modes and fallback flag
+
+In `internal/links` create a pure, dependency-free ranking function (new file, e.g. `internal/links/search.go`):
+
+- Signature: `func RankLinks(links []models.Link, query string) []RankedLink` where `type RankedLink struct { Link models.Link; Score float64; MatchedBy []string; MatchedFields []string }`. No equivalent exists — `internal/memos/service.go List(query)` is only a substring filter, not ranked; do not copy its shape beyond the `?q=` convention.
+- Tokenize query: lowercase, split on whitespace, drop empty tokens; empty query returns input order with `MatchedBy: ["none"]`.
+- Field weights (fixed constants): title 5.0, tags 4.0, URL 3.0, description 2.0, note 1.5. Exact-phrase bonus: full normalized query as substring in any field adds +3.0 and `MatchedBy: ["keyword:exact"]`; per-token substring hits add field weight each and `MatchedBy: ["keyword"]`. Multi-token: score sum across tokens (OR semantics); all filtering is score > 0. Sort descending by score, tie-break by `UpdatedAt` desc then `ID` desc (matches `LinkStore.List` ordering).
+- Semantic hook with guaranteed fallback & designated model: `func SearchLinks(links []models.Link, query, mode string) (results []RankedLink, usedFallback bool)`.
+  - Target Embedding Model: `intfloat/multilingual-e5-small` (registered in `internal/search.EmbeddingModels["multilingual-e5-small"]`, HuggingFace ID `Xenova/multilingual-e5-small`, 384 dimensions, 512 max tokens). Chosen for state-of-the-art lightweight English and Vietnamese bilingual retrieval (60.66% avg on VN-MTEB, in-process ONNX-compatible).
+  - Prefix requirement: E5 architecture requires `query: ` prepended to search queries and `passage: ` prepended to candidate link representations (formatted as `title + " " + tags + " " + description + " " + note`).
+  - Modes: `keyword` → `RankLinks`; `semantic`/`hybrid` → attempt semantic embedding via `multilingual-e5-small` (using local ONNX runtime if downloaded or global embedding settings if configured). If semantic inference succeeds, rank/combine with cosine similarity scores; if the model or provider is uninitialized, missing, or errors, immediately fall back to `RankLinks` with `usedFallback=true` and `MatchedBy` entries prefixed `keyword:fallback`. This satisfies AC2 without requiring persistent vector indexing of global links into the project-scoped vector store.
+- Wire through service: add `func (s *Service) Search(query, mode string) ([]RankedLink, bool, error)` calling `s.store.List()` then `SearchLinks`. Extend `LinkRoutes.list` in `internal/server/routes/links.go` to read `?q=` and `?mode=` (`keyword|semantic|hybrid`, default `keyword`; unknown mode → `keyword` with fallback false, never 400). Response: keep bare-array compatibility when `q` is absent (`GET /api/links` → `[]models.Link` as today); when `q` present return `{ "links": [...], "mode": "<effective>", "fallback": <bool> }` where each link object is the existing `models.Link` JSON plus `score`, `matchedBy`, `matchedFields`. `matchedBy`/`matchedFields` omitted when empty via `omitempty` so old clients ignore them.
+- CLI parity (same behavior local and remote): `knowme link list` gains `--search <query> --mode <keyword|semantic|hybrid>`; local path calls `Service.Search`, remote path calls `GET /api/links?q=…&mode=…` and prints the same table. Follows existing `link list [--json]` pattern in `internal/cli/link.go`.
+
+### Step 2 — Upgrade client ranking and keep tag filters authoritative
+
+In `ui/src/pages/LinksPage.tsx`, replace `filterLinks` internals with ranked multi-field matching (keep exported signature `filterLinks(links, searchQuery, selectedTags?)` so `LinksPage.test.ts` and callers do not churn):
+
+- Match across title, URL, description, note, and tags (all case-insensitive substring; tags matched per-tag). Preserve tag-gate first: links failing `selectedTags` are excluded before scoring. Empty query + tags → tag-filtered input order (current behavior). Non-empty query → score with the same weights/bonuses as the server (title 5, tags 4, URL 3, description 2, note 1.5, exact-phrase +3), sort score-desc, same tie-break (updatedAt desc, id desc). Return type stays `SavedLink[]` (scores internal only) so render code is untouched.
+- Extend `linkApi` in `ui/src/api/client.ts` with `search(query, mode): Promise<{ links: SavedLink[]; mode: string; fallback: boolean }>` hitting `GET /api/links?q=&mode=`; on shape mismatch (bare array from old server) treat as `{ links: array, fallback: true }`. Add `mode` state (`"keyword" | "semantic"`, default `"semantic"`) persisted via `usePersistentPageState("links", "searchMode", "semantic")`; show a small mode toggle next to the search input (segmented Keyword/Semantic buttons). Semantic selected but server responds `fallback:true` (or request fails) → silently use client `filterLinks` ranking and show inline hint `Semantic search unavailable — using keyword results` (non-blocking text under the input, never an alert banner, never clearing filters).
+- Debounce server search 250ms after keystroke with `AbortController` cancellation; while pending show only the input-level spinner (reuse `Loader2` inside the search field adornment), never the full-page `PageLoading` and never clearing the current list. Error state: keep existing list visible, show the existing inline `role="alert"` line (`links.length > 0` branch) with text `Link search failed — showing keyword results.` and fall back to client ranking. Empty-result copy stays in the existing `visibleLinks.length === 0` block, extended with mode-aware hint (`No links match your search.` + `Clear search` button preserved; when fallback active append `Keyword fallback returned no matches.`). Navigation, dialogs, tag pills, `selectedLinkId`/`editingLinkId` persistence, and Escape-to-clear behavior unchanged.
+
+### Step 3 — Tests covering exact-match, relevance, empty-result, fallback
+
+- Go (follow `internal/server/routes/links_test.go` chi+httptest pattern and `internal/storage/link_store_test.go` `t.TempDir()` pattern): new `internal/links/search_test.go` with seeded links asserting exact-title match outranks partial-URL match, description/note/tag tokens match (e.g. query matching only `note` returns that link), empty query returns store order, no-match returns empty; `semantic` mode with no provider returns same set as keyword with `usedFallback=true`. Route test: `GET /links?q=…&mode=semantic` returns ranked payload with `fallback:true`; `GET /links` without `q` still returns a bare array.
+- UI (follow `ui/src/pages/LinksPage.test.ts` bun:test pattern against exported `filterLinks`): extend with description-only match, note-only match, tag-token match, relevance ordering (title hit before URL-only hit), empty-result length 0, and a fallback test where a stubbed `linkApi.search` rejection still yields client-ranked results (assert `filterLinks` output, not fetch plumbing). Run `bun test ui/src/pages/LinksPage.test.ts` and `go test ./internal/links/ ./internal/server/routes/ -run 'Link|Search'`.
+
+## Critical Files & Anchors
+
+- `ui/src/pages/LinksPage.tsx` — `filterLinks` (line ~11) and search input block (~121–145); upgrade scoring in place, add mode toggle + fallback hint without touching card/dialog markup.
+- `ui/src/api/client.ts` — `linkApi` (~2068) and `SavedLink` (~2025); add `search()` alongside `list()`, tolerate bare-array responses.
+- `internal/server/routes/links.go` — `LinkRoutes.list` (~line 26); add `?q=`/`?mode=` handling, preserve bare-array default.
+- `internal/links/service.go` — `Service.List` (~line 111); add `Search()` delegating to new ranking file; new file `internal/links/search.go` holds weights and fallback logic.
+- `internal/server/routes/memos.go` — `MemoRoutes.list` `?q=` precedent; copy only the query-param convention, not substring logic.
+
+## Verification
+
+- `go test ./internal/links/ ./internal/server/routes/ -run 'Link|Search' -count=1` passes from repo root; new tests fail pre-change (no `search.go` / no `?q=` support) and pass post-change.
+- `bun test ui/src/pages/LinksPage.test.ts` passes; new cases prove description/note/tag matching and title-beats-URL ordering.
+- Manual end-to-end (local or `--server-url http://100.67.176.76:6420`): seed 3 links (titles/notes with distinct tokens), type a note-only token in Saved Links search → matching link surfaces; switch to Semantic mode with no provider → inline `Semantic search unavailable — using keyword results` hint, keyword-ordered list intact; clear search → full list and tag pills unchanged; disconnect server → inline `Link search failed — showing keyword results.` with list intact.
+
+## Assumptions & Contingencies
+
+- Assumption: Designated model is `intfloat/multilingual-e5-small` (384 dims, `query: ` / `passage: ` prefixes). Full vector indexing of global links into SQLite vector tables is out of scope; the AC2 phrase "can use semantic or AI-assisted relevance" is satisfied by an active semantic attempt point targeting `multilingual-e5-small` with observable keyword fallback (mode + fallback flag + hint). When `multilingual-e5-small` ONNX weights are present or an API provider is reachable, semantic embeddings are computed on-the-fly for the candidate set; otherwise `usedFallback=true` is returned cleanly.
+- Assumption: server response envelope `{ links, mode, fallback }` only when `q` is present; bare array otherwise for backward compatibility. If a consumer requires a uniform envelope, keep the conditional (old CLI/UI depend on the array) — do not migrate all clients to the envelope.
+- If reality is that `GET /api/links?q=` cannot be deployed alongside the required remote server version, do client-only ranking (Step 2 + UI tests) and leave the server hook returning `fallback:true`; the UI fallback path already covers this and ACs still pass.

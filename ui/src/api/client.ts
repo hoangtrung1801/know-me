@@ -2032,6 +2032,9 @@ export interface SavedLink {
 	tags?: string[];
 	createdAt: string;
 	updatedAt: string;
+	score?: number;
+	matchedBy?: string[];
+	matchedFields?: string[];
 }
 
 export interface LinkClassifierSettings {
@@ -2095,6 +2098,20 @@ export const linkApi = {
 			throw new Error(body.error || "Failed to update link");
 		}
 		return res.json();
+	},
+	async search(query: string, mode: "keyword" | "semantic" = "semantic", signal?: AbortSignal): Promise<{ links: SavedLink[]; mode: string; fallback: boolean }> {
+		const params = new URLSearchParams({ q: query, mode });
+		const res = await apiFetch(`${API_BASE}/api/links?${params.toString()}`, { signal });
+		if (!res.ok) throw new Error("Failed to search links");
+		const data = await res.json();
+		if (Array.isArray(data)) {
+			return { links: data, mode, fallback: true };
+		}
+		return {
+			links: Array.isArray(data?.links) ? data.links : [],
+			mode: typeof data?.mode === "string" ? data.mode : mode,
+			fallback: Boolean(data?.fallback),
+		};
 	},
 };
 

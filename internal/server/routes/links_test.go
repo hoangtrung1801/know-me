@@ -68,4 +68,93 @@ func TestLinkRoutesCreateUpdateAndImage(t *testing.T) {
 	}
 }
 
+func TestLinkRoutesSearch(t *testing.T) {
+	service := links.NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (links.Metadata, error) {
+		return links.Metadata{Title: "Article Title", Description: "Article Description"}, nil
+	})
+	r := chi.NewRouter()
+	(&LinkRoutes{service: service}).Register(r)
+
+	// Seed a link
+	_, err := service.AddWithNote(context.Background(), "https://example.com/article", "Interesting note", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. GET /links without ?q returns a bare array
+	reqBare := httptest.NewRequest(http.MethodGet, "/links", nil)
+	recBare := httptest.NewRecorder()
+	r.ServeHTTP(recBare, reqBare)
+	if recBare.Code != http.StatusOK {
+		t.Fatalf("bare list status = %d", recBare.Code)
+	}
+	var bareList []models.Link
+	if err := json.NewDecoder(recBare.Body).Decode(&bareList); err != nil {
+		t.Fatalf("expected bare array decode: %v", err)
+	}
+	if len(bareList) != 1 {
+		t.Fatalf("expected 1 link in bare list, got %d", len(bareList))
+	}
+
+	// 2. GET /links?q=article&mode=semantic returns ranked envelope with fallback: true
+	reqSem := httptest.NewRequest(http.MethodGet, "/links?q=article&mode=semantic", nil)
+	recSem := httptest.NewRecorder()
+	r.ServeHTTP(recSem, reqSem)
+	if recSem.Code != http.StatusOK {
+		t.Fatalf("semantic search status = %d", recSem.Code)
+	}
+	var semResp struct {
+		Links    []links.RankedLink `json:"links"`
+		Mode     string             `json:"mode"`
+		Fallback bool               `json:"fallback"`
+	}
+	if err := json.NewDecoder(recSem.Body).Decode(&semResp); err != nil {
+		t.Fatalf("decode semantic envelope: %v", err)
+	}
+	if semResp.Mode != "semantic" {
+		t.Fatalf("expected mode=semantic, got mode=%q", semResp.Mode)
+	}
+	if len(semResp.Links) != 1 || semResp.Links[0].Score <= 0 {
+		t.Fatalf("expected 1 scored link, got %+v", semResp.Links)
+	}
+
+	// 3. GET /links?q=article&mode=keyword returns ranked envelope with fallback: false
+	reqKw := httptest.NewRequest(http.MethodGet, "/links?q=article&mode=keyword", nil)
+	recKw := httptest.NewRecorder()
+	r.ServeHTTP(recKw, reqKw)
+	if recKw.Code != http.StatusOK {
+		t.Fatalf("keyword search status = %d", recKw.Code)
+	}
+	var kwResp struct {
+		Links    []links.RankedLink `json:"links"`
+		Mode     string             `json:"mode"`
+		Fallback bool               `json:"fallback"`
+	}
+	if err := json.NewDecoder(recKw.Body).Decode(&kwResp); err != nil {
+		t.Fatalf("decode keyword envelope: %v", err)
+	}
+	if kwResp.Mode != "keyword" || kwResp.Fallback {
+		t.Fatalf("expected mode=keyword, fallback=false, got mode=%q fallback=%v", kwResp.Mode, kwResp.Fallback)
+	}
+
+	// 4. Unknown mode defaults to keyword and fallback false, never 400
+	reqUnknown := httptest.NewRequest(http.MethodGet, "/links?q=article&mode=invalid_mode", nil)
+	recUnknown := httptest.NewRecorder()
+	r.ServeHTTP(recUnknown, reqUnknown)
+	if recUnknown.Code != http.StatusOK {
+		t.Fatalf("unknown mode status = %d, expected 200", recUnknown.Code)
+	}
+	var unkResp struct {
+		Links    []links.RankedLink `json:"links"`
+		Mode     string             `json:"mode"`
+		Fallback bool               `json:"fallback"`
+	}
+	if err := json.NewDecoder(recUnknown.Body).Decode(&unkResp); err != nil {
+		t.Fatalf("decode unknown mode envelope: %v", err)
+	}
+	if unkResp.Mode != "keyword" || unkResp.Fallback {
+		t.Fatalf("expected fallback to keyword mode and false fallback, got mode=%q fallback=%v", unkResp.Mode, unkResp.Fallback)
+	}
+}
+
 var tinyRoutePNG = []byte{0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a}

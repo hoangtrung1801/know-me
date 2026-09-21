@@ -23,13 +23,38 @@ func (lr *LinkRoutes) Register(r chi.Router) {
 	r.Get("/links/{id}/image", lr.image)
 }
 
-func (lr *LinkRoutes) list(w http.ResponseWriter, _ *http.Request) {
-	items, err := lr.service.List()
+func (lr *LinkRoutes) list(w http.ResponseWriter, r *http.Request) {
+	if !r.URL.Query().Has("q") {
+		items, err := lr.service.List()
+		if err != nil {
+			respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		respondJSON(w, http.StatusOK, items)
+		return
+	}
+
+	q := r.URL.Query().Get("q")
+	modeParam := r.URL.Query().Get("mode")
+	effectiveMode := "keyword"
+	if modeParam == "semantic" || modeParam == "hybrid" {
+		effectiveMode = modeParam
+	}
+
+	results, fallback, err := lr.service.Search(q, effectiveMode)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusOK, items)
+	if results == nil {
+		results = []links.RankedLink{}
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"links":    results,
+		"mode":     effectiveMode,
+		"fallback": fallback,
+	})
 }
 
 func (lr *LinkRoutes) create(w http.ResponseWriter, r *http.Request) {

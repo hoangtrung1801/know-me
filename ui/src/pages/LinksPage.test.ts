@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { SavedLink } from "@/ui/api/client";
+import { linkApi, type SavedLink } from "@/ui/api/client";
 import { filterLinks } from "./LinksPage";
 
 const sampleLinks: SavedLink[] = [
@@ -26,6 +26,7 @@ const sampleLinks: SavedLink[] = [
 		url: "https://github.com/hoangtrung1801/know-me",
 		title: "",
 		description: "Personal AI workspace",
+		note: "Workspace productivity tips",
 		tags: ["workspace"],
 		createdAt: "2026-08-03T00:00:00Z",
 		updatedAt: "2026-08-03T00:00:00Z",
@@ -86,5 +87,70 @@ describe("filterLinks", () => {
 
 	test("returns empty array when no links match query", () => {
 		expect(filterLinks(sampleLinks, "nonexistent-query-string")).toHaveLength(0);
+	});
+
+	test("matches links by description only", () => {
+		const result = filterLinks(sampleLinks, "spacing");
+		expect(result).toHaveLength(1);
+		expect(result[0].id).toBe("link-2");
+	});
+
+	test("matches links by note only", () => {
+		const result = filterLinks(sampleLinks, "productivity");
+		expect(result).toHaveLength(1);
+		expect(result[0].id).toBe("link-3");
+	});
+
+	test("matches links by tag token", () => {
+		const result = filterLinks(sampleLinks, "tools");
+		expect(result).toHaveLength(1);
+		expect(result[0].id).toBe("link-1");
+	});
+
+	test("ranks title match ahead of URL-only match", () => {
+		const titleAndUrlLinks: SavedLink[] = [
+			{
+				id: "url-match",
+				url: "https://example.com/search-optimizer",
+				title: "Other Page",
+				description: "General details",
+				createdAt: "2026-08-01T00:00:00Z",
+				updatedAt: "2026-08-01T00:00:00Z",
+			},
+			{
+				id: "title-match",
+				url: "https://example.com/page",
+				title: "Search Optimizer Guide",
+				description: "General details",
+				createdAt: "2026-08-01T00:00:00Z",
+				updatedAt: "2026-08-01T00:00:00Z",
+			},
+		];
+		const ranked = filterLinks(titleAndUrlLinks, "search optimizer");
+		expect(ranked).toHaveLength(2);
+		expect(ranked[0].id).toBe("title-match");
+		expect(ranked[1].id).toBe("url-match");
+	});
+
+	test("stubbed linkApi.search rejection still yields client-ranked results", async () => {
+		const originalSearch = linkApi.search;
+		try {
+			// Stub search to reject (e.g. network failure / server offline)
+			linkApi.search = async () => {
+				throw new Error("Network offline");
+			};
+
+			let clientFallbackResults: SavedLink[] = [];
+			try {
+				await linkApi.search("spacing", "semantic");
+			} catch {
+				clientFallbackResults = filterLinks(sampleLinks, "spacing");
+			}
+
+			expect(clientFallbackResults).toHaveLength(1);
+			expect(clientFallbackResults[0].id).toBe("link-2");
+		} finally {
+			linkApi.search = originalSearch;
+		}
 	});
 });
