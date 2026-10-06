@@ -116,24 +116,10 @@ Ask: **Did this completed work add, change, or remove durable project guidance t
 
 Durable guidance includes architecture, product behavior, workflow conventions, naming, storage models, API contracts, and explicit tradeoffs.
 
-- **No** — create no Decision candidate. Append:
+- **No** — append:
   `System Decision Impact: none — <short reason>`
-- **Yes** — create a first-class **draft System Decision candidate** before completion. Link the originating task, linked spec/doc, and every readable source available. Never auto-accept it.
-
-```json
-mcp_knowns_decision({ "action": "create",
-  "title": "<durable guidance title>",
-  "status": "draft",
-  "decision": "<current guidance future work should follow>",
-  "sources": ["@doc/<source-path>"],
-  "relatedDocs": ["<linked-spec-or-doc-path>"],
-  "relatedTasks": ["<task-id>"]
-})
-```
-
-Append the persisted candidate returned by the tool:
-`System Decision Impact: candidate @decision/<id> (added|changed|removed) — <short summary>`
-
+- **Yes** — record candidate guidance in the task notes or spec before completion:
+  `System Decision Impact: candidate @decision/<id> (added|changed|removed) — <short summary>`
 If review checks find missing evidence or a duplicate/conflict, leave the candidate unresolved in Review Inbox. Passing checks makes it ready for human review; it never makes the candidate current automatically.
 
 Spec Decisions are different: keep every D-ID canonically in the spec's `Locked Decisions` section and report compliance only. Do not copy Spec Decision text into the System Decision ledger merely for display.
@@ -207,13 +193,12 @@ Before final response, use the completed System Decision Impact checkpoint and t
 
 If patterns, decisions, or failures need structured extraction: `/kn-extract`
 
-If a quick insight is worth remembering but does not warrant a full doc:
 ```json
-mcp_knowns_memory({ "action": "add", "title": "<insight>",
-  "content": "<2-3 sentence summary>",
-  "layer": "project",
-  "category": "<pattern|convention|preference|failure>",
-  "tags": ["<domain>"]
+mcp_knowns_docs({ "action": "create", "title": "Learning: <domain> — <pattern>",
+  "description": "Insight from implementation",
+  "folder": "learnings",
+  "tags": ["learning", "<domain>"],
+  "content": "<2-3 sentence summary>"
 })
 ```
 
