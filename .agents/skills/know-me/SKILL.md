@@ -61,7 +61,7 @@ knowme task edit <id> --check-ac 1
 
 ## Links
 
-Links are global saved URLs, not project docs. Use `knowme link add <url>` to capture one, `knowme link list --json` to find its ID, and `knowme link update <id> --help` to correct metadata or replace its image. There is no link delete command; do not invent one.
+Links are global saved URLs, not project docs. Use `knowme link add <url>` to capture one, `knowme link list --json` to find its ID, and `knowme link update <id> --help` to correct metadata or replace its image. Use `knowme link delete <id> --yes` to remove a link without interactive prompting, or use the MCP link tool `delete` action.
 
 ## Memos
 
