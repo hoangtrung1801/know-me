@@ -30,7 +30,7 @@ Use the narrowest search surface that can answer the question, then widen delibe
 
 - Use Know-Me `search` first for project context: docs, tasks, memories, and decisions.
 - Use `retrieve` when the next consumer needs a cited context pack, not for every lookup.
-- Use MCP/code intelligence (`code.find`, `code.symbols`, `code.references`, `code.definition`) for code structure before raw file reads.
+- Use code search and symbols (`rg`, file inspection) or language server features when available before broad file reads.
 - Use specialized external MCP providers when available and relevant, before general web search. Examples: Context7/library-doc MCP for framework or package docs, GitHub/source MCP for issues or repository state, official-docs MCP for vendor APIs.
 - Use web/internet search only when specialized MCP providers are unavailable, insufficient, or the user explicitly asks to search online.
 - Prefer primary sources for external research: official docs, source repos, release notes, specifications, issue threads, or MCP results backed by those sources. Cite sources in findings when the tool exposes them.
@@ -94,25 +94,16 @@ mcp_knowns_tasks({ "action": "get", "taskId": "<id>" })
 
 If Step 2 already found related tasks via structural resolve, focus keyword search on gaps — tasks that might be related but not formally linked.
 
-## Step 4: Search Codebase Through MCP
+## Step 4: Search Codebase
 
-Use MCP code tools as the primary code research path:
-
-```json
-mcp_knowns_code({ "action": "find", "query": "<symbol/topic>", "limit": 20 })
-mcp_knowns_code({ "action": "symbols", "path": "<file>" })
-mcp_knowns_code({ "action": "references", "query": "<symbol>", "path": "<file>" })
-```
-
-Only fall back to raw shell search when MCP/code tools are unavailable, or when MCP/code search returns no useful entry point after narrowing the query. Prefer `rg` over slower shell search tools:
+Search the codebase directly using code search tools:
 
 ```bash
 rg --files | rg "<pattern>"
 rg -n "<pattern>" --glob '!node_modules/**'
 ```
 
-After an `rg` fallback finds likely files or symbols, return to MCP code tools (`symbols`, `definition`, `references`, `diagnostics`) before drawing conclusions.
-
+Follow symbol definitions and references across source files.
 ## Step 4b: Search External MCP / Web Sources When Needed
 
 Use external MCP providers first when local repo context is not enough because the topic depends on current or external information.

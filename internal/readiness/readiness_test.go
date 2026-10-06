@@ -42,3 +42,28 @@ func TestSemanticModelInstalledDoesNotRequireONNXForRemoteProviders(t *testing.T
 	}
 }
 
+func TestBuildCapabilities(t *testing.T) {
+	caps := buildCapabilities(nil, nil)
+	expected := []string{"task-updates", "doc-updates", "link-management", "memo-management", "validation", "search", "template-generation"}
+	for _, want := range expected {
+		found := false
+		for _, c := range caps {
+			if c == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("missing expected capability %q in %v", want, caps)
+		}
+	}
+
+	for _, bad := range []string{"memory-tools", "system-decisions", "decision-migration", "graph", "code-search"} {
+		for _, c := range caps {
+			if c == bad {
+				t.Errorf("unexpected purged capability %q found in %v", bad, caps)
+			}
+		}
+	}
+}
+

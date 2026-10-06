@@ -249,7 +249,7 @@ func buildCapabilities(ss *SearchStatus, rs *RuntimeStatus) []string {
 	var caps []string
 
 	// Always available when project is active.
-	caps = append(caps, "task-updates", "doc-updates", "memory-tools", "system-decisions", "decision-migration", "validation")
+	caps = append(caps, "task-updates", "doc-updates", "link-management", "memo-management", "validation")
 
 	// Search capabilities.
 	caps = append(caps, "search") // keyword search always available
@@ -259,12 +259,6 @@ func buildCapabilities(ss *SearchStatus, rs *RuntimeStatus) []string {
 
 	// Template generation always available.
 	caps = append(caps, "template-generation")
-
-	// Code and graph features if code index exists.
-	if ss != nil && ss.ProjectIndexReady {
-		caps = append(caps, "code-search", "graph")
-	}
-
 	// Browser chat requires runtime.
 	if rs != nil && rs.Running && rs.State == "healthy" {
 		caps = append(caps, "browser-chat")
