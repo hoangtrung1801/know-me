@@ -177,3 +177,26 @@ func TestServiceUpdateWithTags(t *testing.T) {
 		t.Fatalf("updated tags = %#v", updated.Tags)
 	}
 }
+
+func TestServiceDelete(t *testing.T) {
+	service := NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (Metadata, error) {
+		return Metadata{Title: "Fetched"}, nil
+	})
+	link, err := service.Add(context.Background(), "https://example.com", bytes.NewReader(tinyPNG))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := service.Delete(link.ID); err != nil {
+		t.Fatalf("Delete failed: %v", err)
+	}
+	items, err := service.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 0 {
+		t.Fatalf("expected 0 items after delete, got %d", len(items))
+	}
+	if err := service.Delete(link.ID); !errors.Is(err, models.ErrLinkNotFound) {
+		t.Fatalf("expected ErrLinkNotFound, got %v", err)
+	}
+}

@@ -22,6 +22,7 @@ func (lr *LinkRoutes) Register(r chi.Router) {
 	r.Get("/links", lr.list)
 	r.Post("/links", lr.create)
 	r.Patch("/links/{id}", lr.update)
+	r.Delete("/links/{id}", lr.delete)
 	r.Get("/links/{id}/image", lr.image)
 }
 
@@ -207,6 +208,14 @@ func (lr *LinkRoutes) image(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	http.ServeFile(w, r, path)
+}
+
+func (lr *LinkRoutes) delete(w http.ResponseWriter, r *http.Request) {
+	if err := lr.service.Delete(chi.URLParam(r, "id")); err != nil {
+		linkError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func linkError(w http.ResponseWriter, err error) {

@@ -110,3 +110,39 @@ func TestLinkCommandAddAndUpdateTags(t *testing.T) {
 		t.Fatalf("updated.Tags = %#v", updated.Tags)
 	}
 }
+
+func TestLinkCommandDelete(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Chdir(t.TempDir())
+	service := links.NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (links.Metadata, error) {
+		return links.Metadata{Title: "To delete"}, nil
+	})
+	link, err := service.Add(context.Background(), "https://example.com/delete", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := newLinkCmd(service)
+	cmd.PersistentFlags().Bool("json", false, "JSON output")
+	var output bytes.Buffer
+	cmd.SetOut(&output)
+	cmd.SetArgs([]string{"delete", link.ID, "--yes", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("delete command failed: %v", err)
+	}
+	var resp map[string]any
+	if err := json.Unmarshal(output.Bytes(), &resp); err != nil {
+		t.Fatalf("invalid json response: %v, raw: %s", err, output.String())
+	}
+	if resp["id"] != link.ID || resp["deleted"] != true {
+		t.Fatalf("unexpected delete response: %#v", resp)
+	}
+
+	items, err := service.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 0 {
+		t.Fatalf("expected 0 links after delete, got %d", len(items))
+	}
+}

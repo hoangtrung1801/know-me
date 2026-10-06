@@ -12,6 +12,7 @@ import (
 	"github.com/hoangtrung1801/know-me/internal/links"
 	"github.com/hoangtrung1801/know-me/internal/models"
 	"github.com/hoangtrung1801/know-me/internal/storage"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -239,7 +240,46 @@ func newLinkCmd(service *links.Service) *cobra.Command {
 	update.Flags().StringSlice("tag", nil, "New tags for the link (repeatable or comma-separated)")
 	update.Flags().StringSlice("tags", nil, "Alias for --tag")
 	_ = update.Flags().MarkHidden("tags")
-	cmd.AddCommand(add, list, update)
+	deleteCmd := &cobra.Command{
+		Use:   "delete <id>",
+		Short: "Delete a link",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			yes, _ := cmd.Flags().GetBool("yes")
+			if !yes && isInteractiveInput(cmd) {
+				fmt.Fprintf(cmd.OutOrStdout(), "Delete link %s? (y/n): ", args[0])
+				var answer string
+				fmt.Fscanln(cmd.InOrStdin(), &answer)
+				answer = strings.ToLower(strings.TrimSpace(answer))
+				if answer != "y" && answer != "yes" {
+					fmt.Fprintln(cmd.OutOrStdout(), "Aborted.")
+					return nil
+				}
+			}
+
+			remote, isRemote, remoteErr := RemoteForCommand(cmd)
+			if remoteErr != nil {
+				return remoteErr
+			}
+			if isRemote {
+				if err := remote.DoJSON("DELETE", "/api/links/"+url.PathEscape(args[0]), nil, nil, nil); err != nil {
+					return fmt.Errorf("delete link: %w", err)
+				}
+			} else {
+				if err := getService().Delete(args[0]); err != nil {
+					return fmt.Errorf("delete link: %w", err)
+				}
+			}
+
+			if isJSON(cmd) {
+				return json.NewEncoder(cmd.OutOrStdout()).Encode(map[string]any{"id": args[0], "deleted": true})
+			}
+			_, err := fmt.Fprintf(cmd.OutOrStdout(), "deleted %s\n", args[0])
+			return err
+		},
+	}
+	deleteCmd.Flags().BoolP("yes", "y", false, "Confirm deletion without prompting")
+	cmd.AddCommand(add, list, update, deleteCmd)
 	return cmd
 }
 
@@ -249,6 +289,13 @@ func writeLinkOutput(cmd *cobra.Command, link *models.Link) error {
 	}
 	fmt.Fprintf(cmd.OutOrStdout(), "%s\t%s\n", link.ID, link.URL)
 	return nil
+}
+
+func isInteractiveInput(cmd *cobra.Command) bool {
+	if f, ok := cmd.InOrStdin().(*os.File); ok {
+		return isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
+	}
+	return false
 }
 
 func init() { rootCmd.AddCommand(newLinkCmd(nil)) }

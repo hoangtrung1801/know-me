@@ -105,6 +105,27 @@ func (s *LinkStore) Save(link *models.Link) error {
 	return writeJSON(s.linkPath(link.ID), link)
 }
 
+func (s *LinkStore) Delete(id string) error {
+	if !validLinkID(id) {
+		return models.ErrLinkNotFound
+	}
+	link, err := s.Get(id)
+	if err != nil {
+		return err
+	}
+	if link.Image != "" {
+		_ = s.RemoveImage(link.Image)
+	}
+	_ = s.RemoveImage(id)
+	if err := os.Remove(s.linkPath(id)); err != nil {
+		if os.IsNotExist(err) {
+			return models.ErrLinkNotFound
+		}
+		return fmt.Errorf("remove link %s: %w", id, err)
+	}
+	return nil
+}
+
 func (s *LinkStore) SaveImage(linkID string, data []byte, extension string) (string, error) {
 	if !validLinkID(linkID) {
 		return "", models.ErrInvalidLinkImage
@@ -147,6 +168,14 @@ func (s *LinkStore) RemoveImage(relativePath string) error {
 	}
 	path, err := s.LocalImagePath(relativePath)
 	if err != nil {
+		if validLinkID(relativePath) {
+			imagesDir := filepath.Join(s.linksDir(), "images")
+			matches, _ := filepath.Glob(filepath.Join(imagesDir, relativePath+"-*"))
+			for _, m := range matches {
+				_ = os.Remove(m)
+			}
+			return nil
+		}
 		return err
 	}
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {

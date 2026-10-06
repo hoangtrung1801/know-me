@@ -14,10 +14,10 @@ import (
 // RegisterLinkTool registers global saved-link operations.
 func RegisterLinkTool(s toolRegistrar, service *links.Service) {
 	s.AddTool(mcp.NewTool("link",
-		mcp.WithDescription("Saved link operations. Use action add, list, or update."),
-		mcp.WithString("action", mcp.Required(), mcp.Enum("add", "list", "update")),
+		mcp.WithDescription("Saved link operations. Use action add, list, update, or delete."),
+		mcp.WithString("action", mcp.Required(), mcp.Enum("add", "list", "update", "delete")),
 		mcp.WithString("url", mcp.Description("URL to save (add)")),
-		mcp.WithString("id", mcp.Description("Link ID (update)")),
+		mcp.WithString("id", mcp.Description("Link ID (update/delete)")),
 		mcp.WithString("title", mcp.Description("Edited title (update)")),
 		mcp.WithString("description", mcp.Description("Edited description (update)")),
 		mcp.WithString("note", mcp.Description("User-authored note (add/update)")),
@@ -34,6 +34,8 @@ func RegisterLinkTool(s toolRegistrar, service *links.Service) {
 			return handleLinkList(service)
 		case "update":
 			return handleLinkUpdate(ctx, service, req)
+		case "delete":
+			return handleLinkDelete(service, req)
 		default:
 			return errResultf("unknown link action: %s", action)
 		}
@@ -41,6 +43,7 @@ func RegisterLinkTool(s toolRegistrar, service *links.Service) {
 	s.RegisterHelp("link.add", HelpEntry{When: "Save a URL as a global link with fetched SEO metadata.", Params: map[string]string{"url": "required URL", "note": "optional user-authored note", "imagePath": "optional local image"}})
 	s.RegisterHelp("link.list", HelpEntry{When: "List globally saved links."})
 	s.RegisterHelp("link.update", HelpEntry{When: "Edit a saved link title, description, note, or local image.", Params: map[string]string{"id": "required link ID", "title": "optional title", "description": "optional description", "note": "optional user-authored note", "imagePath": "optional local image"}})
+	s.RegisterHelp("link.delete", HelpEntry{When: "Permanently delete a globally saved link.", Params: map[string]string{"id": "required link ID"}})
 }
 
 func handleLinkAdd(ctx context.Context, service *links.Service, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -99,6 +102,17 @@ func handleLinkUpdate(ctx context.Context, service *links.Service, req mcp.CallT
 		return nil, fmt.Errorf("update link: %w", err)
 	}
 	return linkResult(link)
+}
+
+func handleLinkDelete(service *links.Service, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	id, err := req.RequireString("id")
+	if err != nil {
+		return errResult("id is required")
+	}
+	if err := service.Delete(id); err != nil {
+		return nil, err
+	}
+	return mcp.NewToolResultText("deleted"), nil
 }
 
 func openLinkImage(req mcp.CallToolRequest) (io.Reader, func(), error) {

@@ -68,6 +68,43 @@ func TestLinkRoutesCreateUpdateAndImage(t *testing.T) {
 	}
 }
 
+func TestLinkRoutesDelete(t *testing.T) {
+	service := links.NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (links.Metadata, error) {
+		return links.Metadata{Title: "To Delete", Description: "Desc"}, nil
+	})
+	r := chi.NewRouter()
+	(&LinkRoutes{service: service}).Register(r)
+
+	link, err := service.Add(context.Background(), "https://example.com/delete-me", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. Delete existing link -> 204
+	delReq := httptest.NewRequest(http.MethodDelete, "/links/"+link.ID, nil)
+	delRec := httptest.NewRecorder()
+	r.ServeHTTP(delRec, delReq)
+	if delRec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 No Content, got %d", delRec.Code)
+	}
+
+	// 2. Delete again -> 404
+	delAgainReq := httptest.NewRequest(http.MethodDelete, "/links/"+link.ID, nil)
+	delAgainRec := httptest.NewRecorder()
+	r.ServeHTTP(delAgainRec, delAgainReq)
+	if delAgainRec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 Not Found, got %d", delAgainRec.Code)
+	}
+
+	// 3. Delete non-existent -> 404
+	missingReq := httptest.NewRequest(http.MethodDelete, "/links/unknown-link", nil)
+	missingRec := httptest.NewRecorder()
+	r.ServeHTTP(missingRec, missingReq)
+	if missingRec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 Not Found, got %d", missingRec.Code)
+	}
+}
+
 func TestLinkRoutesSearch(t *testing.T) {
 	service := links.NewServiceWithFetcher(t.TempDir(), func(context.Context, string) (links.Metadata, error) {
 		return links.Metadata{Title: "Article Title", Description: "Article Description"}, nil

@@ -39,4 +39,19 @@ func TestLinkHandlersLifecycle(t *testing.T) {
 	if updated.Note != "Updated note" {
 		t.Fatalf("updated note = %q", updated.Note)
 	}
+
+	deleteResult, err := handleLinkDelete(service, mcp.CallToolRequest{Params: mcp.CallToolParams{Arguments: map[string]any{"id": link.ID}}})
+	if err != nil {
+		t.Fatalf("delete failed: %v", err)
+	}
+	if deleteResult.Content[0].(mcp.TextContent).Text != "deleted" {
+		t.Fatalf("unexpected delete result text: %q", deleteResult.Content[0].(mcp.TextContent).Text)
+	}
+	items, err := service.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 0 {
+		t.Fatalf("expected 0 links after delete, got %d", len(items))
+	}
 }
