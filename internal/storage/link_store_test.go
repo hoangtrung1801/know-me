@@ -54,3 +54,55 @@ func TestLinkStoreImagePathStaysInsideImagesDirectory(t *testing.T) {
 		t.Fatalf("saved path = %q", path)
 	}
 }
+
+func TestLinkStoreDeleteRemovesJSONAndImage(t *testing.T) {
+	store := NewLinkStore(t.TempDir())
+	now := time.Now().UTC()
+	imgPath, err := store.SaveImage("link01", tinyPNG, ".png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	link := &models.Link{
+		ID:        "link01",
+		URL:       "https://example.com",
+		Title:     "Example",
+		Image:     imgPath,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := store.Save(link); err != nil {
+		t.Fatal(err)
+	}
+
+	fullImgPath, err := store.LocalImagePath(imgPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(fullImgPath); err != nil {
+		t.Fatalf("expected image to exist before delete: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(store.root, "links", "link01.json")); err != nil {
+		t.Fatalf("expected json to exist before delete: %v", err)
+	}
+
+	if err := store.Delete("link01"); err != nil {
+		t.Fatalf("Delete failed: %v", err)
+	}
+
+	if _, err := store.Get("link01"); !errors.Is(err, models.ErrLinkNotFound) {
+		t.Fatalf("expected ErrLinkNotFound after delete, got %v", err)
+	}
+	if _, err := os.Stat(fullImgPath); !os.IsNotExist(err) {
+		t.Fatalf("expected image to be removed, got err: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(store.root, "links", "link01.json")); !os.IsNotExist(err) {
+		t.Fatalf("expected json to be removed, got err: %v", err)
+	}
+
+	if err := store.Delete("link01"); !errors.Is(err, models.ErrLinkNotFound) {
+		t.Fatalf("expected ErrLinkNotFound on second delete, got %v", err)
+	}
+	if err := store.Delete("../bad"); !errors.Is(err, models.ErrLinkNotFound) {
+		t.Fatalf("expected ErrLinkNotFound on invalid id, got %v", err)
+	}
+}

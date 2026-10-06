@@ -2113,8 +2113,17 @@ export const linkApi = {
 			fallback: Boolean(data?.fallback),
 		};
 	},
+	async delete(id: string): Promise<void> {
+		const res = await apiFetch(`${API_BASE}/api/links/${encodeURIComponent(id)}`, { method: "DELETE" });
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body.error || "Failed to delete link");
+		}
+	},
+	deleteLink(id: string): Promise<void> {
+		return this.delete(id);
+	},
 };
-
 export interface Memo {
 	id: string;
 	content: string;

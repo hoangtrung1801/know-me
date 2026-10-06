@@ -189,6 +189,10 @@ func (s *Service) LocalImagePath(id string) (string, error) {
 	return s.store.LocalImagePath(link.Image)
 }
 
+func (s *Service) Delete(id string) error {
+	return s.store.Delete(id)
+}
+
 func validateLinkURL(rawURL string) (*url.URL, error) {
 	target, err := url.Parse(strings.TrimSpace(rawURL))
 	if err != nil {

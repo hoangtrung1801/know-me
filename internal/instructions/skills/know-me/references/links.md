@@ -25,4 +25,4 @@ Use the `--tag` (`-t`) flag (repeatable or comma-separated) on `knowme link add`
 knowme link add "https://go.dev/doc/" --tag golang --tag official-docs --note "Go documentation for implementation reference."
 ```
 
-When updating classification, preserve the existing note's useful content: `--note` supplies the replacement note, not an append operation. Use `link update <id>` for supported title, description, note, or image changes. There is no link delete command in the current CLI; do not invent one or delete storage files as a workaround.
+When updating classification, preserve the existing note's useful content: `--note` supplies the replacement note, not an append operation. Use `link update <id>` for supported title, description, note, or image changes. To remove a link, use `knowme link delete <id>` (pass `--yes` to confirm deletion without prompting) or use the MCP `delete` action on `mcp_knowns_link` (or link tool: `{"action": "delete", "id": "<id>"}`).
