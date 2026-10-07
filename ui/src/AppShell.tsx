@@ -48,6 +48,7 @@ const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
 const LinksPage = lazyWithRetry(() => import("./pages/LinksPage"));
 const MemosPage = lazyWithRetry(() => import("./pages/MemosPage"));
 const AuditPage = lazyWithRetry(() => import("./pages/AuditPage"));
+const LandingPage = lazyWithRetry(() => import("./pages/LandingPage"));
 
 function PageLoading() {
 	return (
@@ -131,6 +132,10 @@ export default function AppShell() {
 
 	// Update document title based on current page
 	useEffect(() => {
+		if (location.pathname === "/landing") {
+			document.title = "KnowMe · Your personal knowledge database";
+			return;
+		}
 		const titles: Record<string, string> = {
 			dashboard: "Dashboard",
 			projects: "Projects",
@@ -354,6 +359,21 @@ export default function AppShell() {
 		{ id: "chat", component: ChatPage },
 		{ id: "config", component: ConfigPage },
 	];
+
+	if (location.pathname === "/landing") {
+		return (
+			<ThemeContext.Provider value={{ isDark, toggle: toggleTheme }}>
+				<Suspense fallback={<PageLoading />}>
+					<LandingPage
+						onLaunchWorkspace={() => navigate({ to: "/" })}
+						isDark={isDark}
+						onToggleTheme={toggleTheme}
+					/>
+				</Suspense>
+				<Toaster />
+			</ThemeContext.Provider>
+		);
+	}
 
 	return (
 		<ThemeContext.Provider value={{ isDark, toggle: toggleTheme }}>

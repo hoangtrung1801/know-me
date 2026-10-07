@@ -1,4 +1,4 @@
-import { createBrowserHistory, createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import { createBrowserHistory, createMemoryHistory, createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
 import AppShell from "./AppShell";
 import { DocsProvider } from "./contexts/DocsContext";
 import { PageWorkspaceProvider } from "./contexts/PageWorkspaceContext";
@@ -102,6 +102,12 @@ const configRoute = createRoute({
 	component: EmptyRoute,
 });
 
+const landingRoute = createRoute({
+	getParentRoute: () => rootRoute,
+	path: "/landing",
+	component: EmptyRoute,
+});
+
 const fallbackRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: "/$",
@@ -124,11 +130,12 @@ const routeTree = rootRoute.addChildren([
 	chatSessionRoute,
 	configRoute,
 	fallbackRoute,
+	landingRoute,
 ]);
 
 export const router = createRouter({
 	routeTree,
-	history: createBrowserHistory(),
+	history: typeof window !== "undefined" ? createBrowserHistory() : createMemoryHistory(),
 });
 
 declare module "@tanstack/react-router" {
