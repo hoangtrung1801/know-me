@@ -275,18 +275,18 @@ export function LandingPage() {
       {/* ===================================================================
           1. NAVIGATION BAR
           =================================================================== */}
-      <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md transition-colors duration-200">
+      <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md transition-colors duration-160 ease-[var(--ease-out)]">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
             <a
               href="/"
-              className="flex items-center gap-2.5 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+              className="flex items-center gap-2.5 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md active:scale-[0.98] transition-transform duration-160 ease-[var(--ease-out)]"
             >
               <img
                 src="/logo.png"
                 alt="KnowMe Logo"
-                className="h-8 w-8 rounded-lg border border-border/80 object-cover shadow-2xs transition-transform duration-200 group-hover:scale-105"
+                className="h-8 w-8 rounded-lg border border-border/80 object-cover shadow-2xs transition-transform duration-160 ease-[var(--ease-out)] group-hover:scale-105"
               />
               <div className="flex flex-col">
                 <span className="font-semibold tracking-tight text-foreground text-sm">
@@ -300,56 +300,31 @@ export function LandingPage() {
           </div>
 
           {/* Nav Links */}
-          <nav className="flex items-center gap-1.5 sm:gap-2.5">
+          <nav className="flex items-center gap-1.5 sm:gap-2">
             <div className="hidden lg:flex items-center gap-0.5 text-xs text-muted-foreground font-medium">
-              <button
-                type="button"
-                onClick={() => scrollToSection("features-projects")}
-                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-              >
-                Projects
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollToSection("features-tasks")}
-                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-              >
-                Tasks
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollToSection("features-kanban")}
-                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-              >
-                Kanban
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollToSection("features-links")}
-                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-              >
-                Links
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollToSection("features-memos")}
-                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-              >
-                Memos
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollToSection("features-docs")}
-                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-              >
-                Docs
-              </button>
+              {[
+                { label: "Projects", id: "features-projects" },
+                { label: "Tasks", id: "features-tasks" },
+                { label: "Kanban", id: "features-kanban" },
+                { label: "Links", id: "features-links" },
+                { label: "Memos", id: "features-memos" },
+                { label: "Docs", id: "features-docs" },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => scrollToSection(item.id)}
+                  className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-[background-color,color,transform] duration-160 ease-[var(--ease-out)] active:scale-[0.97] cursor-pointer"
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
 
             <button
               type="button"
               onClick={() => scrollToSection("workbench-demo")}
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-md hover:bg-muted/60 transition-[background-color,color,transform] duration-160 ease-[var(--ease-out)] active:scale-[0.97] cursor-pointer"
             >
               <Terminal className="h-3.5 w-3.5 text-primary" />
               <span>MCP Bridge</span>
@@ -359,7 +334,7 @@ export function LandingPage() {
               href="https://github.com/knowns/know-me"
               target="_blank"
               rel="noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-md hover:bg-muted/60 transition-[background-color,color,transform] duration-160 ease-[var(--ease-out)] active:scale-[0.97]"
             >
               <GitBranch className="h-3.5 w-3.5" />
               <span>GitHub</span>
@@ -370,14 +345,14 @@ export function LandingPage() {
               isDark={isDark}
               onToggle={toggleTheme}
               size="sm"
-              className="text-muted-foreground hover:text-foreground cursor-pointer"
+              className="text-muted-foreground hover:text-foreground active:scale-[0.97] transition-transform duration-160 ease-[var(--ease-out)] cursor-pointer"
             />
 
             {/* Launch Workspace CTA */}
             <a href="http://localhost:6421" target="_blank" rel="noreferrer">
               <Button
                 size="sm"
-                className="gap-1.5 shadow-2xs font-medium cursor-pointer transition-transform duration-150 active:scale-95"
+                className="gap-1.5 shadow-2xs font-medium cursor-pointer"
               >
                 <span>Launch Workspace</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -388,15 +363,14 @@ export function LandingPage() {
       </header>
 
       {/* Main Container */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-20 sm:space-y-28">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-16 sm:space-y-24">
         {/* ===================================================================
-            2. HERO SECTION (Split Hero Layout with Micro-Interactions)
+            2. HERO SECTION
             =================================================================== */}
         <section className="pt-2 sm:pt-6 md:pt-10 animate-fade-in-up">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
             {/* Left Column: Distilled Copy & Actions */}
             <div className="lg:col-span-6 space-y-5">
-              {/* Badge */}
               <div className="inline-flex items-center gap-2">
                 <Badge
                   variant="outline"
@@ -407,24 +381,18 @@ export function LandingPage() {
                 </Badge>
               </div>
 
-              {/* Headline */}
               <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl text-foreground text-balance leading-[1.08]">
                 Your personal knowledge database.
               </h1>
 
-              {/* Subheadline (distilled, crisp) */}
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl font-normal text-pretty">
                 Projects, tasks, docs, memos, and reading lists in one calm place. AI coding agents plug in via MCP to read and work with everything you know — zero re-explaining.
               </p>
 
-              {/* Actions */}
               <div className="space-y-3 pt-1">
                 <div className="flex flex-wrap items-center gap-3">
                   <a href="http://localhost:6421" target="_blank" rel="noreferrer">
-                    <Button
-                      size="lg"
-                      className="gap-2 font-medium cursor-pointer shadow-xs transition-transform duration-150 active:scale-95"
-                    >
+                    <Button size="lg" className="gap-2 font-medium cursor-pointer shadow-xs">
                       <span>Open Workspace</span>
                       <ArrowRight className="h-4 w-4" />
                     </Button>
@@ -439,7 +407,7 @@ export function LandingPage() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="gap-2 cursor-pointer font-medium hover:border-primary/40 transition-colors"
+                      className="gap-2 cursor-pointer font-medium hover:border-primary/40"
                     >
                       <GitBranch className="h-4 w-4 text-muted-foreground" />
                       <span>Star on GitHub</span>
@@ -448,7 +416,7 @@ export function LandingPage() {
                 </div>
 
                 {/* Quick Install Command Box */}
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-border/90 bg-muted/40 px-3.5 py-2.5 font-mono text-xs sm:text-sm text-foreground max-w-lg shadow-2xs group hover:border-primary/40 transition-colors">
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border/90 bg-muted/40 px-3.5 py-2.5 font-mono text-xs sm:text-sm text-foreground max-w-lg shadow-2xs group hover:border-primary/40 transition-colors duration-160 ease-[var(--ease-out)]">
                   <div className="flex items-center gap-2 overflow-x-auto select-all">
                     <span className="text-muted-foreground select-none">$</span>
                     <span className="font-mono text-foreground font-medium truncate">
@@ -459,7 +427,7 @@ export function LandingPage() {
                     type="button"
                     onClick={() => copyToClipboard(installCommand, "install")}
                     aria-label="Copy install command"
-                    className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors cursor-pointer"
+                    className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background/80 active:scale-[0.95] transition-[transform,background-color,color] duration-160 ease-[var(--ease-out)] cursor-pointer"
                   >
                     {copiedInstall ? (
                       <Check className="h-4 w-4 text-primary" />
@@ -478,7 +446,6 @@ export function LandingPage() {
             {/* Right Column: Visual Mock (.know-me/ local disk + AI agent MCP session) */}
             <div className="lg:col-span-6">
               <div className="rounded-xl border border-border/90 bg-card p-1 shadow-md card-hover">
-                {/* Window Bar */}
                 <div className="flex items-center justify-between border-b border-border/80 px-4 py-2 bg-muted/30 rounded-t-lg">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
@@ -490,15 +457,12 @@ export function LandingPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse-glow" />
-                    <span className="font-mono text-[11px] text-primary font-medium">
-                      connected
-                    </span>
+                    <span className="font-mono text-[11px] text-primary font-medium">connected</span>
                   </div>
                 </div>
 
-                {/* Split Mock Layout: Local Disk vs AI Agent Session */}
                 <div className="grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-border/80 bg-background/50 font-mono text-xs">
-                  {/* Left: Local Filesystem (.know-me/) */}
+                  {/* Left: Local Filesystem */}
                   <div className="md:col-span-5 p-3 space-y-2.5 bg-muted/15">
                     <div className="flex items-center justify-between text-muted-foreground text-[10.5px] font-semibold uppercase tracking-wider">
                       <span className="flex items-center gap-1 text-foreground">
@@ -539,7 +503,7 @@ export function LandingPage() {
                     </div>
                   </div>
 
-                  {/* Right: AI Coding Agent MCP Session */}
+                  {/* Right: AI Agent Session */}
                   <div className="md:col-span-7 p-3 space-y-2.5 bg-card/60">
                     <div className="flex items-center justify-between text-[11px]">
                       <div className="flex items-center gap-1.5 text-foreground font-semibold">
@@ -551,7 +515,6 @@ export function LandingPage() {
                       </Badge>
                     </div>
 
-                    {/* Chat / Tool Execution Bubble */}
                     <div className="rounded-md border border-border/80 bg-background/80 p-2.5 space-y-1.5 text-[11px]">
                       <div className="flex items-center gap-1.5 text-primary font-medium text-[10.5px]">
                         <Zap className="h-3 w-3" />
@@ -569,7 +532,6 @@ export function LandingPage() {
                       </div>
                     </div>
 
-                    {/* Agent status */}
                     <div className="flex items-center justify-between text-[9.5px] text-muted-foreground px-0.5 font-mono">
                       <span className="flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -585,7 +547,7 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            3. BENTO GRID OVERVIEW (6 Irregular Tiles, Distilled)
+            3. BENTO GRID OVERVIEW (6 Irregular Tiles with Stagger)
             =================================================================== */}
         <section className="space-y-5">
           <div className="space-y-1 max-w-2xl">
@@ -598,8 +560,8 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3 md:grid-rows-[auto_auto_auto]">
-            {/* Tile 1: Lead Tile (spans 2 cols, 2 rows) */}
-            <article className="md:col-span-2 md:row-span-2 rounded-xl border border-border/90 bg-card p-6 sm:p-7 flex flex-col justify-between shadow-2xs card-hover">
+            {/* Tile 1: Lead Tile */}
+            <article className="md:col-span-2 md:row-span-2 rounded-xl border border-border/90 bg-card p-6 sm:p-7 flex flex-col justify-between shadow-2xs card-hover animate-fade-in-up">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-xs font-mono text-primary border-primary/30">
@@ -617,7 +579,6 @@ export function LandingPage() {
                 </p>
               </div>
 
-              {/* Compatibility pills */}
               <div className="mt-6 pt-5 border-t border-border/70 space-y-3">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
@@ -625,10 +586,10 @@ export function LandingPage() {
                     { name: "Cursor IDE", status: "Direct bridge", icon: Code2 },
                     { name: "Hermes & OMP", status: "Auto-detect", icon: Cpu },
                     { name: "Codex CLI", status: "Native tools", icon: Terminal },
-                  ].map((agent) => (
+                  ].map((agent, i) => (
                     <div
                       key={agent.name}
-                      className="rounded-lg border border-border/80 bg-muted/30 p-2 text-center space-y-0.5 hover:border-primary/40 transition-colors"
+                      className={`rounded-lg border border-border/80 bg-muted/30 p-2 text-center space-y-0.5 hover:border-primary/40 active:scale-[0.98] transition-[border-color,transform] duration-160 ease-[var(--ease-out)] stagger-${i + 1}`}
                     >
                       <agent.icon className="h-3.5 w-3.5 text-primary mx-auto" />
                       <div className="text-xs font-medium text-foreground">{agent.name}</div>
@@ -639,8 +600,8 @@ export function LandingPage() {
               </div>
             </article>
 
-            {/* Tile 2: Local-First & Git-Native */}
-            <article className="rounded-xl border border-border/90 bg-card p-5 flex flex-col justify-between shadow-2xs card-hover">
+            {/* Tile 2 */}
+            <article className="rounded-xl border border-border/90 bg-card p-5 flex flex-col justify-between shadow-2xs card-hover animate-fade-in-up stagger-1">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-primary">
                   <GitBranch className="h-4 w-4" />
@@ -657,8 +618,8 @@ export function LandingPage() {
               </div>
             </article>
 
-            {/* Tile 3: Calm Workspace */}
-            <article className="rounded-xl border border-border/90 bg-card p-5 flex flex-col justify-between shadow-2xs card-hover">
+            {/* Tile 3 */}
+            <article className="rounded-xl border border-border/90 bg-card p-5 flex flex-col justify-between shadow-2xs card-hover animate-fade-in-up stagger-2">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-primary">
                   <Kanban className="h-4 w-4" />
@@ -676,8 +637,8 @@ export function LandingPage() {
               </div>
             </article>
 
-            {/* Tile 4: Deterministic References & Hybrid Retrieval (spans 2 cols) */}
-            <article className="md:col-span-2 rounded-xl border border-border/90 bg-card p-5 sm:p-6 flex flex-col justify-between shadow-2xs card-hover">
+            {/* Tile 4 */}
+            <article className="md:col-span-2 rounded-xl border border-border/90 bg-card p-5 sm:p-6 flex flex-col justify-between shadow-2xs card-hover animate-fade-in-up stagger-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-primary">
@@ -699,8 +660,8 @@ export function LandingPage() {
               </div>
             </article>
 
-            {/* Tile 5: Background Agent Runner */}
-            <article className="rounded-xl border border-border/90 bg-card p-5 flex flex-col justify-between shadow-2xs card-hover">
+            {/* Tile 5 */}
+            <article className="rounded-xl border border-border/90 bg-card p-5 flex flex-col justify-between shadow-2xs card-hover animate-fade-in-up stagger-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-primary">
                   <Cpu className="h-4 w-4" />
@@ -717,7 +678,7 @@ export function LandingPage() {
               </div>
             </article>
 
-            {/* Tile 6: Zero Telemetry */}
+            {/* Tile 6 */}
             <article className="md:col-span-3 rounded-xl border border-border/90 bg-muted/20 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs card-hover">
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-primary">
@@ -739,11 +700,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            CORE FEATURE 1: PROJECTS (Distilled & Interactive)
+            CORE FEATURE 1: PROJECTS
             =================================================================== */}
-        <section id="features-projects" className="scroll-mt-20 space-y-6 pt-2">
+        <section id="features-projects" className="scroll-mt-20 space-y-5 pt-1">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Copy */}
             <div className="lg:col-span-5 space-y-3">
               <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
                 <FolderGit2 className="h-4 w-4" />
@@ -767,7 +727,6 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Visual Mock */}
             <div className="lg:col-span-7">
               <div className="rounded-xl border border-border/90 bg-card p-4 sm:p-5 shadow-2xs card-hover space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-border/70 text-xs">
@@ -784,10 +743,10 @@ export function LandingPage() {
                     { name: "api-gateway", path: "~/code/api-gateway", active: false, meta: "12 tasks · 6 docs", branch: "feat/grpc" },
                     { name: "mobile-sdk", path: "~/code/mobile-sdk", active: false, meta: "9 tasks · 14 docs", branch: "v2.1-dev" },
                     { name: "infra-config", path: "~/code/infra", active: false, meta: "17 tasks · 29 docs", branch: "staging" },
-                  ].map((p) => (
+                  ].map((p, i) => (
                     <div
                       key={p.name}
-                      className={`p-2.5 rounded-lg border transition-all ${
+                      className={`p-2.5 rounded-lg border transition-[border-color,background-color,transform] duration-160 ease-[var(--ease-out)] active:scale-[0.98] stagger-${i + 1} ${
                         p.active
                           ? "border-primary/60 bg-primary/5 shadow-2xs"
                           : "border-border/70 bg-muted/20 hover:bg-muted/40"
@@ -815,11 +774,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            CORE FEATURE 2: TASKS (Distilled & Interactive)
+            CORE FEATURE 2: TASKS
             =================================================================== */}
-        <section id="features-tasks" className="scroll-mt-20 space-y-6 pt-2">
+        <section id="features-tasks" className="scroll-mt-20 space-y-5 pt-1">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Visual Mock (order first on lg) */}
             <div className="lg:col-span-7 order-2 lg:order-1">
               <div className="rounded-xl border border-border/90 bg-card p-4 sm:p-5 shadow-2xs card-hover space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-2.5">
@@ -856,16 +814,16 @@ export function LandingPage() {
                       onClick={() =>
                         setTaskCheckedItems((prev) => ({ ...prev, [idx]: !prev[idx] }))
                       }
-                      className="w-full flex items-center gap-2 p-2 rounded-md border border-border/60 hover:bg-muted/40 transition-colors text-left cursor-pointer"
+                      className="w-full flex items-center gap-2 p-2 rounded-md border border-border/60 hover:bg-muted/40 active:scale-[0.98] transition-[background-color,border-color,transform] duration-160 ease-[var(--ease-out)] text-left cursor-pointer"
                     >
-                      <span className={`h-3.5 w-3.5 rounded flex items-center justify-center shrink-0 border ${
+                      <span className={`h-3.5 w-3.5 rounded flex items-center justify-center shrink-0 border transition-colors duration-160 ease-[var(--ease-out)] ${
                         taskCheckedItems[idx]
                           ? "bg-primary border-primary text-primary-foreground"
                           : "border-muted-foreground/40 bg-background"
                       }`}>
                         {taskCheckedItems[idx] && <Check className="h-2.5 w-2.5" />}
                       </span>
-                      <span className={`text-[11px] truncate ${taskCheckedItems[idx] ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                      <span className={`text-[11px] truncate transition-colors duration-160 ease-[var(--ease-out)] ${taskCheckedItems[idx] ? "line-through text-muted-foreground" : "text-foreground"}`}>
                         {crit}
                       </span>
                     </button>
@@ -874,7 +832,6 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Copy */}
             <div className="lg:col-span-5 space-y-3 order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
                 <CheckSquare className="h-4 w-4" />
@@ -901,11 +858,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            CORE FEATURE 3: KANBAN (Distilled & High-Density)
+            CORE FEATURE 3: KANBAN
             =================================================================== */}
-        <section id="features-kanban" className="scroll-mt-20 space-y-6 pt-2">
+        <section id="features-kanban" className="scroll-mt-20 space-y-5 pt-1">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Copy */}
             <div className="lg:col-span-5 space-y-3">
               <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
                 <Kanban className="h-4 w-4" />
@@ -929,7 +885,6 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Visual Mock */}
             <div className="lg:col-span-7">
               <div className="rounded-xl border border-border/90 bg-card p-4 sm:p-5 shadow-2xs card-hover space-y-2.5">
                 <div className="flex items-center justify-between pb-2 border-b border-border/70 text-xs">
@@ -947,11 +902,11 @@ export function LandingPage() {
                       <span>BACKLOG</span>
                       <span className="px-1.5 py-0.2 rounded bg-muted text-[9.5px]">2</span>
                     </div>
-                    <div className="p-1.5 rounded bg-background border border-border/70 shadow-2xs text-[10.5px]">
+                    <div className="p-1.5 rounded bg-background border border-border/70 shadow-2xs text-[10.5px] active:scale-[0.98] transition-transform duration-160 ease-[var(--ease-out)]">
                       <div className="font-medium text-foreground truncate">SQLite indexing</div>
                       <div className="text-[9.5px] font-mono text-muted-foreground">#perf · T-108</div>
                     </div>
-                    <div className="p-1.5 rounded bg-background border border-border/70 shadow-2xs text-[10.5px]">
+                    <div className="p-1.5 rounded bg-background border border-border/70 shadow-2xs text-[10.5px] active:scale-[0.98] transition-transform duration-160 ease-[var(--ease-out)]">
                       <div className="font-medium text-foreground truncate">Markdown export</div>
                       <div className="text-[9.5px] font-mono text-muted-foreground">#export · T-112</div>
                     </div>
@@ -963,7 +918,7 @@ export function LandingPage() {
                       <span>PROGRESS</span>
                       <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[9.5px]">1</span>
                     </div>
-                    <div className="p-1.5 rounded bg-background border border-primary/40 shadow-2xs text-[10.5px] space-y-1">
+                    <div className="p-1.5 rounded bg-background border border-primary/40 shadow-2xs text-[10.5px] space-y-1 active:scale-[0.98] transition-transform duration-160 ease-[var(--ease-out)]">
                       <div className="font-medium text-foreground truncate">MCP Stdio Bridge</div>
                       <div className="text-[9.5px] font-mono text-primary font-semibold">T-104 (75%)</div>
                       <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
@@ -978,7 +933,7 @@ export function LandingPage() {
                       <span>REVIEW</span>
                       <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 text-[9.5px]">1</span>
                     </div>
-                    <div className="p-1.5 rounded bg-background border border-border/70 shadow-2xs text-[10.5px]">
+                    <div className="p-1.5 rounded bg-background border border-border/70 shadow-2xs text-[10.5px] active:scale-[0.98] transition-transform duration-160 ease-[var(--ease-out)]">
                       <div className="font-medium text-foreground truncate">ONNX Embeddings</div>
                       <div className="text-[9.5px] font-mono text-muted-foreground">#ai · T-101</div>
                     </div>
@@ -1004,11 +959,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            CORE FEATURE 4: SAVED LINKS (Distilled & Compact)
+            CORE FEATURE 4: SAVED LINKS
             =================================================================== */}
-        <section id="features-links" className="scroll-mt-20 space-y-6 pt-2">
+        <section id="features-links" className="scroll-mt-20 space-y-5 pt-1">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Visual Mock */}
             <div className="lg:col-span-7 order-2 lg:order-1">
               <div className="rounded-xl border border-border/90 bg-card p-4 sm:p-5 shadow-2xs card-hover space-y-2.5">
                 <div className="flex items-center justify-between pb-2 border-b border-border/70 text-xs">
@@ -1024,10 +978,10 @@ export function LandingPage() {
                     { title: "Model Context Protocol Specification", domain: "modelcontextprotocol.io", tags: ["#mcp", "#spec"] },
                     { title: "uv: Fast Python Package Installer", domain: "github.com", tags: ["#python", "#tools"] },
                     { title: "Local Vector Search with ONNX in Rust", domain: "antigravity.dev", tags: ["#onnx", "#rust"] },
-                  ].map((item) => (
+                  ].map((item, i) => (
                     <div
                       key={item.title}
-                      className="p-2.5 rounded-lg border border-border/70 bg-muted/20 hover:bg-muted/40 transition-colors flex items-center justify-between gap-2"
+                      className={`p-2.5 rounded-lg border border-border/70 bg-muted/20 hover:bg-muted/40 active:scale-[0.98] transition-[background-color,border-color,transform] duration-160 ease-[var(--ease-out)] flex items-center justify-between gap-2 stagger-${i + 1}`}
                     >
                       <div className="min-w-0">
                         <div className="font-medium text-xs text-foreground truncate flex items-center gap-1.5">
@@ -1047,7 +1001,6 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Copy */}
             <div className="lg:col-span-5 space-y-3 order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
                 <Bookmark className="h-4 w-4" />
@@ -1074,11 +1027,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            CORE FEATURE 5: MEMOS (Distilled & Interactive Hashtags)
+            CORE FEATURE 5: MEMOS
             =================================================================== */}
-        <section id="features-memos" className="scroll-mt-20 space-y-6 pt-2">
+        <section id="features-memos" className="scroll-mt-20 space-y-5 pt-1">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Copy */}
             <div className="lg:col-span-5 space-y-3">
               <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
                 <Hash className="h-4 w-4" />
@@ -1102,7 +1054,6 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Visual Mock with Interactive Hashtag filter */}
             <div className="lg:col-span-7">
               <div className="rounded-xl border border-border/90 bg-card p-4 sm:p-5 shadow-2xs card-hover space-y-2.5">
                 <div className="flex items-center justify-between pb-2 border-b border-border/70 text-xs">
@@ -1116,7 +1067,7 @@ export function LandingPage() {
                         key={tag}
                         type="button"
                         onClick={() => setActiveMemoTag(tag)}
-                        className={`text-[10px] font-mono px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded cursor-pointer active:scale-[0.95] transition-[background-color,color,transform] duration-160 ease-[var(--ease-out)] ${
                           activeMemoTag === tag
                             ? "bg-primary text-primary-foreground font-semibold"
                             : "bg-muted text-muted-foreground hover:text-foreground"
@@ -1136,7 +1087,7 @@ export function LandingPage() {
                   ]
                     .filter((m) => activeMemoTag === "all" || m.tag === activeMemoTag)
                     .map((m) => (
-                      <div key={m.content} className="p-2.5 rounded-lg border border-border/70 bg-muted/20 space-y-1">
+                      <div key={m.content} className="p-2.5 rounded-lg border border-border/70 bg-muted/20 space-y-1 active:scale-[0.99] transition-transform duration-160 ease-[var(--ease-out)]">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-xs text-foreground leading-relaxed">{m.content}</p>
                           {m.pinned && <Pin className="h-3 w-3 text-primary shrink-0 fill-primary/30" />}
@@ -1154,11 +1105,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            CORE FEATURE 6: DOCS (Distilled & Cross-Referenced)
+            CORE FEATURE 6: DOCS
             =================================================================== */}
-        <section id="features-docs" className="scroll-mt-20 space-y-6 pt-2">
+        <section id="features-docs" className="scroll-mt-20 space-y-5 pt-1">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Visual Mock */}
             <div className="lg:col-span-7 order-2 lg:order-1">
               <div className="rounded-xl border border-border/90 bg-card p-4 sm:p-5 shadow-2xs card-hover space-y-2.5">
                 <div className="flex items-center justify-between pb-2 border-b border-border/70 text-xs">
@@ -1193,7 +1143,6 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Copy */}
             <div className="lg:col-span-5 space-y-3 order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
                 <FileText className="h-4 w-4" />
@@ -1220,11 +1169,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            WORKBENCH INTERACTIVE DEMO (Blinking Cursor & Micro-Interactions)
+            WORKBENCH INTERACTIVE DEMO (Tactile Tabs & Blinking Cursor)
             =================================================================== */}
-        <section id="workbench-demo" className="scroll-mt-20 space-y-6 pt-4">
+        <section id="workbench-demo" className="scroll-mt-20 space-y-5 pt-2">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start">
-            {/* Copy */}
             <div className="lg:col-span-5 space-y-4">
               <div className="space-y-2">
                 <p className="font-mono text-xs uppercase tracking-wider text-primary font-semibold">
@@ -1271,7 +1219,6 @@ export function LandingPage() {
             {/* Terminal Transcript */}
             <div className="lg:col-span-7">
               <div className="rounded-xl border border-border/90 bg-card overflow-hidden shadow-md card-hover">
-                {/* Header */}
                 <div className="border-b border-border/80 bg-muted/40 p-2.5 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
@@ -1287,7 +1234,7 @@ export function LandingPage() {
                     <button
                       type="button"
                       onClick={() => setDemoView("response")}
-                      className={`px-2 py-0.5 rounded text-[10.5px] transition-colors cursor-pointer ${
+                      className={`px-2 py-0.5 rounded text-[10.5px] active:scale-[0.95] transition-[background-color,color,transform] duration-160 ease-[var(--ease-out)] cursor-pointer ${
                         demoView === "response"
                           ? "bg-primary text-primary-foreground font-medium"
                           : "text-muted-foreground hover:text-foreground"
@@ -1298,7 +1245,7 @@ export function LandingPage() {
                     <button
                       type="button"
                       onClick={() => setDemoView("request")}
-                      className={`px-2 py-0.5 rounded text-[10.5px] transition-colors cursor-pointer ${
+                      className={`px-2 py-0.5 rounded text-[10.5px] active:scale-[0.95] transition-[background-color,color,transform] duration-160 ease-[var(--ease-out)] cursor-pointer ${
                         demoView === "request"
                           ? "bg-primary text-primary-foreground font-medium"
                           : "text-muted-foreground hover:text-foreground"
@@ -1309,17 +1256,16 @@ export function LandingPage() {
                   </div>
                 </div>
 
-                {/* Tabs */}
                 <div className="flex items-center overflow-x-auto border-b border-border/70 bg-muted/20 px-2.5 py-1.5 gap-1 scrollbar-none">
                   {DEMO_TABS.map((tab) => (
                     <button
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveTabId(tab.id)}
-                      className={`font-mono text-xs px-2 py-1 rounded transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                      className={`font-mono text-xs px-2 py-1 rounded whitespace-nowrap cursor-pointer flex items-center gap-1.5 active:scale-[0.96] transition-[background-color,color,border-color,transform] duration-160 ease-[var(--ease-out)] ${
                         activeTabId === tab.id
                           ? "bg-background text-primary border border-border/80 font-semibold shadow-2xs"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
                       }`}
                     >
                       <span className={`h-1.5 w-1.5 rounded-full ${activeTabId === tab.id ? "bg-primary animate-pulse-glow" : "bg-muted-foreground/50"}`} />
@@ -1328,7 +1274,6 @@ export function LandingPage() {
                   ))}
                 </div>
 
-                {/* Body */}
                 <div className="p-3.5 sm:p-4 font-mono text-xs space-y-2.5 bg-card">
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/50 text-[10.5px] text-muted-foreground">
                     <span className="truncate max-w-[80%]">{activeTab.description}</span>
@@ -1340,7 +1285,7 @@ export function LandingPage() {
                           "payload"
                         )
                       }
-                      className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground active:scale-[0.9] transition-[background-color,color,transform] duration-160 ease-[var(--ease-out)] cursor-pointer"
                       title="Copy JSON"
                     >
                       {copiedPayload ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
@@ -1373,9 +1318,9 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            FAQ ACCORDION SECTION (Distilled & High-Signal)
+            FAQ ACCORDION SECTION
             =================================================================== */}
-        <section id="faq-section" className="scroll-mt-20 space-y-5 max-w-4xl mx-auto pt-2">
+        <section id="faq-section" className="scroll-mt-20 space-y-5 max-w-4xl mx-auto pt-1">
           <div className="text-center space-y-1">
             <p className="font-mono text-xs uppercase tracking-wider text-primary font-semibold">
               FAQ
@@ -1436,11 +1381,10 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            COLOPHON / FOOTER (Clean & Editorial)
+            COLOPHON / FOOTER
             =================================================================== */}
         <footer className="border-t border-border/80 pt-10 pb-14 space-y-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-5">
-            {/* Brand Colophon */}
             <div className="md:col-span-2 space-y-2">
               <div className="flex items-center gap-2">
                 <img
@@ -1463,70 +1407,32 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Links: Features */}
             <div className="space-y-2 text-xs">
               <div className="font-mono font-semibold uppercase tracking-wider text-foreground text-[10.5px]">
                 Features
               </div>
               <ul className="space-y-1.5 text-muted-foreground">
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection("features-projects")}
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Projects
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection("features-tasks")}
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Tasks
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection("features-kanban")}
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Kanban
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection("features-links")}
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Saved Links
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection("features-memos")}
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Memos
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection("features-docs")}
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Docs
-                  </button>
-                </li>
+                {[
+                  { label: "Projects", id: "features-projects" },
+                  { label: "Tasks", id: "features-tasks" },
+                  { label: "Kanban", id: "features-kanban" },
+                  { label: "Saved Links", id: "features-links" },
+                  { label: "Memos", id: "features-memos" },
+                  { label: "Docs", id: "features-docs" },
+                ].map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => scrollToSection(item.id)}
+                      className="hover:text-foreground transition-colors duration-160 ease-[var(--ease-out)] cursor-pointer"
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* Links: Developers */}
             <div className="space-y-2 text-xs">
               <div className="font-mono font-semibold uppercase tracking-wider text-foreground text-[10.5px]">
                 Developers
@@ -1537,7 +1443,7 @@ export function LandingPage() {
                     href="https://github.com/knowns/know-me"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-foreground transition-colors inline-flex items-center gap-1"
+                    className="hover:text-foreground transition-colors duration-160 ease-[var(--ease-out)] inline-flex items-center gap-1"
                   >
                     <span>GitHub</span>
                     <ExternalLink className="h-3 w-3" />
@@ -1548,7 +1454,7 @@ export function LandingPage() {
                     href="https://modelcontextprotocol.io"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-foreground transition-colors inline-flex items-center gap-1"
+                    className="hover:text-foreground transition-colors duration-160 ease-[var(--ease-out)] inline-flex items-center gap-1"
                   >
                     <span>MCP Spec</span>
                     <ExternalLink className="h-3 w-3" />
@@ -1558,7 +1464,7 @@ export function LandingPage() {
                   <button
                     type="button"
                     onClick={() => copyToClipboard(installCommand, "install")}
-                    className="hover:text-foreground transition-colors inline-flex items-center gap-1 cursor-pointer"
+                    className="hover:text-foreground transition-colors duration-160 ease-[var(--ease-out)] inline-flex items-center gap-1 cursor-pointer active:scale-[0.97]"
                   >
                     <span>Install Script</span>
                     <Copy className="h-3 w-3" />
@@ -1567,7 +1473,6 @@ export function LandingPage() {
               </ul>
             </div>
 
-            {/* Status */}
             <div className="space-y-2 text-xs">
               <div className="font-mono font-semibold uppercase tracking-wider text-foreground text-[10.5px]">
                 Status
@@ -1583,7 +1488,6 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Bottom Bar */}
           <div className="border-t border-border/60 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
             <div>© 2026 KnowMe Authors. Open source under MIT.</div>
             <div>
@@ -1591,7 +1495,7 @@ export function LandingPage() {
                 href="http://localhost:6421"
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-foreground transition-colors cursor-pointer font-medium text-primary"
+                className="hover:text-foreground transition-colors duration-160 ease-[var(--ease-out)] cursor-pointer font-medium text-primary active:scale-[0.97]"
               >
                 Go to Workspace →
               </a>
