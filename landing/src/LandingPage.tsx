@@ -20,6 +20,16 @@ import {
   Code2,
   FolderTree,
   Sparkles,
+  Bookmark,
+  Hash,
+  FolderGit2,
+  Clock,
+  Tag,
+  CheckSquare,
+  AlertCircle,
+  Link2,
+  Pin,
+  FileCode2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -241,6 +251,17 @@ export function LandingPage() {
   const [activeTabId, setActiveTabId] = useState("retrieve");
   const [demoView, setDemoView] = useState<"response" | "request">("response");
 
+  // Interactive mock state for Task Checklist demo
+  const [taskCheckedItems, setTaskCheckedItems] = useState<Record<number, boolean>>({
+    0: true,
+    1: true,
+    2: false,
+    3: false,
+  });
+
+  // Interactive mock state for Memo hashtag filter
+  const [activeMemoTag, setActiveMemoTag] = useState<string>("all");
+
   const installCommand = "curl -fsSL https://knowme.dev/install.sh | sh";
 
   const copyToClipboard = (text: string, type: "install" | "payload") => {
@@ -257,6 +278,11 @@ export function LandingPage() {
   };
 
   const activeTab = DEMO_TABS.find((t) => t.id === activeTabId) || DEMO_TABS[0];
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-background text-foreground selection:bg-accent selection:text-accent-foreground">
@@ -297,7 +323,61 @@ export function LandingPage() {
           </div>
 
           {/* Nav Links */}
-          <nav className="flex items-center gap-2 sm:gap-4">
+          <nav className="flex items-center gap-1.5 sm:gap-3">
+            <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => scrollToSection("features-projects")}
+                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                Projects
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection("features-tasks")}
+                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                Tasks
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection("features-kanban")}
+                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                Kanban
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection("features-links")}
+                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                Links
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection("features-memos")}
+                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                Memos
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection("features-docs")}
+                className="px-2 py-1 rounded hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                Docs
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollToSection("workbench-demo")}
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
+            >
+              <Terminal className="h-3.5 w-3.5" />
+              <span>MCP Bridge</span>
+            </button>
+
             <a
               href="https://github.com/knowns/know-me"
               target="_blank"
@@ -307,30 +387,6 @@ export function LandingPage() {
               <GitBranch className="h-3.5 w-3.5" />
               <span>GitHub</span>
             </a>
-
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById("workbench-demo");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
-            >
-              <Terminal className="h-3.5 w-3.5" />
-              <span>MCP Protocol</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById("faq-section");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>FAQ</span>
-            </button>
 
             {/* Theme Toggle */}
             <ThemeToggle
@@ -574,7 +630,7 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            3. BENTO GRID FEATURES (6 irregular tiles)
+            3. BENTO GRID OVERVIEW (6 irregular tiles)
             =================================================================== */}
         <section className="space-y-6">
           <div className="space-y-2 max-w-2xl">
@@ -774,9 +830,608 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            4. WORKBENCH INTERACTIVE DEMO SECTION (Terminal & MCP stdio)
+            CORE FEATURE 1: PROJECTS (Centralized Repository / Workspace Home)
             =================================================================== */}
-        <section id="workbench-demo" className="scroll-mt-20 space-y-8">
+        <section id="features-projects" className="scroll-mt-20 space-y-8 pt-4">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
+            {/* Left Column: Copy */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
+                <FolderGit2 className="h-4 w-4" />
+                <span>Feature 01 · Workspace Topology</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+                Projects: Centralized home per repository.
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Every code repository gets its own clean home with a dedicated <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">.know-me/</code> folder. Seamlessly switch between active client projects, microservices, and internal tools without context contamination.
+              </p>
+              <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Instant workspace switching with zero reload lag</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Binds all tasks, docs, and git worktrees under one roof</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Git-native configuration stored directly in your repo root</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Visual Mock for Projects */}
+            <div className="lg:col-span-7">
+              <div className="rounded-xl border border-border/90 bg-card p-5 shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-border/70 pb-3">
+                  <div className="flex items-center gap-2">
+                    <FolderGit2 className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-sm text-foreground">Switch Project Workspace</span>
+                  </div>
+                  <Badge variant="outline" className="text-[11px] font-mono">4 Local Repositories</Badge>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { name: "know-me/core", path: "~/code/know-me", active: true, tasks: "24 tasks", docs: "18 docs", branch: "main (c9a41b)" },
+                    { name: "api-gateway", path: "~/code/api-gateway", active: false, tasks: "12 tasks", docs: "6 docs", branch: "feat/grpc (8f102e)" },
+                    { name: "mobile-sdk", path: "~/code/mobile-sdk", active: false, tasks: "9 tasks", docs: "14 docs", branch: "v2.1-dev (1a044b)" },
+                    { name: "cloud-infrastructure", path: "~/code/infra", active: false, tasks: "17 tasks", docs: "29 docs", branch: "staging (45df01)" },
+                  ].map((p) => (
+                    <div
+                      key={p.name}
+                      className={`p-3 rounded-lg border transition-all ${
+                        p.active
+                          ? "border-primary/60 bg-primary/5 shadow-xs"
+                          : "border-border/70 bg-muted/20 hover:bg-muted/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-semibold text-xs text-foreground truncate">{p.name}</span>
+                        {p.active ? (
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-primary text-primary-foreground font-semibold">ACTIVE</span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-muted-foreground">SWITCH</span>
+                        )}
+                      </div>
+                      <div className="text-[11px] font-mono text-muted-foreground truncate mb-2">{p.path}</div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-1.5 border-t border-border/50">
+                        <span>{p.tasks} · {p.docs}</span>
+                        <span className="text-foreground">{p.branch}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            CORE FEATURE 2: TASKS (Granular Engineering Task Tracking)
+            =================================================================== */}
+        <section id="features-tasks" className="scroll-mt-20 space-y-8 pt-4">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
+            {/* Left Column: Visual Mock for Tasks */}
+            <div className="lg:col-span-7 order-2 lg:order-1">
+              <div className="rounded-xl border border-border/90 bg-card p-5 shadow-xs space-y-4">
+                {/* Task Header */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">TASK-104</span>
+                    <span className="font-semibold text-sm text-foreground">Implement MCP Stdio Bridge</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px] font-mono font-semibold">HIGH PRIORITY</Badge>
+                    <Badge variant="secondary" className="text-[10px] font-mono">IN PROGRESS</Badge>
+                  </div>
+                </div>
+
+                {/* Task Metadata row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono bg-muted/30 p-2.5 rounded-lg border border-border/60">
+                  <div>
+                    <span className="text-muted-foreground block text-[10px]">ASSIGNEE</span>
+                    <span className="text-foreground font-medium">crewmate-4</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-[10px]">BRANCH</span>
+                    <span className="text-foreground font-medium">feat/mcp-bridge</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-[10px]">TIME TRACKED</span>
+                    <span className="text-foreground font-medium">1h 45m</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-[10px]">CROSS-LINKS</span>
+                    <span className="text-primary font-medium">@doc/specs/mcp</span>
+                  </div>
+                </div>
+
+                {/* Acceptance Criteria Checklist */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <CheckSquare className="h-3.5 w-3.5 text-primary" />
+                      Acceptance Criteria Checklist (Agent Verifiable)
+                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      {Object.values(taskCheckedItems).filter(Boolean).length} / 4 passed
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    {[
+                      "Support standard JSON-RPC 2.0 pipes over child process stdin/stdout",
+                      "Zero cloud network roundtrips; read .know-me/ disk state atomically",
+                      "Deterministic cross-references resolution for @task/<id> and @doc/<path>",
+                      "Run isolated worktree test suite before review-ready milestone transition",
+                    ].map((crit, idx) => (
+                      <button
+                        key={crit}
+                        type="button"
+                        onClick={() =>
+                          setTaskCheckedItems((prev) => ({ ...prev, [idx]: !prev[idx] }))
+                        }
+                        className="w-full flex items-start gap-2.5 p-2 rounded-md border border-border/60 hover:bg-muted/40 transition-colors text-left cursor-pointer"
+                      >
+                        <span className={`mt-0.5 h-4 w-4 rounded flex items-center justify-center shrink-0 border ${
+                          taskCheckedItems[idx]
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "border-muted-foreground/40 bg-background"
+                        }`}>
+                          {taskCheckedItems[idx] && <Check className="h-3 w-3" />}
+                        </span>
+                        <span className={taskCheckedItems[idx] ? "line-through text-muted-foreground" : "text-foreground"}>
+                          {crit}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Copy */}
+            <div className="lg:col-span-5 space-y-4 order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
+                <CheckSquare className="h-4 w-4" />
+                <span>Feature 02 · Engineering Execution</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+                Tasks: Granular lifecycles, clear acceptance criteria.
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Tasks in KnowMe aren't just informal to-do bullets. They are precision engineering contracts with lifecycle transitions (<code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">todo</code>, <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">in-progress</code>, <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">review-ready</code>, <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">done</code>, <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">blocked</code>), acceptance checklists, time tracking, and Git worktree links.
+              </p>
+              <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Interactive acceptance criteria that AI coding agents read and satisfy</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Subtask hierarchies with automatic parent progress recalculation</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Audit logging of state transitions stored right inside task markdown files</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            CORE FEATURE 3: KANBAN (Visual Flow & Stage Transitions)
+            =================================================================== */}
+        <section id="features-kanban" className="scroll-mt-20 space-y-8 pt-4">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
+            {/* Left Column: Copy */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
+                <Kanban className="h-4 w-4" />
+                <span>Feature 03 · Visual Workflow</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+                Kanban: Calm, high-density stage visibility.
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                A fluid Kanban board engineered for developer speed. Move work across stages without loading spinners, visualize work-in-progress (WIP), and monitor background subagents moving tasks through milestone review gates in real-time.
+              </p>
+              <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>WIP visibility across Backlog, In Progress, Review, and Done</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Filter by hashtag, assignee, milestone, or priority at keyboard speed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Smooth drag-and-drop or one-key stage advancement</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Visual Mock for Kanban */}
+            <div className="lg:col-span-7">
+              <div className="rounded-xl border border-border/90 bg-card p-4 sm:p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-border/70 text-xs">
+                  <span className="font-semibold text-foreground flex items-center gap-1.5">
+                    <Kanban className="h-3.5 w-3.5 text-primary" />
+                    Active Sprint Board
+                  </span>
+                  <span className="font-mono text-muted-foreground text-[11px]">8 active items · 0 blocked</span>
+                </div>
+
+                {/* Kanban 4 Columns */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {/* Column 1: Backlog */}
+                  <div className="rounded-lg bg-muted/30 p-2 border border-border/60 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-muted-foreground pb-1 border-b border-border/40">
+                      <span>BACKLOG</span>
+                      <span className="px-1.5 py-0.2 rounded bg-muted text-[10px]">2</span>
+                    </div>
+                    <div className="p-2 rounded bg-background border border-border/70 shadow-2xs space-y-1">
+                      <div className="text-[11px] font-medium text-foreground leading-tight">SQLite index optimization</div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+                        <span>#perf</span>
+                        <span>TASK-108</span>
+                      </div>
+                    </div>
+                    <div className="p-2 rounded bg-background border border-border/70 shadow-2xs space-y-1">
+                      <div className="text-[11px] font-medium text-foreground leading-tight">Export to Markdown zip</div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+                        <span>#export</span>
+                        <span>TASK-112</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 2: In Progress */}
+                  <div className="rounded-lg bg-muted/30 p-2 border border-border/60 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-primary pb-1 border-b border-border/40">
+                      <span>IN PROGRESS</span>
+                      <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px]">1</span>
+                    </div>
+                    <div className="p-2 rounded bg-background border border-primary/40 shadow-2xs space-y-1">
+                      <div className="text-[11px] font-medium text-foreground leading-tight">MCP Stdio Bridge</div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-primary">
+                        <span>#mcp</span>
+                        <span className="font-semibold">TASK-104</span>
+                      </div>
+                      <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary w-3/4" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 3: Review */}
+                  <div className="rounded-lg bg-muted/30 p-2 border border-border/60 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-amber-500 pb-1 border-b border-border/40">
+                      <span>REVIEW</span>
+                      <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 text-[10px]">1</span>
+                    </div>
+                    <div className="p-2 rounded bg-background border border-border/70 shadow-2xs space-y-1">
+                      <div className="text-[11px] font-medium text-foreground leading-tight">ONNX Vector Runtime</div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+                        <span>#ai</span>
+                        <span>TASK-101</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 4: Done */}
+                  <div className="rounded-lg bg-muted/30 p-2 border border-border/60 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-emerald-500 pb-1 border-b border-border/40">
+                      <span>DONE</span>
+                      <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px]">4</span>
+                    </div>
+                    <div className="p-2 rounded bg-background/60 border border-border/50 text-muted-foreground space-y-1">
+                      <div className="text-[11px] line-through leading-tight">Theme transition tokens</div>
+                      <div className="text-[10px] font-mono">TASK-098</div>
+                    </div>
+                    <div className="p-2 rounded bg-background/60 border border-border/50 text-muted-foreground space-y-1">
+                      <div className="text-[11px] line-through leading-tight">CLI help auto-generation</div>
+                      <div className="text-[10px] font-mono">TASK-095</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            CORE FEATURE 4: SAVED LINKS (Reading List & URL Bookmarking)
+            =================================================================== */}
+        <section id="features-links" className="scroll-mt-20 space-y-8 pt-4">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
+            {/* Left Column: Visual Mock for Saved Links */}
+            <div className="lg:col-span-7 order-2 lg:order-1">
+              <div className="rounded-xl border border-border/90 bg-card p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-border/70">
+                  <div className="flex items-center gap-2">
+                    <Bookmark className="h-4 w-4 text-primary" />
+                    <span className="font-semibold text-sm text-foreground">Saved Links & Reading List</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
+                    <Search className="h-3 w-3" />
+                    <span>Auto-tagged · Searchable</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    {
+                      title: "Model Context Protocol Specification",
+                      url: "https://modelcontextprotocol.io/specification",
+                      domain: "modelcontextprotocol.io",
+                      tags: ["#mcp", "#spec", "#ai-agents"],
+                      added: "Saved 2d ago",
+                    },
+                    {
+                      title: "uv: Extremely Fast Python Package Installer and Resolver",
+                      url: "https://github.com/astral-sh/uv",
+                      domain: "github.com",
+                      tags: ["#python", "#tools", "#cli"],
+                      added: "Saved 4d ago",
+                    },
+                    {
+                      title: "Local Vector Search with ONNX Embeddings in Rust",
+                      url: "https://antigravity.dev/blog/onnx-embeddings-rust",
+                      domain: "antigravity.dev",
+                      tags: ["#embeddings", "#rust", "#search"],
+                      added: "Saved 1w ago",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.title}
+                      className="p-3 rounded-lg border border-border/70 bg-muted/20 hover:bg-muted/40 transition-colors space-y-1.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-medium text-xs text-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+                          <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span>{item.title}</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-muted-foreground shrink-0">{item.domain}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-1">
+                        <div className="flex items-center gap-1.5">
+                          {item.tags.map((t) => (
+                            <span key={t} className="px-1.5 py-0.2 rounded bg-muted text-foreground">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                        <span>{item.added}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Copy */}
+            <div className="lg:col-span-5 space-y-4 order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
+                <Bookmark className="h-4 w-4" />
+                <span>Feature 04 · Reading & Research</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+                Saved Links: Your personal developer web archive.
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Bookmark libraries, RFC proposals, blogs, and API references without tab overload or third-party cloud bookmarks. KnowMe extracts domains, auto-tags topics, and indexes snippets locally so you and your coding agents can reference them anytime.
+              </p>
+              <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Automatic domain extraction and title resolution</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Hashtag filtering for quick domain categorisation</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Available to AI agents as verified reading material via MCP tools</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            CORE FEATURE 5: MEMOS (Fast Scratchpad & Hashtag Capture)
+            =================================================================== */}
+        <section id="features-memos" className="scroll-mt-20 space-y-8 pt-4">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
+            {/* Left Column: Copy */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
+                <Hash className="h-4 w-4" />
+                <span>Feature 05 · Global Scratchpad</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+                Memos: Rapid capture without workspace friction.
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Spontaneous engineering insights, quick code snippets, and bug reproductions don't belong in formal specs. Memos offer a zero-friction capture pad with instant hashtag taxonomy (<code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#ideas</code>, <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#bugs</code>, <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#rfc</code>). Accessible globally, even without an active project.
+              </p>
+              <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Global access across projects for cross-cutting thoughts</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Instant hashtag classification without folder hierarchies</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Pin crucial thoughts to keep them top-of-mind</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Visual Mock for Memos */}
+            <div className="lg:col-span-7">
+              <div className="rounded-xl border border-border/90 bg-card p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-border/70">
+                  <div className="flex items-center gap-2">
+                    <Hash className="h-4 w-4 text-primary" />
+                    <span className="font-semibold text-sm text-foreground">Global Engineering Memos</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {["all", "ideas", "bugs", "rfc"].map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setActiveMemoTag(tag)}
+                        className={`text-[11px] font-mono px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                          activeMemoTag === tag
+                            ? "bg-primary text-primary-foreground font-semibold"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        #{tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  {[
+                    {
+                      content: "Remember to enforce POSIX path separators when building subagent worktrees on Windows WSL. Prevents path truncation bugs.",
+                      tag: "bugs",
+                      date: "2 hours ago",
+                      pinned: true,
+                    },
+                    {
+                      content: "Idea for hybrid ranking: weight exact BM25 keyword matches 60% and cosine distance on ONNX embeddings 40% for optimal developer term precision.",
+                      tag: "ideas",
+                      date: "Yesterday",
+                      pinned: false,
+                    },
+                    {
+                      content: "RFC: Draft subagent lifecycle transition hooks so GitHub status checks update when crewmate runs pass or fail.",
+                      tag: "rfc",
+                      date: "3 days ago",
+                      pinned: false,
+                    },
+                  ]
+                    .filter((m) => activeMemoTag === "all" || m.tag === activeMemoTag)
+                    .map((m) => (
+                      <div
+                        key={m.content}
+                        className="p-3 rounded-lg border border-border/70 bg-muted/20 space-y-1.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs text-foreground leading-relaxed">{m.content}</p>
+                          {m.pinned && (
+                            <Pin className="h-3.5 w-3.5 text-primary shrink-0 fill-primary/30" />
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-1 border-t border-border/40">
+                          <span className="text-primary font-semibold">#{m.tag}</span>
+                          <span>{m.date}</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            CORE FEATURE 6: DOCS (Living Specs & Architecture Markdown)
+            =================================================================== */}
+        <section id="features-docs" className="scroll-mt-20 space-y-8 pt-4">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
+            {/* Left Column: Visual Mock for Docs */}
+            <div className="lg:col-span-7 order-2 lg:order-1">
+              <div className="rounded-xl border border-border/90 bg-card p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-border/70">
+                  <div className="flex items-center gap-2">
+                    <FileCode2 className="h-4 w-4 text-primary" />
+                    <span className="font-semibold text-sm text-foreground">docs/architecture/mcp-bridge.md</span>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] font-mono text-primary border-primary/30">
+                    APPROVED SPEC
+                  </Badge>
+                </div>
+
+                {/* Editorial Doc View */}
+                <div className="rounded-lg border border-border/70 bg-background/80 p-4 space-y-3 font-sans text-xs">
+                  <div className="space-y-1">
+                    <h4 className="text-base font-semibold text-foreground tracking-tight">
+                      Model Context Protocol Stdio Transport Architecture
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground font-mono">
+                      Last edited by team · Linked with <span className="text-primary font-semibold">@task/TASK-104</span>
+                    </p>
+                  </div>
+
+                  <p className="text-muted-foreground leading-relaxed">
+                    This specification governs how AI coding harnesses (Claude Code, Cursor, Codex) establish low-latency bidirectional IPC over UNIX standard input/output pipes.
+                  </p>
+
+                  <div className="rounded bg-muted/60 p-2.5 font-mono text-[11px] border border-border/60 text-foreground space-y-1">
+                    <div className="text-muted-foreground">// JSON-RPC stdio initialization</div>
+                    <div className="text-primary">{"{ \"jsonrpc\": \"2.0\", \"method\": \"initialize\", \"id\": 1 }"}</div>
+                    <div className="text-foreground">{"→ { \"capabilities\": { \"tools\": { \"listChanged\": true } } }"}</div>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-1 text-[11px] text-muted-foreground font-mono">
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-3 w-3 text-primary" />
+                      <span>References: @task/TASK-104, @doc/specs/subagents</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Copy */}
+            <div className="lg:col-span-5 space-y-4 order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
+                <FileText className="h-4 w-4" />
+                <span>Feature 06 · Living Specifications</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+                Docs: Durable specs and cross-referenced architecture.
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Markdown-native architecture decision records (ADRs), system designs, and onboarding blueprints versioned directly inside your Git repository. Deterministic <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">@task/&lt;id&gt;</code> and <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">@doc/&lt;path&gt;</code> anchors allow both developers and AI agents to navigate your codebase without hallucinating nonexistent paths.
+              </p>
+              <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Deterministic citation anchors with exact line-range accuracy</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Spec status tagging (draft, approved, implemented)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>Pure Markdown files stored in .know-me/docs/ on your disk</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            WORKBENCH INTERACTIVE DEMO SECTION (Terminal & MCP stdio)
+            =================================================================== */}
+        <section id="workbench-demo" className="scroll-mt-20 space-y-8 pt-4">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
             {/* Left Column: Editorial Explanation of MCP Bridge */}
             <div className="lg:col-span-5 space-y-6">
@@ -956,9 +1611,9 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            5. FAQ ACCORDION SECTION
+            FAQ ACCORDION SECTION
             =================================================================== */}
-        <section id="faq-section" className="scroll-mt-20 space-y-6 max-w-4xl mx-auto">
+        <section id="faq-section" className="scroll-mt-20 space-y-6 max-w-4xl mx-auto pt-4">
           <div className="text-center space-y-2">
             <p className="font-mono text-xs uppercase tracking-wider text-primary font-semibold">
               Clear Answers
@@ -1022,7 +1677,7 @@ export function LandingPage() {
         </section>
 
         {/* ===================================================================
-            6. COLOPHON / FOOTER
+            COLOPHON / FOOTER
             =================================================================== */}
         <footer className="border-t border-border/80 pt-12 pb-16 space-y-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:grid-cols-5">
@@ -1052,41 +1707,61 @@ export function LandingPage() {
             {/* Links: Product */}
             <div className="space-y-2.5 text-xs">
               <div className="font-mono font-semibold uppercase tracking-wider text-foreground text-[11px]">
-                Product
+                Product Features
               </div>
               <ul className="space-y-2 text-muted-foreground">
                 <li>
-                  <a
-                    href="http://localhost:6421"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Launch Workspace
-                  </a>
-                </li>
-                <li>
                   <button
                     type="button"
-                    onClick={() => {
-                      const el = document.getElementById("workbench-demo");
-                      el?.scrollIntoView({ behavior: "smooth" });
-                    }}
+                    onClick={() => scrollToSection("features-projects")}
                     className="hover:text-foreground transition-colors cursor-pointer"
                   >
-                    Interactive Workbench
+                    Projects Workspace
                   </button>
                 </li>
                 <li>
                   <button
                     type="button"
-                    onClick={() => {
-                      const el = document.getElementById("faq-section");
-                      el?.scrollIntoView({ behavior: "smooth" });
-                    }}
+                    onClick={() => scrollToSection("features-tasks")}
                     className="hover:text-foreground transition-colors cursor-pointer"
                   >
-                    FAQ & Architecture
+                    Engineering Tasks
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection("features-kanban")}
+                    className="hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Kanban Board
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection("features-links")}
+                    className="hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Saved Links
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection("features-memos")}
+                    className="hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Quick Memos
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection("features-docs")}
+                    className="hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Living Docs & Specs
                   </button>
                 </li>
               </ul>
