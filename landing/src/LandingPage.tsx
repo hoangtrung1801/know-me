@@ -1,5 +1,4 @@
-import { useState, useCallback, type MouseEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useState, useEffect, type MouseEvent } from "react";
 import {
   Terminal,
   Copy,
@@ -22,23 +21,15 @@ import {
   FolderTree,
   Sparkles,
 } from "lucide-react";
-import { Button } from "@/ui/components/ui/button";
-import { Badge } from "@/ui/components/ui/badge";
-import { ThemeToggle } from "@/ui/components/atoms/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from "@/ui/components/ui/accordion";
-import { useTheme } from "@/ui/App";
-import logoImage from "../public/logo.png";
-
-interface LandingPageProps {
-  onLaunchWorkspace?: () => void;
-  isDark?: boolean;
-  onToggleTheme?: (event: MouseEvent<HTMLButtonElement>) => void;
-}
+} from "@/components/ui/accordion";
 
 interface DemoTab {
   id: string;
@@ -221,16 +212,29 @@ const DEMO_TABS: DemoTab[] = [
   },
 ];
 
-export function LandingPage({
-  onLaunchWorkspace,
-  isDark: propIsDark,
-  onToggleTheme: propOnToggleTheme,
-}: LandingPageProps) {
-  const navigate = useNavigate();
-  const themeContext = useTheme();
+export function LandingPage() {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("theme");
+      if (saved) return saved === "dark";
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  });
 
-  const isDark = propIsDark !== undefined ? propIsDark : themeContext.isDark;
-  const toggleTheme = propOnToggleTheme || themeContext.toggle;
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
+
+  const toggleTheme = (e: MouseEvent<HTMLButtonElement>) => {
+    setIsDark((prev) => !prev);
+  };
 
   const [copiedInstall, setCopiedInstall] = useState(false);
   const [copiedPayload, setCopiedPayload] = useState(false);
@@ -238,14 +242,6 @@ export function LandingPage({
   const [demoView, setDemoView] = useState<"response" | "request">("response");
 
   const installCommand = "curl -fsSL https://knowme.dev/install.sh | sh";
-
-  const handleLaunch = useCallback(() => {
-    if (onLaunchWorkspace) {
-      onLaunchWorkspace();
-    } else {
-      navigate({ to: "/" });
-    }
-  }, [onLaunchWorkspace, navigate]);
 
   const copyToClipboard = (text: string, type: "install" | "payload") => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -263,7 +259,7 @@ export function LandingPage({
   const activeTab = DEMO_TABS.find((t) => t.id === activeTabId) || DEMO_TABS[0];
 
   return (
-    <div className="relative min-h-screen h-full w-full overflow-y-auto bg-background text-foreground selection:bg-accent selection:text-accent-foreground">
+    <div className="relative min-h-screen w-full bg-background text-foreground selection:bg-accent selection:text-accent-foreground">
       {/* Top Background subtle gradient grid */}
       <div
         className="pointer-events-none absolute inset-0 -z-10 opacity-30 dark:opacity-20"
@@ -280,13 +276,12 @@ export function LandingPage({
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleLaunch}
+            <a
+              href="/"
               className="flex items-center gap-2.5 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
             >
               <img
-                src={logoImage}
+                src="/logo.png"
                 alt="KnowMe Logo"
                 className="h-8 w-8 rounded-lg border border-border/80 object-cover shadow-xs transition-transform duration-200 group-hover:scale-105"
               />
@@ -298,7 +293,7 @@ export function LandingPage({
                   local-first memory
                 </span>
               </div>
-            </button>
+            </a>
           </div>
 
           {/* Nav Links */}
@@ -319,7 +314,7 @@ export function LandingPage({
                 const el = document.getElementById("workbench-demo");
                 el?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
             >
               <Terminal className="h-3.5 w-3.5" />
               <span>MCP Protocol</span>
@@ -331,7 +326,7 @@ export function LandingPage({
                 const el = document.getElementById("faq-section");
                 el?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
             >
               <BookOpen className="h-3.5 w-3.5" />
               <span>FAQ</span>
@@ -342,18 +337,19 @@ export function LandingPage({
               isDark={isDark}
               onToggle={toggleTheme}
               size="sm"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
             />
 
             {/* Launch Workspace CTA */}
-            <Button
-              size="sm"
-              onClick={handleLaunch}
-              className="gap-1.5 shadow-xs font-medium cursor-pointer"
-            >
-              <span>Launch Workspace</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
+            <a href="http://localhost:6421" target="_blank" rel="noreferrer">
+              <Button
+                size="sm"
+                className="gap-1.5 shadow-xs font-medium cursor-pointer"
+              >
+                <span>Launch Workspace</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </a>
           </nav>
         </div>
       </header>
@@ -391,14 +387,15 @@ export function LandingPage({
               {/* Actions: Install Command & Open Workspace */}
               <div className="space-y-3 pt-2">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button
-                    size="lg"
-                    onClick={handleLaunch}
-                    className="gap-2 font-medium cursor-pointer"
-                  >
-                    <span>Open Workspace</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                  <a href="http://localhost:6421" target="_blank" rel="noreferrer">
+                    <Button
+                      size="lg"
+                      className="gap-2 font-medium cursor-pointer"
+                    >
+                      <span>Open Workspace</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </a>
 
                   <a
                     href="https://github.com/knowns/know-me"
@@ -429,7 +426,7 @@ export function LandingPage({
                     type="button"
                     onClick={() => copyToClipboard(installCommand, "install")}
                     aria-label="Copy install command"
-                    className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
                   >
                     {copiedInstall ? (
                       <Check className="h-4 w-4 text-primary" />
@@ -864,7 +861,7 @@ export function LandingPage({
                     <button
                       type="button"
                       onClick={() => setDemoView("response")}
-                      className={`px-2 py-1 rounded text-[11px] transition-colors ${
+                      className={`px-2 py-1 rounded text-[11px] transition-colors cursor-pointer ${
                         demoView === "response"
                           ? "bg-primary text-primary-foreground font-medium"
                           : "text-muted-foreground hover:text-foreground"
@@ -875,7 +872,7 @@ export function LandingPage({
                     <button
                       type="button"
                       onClick={() => setDemoView("request")}
-                      className={`px-2 py-1 rounded text-[11px] transition-colors ${
+                      className={`px-2 py-1 rounded text-[11px] transition-colors cursor-pointer ${
                         demoView === "request"
                           ? "bg-primary text-primary-foreground font-medium"
                           : "text-muted-foreground hover:text-foreground"
@@ -918,7 +915,7 @@ export function LandingPage({
                           "payload"
                         )
                       }
-                      className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
+                      className="p-1 rounded hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       title="Copy JSON Payload"
                     >
                       {copiedPayload ? (
@@ -1033,7 +1030,7 @@ export function LandingPage({
             <div className="md:col-span-2 space-y-3">
               <div className="flex items-center gap-2.5">
                 <img
-                  src={logoImage}
+                  src="/logo.png"
                   alt="KnowMe"
                   className="h-7 w-7 rounded-lg border border-border/80 object-cover"
                 />
@@ -1059,13 +1056,14 @@ export function LandingPage({
               </div>
               <ul className="space-y-2 text-muted-foreground">
                 <li>
-                  <button
-                    type="button"
-                    onClick={handleLaunch}
+                  <a
+                    href="http://localhost:6421"
+                    target="_blank"
+                    rel="noreferrer"
                     className="hover:text-foreground transition-colors cursor-pointer"
                   >
                     Launch Workspace
-                  </button>
+                  </a>
                 </li>
                 <li>
                   <button
@@ -1157,13 +1155,14 @@ export function LandingPage({
               © 2026 KnowMe Authors. Open source under MIT.
             </div>
             <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={handleLaunch}
+              <a
+                href="http://localhost:6421"
+                target="_blank"
+                rel="noreferrer"
                 className="hover:text-foreground transition-colors cursor-pointer font-medium text-primary"
               >
                 Go to Workspace →
-              </button>
+              </a>
             </div>
           </div>
         </footer>

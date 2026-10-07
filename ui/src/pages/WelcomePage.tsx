@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, FolderOpen, Loader2, Plus, Sparkles } from "lucide-react";
+import { FolderOpen, Loader2, Plus } from "lucide-react";
 import { workspaceApi, type WorkspaceProject } from "@/ui/api/client";
 import { Button } from "@/ui/components/ui/button";
 import { ThemeToggle } from "@/ui/components/atoms/ThemeToggle";
@@ -32,16 +31,6 @@ export function WelcomePage({ onProjectSelected }: WelcomePageProps) {
 			<div className="flex gap-2"><input className="h-10 flex-1 rounded-md border bg-background px-3 text-sm" value={name} onChange={event => setName(event.target.value)} onKeyDown={event => event.key === "Enter" && void create()} placeholder="New project name" /><Button onClick={() => void create()} disabled={busy || !name.trim()}><Plus className="mr-2 h-4 w-4" />Create</Button></div>
 			<div className="overflow-hidden rounded-xl border">
 				{projects.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">No projects yet.</p> : projects.map(project => <button key={project.id} type="button" className="flex w-full items-center gap-3 border-b px-4 py-3 text-left last:border-0 hover:bg-muted/50" disabled={busy} onClick={() => void select(project.id)}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderOpen className="h-4 w-4 text-primary" />}<span className="font-medium">{project.name}</span></button>)}
-			</div>
-			<div className="pt-1 text-center">
-				<Link
-					to="/landing"
-					className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors py-1 px-3 rounded-md hover:bg-muted/50"
-				>
-					<Sparkles className="h-3.5 w-3.5 text-primary" />
-					<span>Explore Landing Page</span>
-					<ArrowRight className="h-3 w-3" />
-				</Link>
 			</div>
 		</div>
 	</div>;
