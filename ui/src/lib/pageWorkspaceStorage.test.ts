@@ -71,10 +71,12 @@ describe("page workspace storage", () => {
 			getItem: () => { throw new Error("blocked"); },
 			setItem: () => { throw new Error("blocked"); },
 		} as unknown as Storage;
-
-		expect(readPageWorkspaceSnapshot("workspace-a", throwingStorage)).toEqual(
-			createEmptyPageWorkspaceSnapshot("workspace-a"),
-		);
+		const actual = readPageWorkspaceSnapshot("workspace-a", throwingStorage);
+		expect(actual.workspaceKey).toBe("workspace-a");
+		expect(actual.version).toBe(1);
+		expect(actual.routes).toEqual({});
+		expect(actual.pages).toEqual({});
+		expect(typeof actual.savedAt).toBe("number");
 		expect(
 			writePageWorkspaceSnapshot(
 				createEmptyPageWorkspaceSnapshot("workspace-a"),
