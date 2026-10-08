@@ -37,6 +37,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { NeuralMemoryGraph } from "@/components/NeuralMemoryGraph";
 
 interface DemoTab {
   id: string;
@@ -303,6 +304,7 @@ export function LandingPage() {
           <nav className="flex items-center gap-1.5 sm:gap-2">
             <div className="hidden lg:flex items-center gap-0.5 text-xs text-muted-foreground font-medium">
               {[
+                { label: "Graph", id: "memory-graph" },
                 { label: "Projects", id: "features-projects" },
                 { label: "Tasks", id: "features-tasks" },
                 { label: "Kanban", id: "features-kanban" },
@@ -697,6 +699,26 @@ export function LandingPage() {
               </Badge>
             </article>
           </div>
+        </section>
+
+        {/* ===================================================================
+            VISUAL GRAPH MEMORY CORE (Interactive Canvas Simulation)
+            =================================================================== */}
+        <section id="memory-graph" className="scroll-mt-20 space-y-5 pt-2 animate-fade-in-up">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="inline-flex items-center gap-2 text-primary font-mono text-xs uppercase tracking-wider font-semibold">
+              <Layers className="h-4 w-4" />
+              <span>Visual Memory · Core Graph</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+              Live neural memory topology.
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Watch tasks, specifications, git commits, and AI coding agents interconnect in real-time. Drag nodes with natural spring physics, filter clusters, and pulse live stdio retrieval packets across the graph.
+            </p>
+          </div>
+
+          <NeuralMemoryGraph />
         </section>
 
         {/* ===================================================================
