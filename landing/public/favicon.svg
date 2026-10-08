@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <rect width="48" height="48" rx="12" fill="#000000"/>
-  <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="rgba(255,255,255,0.15)"/>
-  <path d="M14 12V36M14 24L26 12M14 24L26 36M26 24H34M34 16V32" stroke="url(#titanium)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect width="48" height="48" rx="12" fill="#141d1e"/>
+  <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="#334644"/>
+  <path d="M14 12V36M14 24L26 12M14 24L26 36M26 24H34M34 16V32" stroke="url(#tealGradient)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
   <defs>
-    <linearGradient id="titanium" x1="14" y1="12" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF"/>
-      <stop offset="0.5" stop-color="#E2E2E6"/>
-      <stop offset="1" stop-color="#8E8E93"/>
+    <linearGradient id="tealGradient" x1="14" y1="12" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B4F0DC"/>
+      <stop offset="0.5" stop-color="#8ED6BE"/>
+      <stop offset="1" stop-color="#176B60"/>
     </linearGradient>
   </defs>
 </svg>

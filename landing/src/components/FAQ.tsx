@@ -36,8 +36,8 @@ export function FAQ() {
     <section id="faq" className="relative py-28 px-4 sm:px-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center space-y-4 mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-xs font-mono text-zinc-400">
-          <HelpCircle className="w-3.5 h-3.5 text-zinc-300" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#141d1e] border border-[#334644] text-xs font-mono text-[#8ed6be]">
+          <HelpCircle className="w-3.5 h-3.5 text-[#8ed6be]" />
           <span>QUESTIONS & SPECIFICATIONS</span>
         </div>
         <h2 className="text-4xl sm:text-6xl font-black tracking-[-0.03em] text-titanium leading-tight">
@@ -59,21 +59,27 @@ export function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ type: "spring", bounce: 0, duration: 0.4, delay: index * 0.05 }}
-              className="apple-card rounded-2xl border border-white/10 overflow-hidden transition-all duration-200"
+              className={`apple-card rounded-2xl border transition-all duration-200 overflow-hidden ${
+                isOpen ? "border-[#8ed6be]/40 bg-[#1b2829]/70" : "border-[#334644]"
+              }`}
             >
               <button
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? null : index)}
                 className="w-full px-6 py-5 flex items-center justify-between text-left group active:bg-white/[0.02]"
               >
-                <span className="text-base sm:text-lg font-bold text-white tracking-tight group-hover:text-zinc-200 transition-colors">
+                <span className={`text-base sm:text-lg font-bold tracking-tight transition-colors ${
+                  isOpen ? "text-[#8ed6be]" : "text-white group-hover:text-[#8ed6be]"
+                }`}>
                   {faq.question}
                 </span>
-                <div className={`p-1.5 rounded-full border border-white/10 bg-white/5 transition-transform duration-200 ${isOpen ? "rotate-180 bg-white/10" : ""}`}>
+                <div className={`p-1.5 rounded-full border transition-transform duration-200 ${
+                  isOpen ? "rotate-180 bg-[#2b4540] border-[#8ed6be]/40 text-[#8ed6be]" : "border-[#334644] bg-[#141d1e] text-zinc-400"
+                }`}>
                   {isOpen ? (
-                    <Minus className="w-4 h-4 text-zinc-300" />
+                    <Minus className="w-4 h-4" />
                   ) : (
-                    <Plus className="w-4 h-4 text-zinc-400" />
+                    <Plus className="w-4 h-4" />
                   )}
                 </div>
               </button>
@@ -87,7 +93,7 @@ export function FAQ() {
                     transition={{ type: "spring", bounce: 0, duration: 0.35 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 pb-6 pt-1 text-sm sm:text-base text-zinc-400 leading-relaxed border-t border-white/5">
+                    <div className="px-6 pb-6 pt-1 text-sm sm:text-base text-zinc-300 leading-relaxed border-t border-[#334644]/60">
                       {faq.answer}
                     </div>
                   </motion.div>
