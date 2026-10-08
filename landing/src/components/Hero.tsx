@@ -16,7 +16,7 @@ export function Hero() {
         className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full apple-glass text-xs font-medium text-[#202d31] border border-[#dbe4e2] mb-8 shadow-sm"
       >
         <span className="flex h-2 w-2 rounded-full bg-[#176b60] animate-pulse" />
-        <span className="tracking-wide">Introducing the KnowMe Duo Engine</span>
+        <span className="tracking-wide">Introducing the KnowMe Dual Engine</span>
         <ChevronRight className="w-3.5 h-3.5 text-[#5c706f]" />
       </motion.div>
 
@@ -66,10 +66,10 @@ export function Hero() {
         className="mt-10 flex flex-col sm:flex-row items-center gap-4"
       >
         <a
-          href="#duo"
+          href="#showcase"
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold text-white bg-[#176b60] hover:bg-[#11534b] transition-all duration-150 shadow-lg shadow-[#176b60]/20 active:scale-95"
         >
-          <span>Explore Apple Duo Showcase</span>
+          <span>Explore Interactive Showcase</span>
           <ArrowRight className="w-4 h-4" />
         </a>
 

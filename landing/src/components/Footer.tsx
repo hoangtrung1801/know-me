@@ -13,7 +13,7 @@ export function Footer() {
           <div className="absolute inset-0 bg-radial from-[#e0eeea]/60 via-transparent to-transparent pointer-events-none" />
           <div className="relative space-y-4">
             <h3 className="text-3xl sm:text-5xl font-black tracking-[-0.03em] text-titanium">
-              Ready for the Duo Era?
+              Ready to Upgrade Your Project Memory?
             </h3>
             <p className="text-base sm:text-lg text-[#5c706f] max-w-xl mx-auto font-medium">
               Start synchronizing your thought architecture and AI agents in fewer than 60 seconds.
@@ -55,7 +55,7 @@ export function Footer() {
               Ecosystem
             </h4>
             <ul className="space-y-2 text-xs text-[#5c706f]">
-              <li><a href="#duo" className="hover:text-[#176b60] transition-colors">Duo Showcase</a></li>
+              <li><a href="#showcase" className="hover:text-[#176b60] transition-colors">Showcase</a></li>
               <li><a href="#features" className="hover:text-[#176b60] transition-colors">Visual Kanban</a></li>
               <li><a href="#features" className="hover:text-[#176b60] transition-colors">MCP Protocol Stdio</a></li>
               <li><a href="#features" className="hover:text-[#176b60] transition-colors">Knowledge Graphs</a></li>
@@ -89,7 +89,7 @@ export function Footer() {
               Design Heritage
             </h4>
             <p className="text-xs text-[#5c706f] leading-relaxed">
-              Designed adhering to the Apple iPhone Duo visual system, WWDC fluid motion guidelines, and Know-Me's sovereign teal design tokens.
+              Designed adhering to Apple visual systems, WWDC fluid motion guidelines, and Know-Me's sovereign teal design tokens.
             </p>
           </div>
         </div>

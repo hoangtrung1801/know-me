@@ -44,14 +44,14 @@ export function Navbar() {
             KnowMe
           </span>
           <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-[#e0eeea] text-[#176b60] border border-[#176b60]/20 hidden sm:inline-block">
-            Duo Core
+            Memory Layer
           </span>
         </a>
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-6 text-[13px] font-medium text-[#5c706f]">
-          <a href="#duo" className="hover:text-[#176b60] transition-colors duration-150">
-            Duo Showcase
+          <a href="#showcase" className="hover:text-[#176b60] transition-colors duration-150">
+            Showcase
           </a>
           <a href="#features" className="hover:text-[#176b60] transition-colors duration-150">
             Capabilities
@@ -74,10 +74,10 @@ export function Navbar() {
           </a>
 
           <a
-            href="#duo"
+            href="#showcase"
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[#176b60] hover:bg-[#11534b] transition-all duration-150 shadow-sm active:scale-95"
           >
-            <span>Experience Duo</span>
+            <span>Experience KnowMe</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
 
@@ -104,11 +104,11 @@ export function Navbar() {
             className="pointer-events-auto absolute top-20 inset-x-4 max-w-sm mx-auto apple-glass rounded-2xl p-4 flex flex-col gap-3 md:hidden shadow-xl border border-[#dbe4e2]"
           >
             <a 
-              href="#duo" 
+              href="#showcase" 
               onClick={() => setMobileMenuOpen(false)}
               className="px-3 py-2 text-sm font-medium text-[#202d31] hover:text-[#176b60] rounded-lg hover:bg-[#e0eeea]/50"
             >
-              Duo Showcase
+              Showcase
             </a>
             <a 
               href="#features" 

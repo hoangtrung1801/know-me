@@ -24,7 +24,7 @@ export function AppleDuoShowcase() {
   const [activePerspective, setActivePerspective] = useState<Perspective>("human");
 
   return (
-    <section id="duo" className="relative py-28 px-4 sm:px-6 max-w-7xl mx-auto overflow-hidden">
+    <section id="showcase" className="relative py-28 px-4 sm:px-6 max-w-7xl mx-auto overflow-hidden">
       {/* Background radial spotlight with Know-Me Teal theme */}
       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[650px] rounded-full blur-[140px] pointer-events-none transition-colors duration-700 ${
         activePerspective === "human" ? "bg-[#e0eeea]/80" : "bg-[#eaf0ef]/90"
@@ -37,7 +37,7 @@ export function AppleDuoShowcase() {
           <span>DUAL PERSPECTIVE ARCHITECTURE</span>
         </div>
         <h2 className="text-4xl sm:text-6xl font-black tracking-[-0.03em] text-titanium leading-tight">
-          The Duo Architecture.
+          Dual Perspectives.
         </h2>
         <p className="text-lg sm:text-xl text-[#5c706f] font-medium">
           The same atomic record simultaneously serves human vision and autonomous agent cognition. 
@@ -75,7 +75,7 @@ export function AppleDuoShowcase() {
         </div>
       </div>
 
-      {/* Duo Interactive Device Frame */}
+      {/* Interactive Device Frame */}
       <div className="relative rounded-3xl p-1 bg-gradient-to-b from-[#176b60]/20 via-[#dbe4e2]/60 to-[#dbe4e2]/20 shadow-xl">
         <div className="bg-[#ffffff] rounded-[22px] border border-[#dbe4e2] p-4 sm:p-8 overflow-hidden min-h-[580px] flex flex-col justify-between shadow-sm">
           {/* Frame Top Bar */}
@@ -139,13 +139,13 @@ export function AppleDuoShowcase() {
                             </span>
                           </div>
                           <p className="text-xs font-semibold text-[#202d31] leading-snug">
-                            Implement Apple Duo spring transitions & pill nav
+                            Implement Apple fluid spring transitions & pill nav
                           </p>
                           <div className="flex items-center justify-between pt-1 text-[11px] text-[#5c706f] border-t border-[#dbe4e2]">
                             <span className="flex items-center gap-1 text-[#176b60] font-medium">
                               <CheckCircle2 className="w-3 h-3" /> 4/4 criteria
                             </span>
-                            <span className="font-mono text-[10px]">@doc/spec-duo</span>
+                            <span className="font-mono text-[10px]">@doc/spec-core</span>
                           </div>
                         </div>
                       </div>
@@ -200,7 +200,7 @@ export function AppleDuoShowcase() {
                         <FileText className="w-4 h-4 text-[#176b60]" />
                         <h4 className="text-sm font-bold text-[#202d31] tracking-tight">Durable Knowledge Spec</h4>
                       </div>
-                      <span className="text-xs text-[#5c706f] font-mono">docs/architecture/duo-core.md</span>
+                      <span className="text-xs text-[#5c706f] font-mono">docs/architecture/memory-core.md</span>
                     </div>
                     <div className="p-3.5 rounded-xl bg-[#f4f7f7] border border-[#dbe4e2] font-mono text-xs text-[#202d31] space-y-1.5 leading-relaxed">
                       <p className="text-[#176b60] font-bold"># Architecture: Single Source of Truth</p>
@@ -272,12 +272,12 @@ export function AppleDuoShowcase() {
                     <div className="p-4 rounded-xl bg-[#f4f7f7] border border-[#dbe4e2] text-[11px] sm:text-xs space-y-2.5 text-[#202d31] max-h-[340px] overflow-x-auto leading-relaxed">
                       <div className="text-[#5c706f] font-mono">// 1. Autonomous Agent bootstraps session</div>
                       <p className="text-[#202d31]">
-                        <span className="text-[#176b60] font-bold">&gt; knowme retrieve</span> &quot;Apple Duo landing specifications&quot; --json
+                        <span className="text-[#176b60] font-bold">&gt; knowme retrieve</span> &quot;Interface landing specifications&quot; --json
                       </p>
                       <div className="pl-3 border-l-2 border-[#176b60]/40 text-[#202d31] space-y-1">
                         <p className="text-[#5c706f]">{`{`}</p>
                         <p className="pl-2"><span className="text-[#176b60] font-semibold">&quot;resolved_context&quot;</span>: [</p>
-                        <p className="pl-4 text-[#176b60]">&#123; &quot;ref&quot;: &quot;@doc/spec-duo&quot;, &quot;score&quot;: 0.98, &quot;path&quot;: &quot;landing/DESIGN.md&quot; &#125;,</p>
+                        <p className="pl-4 text-[#176b60]">&#123; &quot;ref&quot;: &quot;@doc/spec-core&quot;, &quot;score&quot;: 0.98, &quot;path&quot;: &quot;landing/DESIGN.md&quot; &#125;,</p>
                         <p className="pl-4 text-[#176b60]">&#123; &quot;ref&quot;: &quot;@task/104&quot;, &quot;status&quot;: &quot;in_progress&quot;, &quot;priority&quot;: 1 &#125;</p>
                         <p className="pl-2">],</p>
                         <p className="pl-2"><span className="text-[#176b60] font-semibold">&quot;grounding&quot;</span>: &quot;Single-source-of-truth established without re-explaining.&quot;</p>
@@ -350,7 +350,7 @@ export function AppleDuoShowcase() {
             )}
           </AnimatePresence>
 
-          {/* Bottom Dual Bar Note */}
+          {/* Bottom Bar Note */}
           <div className="mt-8 pt-4 border-t border-[#dbe4e2] flex flex-col sm:flex-row items-center justify-between text-xs text-[#5c706f] gap-3">
             <div className="flex items-center gap-2">
               <Zap className="w-3.5 h-3.5 text-[#176b60]" />

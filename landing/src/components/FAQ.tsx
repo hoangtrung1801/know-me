@@ -4,7 +4,7 @@ import { Plus, Minus, HelpCircle } from "lucide-react";
 
 const faqs = [
   {
-    question: "What makes KnowMe's 'Duo' architecture unique?",
+    question: "What makes KnowMe's dual architecture unique?",
     answer: "Most tools are designed exclusively for humans (rich web UIs with complicated proprietary APIs) or solely for AI agents (raw unstructured Markdown dump files). KnowMe solves both simultaneously: it maintains a clean, human-navigable Kanban board and Markdown spec engine, while mirroring every state transition into structured, deterministic MCP stdio protocols for AI coding agents."
   },
   {
@@ -44,7 +44,7 @@ export function FAQ() {
           Frequently Answered.
         </h2>
         <p className="text-lg text-[#5c706f] font-medium">
-          Everything you need to know about local memory, MCP tooling, and the Duo philosophy.
+          Everything you need to know about local memory, MCP tooling, and the dual-perspective philosophy.
         </p>
       </div>
 
