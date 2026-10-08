@@ -39,10 +39,8 @@ export function Footer() {
         {/* Links Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm pt-4">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-[#202d31] font-bold tracking-tight">
-              <div className="w-5 h-5 rounded bg-[#176b60] text-white text-xs font-black flex items-center justify-center">
-                K
-              </div>
+            <div className="flex items-center gap-2.5 text-[#202d31] font-bold tracking-tight">
+              <img src="/logo.png" alt="KnowMe" className="w-6 h-6 rounded-md object-contain" />
               <span className="text-[#176b60]">KnowMe</span>
             </div>
             <p className="text-xs text-[#5c706f] leading-relaxed">

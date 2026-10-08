@@ -13,8 +13,9 @@ export function Hero() {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", bounce: 0, duration: 0.6 }}
-        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full apple-glass text-xs font-medium text-[#202d31] border border-[#dbe4e2] mb-8 shadow-sm"
+        className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full apple-glass text-xs font-medium text-[#202d31] border border-[#dbe4e2] mb-8 shadow-sm"
       >
+        <img src="/logo.png" alt="KnowMe" className="w-4 h-4 rounded-sm object-contain" />
         <span className="flex h-2 w-2 rounded-full bg-[#176b60] animate-pulse" />
         <span className="tracking-wide">Introducing the KnowMe Dual Engine</span>
         <ChevronRight className="w-3.5 h-3.5 text-[#5c706f]" />

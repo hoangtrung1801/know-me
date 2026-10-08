@@ -35,11 +35,7 @@ export function Navbar() {
           href="#" 
           className="flex items-center gap-2.5 text-[#202d31] font-medium tracking-tight group active:scale-95 transition-transform duration-100"
         >
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#176b60] via-[#238c7e] to-[#8ed6be] flex items-center justify-center p-[1px] shadow-sm">
-            <div className="w-full h-full bg-[#176b60] rounded-[7px] flex items-center justify-center">
-              <span className="text-xs font-black tracking-tighter text-white">KM</span>
-            </div>
-          </div>
+          <img src="/logo.png" alt="KnowMe" className="w-7 h-7 rounded-lg object-contain shadow-xs" />
           <span className="text-sm font-semibold tracking-tight text-[#202d31] group-hover:text-[#176b60] transition-colors">
             KnowMe
           </span>
