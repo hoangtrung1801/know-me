@@ -36,14 +36,14 @@ export function FAQ() {
     <section id="faq" className="relative py-28 px-4 sm:px-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center space-y-4 mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#141d1e] border border-[#334644] text-xs font-mono text-[#8ed6be]">
-          <HelpCircle className="w-3.5 h-3.5 text-[#8ed6be]" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f4f7f7] border border-[#dbe4e2] text-xs font-mono text-[#176b60]">
+          <HelpCircle className="w-3.5 h-3.5 text-[#176b60]" />
           <span>QUESTIONS & SPECIFICATIONS</span>
         </div>
         <h2 className="text-4xl sm:text-6xl font-black tracking-[-0.03em] text-titanium leading-tight">
           Frequently Answered.
         </h2>
-        <p className="text-lg text-zinc-400 font-medium">
+        <p className="text-lg text-[#5c706f] font-medium">
           Everything you need to know about local memory, MCP tooling, and the Duo philosophy.
         </p>
       </div>
@@ -60,21 +60,21 @@ export function FAQ() {
               viewport={{ once: true }}
               transition={{ type: "spring", bounce: 0, duration: 0.4, delay: index * 0.05 }}
               className={`apple-card rounded-2xl border transition-all duration-200 overflow-hidden ${
-                isOpen ? "border-[#8ed6be]/40 bg-[#1b2829]/70" : "border-[#334644]"
+                isOpen ? "border-[#176b60] shadow-md bg-white" : "border-[#dbe4e2] bg-[#fdfdfd]"
               }`}
             >
               <button
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? null : index)}
-                className="w-full px-6 py-5 flex items-center justify-between text-left group active:bg-white/[0.02]"
+                className="w-full px-6 py-5 flex items-center justify-between text-left group active:bg-zinc-50"
               >
                 <span className={`text-base sm:text-lg font-bold tracking-tight transition-colors ${
-                  isOpen ? "text-[#8ed6be]" : "text-white group-hover:text-[#8ed6be]"
+                  isOpen ? "text-[#176b60]" : "text-[#202d31] group-hover:text-[#176b60]"
                 }`}>
                   {faq.question}
                 </span>
                 <div className={`p-1.5 rounded-full border transition-transform duration-200 ${
-                  isOpen ? "rotate-180 bg-[#2b4540] border-[#8ed6be]/40 text-[#8ed6be]" : "border-[#334644] bg-[#141d1e] text-zinc-400"
+                  isOpen ? "rotate-180 bg-[#e0eeea] border-[#176b60]/30 text-[#176b60]" : "border-[#dbe4e2] bg-[#f4f7f7] text-[#5c706f]"
                 }`}>
                   {isOpen ? (
                     <Minus className="w-4 h-4" />
@@ -93,7 +93,7 @@ export function FAQ() {
                     transition={{ type: "spring", bounce: 0, duration: 0.35 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 pb-6 pt-1 text-sm sm:text-base text-zinc-300 leading-relaxed border-t border-[#334644]/60">
+                    <div className="px-6 pb-6 pt-1 text-sm sm:text-base text-[#5c706f] leading-relaxed border-t border-[#dbe4e2]">
                       {faq.answer}
                     </div>
                   </motion.div>
