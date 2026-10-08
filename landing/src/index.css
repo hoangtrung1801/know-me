@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, sans-serif;
+    --font-mono: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+    
+    /* Know-Me Light Design System Tokens */
+    --background: #ffffff;
+    --canvas: #f4f7f7;
+    --foreground: #202d31;
+    --card: #ffffff;
+    --primary: #176b60;
+    --secondary: #e9efee;
+    --muted: #eaf0ef;
+    --muted-foreground: #5c706f;
+    --accent: #e0eeea;
+    --border: #dbe4e2;
+    --ring: #176b60;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #202d31;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+}
+
+/* Apple Typography Display Headline with Charcoal / Slate Titanium gradient */
+.text-titanium {
+  background: linear-gradient(180deg, #111827 0%, #1f2937 50%, #4b5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-titanium-subtle {
+  background: linear-gradient(180deg, #1f2937 0%, #4b5563 60%, #9ca3af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-apple-teal {
+  background: linear-gradient(180deg, #176b60 0%, #11534b 70%, #0d3e37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Apple Glass / Translucent Materials on White Canvas */
+.apple-glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 1px solid rgba(219, 228, 226, 0.8);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.apple-glass-pill {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(30px) saturate(190%);
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  border: 1px solid rgba(219, 228, 226, 0.9);
+  box-shadow: 0 10px 30px -5px rgba(23, 107, 96, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.apple-card {
+  background: #ffffff;
+  border: 1px solid #dbe4e2;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 4px 6px -2px rgba(0, 0, 0, 0.01);
+}
+
+.apple-card:hover {
+  border-color: #176b60;
+  box-shadow: 0 20px 35px -10px rgba(23, 107, 96, 0.1), 0 6px 12px -3px rgba(0, 0, 0, 0.02);
+}
+
+/* Light Catching Rim for Apple Components */
+.light-rim {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(219, 228, 226, 0.5);
+}
+
+/* Ambient Radial Glows — Soft Crisp Teal on White Canvas */
+.apple-glow-radial {
+  background: radial-gradient(circle at 50% 20%, rgba(224, 238, 234, 0.7) 0%, rgba(244, 247, 247, 0.3) 50%, transparent 80%);
+}
+
+.apple-glow-teal {
+  background: radial-gradient(circle at 50% 50%, rgba(224, 238, 234, 0.6) 0%, transparent 70%);
+}
