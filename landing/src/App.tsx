@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { TextAnimate } from "./components/magicui/TextAnimate";
+import { BorderBeam } from "./components/magicui/BorderBeam";
+import { ShimmerButton } from "./components/magicui/ShimmerButton";
+import { Marquee } from "./components/magicui/Marquee";
+import { DecryptedText } from "./components/reactbits/DecryptedText";
 import {
   easeOut,
   useLandingMotion,
@@ -318,8 +322,10 @@ export default function App() {
             AI the context to keep going.
           </p>
           <div className="hero-actions">
-            <a className="button primary" href="#get-started">
-              Get started for free <ArrowUpRight size={16} />
+            <a href="#get-started" className="inline-block no-underline">
+              <ShimmerButton background="#176b60" shimmerColor="#ffffff" shimmerDuration="3s" className="text-sm font-semibold flex items-center gap-1.5 px-5 py-2.5 rounded-full">
+                Get started for free <ArrowUpRight size={16} />
+              </ShimmerButton>
             </a>
             <a className="button" href={repo} target="_blank" rel="noreferrer">
               Explore on GitHub
@@ -343,6 +349,7 @@ export default function App() {
           aria-label="KnowMe product tour"
         >
           <div className="screenshot-stage">
+            <BorderBeam size={80} duration={10} colorFrom="#176b60" colorTo="#2ca58d" borderWidth={1.5} />
             <ScreenshotStack
               selected={active}
               animateChange={animateChange && !reduceMotion}
@@ -518,8 +525,32 @@ export default function App() {
             <br /> a place to stay.
           </h2>
           <p>Start building your own local memory with KnowMe.</p>
+          <div className="w-full max-w-xl my-4">
+            <Marquee pauseOnHover className="[--duration:25s] py-2 border-y border-[var(--border)]">
+              {[
+                "Claude Desktop",
+                "Cursor AI",
+                "OpenCode",
+                "OpenAI Codex",
+                "Cline",
+                "VS Code",
+                "Neovim",
+                "Terminal CLI",
+                "Git Worktrees",
+              ].map((tool) => (
+                <span
+                  key={tool}
+                  className="mx-3 text-xs font-mono font-medium text-[#202d31] px-2.5 py-1 rounded-full bg-white border border-[#dbe4e2] shadow-xs"
+                >
+                  {tool}
+                </span>
+              ))}
+            </Marquee>
+          </div>
           <div className="install-command">
-            <code>{install}</code>
+            <code>
+              <DecryptedText text={install} speed={30} animateOn="hover" />
+            </code>
             <button
               onClick={copyInstall}
               aria-label="Copy installation command"
