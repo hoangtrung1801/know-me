@@ -1,4 +1,4 @@
-import { motion, type Transition } from "framer-motion";
+import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "../../lib/utils";
 
 interface BorderBeamProps {
@@ -20,14 +20,21 @@ export function BorderBeam({
   size = 60,
   delay = 0,
   duration = 8,
-  colorFrom = "#176b60",
-  colorTo = "#2ca58d",
+  colorFrom = "var(--landing-primary)",
+  colorTo = "var(--landing-primary-hover)",
   transition,
   style,
   reverse = false,
   initialOffset = 0,
   borderWidth = 1.5,
 }: BorderBeamProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  // If user prefers reduced motion, disable the beam motion completely
+  if (shouldReduceMotion) {
+    return null;
+  }
+
   return (
     <div
       className="pointer-events-none absolute inset-0 rounded-[inherit] border border-transparent [mask-clip:padding-box,border-box] [mask-composite:intersect] [mask-image:linear-gradient(transparent,transparent),linear-gradient(#000,#000)]"

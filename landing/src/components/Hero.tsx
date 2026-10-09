@@ -1,106 +1,78 @@
-import { motion } from "framer-motion";
-import { ArrowRight, ChevronRight, Terminal, Sparkles, Cpu, Layers } from "lucide-react";
+import { ArrowRight, ChevronRight, Terminal, Layers, Cpu, ShieldCheck } from "lucide-react";
+import { InstallCommand } from "./InstallCommand";
 import { BorderBeam } from "./magicui/BorderBeam";
-import { DecryptedText } from "./reactbits/DecryptedText";
+import { TextAnimate } from "./magicui/TextAnimate";
+import { INSTALL_COMMAND } from "../config/landing";
 
 export function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-32 pb-20 px-6 overflow-hidden">
-      {/* Subtle Apple Radial Glows with Cool Mist & Soft Teal */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[450px] bg-gradient-to-b from-[#e0eeea] via-[#eaf0ef]/40 to-transparent blur-[120px] pointer-events-none rounded-full" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[300px] bg-radial from-[#176b60]/[0.05] to-transparent blur-[100px] pointer-events-none" />
+    <section className="relative min-h-[85vh] flex flex-col items-center justify-center pt-32 pb-20 px-4 sm:px-6 overflow-hidden">
+      {/* Subtle static radial glow behind hero */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-b from-[var(--landing-primary-soft)]/60 via-transparent to-transparent blur-[120px] pointer-events-none rounded-full" />
 
-      {/* Titanium Subtitle Pill with Teal Accent */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", bounce: 0, duration: 0.6 }}
-        className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full apple-glass text-xs font-medium text-[#202d31] border border-[#dbe4e2] mb-8 shadow-sm"
-      >
-        <img src="/logo.png" alt="KnowMe" className="w-4 h-4 rounded-sm object-contain" />
-        <span className="flex h-2 w-2 rounded-full bg-[#176b60] animate-pulse" />
-        <span className="tracking-wide">Introducing the KnowMe Dual Engine</span>
-        <ChevronRight className="w-3.5 h-3.5 text-[#5c706f]" />
-      </motion.div>
+      {/* Titanium pill */}
+      <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[var(--landing-surface)] text-xs font-medium text-[var(--landing-text)] border border-[var(--landing-border)] mb-8 shadow-xs">
+        <img
+          src="/logo-48.png"
+          width={16}
+          height={16}
+          className="w-4 h-4 rounded-xs object-contain"
+        />
+        <span className="flex h-2 w-2 rounded-full bg-[var(--landing-primary)] animate-pulse" />
+        <span className="tracking-wide">Local-First · CLI + MCP Core · MIT Licensed</span>
+      </div>
 
-      {/* Main Apple Bold Display Headline */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", bounce: 0, duration: 0.7, delay: 0.1 }}
-        className="text-center max-w-4xl mx-auto space-y-4"
-      >
-        <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-[-0.04em] leading-[0.98] sm:leading-[0.95] text-titanium">
-          Two Minds.
+      {/* Main Bold Display Headline */}
+      <div className="text-center max-w-4xl mx-auto space-y-4">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[var(--landing-text)] leading-[1.05]">
+          Two minds.
           <br />
-          One Memory.
+          One memory.
         </h1>
-        <p className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight text-[#5c706f] max-w-2xl mx-auto leading-snug">
-          A seamless local-first operating layer for humans who craft and AI agents that build.
+        <p className="text-lg sm:text-xl lg:text-2xl font-normal text-[var(--landing-muted)] max-w-2xl mx-auto leading-relaxed">
+          Keep tasks, documents, and project context in one local workspace—for you and your AI tools.
         </p>
-      </motion.div>
+      </div>
 
-      {/* Titanium spec badges */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", bounce: 0, duration: 0.6, delay: 0.25 }}
-        className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-[#202d31] font-mono"
-      >
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-[#dbe4e2] shadow-sm">
-          <Layers className="w-3.5 h-3.5 text-[#176b60]" />
+      {/* Feature Badges */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-mono text-[var(--landing-text)]">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--landing-surface)] border border-[var(--landing-border)] shadow-xs">
+          <Layers className="w-3.5 h-3.5 text-[var(--landing-primary)]" />
           <span>Local Markdown & JSON</span>
         </div>
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-[#dbe4e2] shadow-sm">
-          <Terminal className="w-3.5 h-3.5 text-[#176b60]" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--landing-surface)] border border-[var(--landing-border)] shadow-xs">
+          <Terminal className="w-3.5 h-3.5 text-[var(--landing-primary)]" />
           <span>MCP Stdio Agent Core</span>
         </div>
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-[#dbe4e2] shadow-sm">
-          <Cpu className="w-3.5 h-3.5 text-[#176b60]" />
-          <span>Zero Black Boxes</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--landing-surface)] border border-[var(--landing-border)] shadow-xs">
+          <ShieldCheck className="w-3.5 h-3.5 text-[var(--landing-primary)]" />
+          <span>Git-Versioned State</span>
         </div>
-      </motion.div>
+      </div>
 
       {/* CTAs */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", bounce: 0, duration: 0.6, delay: 0.35 }}
-        className="mt-10 flex flex-col sm:flex-row items-center gap-4"
-      >
+      <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 w-full max-w-md mx-auto">
         <a
-          href="#showcase"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold text-white bg-[#176b60] hover:bg-[#11534b] transition-all duration-150 shadow-lg shadow-[#176b60]/20 active:scale-95"
+          href="#get-started"
+          className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full text-sm font-semibold text-white bg-[var(--landing-primary)] hover:bg-[var(--landing-primary-hover)] transition-all shadow-md shadow-[var(--landing-primary)]/20 active:scale-95 cursor-pointer"
         >
-          <span>Explore Interactive Showcase</span>
+          <span>Install KnowMe</span>
           <ArrowRight className="w-4 h-4" />
         </a>
 
-        <div className="relative w-full sm:w-auto flex items-center justify-center gap-3 px-5 py-3 rounded-full bg-[#f4f7f7] border border-[#dbe4e2] text-[#202d31] font-mono text-xs shadow-sm overflow-hidden">
-          <BorderBeam size={40} duration={7} colorFrom="#176b60" colorTo="#2ca58d" borderWidth={1} />
-          <span className="text-[#176b60] font-bold">$</span>
-          <DecryptedText text="curl -sSL get.knowme.dev | sh" speed={30} animateOn="view" />
-          <button
-            type="button"
-            onClick={() => navigator.clipboard.writeText("curl -sSL get.knowme.dev | sh")}
-            className="relative z-10 text-[10px] text-[#176b60] hover:text-white px-2 py-0.5 rounded bg-[#e0eeea] hover:bg-[#176b60] uppercase tracking-wider font-sans font-semibold active:scale-90 transition-all cursor-pointer"
-          >
-            Copy
-          </button>
-        </div>
-      </motion.div>
+        <a
+          href="#showcase"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-[var(--landing-text)] bg-[var(--landing-surface)] hover:bg-[var(--landing-surface-muted)] border border-[var(--landing-border)] transition-all active:scale-95 cursor-pointer"
+        >
+          <span>Try Workflow</span>
+          <ChevronRight className="w-4 h-4 text-[var(--landing-muted)]" />
+        </a>
+      </div>
 
-      {/* Bottom Scroll Cue */}
-      <motion.div 
-        animate={{ y: [0, 6, 0] }}
-        transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-        className="mt-16 text-[#5c706f] text-xs flex flex-col items-center gap-1.5"
-      >
-        <span className="text-[11px] font-medium tracking-wide uppercase">Toggle The Two Perspectives</span>
-        <div className="w-4 h-7 rounded-full border border-[#dbe4e2] flex items-start justify-center p-1 bg-white shadow-xs">
-          <div className="w-1 h-1.5 bg-[#176b60] rounded-full animate-bounce" />
-        </div>
-      </motion.div>
+      {/* Hero Install Command Snippet */}
+      <div className="mt-6 w-full max-w-md mx-auto">
+        <InstallCommand command={INSTALL_COMMAND} label="Copy npm installation command" />
+      </div>
     </section>
   );
 }

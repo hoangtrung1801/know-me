@@ -1,0 +1,11 @@
+export const REPO_URL = "https://github.com/hoangtrung1801/know-me";
+export const INSTALL_COMMAND = "npm install -g @hoangtrung1801/knowme";
+export const DOCS_URL = `${REPO_URL}#readme`;
+export const INSTALL_GUIDE_URL = `${REPO_URL}/blob/main/docs/en/getting-started/installation.md`;
+export const QUICK_START_URL = `${REPO_URL}/blob/main/docs/en/getting-started/quick-start.md`;
+export const MCP_GUIDE_URL = `${REPO_URL}/blob/main/docs/en/guides/mcp-integration.md`;
+export const TASK_MANAGEMENT_URL = `${REPO_URL}/blob/main/docs/en/guides/task-management.md`;
+export const REFERENCE_SYSTEM_URL = `${REPO_URL}/blob/main/docs/en/reference/reference-system.md`;
+export const COMMANDS_URL = `${REPO_URL}/blob/main/docs/en/reference/commands.md`;
+export const WEB_UI_URL = `${REPO_URL}/blob/main/docs/en/guides/web-ui.md`;
+export const USER_GUIDE_URL = `${REPO_URL}/blob/main/docs/en/guides/user-guide.md`;

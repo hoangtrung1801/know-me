@@ -2,7 +2,7 @@ import React, { type ComponentPropsWithoutRef, type CSSProperties } from "react"
 import { useReducedMotion } from "framer-motion";
 import { cn } from "../../lib/utils";
 
-export interface ShimmerButtonProps extends ComponentPropsWithoutRef<"button"> {
+export interface ShimmerLinkProps extends ComponentPropsWithoutRef<"a"> {
   shimmerColor?: string;
   shimmerSize?: string;
   borderRadius?: string;
@@ -12,7 +12,7 @@ export interface ShimmerButtonProps extends ComponentPropsWithoutRef<"button"> {
   children?: React.ReactNode;
 }
 
-export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonProps>(
+export const ShimmerLink = React.forwardRef<HTMLAnchorElement, ShimmerLinkProps>(
   (
     {
       shimmerColor = "#ffffff",
@@ -22,7 +22,6 @@ export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonPr
       background = "var(--landing-primary)",
       className,
       children,
-      type = "button",
       ...props
     },
     ref
@@ -30,8 +29,7 @@ export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonPr
     const shouldReduceMotion = useReducedMotion();
 
     return (
-      <button
-        type={type}
+      <a
         style={
           {
             "--spread": "90deg",
@@ -72,9 +70,9 @@ export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonPr
         <div
           className="absolute inset-[var(--cut)] -z-20 rounded-[inherit] [background:var(--bg)]"
         />
-      </button>
+      </a>
     );
   }
 );
 
-ShimmerButton.displayName = "ShimmerButton";
+ShimmerLink.displayName = "ShimmerLink";
