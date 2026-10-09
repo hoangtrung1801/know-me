@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight, Terminal, Sparkles, Cpu, Layers } from "lucide-react";
+import { BorderBeam } from "./magicui/BorderBeam";
+import { DecryptedText } from "./reactbits/DecryptedText";
 
 export function Hero() {
   return (
@@ -74,13 +76,14 @@ export function Hero() {
           <ArrowRight className="w-4 h-4" />
         </a>
 
-        <div className="w-full sm:w-auto flex items-center justify-center gap-3 px-5 py-3 rounded-full bg-[#f4f7f7] border border-[#dbe4e2] text-[#202d31] font-mono text-xs shadow-sm">
+        <div className="relative w-full sm:w-auto flex items-center justify-center gap-3 px-5 py-3 rounded-full bg-[#f4f7f7] border border-[#dbe4e2] text-[#202d31] font-mono text-xs shadow-sm overflow-hidden">
+          <BorderBeam size={40} duration={7} colorFrom="#176b60" colorTo="#2ca58d" borderWidth={1} />
           <span className="text-[#176b60] font-bold">$</span>
-          <span>curl -sSL get.knowme.dev | sh</span>
+          <DecryptedText text="curl -sSL get.knowme.dev | sh" speed={30} animateOn="view" />
           <button
             type="button"
             onClick={() => navigator.clipboard.writeText("curl -sSL get.knowme.dev | sh")}
-            className="text-[10px] text-[#176b60] hover:text-white px-2 py-0.5 rounded bg-[#e0eeea] hover:bg-[#176b60] uppercase tracking-wider font-sans font-semibold active:scale-90 transition-all"
+            className="relative z-10 text-[10px] text-[#176b60] hover:text-white px-2 py-0.5 rounded bg-[#e0eeea] hover:bg-[#176b60] uppercase tracking-wider font-sans font-semibold active:scale-90 transition-all cursor-pointer"
           >
             Copy
           </button>

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { BorderBeam } from "./magicui/BorderBeam";
+import { DecryptedText } from "./reactbits/DecryptedText";
 import { 
   Users, 
   Bot, 
@@ -76,8 +78,15 @@ export function AppleDuoShowcase() {
       </div>
 
       {/* Interactive Device Frame */}
-      <div className="relative rounded-3xl p-1 bg-gradient-to-b from-[#176b60]/20 via-[#dbe4e2]/60 to-[#dbe4e2]/20 shadow-xl">
-        <div className="bg-[#ffffff] rounded-[22px] border border-[#dbe4e2] p-4 sm:p-8 overflow-hidden min-h-[580px] flex flex-col justify-between shadow-sm">
+      <div className="relative rounded-3xl p-1 bg-gradient-to-b from-[#176b60]/20 via-[#dbe4e2]/60 to-[#dbe4e2]/20 shadow-xl overflow-hidden">
+        <BorderBeam
+          size={120}
+          duration={8}
+          colorFrom={activePerspective === "human" ? "#176b60" : "#10b981"}
+          colorTo={activePerspective === "human" ? "#2ca58d" : "#3b82f6"}
+          borderWidth={1.5}
+        />
+        <div className="relative z-10 bg-[#ffffff] rounded-[22px] border border-[#dbe4e2] p-4 sm:p-8 overflow-hidden min-h-[580px] flex flex-col justify-between shadow-sm">
           {/* Frame Top Bar */}
           <div className="flex items-center justify-between pb-6 border-b border-[#dbe4e2] mb-6">
             <div className="flex items-center gap-2">
@@ -272,7 +281,8 @@ export function AppleDuoShowcase() {
                     <div className="p-4 rounded-xl bg-[#f4f7f7] border border-[#dbe4e2] text-[11px] sm:text-xs space-y-2.5 text-[#202d31] max-h-[340px] overflow-x-auto leading-relaxed">
                       <div className="text-[#5c706f] font-mono">// 1. Autonomous Agent bootstraps session</div>
                       <p className="text-[#202d31]">
-                        <span className="text-[#176b60] font-bold">&gt; knowme retrieve</span> &quot;Interface landing specifications&quot; --json
+                        <span className="text-[#176b60] font-bold">&gt; </span>
+                        <DecryptedText text='knowme retrieve "Interface landing specifications" --json' speed={25} animateOn="view" />
                       </p>
                       <div className="pl-3 border-l-2 border-[#176b60]/40 text-[#202d31] space-y-1">
                         <p className="text-[#5c706f]">{`{`}</p>
@@ -286,7 +296,8 @@ export function AppleDuoShowcase() {
 
                       <div className="text-[#5c706f] font-mono pt-2">// 2. Execution updates task atomically</div>
                       <p className="text-[#202d31]">
-                        <span className="text-[#176b60] font-bold">&gt; knowme task update</span> 104 --criteria-check &quot;1,2,3,4&quot;
+                        <span className="text-[#176b60] font-bold">&gt; </span>
+                        <DecryptedText text='knowme task update 104 --criteria-check "1,2,3,4"' speed={25} animateOn="view" />
                       </p>
                       <p className="text-[#176b60] text-[11px] font-semibold">
                         ✓ Task 104 synchronized: UI updated in 4ms, Git diff staged.

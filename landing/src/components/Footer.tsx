@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { Terminal, Github, Heart, Layers, ArrowUpRight } from "lucide-react";
+import { ShimmerButton } from "./magicui/ShimmerButton";
+import { Marquee } from "./magicui/Marquee";
 
 export function Footer() {
   return (
@@ -8,6 +10,33 @@ export function Footer() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-[#176b60]/30 to-transparent" />
 
       <div className="max-w-7xl mx-auto space-y-16">
+        {/* Supported ecosystem marquee ribbon */}
+        <div className="space-y-3">
+          <p className="text-center text-xs font-mono uppercase tracking-widest text-[#5c706f] font-semibold">
+            Native Integration with Modern Coding Environments
+          </p>
+          <Marquee pauseOnHover className="[--duration:25s] py-3 border-y border-[#dbe4e2]">
+            {[
+              "Claude Desktop",
+              "Cursor AI",
+              "OpenCode",
+              "OpenAI Codex",
+              "Cline",
+              "VS Code",
+              "Neovim",
+              "Terminal CLI",
+              "Git Worktrees",
+            ].map((tool) => (
+              <span
+                key={tool}
+                className="mx-4 text-xs font-mono font-medium text-[#202d31] px-3 py-1.5 rounded-full bg-white border border-[#dbe4e2] shadow-xs"
+              >
+                {tool}
+              </span>
+            ))}
+          </Marquee>
+        </div>
+
         {/* Bottom Hero Callout */}
         <div className="apple-card rounded-3xl p-8 sm:p-14 text-center max-w-4xl mx-auto border border-[#dbe4e2] relative overflow-hidden bg-white shadow-md">
           <div className="absolute inset-0 bg-radial from-[#e0eeea]/60 via-transparent to-transparent pointer-events-none" />
@@ -23,10 +52,17 @@ export function Footer() {
                 href="https://github.com/hoangtrung1801/know-me"
                 target="_blank"
                 rel="noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full text-sm font-semibold text-white bg-[#176b60] hover:bg-[#11534b] transition-all duration-150 active:scale-95 shadow-md shadow-[#176b60]/20"
+                className="w-full sm:w-auto inline-block"
               >
-                <span>Get KnowMe on GitHub</span>
-                <ArrowUpRight className="w-4 h-4" />
+                <ShimmerButton
+                  background="#176b60"
+                  shimmerColor="#ffffff"
+                  shimmerDuration="3s"
+                  className="w-full sm:w-auto text-sm font-semibold shadow-md shadow-[#176b60]/20 flex items-center justify-center gap-2"
+                >
+                  <span>Get KnowMe on GitHub</span>
+                  <ArrowUpRight className="w-4 h-4 ml-1" />
+                </ShimmerButton>
               </a>
               <div className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#f4f7f7] border border-[#dbe4e2] font-mono text-xs text-[#202d31]">
                 <span className="text-[#176b60] font-bold">$</span>
