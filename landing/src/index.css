@@ -17,7 +17,7 @@
   box-sizing: border-box;
 }
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-padding-top: 80px;
 }
 body {
@@ -860,4 +860,88 @@ section[id] {
   *::after {
     transition: none !important;
   }
+}
+
+/* Motion belongs to first encounters and intentional state changes. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+.screenshot-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1.6;
+}
+.screenshot-stack img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.carousel-arrow {
+  z-index: 2;
+}
+.button,
+.thumbnail-tabs button,
+.tour-tabs button,
+.menu-toggle,
+.install-command button {
+  transition:
+    transform 160ms var(--ease-out),
+    background 180ms ease,
+    color 180ms ease;
+}
+.carousel-arrow {
+  transition:
+    transform 160ms var(--ease-out),
+    background 180ms ease;
+}
+html[data-input="pointer"]
+  :is(
+    .button,
+    .thumbnail-tabs button,
+    .tour-tabs button,
+    .menu-toggle,
+    .install-command button
+  ):active {
+  transform: scale(0.97);
+}
+html[data-input="pointer"] .carousel-arrow:active {
+  transform: translateY(-50%) scale(0.95);
+}
+html[data-input="keyboard"] :is(button, a) {
+  transition-duration: 0ms;
+}
+@media (hover: hover) and (pointer: fine) {
+  .text-link svg {
+    transition: transform 160ms var(--ease-out);
+  }
+  .text-link:hover svg {
+    transform: translate(2px, -2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-input="pointer"]
+    :is(
+      .button,
+      .thumbnail-tabs button,
+      .tour-tabs button,
+      .menu-toggle,
+      .install-command button
+    ):active {
+    transform: none;
+  }
+  html[data-input="pointer"] .carousel-arrow:active {
+    transform: translateY(-50%);
+  }
+  .text-link:hover svg {
+    transform: none;
+  }
+}
+
+.animated-word {
+  display: inline-block;
 }

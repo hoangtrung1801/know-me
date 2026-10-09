@@ -1,4 +1,11 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { TextAnimate } from "./components/magicui/TextAnimate";
+import {
+  easeOut,
+  useLandingMotion,
+  useLandingScroll,
+} from "./hooks/useLandingMotion";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -207,7 +214,44 @@ const faqs = [
     "Yes. KnowMe is available under the MIT license. Explore the source, installation instructions, and integration guides on GitHub.",
   ],
 ];
+function ScreenshotStack({
+  selected,
+  animateChange,
+  label,
+}: {
+  selected: number;
+  animateChange: boolean;
+  label: string;
+}) {
+  // Keep decoded images in one stable frame so fast switching never flashes blank.
+  return (
+    <div className="screenshot-stack">
+      {slides.map((item, index) => (
+        <motion.img
+          key={item.image}
+          src={`/screenshots/screenshot-${item.image}.png`}
+          alt={
+            index === selected
+              ? `KnowMe ${item.name.toLowerCase()} ${label}`
+              : ""
+          }
+          aria-hidden={index !== selected}
+          width="1996"
+          height="1248"
+          draggable={false}
+          fetchPriority={index === 0 ? "high" : "auto"}
+          initial={false}
+          animate={{ opacity: index === selected ? 1 : 0 }}
+          transition={{ duration: animateChange ? 0.2 : 0, ease: easeOut }}
+        />
+      ))}
+    </div>
+  );
+}
 export default function App() {
+  const { scope, reduceMotion } = useLandingMotion();
+  useLandingScroll();
+  const [animateChange, setAnimateChange] = useState(false);
   const [menu, setMenu] = useState(false);
   const [active, setActive] = useState(0);
   const [tour, setTour] = useState(0);
@@ -224,7 +268,7 @@ export default function App() {
     }
   }
   return (
-    <>
+    <div ref={scope} className="landing-page">
       <header className="site-header">
         <a className="brand" href="#" aria-label="KnowMe home">
           <img src="/logo.png" alt="" />
@@ -263,9 +307,10 @@ export default function App() {
       </header>
       <main>
         <section className="hero">
-          <h1>
-            A little context.
-            <br className="mobile-break" /> A lasting memory.
+          <h1 aria-label="A little context. A lasting memory.">
+            <TextAnimate text="A little context." />
+            <br className="mobile-break" />{" "}
+            <TextAnimate text="A lasting memory." delay={0.15} />
           </h1>
           <p>
             Keep tasks, notes, links, and documents in a local workspace.
@@ -298,26 +343,30 @@ export default function App() {
           aria-label="KnowMe product tour"
         >
           <div className="screenshot-stage">
-            <img
-              src={`/screenshots/screenshot-${slide.image}.png`}
-              alt={`KnowMe ${slide.name.toLowerCase()} interface`}
-              width="1996"
-              height="1248"
-              fetchPriority="high"
+            <ScreenshotStack
+              selected={active}
+              animateChange={animateChange && !reduceMotion}
+              label="interface"
             />
             <button
               className="carousel-arrow previous"
               aria-label="Previous feature"
-              onClick={() =>
-                setActive((active + slides.length - 1) % slides.length)
-              }
+              onClick={(event) => {
+                setAnimateChange(event.detail > 0);
+                setActive(
+                  (value) => (value + slides.length - 1) % slides.length,
+                );
+              }}
             >
               <ChevronLeft size={20} />
             </button>
             <button
               className="carousel-arrow next"
               aria-label="Next feature"
-              onClick={() => setActive((active + 1) % slides.length)}
+              onClick={(event) => {
+                setAnimateChange(event.detail > 0);
+                setActive((value) => (value + 1) % slides.length);
+              }}
             >
               <ChevronRight size={20} />
             </button>
@@ -336,7 +385,10 @@ export default function App() {
                 aria-pressed={active === index}
                 aria-label={item.name}
                 className={active === index ? "selected" : ""}
-                onClick={() => setActive(index)}
+                onClick={(event) => {
+                  setAnimateChange(event.detail > 0);
+                  setActive(index);
+                }}
               >
                 <img
                   src={`/screenshots/screenshot-${item.image}.png`}
@@ -357,8 +409,12 @@ export default function App() {
             <p>Fully local. Open source. Built for you and your AI.</p>
           </div>
           <div className="feature-grid">
-            {features.map((feature) => (
-              <article className="feature" key={feature.title}>
+            {features.map((feature, index) => (
+              <article
+                className="feature"
+                key={feature.title}
+                data-reveal-index={index}
+              >
                 <div className="feature-visual" aria-hidden="true">
                   <FeatureVisual type={feature.type} />
                 </div>
@@ -381,19 +437,20 @@ export default function App() {
                 aria-pressed={tour === pos}
                 className={tour === pos ? "active" : ""}
                 key={index}
-                onClick={() => setTour(pos)}
+                onClick={(event) => {
+                  setAnimateChange(event.detail > 0);
+                  setTour(pos);
+                }}
               >
                 {slides[index].name}
               </button>
             ))}
           </div>
           <div className="tour-image">
-            <img
-              src={`/screenshots/screenshot-${slides[[1, 2, 4, 5][tour]].image}.png`}
-              alt={`KnowMe ${slides[[1, 2, 4, 5][tour]].name} view`}
-              loading="lazy"
-              width="1996"
-              height="1248"
+            <ScreenshotStack
+              selected={[1, 2, 4, 5][tour]}
+              animateChange={animateChange && !reduceMotion}
+              label="view"
             />
           </div>
           <p className="slide-caption" aria-live="polite">
@@ -500,6 +557,6 @@ export default function App() {
           <a href={`${repo}/blob/main/LICENSE`}>License</a>
         </nav>
       </footer>
-    </>
+    </div>
   );
 }
