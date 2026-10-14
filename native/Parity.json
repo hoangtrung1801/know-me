@@ -1,0 +1,755 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "f215d91d8b0d1a6b5f4235e9ac23dbc9fd05a4b9",
+  "stage": "integrated-preview",
+  "note": "Four OMP domains integrated. Worker reports are implementation evidence, not full release certification. Partial and blocked groups remain; end-to-end parity gate is open.",
+  "excludedRemovedEndpoints": [
+    "/api/graph",
+    "/api/memories",
+    "/api/decisions",
+    "/api/imports",
+    "/api/lsp/languages",
+    "/api/embedding-models"
+  ],
+  "actions": [
+    {
+      "id": "work.1",
+      "domain": "work",
+      "action": "Task list and detail",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.2",
+      "domain": "work",
+      "action": "Task creation and editing",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.3",
+      "domain": "work",
+      "action": "List filters grouping and sorting",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Project/status/priority/assignee/label/spec filters, grouping, and deterministic sorting implemented and regression-tested; integrated UI evidence remains pending."
+    },
+    {
+      "id": "work.4",
+      "domain": "work",
+      "action": "Board status moves and ordering",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Drag/drop and Move Up/Down implemented with full-column ordering and scoped IDs. Go status/reorder contract verified on temporary records; pointer-driven UI verification pending."
+    },
+    {
+      "id": "work.5",
+      "domain": "work",
+      "action": "Acceptance criteria and spec fulfillment",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.6",
+      "domain": "work",
+      "action": "Task hierarchy and relationships",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.7",
+      "domain": "work",
+      "action": "History and changes",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.8",
+      "domain": "work",
+      "action": "Archive and unarchive preview execute",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.9",
+      "domain": "work",
+      "action": "Batch lifecycle actions",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.10",
+      "domain": "work",
+      "action": "Capability-gated hard delete",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.11",
+      "domain": "work",
+      "action": "Timer start pause resume stop manual entry",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.12",
+      "domain": "work",
+      "action": "Dashboard real activity and navigation",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.13",
+      "domain": "work",
+      "action": "Project registry CRUD and selection",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "work.14",
+      "domain": "work",
+      "action": "Search filters scope fallback and result navigation",
+      "source": "ui/src/pages/{TasksPage,KanbanPage,DashboardPage,ProjectsPage}.tsx; ui/src/components/organisms/SearchCommandDialog.tsx",
+      "contract": "/api/tasks; /api/time/*; /api/activities; /api/workspaces; /api/search; /api/resolve",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/work.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "OverviewView / ProjectsView / TasksView / SearchView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Task/doc selection is integrated; remaining entity navigation and semantic fallback evidence remain incomplete."
+    },
+    {
+      "id": "knowledge.15",
+      "domain": "knowledge",
+      "action": "Document hierarchy and selection",
+      "source": "ui/src/pages/DocsPage.tsx; ui/src/components/editor; ui/src/hooks/useAnnotations.ts",
+      "contract": "/api/docs; /api/docs/*; /api/assets; annotation route availability requires audit",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "DocumentsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "knowledge.16",
+      "domain": "knowledge",
+      "action": "Document create and update",
+      "source": "ui/src/pages/DocsPage.tsx; ui/src/components/editor; ui/src/hooks/useAnnotations.ts",
+      "contract": "/api/docs; /api/docs/*; /api/assets; annotation route availability requires audit",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "DocumentsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "knowledge.17",
+      "domain": "knowledge",
+      "action": "Markdown source preview and references",
+      "source": "ui/src/pages/DocsPage.tsx; ui/src/components/editor; ui/src/hooks/useAnnotations.ts",
+      "contract": "/api/docs; /api/docs/*; /api/assets; annotation route availability requires audit",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "DocumentsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "TOC navigation and duplicate heading targets implemented. Task/doc references exclude code and open native destinations; Mermaid, line-range fragments and other semantic entity types remain incomplete."
+    },
+    {
+      "id": "knowledge.18",
+      "domain": "knowledge",
+      "action": "Revision history diff and restore",
+      "source": "ui/src/pages/DocsPage.tsx; ui/src/components/editor; ui/src/hooks/useAnnotations.ts",
+      "contract": "/api/docs; /api/docs/*; /api/assets; annotation route availability requires audit",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "DocumentsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "knowledge.19",
+      "domain": "knowledge",
+      "action": "Images attachments and paste",
+      "source": "ui/src/pages/DocsPage.tsx; ui/src/components/editor; ui/src/hooks/useAnnotations.ts",
+      "contract": "/api/docs; /api/docs/*; /api/assets; annotation route availability requires audit",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "DocumentsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Authenticated upload/download and main-editor image paste implemented; every paste/edit path still needs E2E evidence."
+    },
+    {
+      "id": "knowledge.20",
+      "domain": "knowledge",
+      "action": "Annotation persistence audit",
+      "source": "ui/src/pages/DocsPage.tsx; ui/src/components/editor; ui/src/hooks/useAnnotations.ts",
+      "contract": "/api/docs; /api/docs/*; /api/assets; annotation route availability requires audit",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "DocumentsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "links.21",
+      "domain": "links",
+      "action": "Saved link add edit delete",
+      "source": "ui/src/pages/LinksPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/links; /api/link-classifier audit exact path",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "LinksView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "links.22",
+      "domain": "links",
+      "action": "Metadata images and notes",
+      "source": "ui/src/pages/LinksPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/links; /api/link-classifier audit exact path",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "LinksView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "links.23",
+      "domain": "links",
+      "action": "Keyword semantic search and fallback",
+      "source": "ui/src/pages/LinksPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/links; /api/link-classifier audit exact path",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "LinksView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "links.24",
+      "domain": "links",
+      "action": "Link classifier integration",
+      "source": "ui/src/pages/LinksPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/links; /api/link-classifier audit exact path",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "LinksView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "memos.25",
+      "domain": "memos",
+      "action": "Memo create edit delete",
+      "source": "ui/src/pages/MemosPage.tsx",
+      "contract": "/api/memos; /api/assets",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "MemosView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "memos.26",
+      "domain": "memos",
+      "action": "Date groups tag filters and search",
+      "source": "ui/src/pages/MemosPage.tsx",
+      "contract": "/api/memos; /api/assets",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "MemosView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "memos.27",
+      "domain": "memos",
+      "action": "Markdown image paste and draft recovery",
+      "source": "ui/src/pages/MemosPage.tsx",
+      "contract": "/api/memos; /api/assets",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/knowledge.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "MemosView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "agents.28",
+      "domain": "agents",
+      "action": "Chat session lifecycle",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "agents.29",
+      "domain": "agents",
+      "action": "Agent and model selection",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "agents.30",
+      "domain": "agents",
+      "action": "Streaming send queue stop",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Queue/stop/stream UI implemented; a complete live paid-provider workflow was not executed."
+    },
+    {
+      "id": "agents.31",
+      "domain": "agents",
+      "action": "Tool output and attachments",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Tool output exists; full attachment parity is unverified."
+    },
+    {
+      "id": "agents.32",
+      "domain": "agents",
+      "action": "OMP task snapshot investigation plan approval",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "agents.33",
+      "domain": "agents",
+      "action": "OMP implementation diff code review cancellation",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "agents.34",
+      "domain": "agents",
+      "action": "OpenCode questions and permissions",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "OpenCode/provider/auth/permission/command workflows are incomplete and unavailable in the bundled browser backend mode."
+    },
+    {
+      "id": "agents.35",
+      "domain": "agents",
+      "action": "OpenCode providers models authentication and commands",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "OpenCode provider/auth/model/command coverage is incomplete; bundled browser backend disables OpenCode."
+    },
+    {
+      "id": "agents.36",
+      "domain": "agents",
+      "action": "Subagent views and context",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "partial",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Subagent/context-management parity is incomplete."
+    },
+    {
+      "id": "agents.37",
+      "domain": "agents",
+      "action": "Terminal protocol and availability audit",
+      "source": "ui/src/pages/chat/useChatPage.ts; ui/src/contexts/SSEContext.tsx; ui/src/hooks/useTerminalWebsocket.ts",
+      "contract": "/api/chats/*; /api/omp/status; /api/tasks/{id}/agent/*; /api/opencode/*; /ws/chat",
+      "scope": "audit-per-action",
+      "nativeStatus": "blocked",
+      "evidence": [
+        "native/reports/agents.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "ChatView / AgentRunView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending.",
+      "limitation": "Interactive terminal blocked: /ws/terminal is not registered; run logs only."
+    },
+    {
+      "id": "operations.38",
+      "domain": "operations",
+      "action": "Project defaults and preferences",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.39",
+      "domain": "operations",
+      "action": "Task statuses and board columns",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.40",
+      "domain": "operations",
+      "action": "Search and classifier configuration",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.41",
+      "domain": "operations",
+      "action": "OMP and OpenCode configuration",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.42",
+      "domain": "operations",
+      "action": "Runtime service health",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.43",
+      "domain": "operations",
+      "action": "Memory limits and platform options",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.44",
+      "domain": "operations",
+      "action": "Password protection",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.45",
+      "domain": "operations",
+      "action": "Git and server configuration",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.46",
+      "domain": "operations",
+      "action": "Raw config editor",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "operations.47",
+      "domain": "operations",
+      "action": "Skills templates reachable actions audit",
+      "source": "ui/src/pages/ConfigPage.tsx; ui/src/api/client.ts",
+      "contract": "/api/config; /api/runtime/*; /api/auth/*; /api/skills; /api/templates; /api/user-preferences",
+      "scope": "audit-per-action",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "SettingsView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    },
+    {
+      "id": "audit.48",
+      "domain": "audit",
+      "action": "Audit filters stats detail and limits",
+      "source": "ui/src/pages/AuditPage.tsx",
+      "contract": "/api/audit/recent; /api/audit/stats",
+      "scope": "global",
+      "nativeStatus": "implemented",
+      "evidence": [
+        "native/reports/operations.md",
+        "native/reports/integration.md"
+      ],
+      "nativeView": "AuditView",
+      "verification": "Compilation/contract checks; complete user-workflow E2E verification pending."
+    }
+  ],
+  "releaseGatePassed": false,
+  "validation": {
+    "swiftTests": 29,
+    "allPassedWithDisposableBackend": true,
+    "packagedAppSmoke": "connected=true projects=1 login=false",
+    "goHelperBundled": true,
+    "report": "native/reports/integration.md"
+  }
+}

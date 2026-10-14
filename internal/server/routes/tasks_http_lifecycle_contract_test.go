@@ -368,3 +368,35 @@ func assertTaskMarkdownOmitsLifecycleState(t *testing.T, store *storage.Store, d
 	}
 	t.Fatalf("Task %s file not found in %s", taskID, dir)
 }
+
+func TestTaskHTTPDecodesEncodedScopedTaskIdentity(t *testing.T) {
+	root := t.TempDir()
+	first := storage.NewProjectStore(root, "p1", "")
+	second := storage.NewProjectStore(root, "p2", "")
+	for _, store := range []*storage.Store{first, second} {
+		if err := store.Init("Scoped task fixture"); err != nil {
+			t.Fatal(err)
+		}
+		if err := store.Tasks.Create(&models.Task{ID: "shared", Title: store.ProjectID, Status: "todo", Priority: "medium"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	router := taskHTTPContractRouter(first)
+	got := callTaskHTTPContract(t, router, http.MethodGet, "/api/tasks/p2%3Ashared", nil, http.StatusOK)
+	if got.ID != "shared" {
+		t.Fatalf("encoded GET = %#v", got)
+	}
+	callTaskHTTPContract(t, router, http.MethodPut, "/api/tasks/p2%3Ashared", []byte("{\"status\":\"in-progress\"}"), http.StatusOK)
+	taskOne, err := first.Tasks.Get("p1:shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	taskTwo, err := second.Tasks.Get("p2:shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if taskOne.Status != "todo" || taskTwo.Status != "in-progress" {
+		t.Fatalf("scoped update touched wrong record: p1=%s p2=%s", taskOne.Status, taskTwo.Status)
+	}
+	callTaskHTTPContract(t, router, http.MethodGet, "/api/tasks/p2%253Ashared", nil, http.StatusNotFound)
+}

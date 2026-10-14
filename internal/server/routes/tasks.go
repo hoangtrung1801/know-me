@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -82,6 +83,19 @@ func (tr *TaskRoutes) getStore() *storage.Store {
 		return tr.mgr.GetStore()
 	}
 	return tr.store
+}
+
+// chi preserves escaped route parameters when URL.RawPath is set. Decode
+// exactly once so encoded project-qualified identities resolve like plain ones.
+func taskIDFromURL(r *http.Request) string {
+	raw := chi.URLParam(r, "id")
+	if r.URL.RawPath == "" {
+		return raw // URL.Path and its captured parameters are already decoded.
+	}
+	if decoded, err := url.PathUnescape(raw); err == nil {
+		return decoded
+	}
+	return raw
 }
 
 func resolveHTTPTask(store *storage.Store, r *http.Request, id string) (*models.Task, error) {
@@ -215,7 +229,7 @@ func taskLifecycleRank(task *models.Task) int {
 //
 // GET /api/tasks/{id}
 func (tr *TaskRoutes) get(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	id := taskIDFromURL(r)
 	task, err := resolveHTTPTask(tr.getStore(), r, id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
@@ -297,7 +311,7 @@ func (tr *TaskRoutes) create(w http.ResponseWriter, r *http.Request) {
 //
 // PUT /api/tasks/{id}
 func (tr *TaskRoutes) update(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	id := taskIDFromURL(r)
 	var patch map[string]json.RawMessage
 	if err := decodeJSON(r, &patch); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
@@ -344,7 +358,7 @@ func (tr *TaskRoutes) update(w http.ResponseWriter, r *http.Request) {
 //
 // POST /api/tasks/{id}/archive
 func (tr *TaskRoutes) archive(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	id := taskIDFromURL(r)
 	request, ok := decodeLifecycleRequest(w, r)
 	if !ok {
 		return
@@ -358,7 +372,7 @@ func (tr *TaskRoutes) archive(w http.ResponseWriter, r *http.Request) {
 //
 // POST /api/tasks/{id}/unarchive
 func (tr *TaskRoutes) unarchive(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	id := taskIDFromURL(r)
 	request, ok := decodeLifecycleRequest(w, r)
 	if !ok {
 		return
@@ -410,7 +424,7 @@ func (tr *TaskRoutes) hardDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.Operation = tasklifecycle.OperationHardDelete
-	request.TaskID = chi.URLParam(r, "id")
+	request.TaskID = taskIDFromURL(r)
 	request.Execute = request.Confirmed
 	tr.executeLifecycle(w, r, request)
 }
@@ -621,7 +635,7 @@ func (tr *TaskRoutes) syncSpecACs(w http.ResponseWriter, r *http.Request) {
 //
 // GET /api/tasks/{id}/history
 func (tr *TaskRoutes) history(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	id := taskIDFromURL(r)
 	task, err := resolveHTTPTask(tr.getStore(), r, id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
