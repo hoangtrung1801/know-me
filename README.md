@@ -34,8 +34,6 @@ agents can actually inspect.
 
 The product is called **Know-Me**. The command-line interface is `knowme`.
 
-> **Fork notice:** this project is forked from [hoangtrung1801/know-me](https://github.com/hoangtrung1801/know-me). Credit for the original work goes to its authors; see [LICENSE](./LICENSE) for terms.
-
 <p align="center">
   <img src="./images/screenshot-dashboard.png" alt="Know-Me Workspace Dashboard" width="100%">
 </p>
@@ -255,3 +253,7 @@ and [Architecture](./ARCHITECTURE.md). Contributions follow
 - [npm](https://www.npmjs.com/package/@hoangtrung1801/knowme)
 - [Discord](https://discord.knowns.dev)
 - [Releases](https://github.com/hoangtrung1801/know-me/releases)
+
+## Fork notice
+
+This project is forked from [knowns-dev/knowns](https://github.com/knowns-dev/knowns). Credit for the original work goes to its authors; see [LICENSE](./LICENSE) for terms.
